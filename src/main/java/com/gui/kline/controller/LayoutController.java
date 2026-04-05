@@ -35,6 +35,10 @@ public class LayoutController {
 
     @FXML
     private void onHideQuick() {
+        if (!(lblPageTitle.getText().equals("Dashboard") ||
+                lblPageTitle.getText().equals("Services"))) {
+            return;
+        }
         quickActionsVisible = !quickActionsVisible;
 
         quickHide.setVisible(quickActionsVisible);
@@ -81,6 +85,17 @@ public class LayoutController {
 
         if (lblPageTitle != null)
             lblPageTitle.setText(title);
+
+        boolean showQuick = path.equals("dashboard") || path.equals("services");
+
+        quickActionsVisible = showQuick;
+
+        quickHide.setVisible(showQuick);
+        quickHide.setManaged(showQuick);
+        btnHideQuick.setVisible(showQuick);
+        btnHideQuick.setManaged(showQuick);
+
+        AnchorPane.setRightAnchor(contentPane, showQuick ? QUICK_WIDTH : 0.0);
     }
 
     @FXML private void onDashboard()   { setActive(btnDashboard, "Dashboard", "dashboard"); }
