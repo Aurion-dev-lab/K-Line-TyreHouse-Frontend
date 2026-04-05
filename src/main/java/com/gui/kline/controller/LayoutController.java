@@ -6,7 +6,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-public class Sidebar {
+public class LayoutController {
 
     @FXML private VBox sidebarContainer, quickHide;
     @FXML private HBox headerbar;
@@ -25,7 +25,7 @@ public class Sidebar {
 
     private static final double SIDEBAR_FULL = 260.0;
     private static final double SIDEBAR_SMALL = 65.0;
-    private static final double QUICK_WIDTH = 214.0;
+    private static final double QUICK_WIDTH = 260.0;
 
     @FXML
     public void initialize() {
@@ -48,14 +48,19 @@ public class Sidebar {
     private void onCollapse() {
         isCollapsed = !isCollapsed;
 
-        double width = isCollapsed ? SIDEBAR_SMALL : SIDEBAR_FULL;
+        double sideWidth = isCollapsed ? SIDEBAR_SMALL : SIDEBAR_FULL;
 
-        sidebarContainer.setPrefWidth(width);
+        sidebarContainer.setPrefWidth(sideWidth);
+        sidebarContainer.setMinWidth(sideWidth);
+        sidebarContainer.setMaxWidth(sideWidth);
+
         lblLogo.setVisible(!isCollapsed);
+        lblLogo.setManaged(!isCollapsed);
+
         iconCollapse.setIconLiteral(isCollapsed ? "fas-angle-double-right" : "fas-angle-double-left");
         btnCollapse.setText(isCollapsed ? "" : "Collapse");
 
-        updateLeftAnchors(width);
+        updateLeftAnchors(sideWidth);
     }
 
     private void updateLeftAnchors(double width) {
@@ -95,5 +100,20 @@ public class Sidebar {
 
     private void onSearch(String q) {
         System.out.println("Searching: " + q);
+    }
+
+    @FXML
+    private void onQuickPolish() {
+        System.out.println("Quick Polish added");
+    }
+
+    @FXML
+    private void onTyreAirFill() {
+        System.out.println("Tyre Air Fill added");
+    }
+
+    @FXML
+    private void onCoolantTopup() {
+        System.out.println("Coolant Top-up added");
     }
 }

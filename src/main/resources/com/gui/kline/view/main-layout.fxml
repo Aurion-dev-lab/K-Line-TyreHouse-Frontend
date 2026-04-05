@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<AnchorPane prefHeight="800.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gui.kline.controller.Sidebar">
+<AnchorPane prefHeight="700.0" prefWidth="1200.0" styleClass="quick-actions-panel" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gui.kline.controller.LayoutController">
     <children>
         <VBox fx:id="sidebarContainer" prefWidth="260.0" styleClass="sidebar" stylesheets="@../css/sidebar.css" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.topAnchor="0">
          <AnchorPane prefHeight="81.0" prefWidth="260.0">
@@ -98,13 +98,81 @@
             </StackPane>
         </HBox>
 
-        <AnchorPane fx:id="contentPane" layoutY="67.2" prefHeight="733.0" prefWidth="726.0" style="-fx-background-color: #f9fafb;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="260.0" AnchorPane.rightAnchor="214.0" AnchorPane.topAnchor="67.0" />
+        <AnchorPane fx:id="contentPane" layoutY="67.2" prefHeight="700.0" prefWidth="681.0" style="-fx-background-color: #f9fafb;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="260.0" AnchorPane.rightAnchor="260.0" AnchorPane.topAnchor="67.0" />
 
-        <VBox fx:id="quickHide" layoutY="67.2" prefHeight="733.0" prefWidth="214.0" style="-fx-background-color: white; -fx-border-color: #e5e7eb; -fx-border-width: 0 0 0 1;" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="67.0">
+        <VBox fx:id="quickHide" prefHeight="733.0" prefWidth="260.0" stylesheets="@../css/sidebar.css" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="67.0">
             <children>
-                <Label style="-fx-font-weight: bold; -fx-padding: 15;" text="Quick Actions" />
+                <VBox spacing="5">
+                    <padding><Insets bottom="15" left="15" right="15" top="15" /></padding>
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <FontIcon iconColor="#f59e0b" iconLiteral="fas-bolt" iconSize="16" />
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #6b7280;" text="QUICK ACTIONS" />
+                    </HBox>
+                    <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 11px;" text="One-click small services" />
+                </VBox>
+
                 <Separator />
-                <Label style="-fx-padding: 20;" text="Hi Friend" />
+
+                <AnchorPane style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
+                    <VBox prefHeight="238.0" prefWidth="260.0" spacing="10">
+                        <padding><Insets bottom="15" left="10" right="10" top="15" /></padding>
+
+                        <Button maxWidth="Infinity" onAction="#onQuickPolish" styleClass="quick-service-btn">
+                            <graphic>
+                                <HBox alignment="CENTER_LEFT" spacing="12">
+                                    <StackPane styleClass="icon-bg-blue">
+                                        <FontIcon iconColor="white" iconLiteral="fas-wind" iconSize="16" />
+                                    </StackPane>
+                                    <VBox alignment="CENTER_LEFT">
+                                        <Label styleClass="service-title" text="Quick Polish" />
+                                        <Label styleClass="service-price" text="Rs. 500" />
+                                    </VBox>
+                                </HBox>
+                            </graphic>
+                        </Button>
+
+                        <Button maxWidth="Infinity" onAction="#onTyreAirFill" styleClass="quick-service-btn">
+                            <graphic>
+                                <HBox alignment="CENTER_LEFT" spacing="12">
+                                    <StackPane styleClass="icon-bg-green">
+                                        <FontIcon iconColor="white" iconLiteral="fas-tachometer-alt" iconSize="16" />
+                                    </StackPane>
+                                    <VBox alignment="CENTER_LEFT">
+                                        <Label styleClass="service-title" text="Tyre Air Fill" />
+                                        <Label styleClass="service-price" text="Rs. 100" />
+                                    </VBox>
+                                </HBox>
+                            </graphic>
+                        </Button>
+
+                        <Button maxWidth="Infinity" onAction="#onCoolantTopup" styleClass="quick-service-btn">
+                            <graphic>
+                                <HBox alignment="CENTER_LEFT" spacing="12">
+                                    <StackPane styleClass="icon-bg-cyan">
+                                        <FontIcon iconColor="white" iconLiteral="fas-tint" iconSize="16" />
+                                    </StackPane>
+                                    <VBox alignment="CENTER_LEFT">
+                                        <Label styleClass="service-title" text="Coolant Top-up" />
+                                        <Label styleClass="service-price" text="Rs. 350" />
+                                    </VBox>
+                                </HBox>
+                            </graphic>
+                        </Button>
+                    </VBox>
+                </AnchorPane>
+
+                <Region prefWidth="236.0" VBox.vgrow="ALWAYS" />
+
+                <VBox spacing="10" styleClass="stats-container">
+                    <VBox.margin><Insets bottom="15" left="10" right="10" /></VBox.margin>
+                    <Label styleClass="stats-header" text="SESSION STATS" />
+                    <Label styleClass="stats-sub" text="Total Quick Services" />
+                    <HBox alignment="BOTTOM_LEFT">
+                        <Label fx:id="lblTotalQuickCount" styleClass="stats-count" text="0" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="lblTotalQuickPrice" styleClass="stats-total-price" text="Rs. 0" />
+                    </HBox>
+                </VBox>
             </children>
         </VBox>
     </children>

@@ -1,0 +1,179 @@
+/* ════════════════════════════════════════
+   Record Service Dialog  –  Bootstrap style
+   ════════════════════════════════════════ */
+.modal-overlay {
+    -fx-background-color: rgba(0, 0, 0, 0.45);
+}
+/* ── Card ── */
+.modal-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.18), 32, 0, 0, 8);
+}
+
+/* ── Title ── */
+.modal-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+/* ── Divider ── */
+.modal-divider {
+    -fx-background-color: #e5e7eb;
+}
+
+/* ── Form labels (Bootstrap "text-uppercase small" style) ── */
+.form-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6b7280;
+    -fx-letter-spacing: 0.8px;
+}
+
+/* ── Text inputs ── */
+.form-input {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-font-size: 14px;
+    -fx-text-fill: #374151;
+    -fx-prompt-text-fill: #adb5bd;
+    -fx-padding: 10 14;
+    -fx-pref-height: 42px;
+}
+
+.form-input:focused {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #00c881;
+    -fx-effect: dropshadow(gaussian, rgba(0, 200, 129, 0.20), 6, 0, 0, 0);
+}
+
+/* ── Textarea ── */
+.form-textarea {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-font-size: 14px;
+    -fx-text-fill: #374151;
+    -fx-prompt-text-fill: #adb5bd;
+    -fx-padding: 10 14;
+}
+
+.form-textarea:focused {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #00c881;
+    -fx-effect: dropshadow(gaussian, rgba(0, 200, 129, 0.20), 6, 0, 0, 0);
+}
+
+/* Hide textarea scroll bar track decorations */
+.form-textarea > .scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.form-textarea > .scroll-pane > .scroll-bar:vertical {
+    -fx-pref-width: 6px;
+    -fx-background-color: transparent;
+}
+
+.form-textarea > .scroll-pane > .scroll-bar:vertical .thumb {
+    -fx-background-color: #d1d5db;
+    -fx-background-radius: 3;
+}
+
+.form-textarea > .scroll-pane > .scroll-bar:vertical .track,
+.form-textarea > .scroll-pane > .scroll-bar:vertical .track-background,
+.form-textarea > .scroll-pane > .scroll-bar:vertical .increment-button,
+.form-textarea > .scroll-pane > .scroll-bar:vertical .decrement-button,
+.form-textarea > .scroll-pane > .scroll-bar:vertical .increment-arrow,
+.form-textarea > .scroll-pane > .scroll-bar:vertical .decrement-arrow {
+    -fx-background-color: transparent;
+    -fx-pref-height: 0;
+    -fx-pref-width: 0;
+}
+
+/* ── DatePicker ── */
+.form-datepicker {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-pref-height: 42px;
+}
+
+.form-datepicker .text-field {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-size: 14px;
+    -fx-text-fill: #374151;
+    -fx-prompt-text-fill: #adb5bd;
+    -fx-padding: 10 4;
+}
+
+.form-datepicker:focused,
+.form-datepicker .text-field:focused {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #00c881;
+    -fx-effect: dropshadow(gaussian, rgba(0, 200, 129, 0.20), 6, 0, 0, 0);
+}
+
+.form-datepicker .arrow-button {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-padding: 0 10;
+}
+
+.form-datepicker .arrow-button .arrow {
+    -fx-background-color: #6b7280;
+    -fx-shape: "M7 10l5 5 5-5z";
+}
+
+/* ── Buttons ── */
+.btn-cancel {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.btn-cancel:hover {
+    -fx-background-color: #f3f4f6;
+    -fx-text-fill: #374151;
+}
+
+.btn-cancel:pressed {
+    -fx-background-color: #e5e7eb;
+}
+
+.btn-save {
+    -fx-background-color: #00c881;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-border-radius: 8;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0, 200, 129, 0.35), 8, 0, 0, 3);
+}
+
+.btn-save:hover {
+    -fx-background-color: #00b574;
+    -fx-effect: dropshadow(gaussian, rgba(0, 181, 116, 0.45), 10, 0, 0, 4);
+}
+
+.btn-save:pressed {
+    -fx-background-color: #009f67;
+    -fx-effect: none;
+}
