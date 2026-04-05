@@ -145,8 +145,6 @@
     -fx-icon-color: white;
 }
 
-/* ── Header bar ── */
-
 .header-bar {
     -fx-background-color: white;
     -fx-border-color: transparent transparent #e5e7eb transparent;
@@ -224,13 +222,10 @@
     -fx-font-weight: bold;
 }
 
-/* ── Content area ── */
 
 #contentPane {
     -fx-background-color: #f3f4f6;
 }
-
-/* ── Quick actions panel ── */
 
 .quick-actions-panel {
     -fx-background-color: #ffffff;

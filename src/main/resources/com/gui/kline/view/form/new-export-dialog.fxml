@@ -28,18 +28,15 @@
 
         <VBox styleClass="modal-card" maxWidth="560" minWidth="400" maxHeight="580" spacing="0">
 
-            <!-- ── Title ── -->
             <Label text="New Export Record" styleClass="modal-title">
                 <VBox.margin><Insets top="28" left="28" right="28" bottom="20" /></VBox.margin>
             </Label>
 
             <Region styleClass="modal-divider" prefHeight="1" maxHeight="1" />
 
-            <!-- ── Form Fields ── -->
             <VBox spacing="18">
                 <padding><Insets top="24" left="28" right="28" bottom="8" /></padding>
 
-                <!-- COMPANY NAME — full width -->
                 <VBox spacing="6">
                     <Label text="COMPANY NAME" styleClass="form-label" />
                     <TextField fx:id="txtCompany"
@@ -47,7 +44,6 @@
                                styleClass="form-input" />
                 </VBox>
 
-                <!-- TYRE COUNT + SERVICE FEE -->
                 <GridPane hgap="16">
                     <columnConstraints>
                         <ColumnConstraints hgrow="ALWAYS" />
@@ -70,7 +66,6 @@
                     </VBox>
                 </GridPane>
 
-                <!-- CUSTOMER PAID + COMPANY PRICE -->
                 <GridPane hgap="16">
                     <columnConstraints>
                         <ColumnConstraints hgrow="ALWAYS" />
@@ -93,7 +88,6 @@
                     </VBox>
                 </GridPane>
 
-                <!-- DATE SENT + INITIAL STATUS -->
                 <GridPane hgap="16">
                     <columnConstraints>
                         <ColumnConstraints hgrow="ALWAYS" />
@@ -118,12 +112,10 @@
 
             </VBox>
 
-            <!-- ── Divider ── -->
             <Region styleClass="modal-divider" prefHeight="1" maxHeight="1">
                 <VBox.margin><Insets top="24" /></VBox.margin>
             </Region>
 
-            <!-- ── Buttons ── -->
             <HBox alignment="CENTER_RIGHT" spacing="12">
                 <padding><Insets top="16" left="28" right="28" bottom="24" /></padding>
                 <Button fx:id="btnCancel"

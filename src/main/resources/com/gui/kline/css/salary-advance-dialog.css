@@ -1,0 +1,73 @@
+.modal-overlay {
+    -fx-background-color: rgba(0, 0, 0, 0.35);
+}
+.modal-card {
+    -fx-background-color: white;
+    -fx-background-radius: 25;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 25, 0, 0, 15);
+}
+
+.modal-title-plain {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a1a;
+    -fx-font-family: "Segoe UI", "System";
+}
+
+.form-label-bold {
+    -fx-text-fill: #94a3b8;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+    -fx-letter-spacing: 0.5px;
+}
+
+.form-input-minimal, .form-combo-minimal, .form-datepicker-minimal {
+    -fx-background-color: #F8FAFC;
+    -fx-background-radius: 12;
+    -fx-border-color: transparent;
+    -fx-padding: 12;
+    -fx-font-size: 15px;
+}
+
+.form-input-minimal:focused,
+.form-combo-minimal:focused,
+.form-datepicker-minimal:focused {
+    -fx-border-color: #FF9500;
+    -fx-border-width: 1.5;
+    -fx-background-color: white;
+}
+
+.form-datepicker-minimal .text-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: #334155;
+}
+
+.form-datepicker-minimal .button .date-picker-display-icon {
+    -fx-fill: #334155;
+}
+
+.btn-save-primary {
+    -fx-background-color: #FF9500;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+    -fx-background-radius: 15;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(255, 149, 0, 0.4), 12, 0, 0, 5);
+}
+
+.btn-save-primary:hover {
+    -fx-background-color: #e68600;
+}
+
+.btn-cancel-simple {
+    -fx-background-color: transparent;
+    -fx-text-fill: #64748b;
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+}
+
+.btn-cancel-simple:hover {
+    -fx-text-fill: #1e293b;
+}
