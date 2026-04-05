@@ -14,4 +14,6 @@ module com.gui.kline {
 
 
     opens com.gui.kline.controller to javafx.fxml;
+    exports com.gui.kline.controller.form;
+    opens com.gui.kline.controller.form to javafx.fxml;
 }

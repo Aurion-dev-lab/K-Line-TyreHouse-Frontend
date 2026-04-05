@@ -18,7 +18,7 @@
            stylesheets="@../../css/record-service-dialog.css"
            xmlns="http://javafx.com/javafx/25"
            xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="com.gui.kline.controller.RecordServiceDialogController">
+           fx:controller="com.gui.kline.controller.form.RecordServiceDialogController">
 
     <StackPane AnchorPane.topAnchor="0"
                AnchorPane.bottomAnchor="0"

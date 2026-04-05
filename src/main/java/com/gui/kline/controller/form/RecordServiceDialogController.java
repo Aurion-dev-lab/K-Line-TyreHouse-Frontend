@@ -1,4 +1,4 @@
-package com.gui.kline.controller;
+package com.gui.kline.controller.form;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.DatePicker;

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.gui.kline.controller.TyreExportsController"
+            prefHeight="700.0" prefWidth="1000.0"
+            style="-fx-background-color: #f3f4f6;">
+    <children>
+        <VBox spacing="25.0"
+              AnchorPane.topAnchor="30.0" AnchorPane.bottomAnchor="30.0"
+              AnchorPane.leftAnchor="30.0" AnchorPane.rightAnchor="30.0">
+            <children>
+
+                <HBox alignment="CENTER_LEFT">
+                    <children>
+                        <VBox spacing="4.0">
+                            <children>
+                                <Label text="Tyre Export Tracking"
+                                       style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #111827;" />
+                                <Label text="Manage bulk tyre shipments to companies"
+                                       style="-fx-font-size: 13px; -fx-text-fill: #6b7280;" />
+                            </children>
+                        </VBox>
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnNewExport"
+                                text="+ New Export Record"
+                                onAction="#handleNewExport"
+                                style="-fx-background-color: #10b981; -fx-text-fill: white;
+                                       -fx-font-size: 13px; -fx-font-weight: bold;
+                                       -fx-background-radius: 8px; -fx-padding: 10 20 10 20;
+                                       -fx-cursor: hand;" />
+                    </children>
+                </HBox>
+
+                <VBox style="-fx-background-color: white; -fx-background-radius: 14px;
+                             -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 12, 0, 0, 3);"
+                      VBox.vgrow="ALWAYS">
+                    <children>
+
+                        <HBox alignment="CENTER_LEFT" spacing="12.0"
+                              style="-fx-padding: 18 20 14 20; -fx-border-color: transparent transparent #f0f0f0 transparent; -fx-border-width: 1;">
+                            <children>
+                                <Label text="Recent Shipments"
+                                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;" />
+                                <TextField fx:id="txtFilter"
+                                           promptText="Filter company..."
+                                           onKeyReleased="#handleFilter"
+                                           style="-fx-background-radius: 20px; -fx-border-radius: 20px;
+                                                  -fx-border-color: #e5e7eb; -fx-border-width: 1;
+                                                  -fx-padding: 6 14 6 14; -fx-font-size: 13px;"
+                                           prefWidth="200.0" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <DatePicker fx:id="dpFrom" promptText="dd/mm/yyyy"
+                                            onAction="#handleDateFilter" prefWidth="140.0" />
+                                <Label text="to" style="-fx-text-fill: #6b7280;" />
+                                <DatePicker fx:id="dpTo" promptText="dd/mm/yyyy"
+                                            onAction="#handleDateFilter" prefWidth="140.0" />
+                            </children>
+                        </HBox>
+
+                        <TableView fx:id="tblExports" VBox.vgrow="ALWAYS"
+                                   style="-fx-background-color: transparent; -fx-border-color: transparent;">
+                            <columns>
+                                <TableColumn fx:id="colCompany"  text="COMPANY"           prefWidth="220.0" />
+                                <TableColumn fx:id="colTyres"   text="TYRES"              prefWidth="90.0"  />
+                                <TableColumn fx:id="colPrices"  text="PRICES (CUST/COMP)" prefWidth="180.0" />
+                                <TableColumn fx:id="colService" text="SERVICE"            prefWidth="120.0" />
+                                <TableColumn fx:id="colProfit"  text="NET PROFIT"         prefWidth="140.0" />
+                                <TableColumn fx:id="colStatus"  text="STATUS"             prefWidth="130.0" />
+                                <TableColumn fx:id="colActions" text="ACTIONS"            prefWidth="160.0" />
+                            </columns>
+                            <columnResizePolicy>
+                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                            </columnResizePolicy>
+                        </TableView>
+
+                    </children>
+                </VBox>
+
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>

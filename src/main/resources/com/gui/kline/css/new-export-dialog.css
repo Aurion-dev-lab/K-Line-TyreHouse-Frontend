@@ -1,0 +1,127 @@
+.modal-overlay {
+    -fx-background-color: rgba(0, 0, 0, 0.45);
+}
+
+.modal-card {
+    -fx-background-color: white;
+    -fx-background-radius: 16px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 24, 0, 0, 6);
+}
+
+.modal-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.modal-divider {
+    -fx-background-color: #f0f0f0;
+}
+
+.form-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6b7280;
+}
+
+.form-input,
+.form-input-amber,
+.form-input-green,
+.form-input-red {
+    -fx-font-size: 14px;
+    -fx-border-width: 1.5px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 10 14 10 14;
+    -fx-pref-height: 42px;
+}
+
+.form-input {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #e5e7eb;
+    -fx-text-fill: #374151;
+}
+.form-input:focused {
+    -fx-border-color: #10b981;
+    -fx-background-color: #f0fdf4;
+}
+
+.form-input-amber {
+    -fx-background-color: #fffbeb;
+    -fx-border-color: #fde68a;
+    -fx-text-fill: #f59e0b;
+}
+.form-input-amber:focused {
+    -fx-border-color: #f59e0b;
+}
+
+.form-input-green {
+    -fx-background-color: #f0fdf4;
+    -fx-border-color: #86efac;
+    -fx-text-fill: #22c55e;
+}
+.form-input-green:focused {
+    -fx-border-color: #22c55e;
+}
+
+.form-input-red {
+    -fx-background-color: #fff1f2;
+    -fx-border-color: #fecdd3;
+    -fx-text-fill: #f43f5e;
+}
+.form-input-red:focused {
+    -fx-border-color: #f43f5e;
+}
+
+.form-datepicker {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1.5px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-font-size: 14px;
+    -fx-pref-height: 42px;
+}
+.form-datepicker:focused {
+    -fx-border-color: #10b981;
+}
+
+.form-combobox {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1.5px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-font-size: 14px;
+    -fx-pref-height: 42px;
+}
+.form-combobox:focused {
+    -fx-border-color: #10b981;
+}
+
+.btn-cancel {
+    -fx-background-color: transparent;
+    -fx-text-fill: #374151;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1.5px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+}
+.btn-cancel:hover {
+    -fx-background-color: #f3f4f6;
+}
+
+.btn-save {
+    -fx-background-color: #10b981;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+}
+.btn-save:hover {
+    -fx-background-color: #059669;
+}

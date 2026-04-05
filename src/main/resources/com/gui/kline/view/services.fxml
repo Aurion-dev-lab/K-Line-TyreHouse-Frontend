@@ -25,7 +25,6 @@
                         </VBox>
                         <Region HBox.hgrow="ALWAYS" />
 
-                        <!-- fx:id + onAction added -->
                         <Button fx:id="btnRecordService"
                                 graphicTextGap="10.0"
                                 styleClass="record-service-btn"
@@ -43,7 +42,6 @@
                                     <Label style="-fx-font-weight: bold; -fx-font-size: 16px;"
                                            text="Recent Service Records" />
 
-                                    <!-- fx:id + onKeyReleased for live filter -->
                                     <TextField fx:id="txtFilter"
                                                promptText="Filter services..."
                                                styleClass="filter-field"
@@ -52,7 +50,6 @@
                                     <Region HBox.hgrow="ALWAYS" />
 
                                     <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="date-range-picker">
-                                        <!-- fx:id + onAction for date pickers -->
                                         <DatePicker fx:id="dpFrom"
                                                     prefWidth="120.0"
                                                     promptText="mm/dd/yyyy"
@@ -65,7 +62,6 @@
                                     </HBox>
                                 </HBox>
 
-                                <!-- fx:id already present, kept -->
                                 <TableView fx:id="tblServices" VBox.vgrow="ALWAYS">
                                     <columns>
                                         <TableColumn fx:id="colDate"    prefWidth="150.0" text="DATE" />
@@ -80,7 +76,6 @@
                             </children>
                         </VBox>
 
-                        <!-- Insights card — added fx:id to dynamic labels -->
                         <VBox prefWidth="300.0" spacing="25.0" styleClass="insights-card">
                             <children>
                                 <Label style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"
