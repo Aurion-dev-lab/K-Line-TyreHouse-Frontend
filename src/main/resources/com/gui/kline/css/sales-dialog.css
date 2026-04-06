@@ -1,0 +1,57 @@
+/* Container and Card */
+.modal-overlay { -fx-background-color: rgba(0, 0, 0, 0.4); }
+.modal-card {
+    -fx-background-color: white;
+    -fx-background-radius: 25;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 20, 0, 0, 10);
+}
+
+.modal-title-plain {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+/* Inputs */
+.form-label-bold {
+    -fx-text-fill: #9CA3AF;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+.form-input-minimal, .form-combo-minimal, .form-datepicker-minimal {
+    -fx-background-color: #F9FAFB;
+    -fx-background-radius: 12;
+    -fx-border-color: transparent;
+    -fx-padding: 10 15;
+    -fx-font-size: 14px;
+}
+
+/* Specific Buttons */
+.btn-cancel-simple{
+    -fx-background-color: transparent;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-border-radius: 8;
+    -fx-font-family: "Segoe UI Semibold", "System Bold";
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #4A5E57;
+    -fx-cursor: hand;
+}
+
+.btn-cancel-simple:hover {
+    -fx-background-color: #F0F4F2;
+}
+
+.btn-complete-sale {
+    -fx-background-color: #00C385; /* The specific green from your image */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+    -fx-background-radius: 15;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,195,133,0.3), 10, 0, 0, 5);
+}
+
+.btn-complete-sale:hover { -fx-background-color: #00AC75; }
