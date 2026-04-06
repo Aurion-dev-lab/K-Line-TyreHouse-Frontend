@@ -1,18 +1,106 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
-<AnchorPane maxHeight="400.0" maxWidth="600.0" minHeight="400.0" minWidth="600.0"
-            prefHeight="400.0" prefWidth="600.0"
-            xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane prefHeight="860.0" prefWidth="1100.0" style="-fx-background-color: #f0f2f5;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gui.kline.controller.WorkerManagementController">
    <children>
-      <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                 AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-         <children>
-            <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="on workers" />
-         </children>
-      </StackPane>
+      <VBox spacing="20.0" AnchorPane.bottomAnchor="24.0" AnchorPane.leftAnchor="24.0" AnchorPane.rightAnchor="24.0" AnchorPane.topAnchor="24.0">
+
+         <HBox alignment="CENTER_LEFT">
+            <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+               <Label style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #1a1a2e;" text="Worker Management" />
+               <Label style="-fx-font-size: 13px; -fx-text-fill: #888888;" text="Manage your team and track daily attendance" />
+            </VBox>
+            <AnchorPane>
+               <children>
+                  <DatePicker fx:id="attendanceDatePicker" layoutY="11.0" prefHeight="39.0" prefWidth="210.0" promptText="dd/mm/yyyy" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 13px;" />
+               </children>
+            </AnchorPane>
+
+            <Region minWidth="12.0" />
+
+            <Button fx:id="addWorkerBtn" onAction="#handleAddWorker" style="-fx-background-color: #22c55e; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 8; -fx-padding: 10 20 10 20; -fx-cursor: hand;" text="  Add New Worker">
+               <graphic>
+                  <Label style="-fx-font-size: 13px; -fx-text-fill: white;" text="👤+" />
+               </graphic>
+            </Button>
+         </HBox>
+
+         <HBox spacing="24.0" VBox.vgrow="ALWAYS">
+
+            <VBox spacing="20.0" HBox.hgrow="ALWAYS">
+
+               <VBox style="-fx-background-color: white; -fx-background-radius: 14; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+                  <HBox alignment="CENTER_LEFT" style="-fx-padding: 20;">
+                     <Label fx:id="attendanceDateLabel" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1a1a2e;" text="Daily Attendance - 2026-04-06" HBox.hgrow="ALWAYS" />
+                     <Region HBox.hgrow="ALWAYS" />
+                     <HBox spacing="15.0">
+                        <HBox alignment="CENTER" spacing="5.0">
+                           <Label style="-fx-text-fill: #22c55e;" text="⊙" />
+                           <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #22c55e;" text="PRESENT" />
+                        </HBox>
+                        <HBox alignment="CENTER" spacing="5.0">
+                           <Label style="-fx-text-fill: #f97316;" text="⊙" />
+                           <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #f97316;" text="HALF DAY" />
+                        </HBox>
+                        <HBox alignment="CENTER" spacing="5.0">
+                           <Label style="-fx-text-fill: #ef4444;" text="⊙" />
+                           <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #ef4444;" text="ABSENT" />
+                        </HBox>
+                     </HBox>
+                  </HBox>
+
+                  <HBox style="-fx-padding: 10 20; -fx-border-color: transparent transparent #f0f2f5 transparent;">
+                     <Label prefWidth="200.0" style="-fx-font-size: 11px; -fx-text-fill: #aaaaaa; -fx-font-weight: bold;" text="WORKER" />
+                     <Label prefWidth="150.0" style="-fx-font-size: 11px; -fx-text-fill: #aaaaaa; -fx-font-weight: bold;" text="DAILY RATE" />
+                     <Label style="-fx-font-size: 11px; -fx-text-fill: #aaaaaa; -fx-font-weight: bold;" text="MARK ATTENDANCE" HBox.hgrow="ALWAYS" />
+                     <Region HBox.hgrow="ALWAYS" />
+                     <Label alignment="CENTER_RIGHT" prefWidth="100.0" style="-fx-font-size: 11px; -fx-text-fill: #aaaaaa; -fx-font-weight: bold;" text="ACTIONS" />
+                  </HBox>
+                  <VBox fx:id="attendanceRowsContainer" />
+               </VBox>
+
+               <VBox style="-fx-background-color: white; -fx-background-radius: 14; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);" VBox.vgrow="ALWAYS">
+                  <HBox alignment="CENTER_LEFT" spacing="12.0" style="-fx-padding: 20;">
+                     <Label style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1a1a2e;" text="Attendance History" />
+                     <HBox alignment="CENTER_LEFT" spacing="8.0" style="-fx-background-color: #f8f9fa; -fx-border-color: #e0e0e0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 6 12;" HBox.hgrow="ALWAYS">
+                        <Label text="🔍" />
+                        <TextField fx:id="historySearchField" promptText="Search worker..." style="-fx-background-color: transparent;" HBox.hgrow="ALWAYS" />
+                     </HBox>
+                     <HBox alignment="CENTER" spacing="8.0" style="-fx-background-color: #f8f9fa; -fx-border-color: #e0e0e0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 6 12;">
+                        <DatePicker fx:id="historyFromDate" prefWidth="110.0" promptText="dd/mm/yyyy" style="-fx-background-color: transparent;" />
+                        <Label text="to" />
+                        <DatePicker fx:id="historyToDate" prefWidth="110.0" promptText="dd/mm/yyyy" style="-fx-background-color: transparent;" />
+                     </HBox>
+                  </HBox>
+
+                  <HBox style="-fx-padding: 10 20; -fx-border-color: transparent transparent #f0f2f5 transparent;">
+                     <Label prefWidth="250.0" style="-fx-font-size: 11px; -fx-text-fill: #aaaaaa; -fx-font-weight: bold;" text="DATE" />
+                     <Label style="-fx-font-size: 11px; -fx-text-fill: #aaaaaa; -fx-font-weight: bold;" text="WORKER" HBox.hgrow="ALWAYS" />
+                     <Region HBox.hgrow="ALWAYS" />
+                     <Label alignment="CENTER_RIGHT" prefWidth="100.0" style="-fx-font-size: 11px; -fx-text-fill: #aaaaaa; -fx-font-weight: bold;" text="STATUS" />
+                  </HBox>
+                  <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
+                     <VBox fx:id="historyRowsContainer" />
+                  </ScrollPane>
+               </VBox>
+            </VBox>
+
+            <VBox minWidth="320.0" spacing="0.0" style="-fx-background-color: #1a1a2e; -fx-background-radius: 14; -fx-padding: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 4);">
+               <Label style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;" text="Monthly Summary" />
+               <Label fx:id="monthlySummaryMonthLabel" style="-fx-font-size: 11px; -fx-text-fill: #888888; -fx-padding: 4 0 20 0;" text="CURRENT MONTH: 2026-04" />
+               <VBox fx:id="monthlySummaryContainer" spacing="16.0" VBox.vgrow="ALWAYS" />
+            </VBox>
+
+         </HBox>
+      </VBox>
    </children>
 </AnchorPane>
