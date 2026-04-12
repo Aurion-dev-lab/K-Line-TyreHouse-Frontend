@@ -1,0 +1,181 @@
+.modal-overlay {
+    -fx-background-color: rgba(0, 0, 0, 0.35);
+}
+
+.modal-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-color: #E2E8E4;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 24, 0, 0, 6);
+}
+
+.header-icon {
+    -fx-background-color: #E8F7F0;
+    -fx-background-radius: 50;
+    -fx-min-width: 36;
+    -fx-min-height: 36;
+    -fx-max-width: 36;
+    -fx-max-height: 36;
+    -fx-alignment: CENTER;
+}
+
+.header-icon-path {
+    -fx-fill: #1A9E6A;
+    -fx-scale-x: 0.75;
+    -fx-scale-y: 0.75;
+}
+
+.modal-header {
+    -fx-alignment: CENTER_LEFT;
+}
+
+.modal-title {
+    -fx-font-family: "Segoe UI Semibold", "System Bold";
+    -fx-font-size: 17px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #111B15;
+}
+
+.modal-subtitle {
+    -fx-font-family: "Segoe UI", "System";
+    -fx-font-size: 12px;
+    -fx-text-fill: #6B7D74;
+}
+
+.modal-divider {
+    -fx-background-color: #E8EDE9;
+}
+
+.form-label {
+    -fx-font-family: "Segoe UI Semibold", "System Bold";
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #718880;
+    -fx-letter-spacing: 0.5;
+}
+
+.form-input {
+    -fx-background-color: #F4F8F6;
+    -fx-background-radius: 8;
+    -fx-border-color: #D8E4DF;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-font-family: "Segoe UI", "System";
+    -fx-font-size: 13px;
+    -fx-text-fill: #111B15;
+    -fx-prompt-text-fill: #A9BDB6;
+    -fx-padding: 10 12 10 12;
+    -fx-pref-height: 40;
+}
+
+.form-input:focused {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #1A9E6A;
+    -fx-border-width: 1.5;
+    -fx-effect: dropshadow(gaussian, rgba(26,158,106,0.15), 6, 0, 0, 0);
+}
+
+.form-combo {
+    -fx-background-color: #F4F8F6;
+    -fx-background-radius: 8;
+    -fx-border-color: #D8E4DF;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-font-family: "Segoe UI", "System";
+    -fx-font-size: 13px;
+    -fx-text-fill: #111B15;
+    -fx-pref-height: 40;
+}
+
+.form-combo:focused {
+    -fx-border-color: #1A9E6A;
+    -fx-border-width: 1.5;
+}
+
+.form-combo .list-view {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #D8E4DF;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 12, 0, 0, 4);
+}
+
+.form-combo .list-cell {
+    -fx-font-family: "Segoe UI", "System";
+    -fx-font-size: 13px;
+    -fx-text-fill: #111B15;
+    -fx-padding: 8 12 8 12;
+}
+
+.form-combo .list-cell:hover {
+    -fx-background-color: #E8F7F0;
+}
+
+.form-datepicker {
+    -fx-background-color: #F4F8F6;
+    -fx-background-radius: 8;
+    -fx-border-color: #D8E4DF;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-font-family: "Segoe UI", "System";
+    -fx-font-size: 13px;
+    -fx-text-fill: #111B15;
+    -fx-pref-height: 40;
+}
+
+.form-datepicker:focused {
+    -fx-border-color: #1A9E6A;
+    -fx-border-width: 1.5;
+}
+
+.form-datepicker .text-field {
+    -fx-background-color: transparent;
+    -fx-font-family: "Segoe UI", "System";
+    -fx-font-size: 13px;
+    -fx-text-fill: #111B15;
+    -fx-padding: 0 0 0 12;
+}
+
+.btn-cancel {
+    -fx-background-color: transparent;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-border-radius: 8;
+    -fx-font-family: "Segoe UI Semibold", "System Bold";
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #4A5E57;
+    -fx-cursor: hand;
+}
+
+.btn-cancel:hover {
+    -fx-background-color: #F0F4F2;
+}
+
+.btn-cancel:pressed {
+    -fx-background-color: #E4EAE7;
+}
+
+.btn-record {
+    -fx-background-color: #1A9E6A;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-border-radius: 8;
+    -fx-font-family: "Segoe UI Semibold", "System Bold";
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #FFFFFF;
+    -fx-cursor: hand;
+}
+
+.btn-record:hover {
+    -fx-background-color: #158A5A;
+}
+
+.btn-record:pressed {
+    -fx-background-color: #0F7048;
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}

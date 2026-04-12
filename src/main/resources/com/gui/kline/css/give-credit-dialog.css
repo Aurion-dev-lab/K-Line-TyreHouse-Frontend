@@ -1,0 +1,130 @@
+.modal-overlay {
+    -fx-background-color: rgba(0, 0, 0, 0.35);
+}
+
+.modal-card {
+    -fx-background-color: white;
+    -fx-background-radius: 20;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 20, 0, 0, 10);
+}
+
+.modal-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a1a1a;
+}
+
+.modal-subtitle {
+    -fx-text-fill: #7d8590;
+    -fx-font-size: 14px;
+}
+
+.header-icon-container {
+    -fx-shape: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z";
+    -fx-background-color: transparent;
+    -fx-border-color: #FF2D55;
+    -fx-border-width: 2;
+    -fx-border-radius: 50;
+    -fx-padding: 5;
+}
+
+.header-icon-path {
+    -fx-fill: #FF2D55;
+}
+.form-label-bold {
+    -fx-text-fill: #94a3b8;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+.form-input-minimal,
+.form-combo-minimal {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 10;
+    -fx-border-color: #f1f5f9;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-padding: 10;
+    -fx-font-family: "Segoe UI", "System";
+    -fx-font-size: 14px;
+}
+
+.form-input-minimal:focused,
+.form-combo-minimal:focused {
+    -fx-background-color: white;
+    -fx-border-color: #FF2D55;
+    -fx-border-width: 1.5;
+}
+
+.form-datepicker-minimal {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 10;
+    -fx-border-color: #f1f5f9;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-pref-height: 42;
+}
+
+.form-datepicker-minimal:focused {
+    -fx-background-color: white;
+    -fx-border-color: #FF2D55;
+    -fx-border-width: 1.5;
+}
+
+.form-datepicker-minimal .text-field {
+    -fx-background-color: transparent;
+    -fx-font-family: "Segoe UI", "System";
+    -fx-font-size: 14px;
+    -fx-text-fill: #1a1a1a;
+    -fx-padding: 0 0 0 10;
+}
+
+.form-datepicker-minimal .button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0 10 10 0;
+    -fx-cursor: hand;
+}
+
+.form-datepicker-minimal .button .date-picker-display-icon {
+    -fx-fill: #64748b;
+}
+
+.form-datepicker-minimal:focused .button .date-picker-display-icon {
+    -fx-fill: #FF2D55;
+}
+
+.btn-record-primary {
+    -fx-background-color: #FF2D55;
+    -fx-text-fill: white;
+    -fx-font-family: "Segoe UI Bold";
+    -fx-font-size: 14px;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(255, 45, 85, 0.3), 10, 0, 0, 4);
+}
+
+.btn-record-primary:hover {
+    -fx-background-color: #E6294D;
+}
+
+.btn-cancel {
+    -fx-background-color: transparent;
+    -fx-text-fill: #64748b;
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+
+.btn-cancel:hover {
+    -fx-text-fill: #1a1a1a;
+    -fx-background-color: #f1f5f9;
+    -fx-background-radius: 10;
+}
+
+.btn-record-primary {
+    -fx-background-color: #FF2D55;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+}

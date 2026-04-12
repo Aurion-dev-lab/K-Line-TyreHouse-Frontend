@@ -6,7 +6,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-public class Sidebar {
+public class LayoutController {
 
     @FXML private VBox sidebarContainer, quickHide;
     @FXML private HBox headerbar;
@@ -25,7 +25,7 @@ public class Sidebar {
 
     private static final double SIDEBAR_FULL = 260.0;
     private static final double SIDEBAR_SMALL = 65.0;
-    private static final double QUICK_WIDTH = 214.0;
+    private static final double QUICK_WIDTH = 260.0;
 
     @FXML
     public void initialize() {
@@ -35,6 +35,10 @@ public class Sidebar {
 
     @FXML
     private void onHideQuick() {
+        if (!(lblPageTitle.getText().equals("Dashboard") ||
+                lblPageTitle.getText().equals("Services"))) {
+            return;
+        }
         quickActionsVisible = !quickActionsVisible;
 
         quickHide.setVisible(quickActionsVisible);
@@ -48,14 +52,19 @@ public class Sidebar {
     private void onCollapse() {
         isCollapsed = !isCollapsed;
 
-        double width = isCollapsed ? SIDEBAR_SMALL : SIDEBAR_FULL;
+        double sideWidth = isCollapsed ? SIDEBAR_SMALL : SIDEBAR_FULL;
 
-        sidebarContainer.setPrefWidth(width);
+        sidebarContainer.setPrefWidth(sideWidth);
+        sidebarContainer.setMinWidth(sideWidth);
+        sidebarContainer.setMaxWidth(sideWidth);
+
         lblLogo.setVisible(!isCollapsed);
+        lblLogo.setManaged(!isCollapsed);
+
         iconCollapse.setIconLiteral(isCollapsed ? "fas-angle-double-right" : "fas-angle-double-left");
         btnCollapse.setText(isCollapsed ? "" : "Collapse");
 
-        updateLeftAnchors(width);
+        updateLeftAnchors(sideWidth);
     }
 
     private void updateLeftAnchors(double width) {
@@ -76,14 +85,24 @@ public class Sidebar {
 
         if (lblPageTitle != null)
             lblPageTitle.setText(title);
+
+        boolean showQuick = path.equals("dashboard") || path.equals("services");
+
+        quickActionsVisible = showQuick;
+
+        quickHide.setVisible(showQuick);
+        quickHide.setManaged(showQuick);
+        btnHideQuick.setVisible(showQuick);
+        btnHideQuick.setManaged(showQuick);
+
+        AnchorPane.setRightAnchor(contentPane, showQuick ? QUICK_WIDTH : 0.0);
     }
 
     @FXML private void onDashboard()   { setActive(btnDashboard, "Dashboard", "dashboard"); }
     @FXML private void onWorkers()     { setActive(btnWorkers, "Workers", "workers"); }
     @FXML private void onInventory()   { setActive(btnInventory, "Inventory", "inventory"); }
     @FXML private void onInvoices()    { setActive(btnInvoices, "Invoices & Billing", "invoices"); }
-    @FXML private void onSales()       { setActive(btnSales, "Sales", "sales"); }
-    @FXML private void onServices()    { setActive(btnServices, "Services", "services"); }
+    @FXML private void onSales()       { setActive(btnSales, "Credit Sales", "credit-sales"); }
     @FXML private void onTyreExports() { setActive(btnTyreExports, "Tyre Exports", "tyre-exports"); }
     @FXML private void onSalary()      { setActive(btnSalary, "Salary Management", "salary"); }
     @FXML private void onAnalytics()   { setActive(btnAnalytics, "Analytics Charts", "analytics"); }
@@ -95,5 +114,20 @@ public class Sidebar {
 
     private void onSearch(String q) {
         System.out.println("Searching: " + q);
+    }
+
+    @FXML
+    private void onQuickPolish() {
+        System.out.println("Quick Polish added");
+    }
+
+    @FXML
+    private void onTyreAirFill() {
+        System.out.println("Tyre Air Fill added");
+    }
+
+    @FXML
+    private void onCoolantTopup() {
+        System.out.println("Coolant Top-up added");
     }
 }

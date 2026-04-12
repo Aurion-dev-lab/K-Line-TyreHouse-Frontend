@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+
+<AnchorPane styleClass="modal-overlay"
+            stylesheets="@../../css/settle-credit-dialog.css"
+            xmlns="http://javafx.com/javafx/25"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.gui.kline.controller.form.SettleCreditDialogController">
+
+    <StackPane AnchorPane.topAnchor="0"
+               AnchorPane.bottomAnchor="0"
+               AnchorPane.leftAnchor="0"
+               AnchorPane.rightAnchor="0">
+
+        <VBox styleClass="modal-card" maxWidth="520" minWidth="380" maxHeight="480" spacing="0">
+
+            <HBox alignment="CENTER_LEFT" spacing="10" styleClass="modal-header">
+                <VBox.margin><Insets top="24" left="24" right="24" bottom="16" /></VBox.margin>
+
+                <StackPane styleClass="header-icon">
+                    <SVGPath styleClass="header-icon-path"
+                             content="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 13.41V8h-2v7.41L8.41 12.83 7 14.24l5 5 5-5-1.41-1.41L13 15.41z" />
+                </StackPane>
+
+                <VBox spacing="2">
+                    <Label text="Settle Credit" styleClass="modal-title" />
+                    <Label text="Record a settlement payment from work done" styleClass="modal-subtitle" />
+                </VBox>
+            </HBox>
+
+            <Region styleClass="modal-divider" prefHeight="1" maxHeight="1" />
+
+            <VBox spacing="16">
+                <padding><Insets top="20" left="24" right="24" bottom="8" /></padding>
+
+                <VBox spacing="6">
+                    <Label text="SELECT WORKER" styleClass="form-label" />
+                    <ComboBox fx:id="cmbWorker"
+                              promptText="Choose a worker..."
+                              styleClass="form-combo"
+                              maxWidth="Infinity" />
+                </VBox>
+
+                <GridPane hgap="14">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="ALWAYS" />
+                        <ColumnConstraints hgrow="ALWAYS" />
+                    </columnConstraints>
+                    <rowConstraints>
+                        <RowConstraints />
+                    </rowConstraints>
+
+                    <VBox spacing="6" GridPane.columnIndex="0">
+                        <Label text="AMOUNT (RS.)" styleClass="form-label" />
+                        <TextField fx:id="txtAmount"
+                                   promptText="0.00"
+                                   styleClass="form-input" />
+                    </VBox>
+
+                    <VBox spacing="6" GridPane.columnIndex="1">
+                        <Label text="DATE" styleClass="form-label" />
+                        <DatePicker fx:id="datePicker"
+                                    styleClass="form-datepicker"
+                                    maxWidth="Infinity" />
+                    </VBox>
+                </GridPane>
+
+                <VBox spacing="6">
+                    <Label text="NOTE" styleClass="form-label" />
+                    <TextField fx:id="txtNote"
+                               promptText="e.g. Settled from last week work"
+                               styleClass="form-input" />
+                </VBox>
+
+            </VBox>
+
+            <Region styleClass="modal-divider" prefHeight="1" maxHeight="1">
+                <VBox.margin><Insets top="20" /></VBox.margin>
+            </Region>
+
+            <HBox alignment="CENTER_RIGHT" spacing="12">
+                <padding><Insets top="16" left="24" right="24" bottom="24" /></padding>
+                <Button fx:id="btnCancel"
+                        text="Cancel"
+                        styleClass="btn-cancel"
+                        onAction="#onCancel"
+                        prefWidth="110"
+                        prefHeight="42" />
+                <Button fx:id="btnRecord"
+                        text="Record Settlement"
+                        styleClass="btn-record"
+                        onAction="#onRecord"
+                        prefWidth="170"
+                        prefHeight="42" />
+            </HBox>
+
+        </VBox>
+    </StackPane>
+</AnchorPane>
