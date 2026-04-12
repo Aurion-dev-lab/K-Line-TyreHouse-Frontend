@@ -16,8 +16,8 @@
 
          <HBox alignment="CENTER_LEFT">
             <VBox spacing="4.0" HBox.hgrow="ALWAYS">
-               <Label style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #1a1a2e;" text="Worker Management" />
-               <Label style="-fx-font-size: 13px; -fx-text-fill: #888888;" text="Manage your team and track daily attendance" />
+               <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;" text="Worker Management" />
+               <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;" text="Manage your team and track daily attendance" />
             </VBox>
             <AnchorPane>
                <children>
@@ -27,7 +27,7 @@
 
             <Region minWidth="12.0" />
 
-            <Button fx:id="addWorkerBtn" onAction="#handleAddWorker" style="-fx-background-color: #22c55e; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 8; -fx-padding: 10 20 10 20; -fx-cursor: hand;" text="  Add New Worker">
+            <Button fx:id="addWorkerBtn" onAction="#handleAddWorker" style="-fx-background-color: #10B981; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 8; -fx-padding: 10 20 10 20; -fx-cursor: hand;" text="  Add New Worker">
                <graphic>
                   <Label style="-fx-font-size: 13px; -fx-text-fill: white;" text="👤+" />
                </graphic>

@@ -102,8 +102,7 @@ public class LayoutController {
     @FXML private void onWorkers()     { setActive(btnWorkers, "Workers", "workers"); }
     @FXML private void onInventory()   { setActive(btnInventory, "Inventory", "inventory"); }
     @FXML private void onInvoices()    { setActive(btnInvoices, "Invoices & Billing", "invoices"); }
-    @FXML private void onSales()       { setActive(btnSales, "Sales", "sales"); }
-    @FXML private void onServices()    { setActive(btnServices, "Services", "services"); }
+    @FXML private void onSales()       { setActive(btnSales, "Credit Sales", "credit-sales"); }
     @FXML private void onTyreExports() { setActive(btnTyreExports, "Tyre Exports", "tyre-exports"); }
     @FXML private void onSalary()      { setActive(btnSalary, "Salary Management", "salary"); }
     @FXML private void onAnalytics()   { setActive(btnAnalytics, "Analytics Charts", "analytics"); }

@@ -17,9 +17,9 @@
                     <children>
                         <VBox spacing="5.0">
                             <children>
-                                <Label style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"
+                                <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;"
                                        text="Service Management" />
-                                <Label style="-fx-text-fill: #6b7280; -fx-font-size: 14px;"
+                                <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"
                                        text="Track garage work and service records" />
                             </children>
                         </VBox>

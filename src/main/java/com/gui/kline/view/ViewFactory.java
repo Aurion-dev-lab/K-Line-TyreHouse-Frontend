@@ -35,10 +35,11 @@ public class ViewFactory {
         return null;
     }
 
-    public void getForm(String view, Stage ownerStage) {
+    public <T> T getForm(String view, Stage ownerStage) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gui/kline/view/" + view + ".fxml"));
             Parent root = loader.load();
+            T controller = loader.getController();
 
             Stage stage = new Stage();
             stage.initStyle(StageStyle.TRANSPARENT);
@@ -54,17 +55,16 @@ public class ViewFactory {
 
             ownerStage.xProperty().addListener((obs, oldVal, newVal) -> stage.setX(newVal.doubleValue()));
             ownerStage.yProperty().addListener((obs, oldVal, newVal) -> stage.setY(newVal.doubleValue()));
-            ownerStage.widthProperty().addListener((obs, oldVal, newVal) -> {
-                stage.setWidth(newVal.doubleValue());
-            });
-            ownerStage.heightProperty().addListener((obs, oldVal, newVal) -> {
-                stage.setHeight(newVal.doubleValue());
-            });
+            ownerStage.widthProperty().addListener((obs, oldVal, newVal) -> stage.setWidth(newVal.doubleValue()));
+            ownerStage.heightProperty().addListener((obs, oldVal, newVal) -> stage.setHeight(newVal.doubleValue()));
 
-            stage.showAndWait();
+            stage.show();
+
+            return controller;
 
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
     }
 }

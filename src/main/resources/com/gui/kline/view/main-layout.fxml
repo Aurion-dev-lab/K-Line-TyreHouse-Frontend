@@ -40,11 +40,8 @@
                     <Button fx:id="btnInvoices" maxWidth="Infinity" onAction="#onInvoices" styleClass="nav-button" text="    Invoices &amp; Billing">
                         <graphic><FontIcon iconLiteral="fas-file-alt" /></graphic>
                     </Button>
-                    <Button fx:id="btnSales" maxWidth="Infinity" onAction="#onSales" styleClass="nav-button" text="   Sales">
+                    <Button fx:id="btnSales" maxWidth="Infinity" onAction="#onSales" styleClass="nav-button" text="   Credit Sales">
                         <graphic><FontIcon iconLiteral="fas-shopping-cart" /></graphic>
-                    </Button>
-                    <Button fx:id="btnServices" maxWidth="Infinity" onAction="#onServices" styleClass="nav-button" text="   Services">
-                        <graphic><FontIcon iconLiteral="fas-tools" /></graphic>
                     </Button>
                     <Button fx:id="btnTyreExports" maxWidth="Infinity" onAction="#onTyreExports" styleClass="nav-button" text="  Tyre Exports">
                         <graphic><FontIcon iconLiteral="fas-truck" /></graphic>
@@ -60,12 +57,13 @@
                     </Button>
 
                     <Region prefHeight="16" />
-
-                    <Button fx:id="btnQuickActions" maxWidth="Infinity" onAction="#onQuickActions" prefHeight="49.0" prefWidth="230.0" styleClass="quick-action-button" text="   Manage Quick Actions">
+      
+                                <Button fx:id="btnQuickActions" maxWidth="Infinity" onAction="#onQuickActions" prefHeight="42.0" prefWidth="218.0" styleClass="quick-action-button" text="   Manage Quick Actions">
                         <graphic>
-                     <FontIcon iconColor="white" iconLiteral="fas-bolt" text="" /></graphic>
+                     <FontIcon iconColor="white" iconLiteral="fas-bolt" text="" />
+                  </graphic>
                     </Button>
-
+      
                     <Region prefHeight="16" />
 
                 </VBox>
