@@ -17,7 +17,7 @@ public class LayoutController {
 
     @FXML private Button btnHideQuick, btnCollapse;
     @FXML private Button btnDashboard, btnWorkers, btnInventory, btnInvoices,
-            btnSales, btnServices, btnTyreExports, btnSalary,
+            btnSales, btnTyreExports, btnSalary,
             btnAnalytics, btnReports, btnQuickActions;
 
     private Button activeButton;
