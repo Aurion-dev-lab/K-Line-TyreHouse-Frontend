@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="0" styleClass="page-root" stylesheets="@../css/sales-view.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gui.kline.controller.CreditSalesController">
+<VBox spacing="0" styleClass="page-root" stylesheets="@../css/sales-view.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.gui.kline.controller.CreditSalesController">
 
     <HBox alignment="CENTER_LEFT" spacing="16" styleClass="page-header-bar">
         <padding>
