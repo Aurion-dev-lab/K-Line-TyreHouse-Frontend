@@ -18,8 +18,8 @@
 
 <AnchorPane styleClass="modal-overlay"
             stylesheets="@../../css/settle-credit-dialog.css"
-            xmlns="http://javafx.com/javafx/25"
-            xmlns:fx="http://javafx.com/fxml/1"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.gui.kline.controller.form.SettleCreditDialogController">
 
     <StackPane AnchorPane.topAnchor="0"

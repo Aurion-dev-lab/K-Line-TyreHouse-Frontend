@@ -21,6 +21,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class CreditSalesController implements Initializable {
+
     @FXML private Button btnNewCredit;
     @FXML private TableView<CreditSaleRow> tblCreditSales;
     @FXML private TableColumn<CreditSaleRow, String>  colDate;
@@ -50,20 +51,21 @@ public class CreditSalesController implements Initializable {
     private final ObservableList<CreditSaleRow> creditSaleList =
             FXCollections.observableArrayList();
 
-    private CreditSaleRow         selectedSale       = null;
-    private CreditSaleDetail currentSaleDetail  = null;
-    private boolean               isEditMode         = false;
+    private CreditSaleRow    selectedSale      = null;
+    private CreditSaleDetail currentSaleDetail = null;
+    private boolean          isEditMode        = false;
 
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setupTableColumns();
         setupChoiceBoxes();
-        setupEventHandlers();
+        // No table selection listener — panel only opens via View button
         loadSampleData();
         tblCreditSales.setItems(creditSaleList);
-        disableDetailPanel();
+        hideDetailPanel(); // hidden by default, not dimmed
     }
 
     private void setupTableColumns() {
@@ -80,7 +82,6 @@ public class CreditSalesController implements Initializable {
 
         colStatus.setCellFactory(col -> new TableCell<>() {
             private final Label pill = new Label();
-
             private static final String BASE_STYLE =
                     "-fx-padding: 4 9 4 9; -fx-background-radius: 6; " +
                             "-fx-font-size: 10px; -fx-font-weight: bold;";
@@ -91,14 +92,13 @@ public class CreditSalesController implements Initializable {
                 if (empty || item == null) { setGraphic(null); return; }
                 pill.setText(item);
                 switch (item) {
-                    case "PENDING" ->
-                            pill.setStyle(BASE_STYLE + "-fx-background-color: #fef3c7; -fx-text-fill: #92400e;");
-                    case "PARTIAL" ->
-                            pill.setStyle(BASE_STYLE + "-fx-background-color: #dbeafe; -fx-text-fill: #1e40af;");
-                    case "PAID" ->
-                            pill.setStyle(BASE_STYLE + "-fx-background-color: #dcfce7; -fx-text-fill: #15803d;");
-                    default ->
-                            pill.setStyle(BASE_STYLE);
+                    case "PENDING" -> pill.setStyle(BASE_STYLE +
+                            "-fx-background-color: #fef3c7; -fx-text-fill: #92400e;");
+                    case "PARTIAL" -> pill.setStyle(BASE_STYLE +
+                            "-fx-background-color: #dbeafe; -fx-text-fill: #1e40af;");
+                    case "PAID"    -> pill.setStyle(BASE_STYLE +
+                            "-fx-background-color: #dcfce7; -fx-text-fill: #15803d;");
+                    default        -> pill.setStyle(BASE_STYLE);
                 }
                 setGraphic(pill);
                 setText(null);
@@ -109,17 +109,33 @@ public class CreditSalesController implements Initializable {
             @Override
             protected void updateItem(Double item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? null : "Rs. " + String.format("%,.0f", item));
+                setText(empty || item == null ? null :
+                        "Rs. " + String.format("%,.0f", item));
             }
         });
 
         colAction.setCellFactory(param -> new TableCell<>() {
             private final Button btn = new Button("View");
             {
-                btn.setStyle("-fx-background-color: transparent; -fx-border-color: rgba(0,0,0,0.12); " +
-                        "-fx-border-radius: 6; -fx-font-size: 11px; -fx-text-fill: #666666; " +
-                        "-fx-padding: 4 10 4 10; -fx-cursor: hand;");
-                btn.setOnAction(e -> onViewCredit(getTableView().getItems().get(getIndex())));
+                btn.setStyle(
+                        "-fx-background-color: transparent; " +
+                                "-fx-border-color: rgba(0,0,0,0.12); " +
+                                "-fx-border-radius: 6; -fx-font-size: 11px; " +
+                                "-fx-text-fill: #666666; -fx-padding: 4 10 4 10; " +
+                                "-fx-cursor: hand;");
+                btn.setOnAction(e -> {
+                    CreditSaleRow row = getTableView().getItems().get(getIndex());
+                    // Toggle: clicking same row again hides the panel
+                    if (selectedSale != null &&
+                            selectedSale.getCreditId().equals(row.getCreditId()) &&
+                            rightPanel.isVisible()) {
+                        hideDetailPanel();
+                        tblCreditSales.getSelectionModel().clearSelection();
+                        selectedSale = null;
+                    } else {
+                        onViewCredit(row);
+                    }
+                });
             }
             @Override
             protected void updateItem(Void item, boolean empty) {
@@ -131,13 +147,9 @@ public class CreditSalesController implements Initializable {
 
     private void setupChoiceBoxes() {
         cboPartCategory.setItems(FXCollections.observableArrayList(
-                "Engine Parts", "Suspension", "Electrical", "Body Parts", "Accessories", "Consumables"));
+                "Engine Parts", "Suspension", "Electrical",
+                "Body Parts", "Accessories", "Consumables"));
         cboPartCategory.getSelectionModel().selectFirst();
-    }
-
-    private void setupEventHandlers() {
-        tblCreditSales.getSelectionModel().selectedItemProperty()
-                .addListener((obs, old, nw) -> { if (nw != null) onViewCredit(nw); });
     }
 
     @FXML
@@ -149,18 +161,17 @@ public class CreditSalesController implements Initializable {
     @FXML
     private void onSearch(javafx.scene.input.KeyEvent event) {
         String q = txtSearch.getText().toLowerCase().trim();
-        tblCreditSales.setItems(q.isEmpty()
-                ? creditSaleList
-                : creditSaleList.filtered(sale ->
-                sale.getCustomer().toLowerCase().contains(q) ||
-                        sale.getDate().toLowerCase().contains(q) ||
-                        sale.getCreditId().toLowerCase().contains(q)));
+        tblCreditSales.setItems(q.isEmpty() ? creditSaleList :
+                creditSaleList.filtered(sale ->
+                        sale.getCustomer().toLowerCase().contains(q) ||
+                                sale.getDate().toLowerCase().contains(q)     ||
+                                sale.getCreditId().toLowerCase().contains(q)));
     }
 
     private void onViewCredit(CreditSaleRow sale) {
         selectedSale = sale;
-        isEditMode = true;
-        enableDetailPanel();
+        isEditMode   = true;
+        showDetailPanel();
         loadSaleDetail(sale);
     }
 
@@ -172,31 +183,27 @@ public class CreditSalesController implements Initializable {
         }
 
         String category = cboPartCategory.getValue();
-        String desc = txtPartDesc.getText().trim();
+        String desc     = txtPartDesc.getText().trim();
 
         if (category == null || category.isBlank()) {
-            showError("Please select a part category.");
-            return;
+            showError("Please select a part category."); return;
         }
         if (desc.isBlank()) {
-            showError("Please enter part description.");
-            return;
+            showError("Please enter part description."); return;
         }
 
-        String qtyStr = txtPartQty.getText().trim();
+        String qtyStr   = txtPartQty.getText().trim();
         String priceStr = txtPartPrice.getText().trim();
 
         if (qtyStr.isBlank() || priceStr.isBlank()) {
-            showError("Please enter quantity and unit price.");
-            return;
+            showError("Please enter quantity and unit price."); return;
         }
 
         try {
-            int qty = Integer.parseInt(qtyStr);
+            int    qty   = Integer.parseInt(qtyStr);
             double price = Double.parseDouble(priceStr);
             if (qty <= 0 || price <= 0) {
-                showError("Quantity and price must be greater than 0.");
-                return;
+                showError("Quantity and price must be greater than 0."); return;
             }
 
             Part part = new Part(desc, category, qty, price);
@@ -256,8 +263,8 @@ public class CreditSalesController implements Initializable {
             return;
         }
 
-        String creditId = isEditMode ? selectedSale.getCreditId() : generateCreditId();
-        LocalDate dueDate = currentSaleDetail.getDueDate();
+        String    creditId = isEditMode ? selectedSale.getCreditId() : generateCreditId();
+        LocalDate dueDate  = currentSaleDetail.getDueDate();
 
         CreditSaleRow row = new CreditSaleRow(
                 creditId,
@@ -265,8 +272,7 @@ public class CreditSalesController implements Initializable {
                 currentSaleDetail.getCustomer(),
                 dueDate.toString(),
                 currentSaleDetail.getAmount(),
-                "PENDING"
-        );
+                "PENDING");
 
         if (!isEditMode) creditSaleList.add(0, row);
         showSuccess("Credit sale " + (isEditMode ? "updated" : "created") + " successfully.");
@@ -275,8 +281,8 @@ public class CreditSalesController implements Initializable {
 
     @FXML
     private void onDeselect() {
-        disableDetailPanel();
-        selectedSale = null;
+        hideDetailPanel();
+        selectedSale      = null;
         currentSaleDetail = null;
         tblCreditSales.getSelectionModel().clearSelection();
         tblCreditSales.setItems(creditSaleList);
@@ -316,22 +322,28 @@ public class CreditSalesController implements Initializable {
         clearPartInputs();
     }
 
-    private void enableDetailPanel() {
+    // ── Show / hide (no dim / glass effect) ──────────────────────────────────
+
+    private void showDetailPanel() {
+        rightPanel.setVisible(true);
+        rightPanel.setManaged(true);
         rightPanel.setDisable(false);
         rightPanel.setOpacity(1.0);
     }
 
-    private void disableDetailPanel() {
-        rightPanel.setDisable(true);
-        rightPanel.setOpacity(0.45);
+    private void hideDetailPanel() {
+        rightPanel.setVisible(false);
+        rightPanel.setManaged(false);
         clearDetailPanel();
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+
     private void updateTotals() {
         if (currentSaleDetail == null) return;
-        lblSubtotal.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getSubtotal()));
-        lblPaid.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getPaid()));
-        lblAmountDue.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getAmountDue()));
+        lblSubtotal.setText("Rs. "   + String.format("%,.2f", currentSaleDetail.getSubtotal()));
+        lblPaid.setText("Rs. "       + String.format("%,.2f", currentSaleDetail.getPaid()));
+        lblAmountDue.setText("Rs. "  + String.format("%,.2f", currentSaleDetail.getAmountDue()));
     }
 
     private String generateCreditId() { return "CS" + System.currentTimeMillis(); }
@@ -362,19 +374,16 @@ public class CreditSalesController implements Initializable {
 
         public CreditSaleRow(String creditId, String date, String customer,
                              String dueDate, double amount, String status) {
-            this.creditId = creditId;
-            this.date = date;
-            this.customer = customer;
-            this.dueDate = dueDate;
-            this.amount = amount;
-            this.status = status;
+            this.creditId = creditId; this.date     = date;
+            this.customer = customer; this.dueDate  = dueDate;
+            this.amount   = amount;   this.status   = status;
         }
 
         public String getCreditId() { return creditId; }
-        public String getDate() { return date; }
+        public String getDate()     { return date;     }
         public String getCustomer() { return customer; }
-        public String getDueDate() { return dueDate; }
-        public double getAmount() { return amount; }
-        public String getStatus() { return status; }
+        public String getDueDate()  { return dueDate;  }
+        public double getAmount()   { return amount;   }
+        public String getStatus()   { return status;   }
     }
 }

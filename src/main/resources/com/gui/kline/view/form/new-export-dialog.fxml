@@ -17,8 +17,8 @@
 
 <AnchorPane styleClass="modal-overlay"
             stylesheets="@../../css/new-export-dialog.css"
-            xmlns="http://javafx.com/javafx/21"
-            xmlns:fx="http://javafx.com/fxml/1"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.gui.kline.controller.form.NewExportDialogController">
 
     <StackPane AnchorPane.topAnchor="0"

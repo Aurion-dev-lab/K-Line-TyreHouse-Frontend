@@ -16,8 +16,8 @@
 
 <AnchorPane styleClass="modal-overlay"
            stylesheets="@../../css/record-service-dialog.css"
-           xmlns="http://javafx.com/javafx/25"
-           xmlns:fx="http://javafx.com/fxml/1"
+           xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
            fx:controller="com.gui.kline.controller.form.RecordServiceDialogController">
 
     <StackPane AnchorPane.topAnchor="0"
