@@ -13,17 +13,23 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="0" styleClass="page-root" stylesheets="@../css/invoices.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.gui.kline.controller.InvoicesController">
+<VBox spacing="0" styleClass="page-root" stylesheets="@../css/invoices.css"
+      xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gui.kline.controller.InvoicesController">
 
     <HBox alignment="CENTER_LEFT" spacing="16" styleClass="page-header-bar">
         <padding>
             <Insets bottom="18" left="28" right="28" top="22" />
         </padding>
         <VBox spacing="3" HBox.hgrow="ALWAYS">
-            <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;" text="Invoice Management" />
-            <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;" text="Create and manage sales &amp; service invoices" />
+            <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;"
+                   text="Invoice Management" />
+            <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"
+                   text="Create and manage sales &amp; service invoices" />
         </VBox>
-        <Button fx:id="btnNewInvoice" onAction="#onNewInvoice" styleClass="btn-primary" text="＋  New Quatation" />
+        <Button fx:id="btnNewInvoice" onAction="#onNewInvoice"
+                styleClass="btn-primary" text="＋  New Quotation" />
     </HBox>
 
     <HBox spacing="14" VBox.vgrow="ALWAYS">
@@ -31,6 +37,7 @@
             <Insets bottom="14" left="20" right="20" top="0" />
         </padding>
 
+        <!-- ── Invoice list (always visible, expands when panel is hidden) ── -->
         <VBox spacing="0" styleClass="left-card" HBox.hgrow="ALWAYS">
 
             <HBox alignment="CENTER_LEFT" spacing="12" styleClass="table-header-bar">
@@ -38,17 +45,20 @@
                     <Insets bottom="13" left="20" right="16" top="13" />
                 </padding>
                 <Label styleClass="card-title" text="Invoice List" HBox.hgrow="ALWAYS" />
-                <TextField fx:id="txtSearch" onKeyReleased="#onSearch" prefHeight="32" prefWidth="200" promptText="⌕  Search…" styleClass="search-field" />
+                <TextField fx:id="txtSearch" onKeyReleased="#onSearch"
+                           prefHeight="32" prefWidth="200"
+                           promptText="⌕  Search…" styleClass="search-field" />
             </HBox>
 
-            <TableView fx:id="tblInvoices" maxHeight="1.7976931348623157E308" styleClass="main-table" VBox.vgrow="ALWAYS">
+            <TableView fx:id="tblInvoices" maxHeight="1.7976931348623157E308"
+                       styleClass="main-table" VBox.vgrow="ALWAYS">
                 <columns>
-                    <TableColumn fx:id="colDate" prefWidth="100" text="DATE" />
+                    <TableColumn fx:id="colDate"     prefWidth="100" text="DATE" />
                     <TableColumn fx:id="colCustomer" prefWidth="150" text="CUSTOMER" />
-                    <TableColumn fx:id="colType" prefWidth="90" text="TYPE" />
-                    <TableColumn fx:id="colItems" prefWidth="60" text="ITEMS" />
-                    <TableColumn fx:id="colTotal" prefWidth="110" text="TOTAL" />
-                    <TableColumn fx:id="colAction" prefWidth="70" text="VIEW" />
+                    <TableColumn fx:id="colType"     prefWidth="90"  text="TYPE" />
+                    <TableColumn fx:id="colItems"    prefWidth="60"  text="ITEMS" />
+                    <TableColumn fx:id="colTotal"    prefWidth="110" text="TOTAL" />
+                    <TableColumn fx:id="colAction"   prefWidth="70"  text="VIEW" />
                 </columns>
                 <columnResizePolicy>
                     <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -57,7 +67,11 @@
 
         </VBox>
 
-        <VBox fx:id="rightPanel" minWidth="310" prefWidth="355" spacing="0" styleClass="right-panel">
+        <!-- ── Right panel: hidden until View is clicked ── -->
+        <VBox fx:id="rightPanel"
+              visible="false" managed="false"
+              minWidth="310" prefWidth="355"
+              spacing="0" styleClass="right-panel">
 
             <HBox alignment="CENTER_LEFT" spacing="8" styleClass="panel-header">
                 <padding>
@@ -93,7 +107,9 @@
                 </VBox.margin>
             </Label>
 
-            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="items-scroll" vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS">
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                        styleClass="items-scroll" vbarPolicy="AS_NEEDED"
+                        VBox.vgrow="ALWAYS">
                 <content>
                     <VBox fx:id="vboxLineItems" spacing="0" styleClass="line-items-box" />
                 </content>
@@ -106,28 +122,27 @@
                     <Insets bottom="10" left="18" right="18" top="12" />
                 </padding>
                 <HBox alignment="CENTER_LEFT">
-               <AnchorPane HBox.hgrow="ALWAYS">
-                  <children>
-                          <Label styleClass="tot-label" text="Subtotal" />
-                  </children>
-               </AnchorPane>
+                    <AnchorPane HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label styleClass="tot-label" text="Subtotal" />
+                        </children>
+                    </AnchorPane>
                     <Label fx:id="lblSubtotal" styleClass="tot-val" text="Rs. 0.00" />
                 </HBox>
                 <HBox alignment="CENTER_LEFT">
-               <AnchorPane HBox.hgrow="ALWAYS">
-                  <children>
-                          <Label styleClass="tot-label" text="Tax (0%)" />
-                  </children>
-               </AnchorPane>
+                    <AnchorPane HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label styleClass="tot-label" text="Tax (0%)" />
+                        </children>
+                    </AnchorPane>
                     <Label fx:id="lblTax" styleClass="tot-val" text="Rs. 0.00" />
                 </HBox>
-
                 <HBox alignment="CENTER_LEFT">
-               <AnchorPane HBox.hgrow="ALWAYS">
-                  <children>
-                          <Label styleClass="grand-label" text="Grand Total" />
-                  </children>
-               </AnchorPane>
+                    <AnchorPane HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label styleClass="grand-label" text="Grand Total" />
+                        </children>
+                    </AnchorPane>
                     <Label fx:id="lblGrandTotal" styleClass="grand-val" text="Rs. 0.00" />
                 </HBox>
             </VBox>
@@ -141,26 +156,39 @@
                 <Label styleClass="section-mini-label" text="ADD TO THIS INVOICE" />
 
                 <HBox alignment="CENTER_LEFT" spacing="6">
-                    <ChoiceBox fx:id="cboInvType" onAction="#onInvTypeChange" prefHeight="32" prefWidth="92" styleClass="field-choice" />
-                    <ChoiceBox fx:id="cboInvProduct" maxWidth="1.7976931348623157E308" prefHeight="32" styleClass="field-choice" HBox.hgrow="ALWAYS" />
+                    <ChoiceBox fx:id="cboInvType" onAction="#onInvTypeChange"
+                               prefHeight="32" prefWidth="92" styleClass="field-choice" />
+                    <ChoiceBox fx:id="cboInvProduct" maxWidth="1.7976931348623157E308"
+                               prefHeight="32" styleClass="field-choice" HBox.hgrow="ALWAYS" />
                 </HBox>
 
-                <TextField fx:id="txtInvService" managed="false" prefHeight="32" promptText="Service description…" styleClass="field-input" visible="false" />
+                <TextField fx:id="txtInvService" managed="false" prefHeight="32"
+                           promptText="Service description…"
+                           styleClass="field-input" visible="false" />
 
                 <HBox spacing="6">
-                    <TextField fx:id="txtInvQty" prefHeight="32" prefWidth="64" promptText="Qty" styleClass="field-input field-narrow" />
-                    <TextField fx:id="txtInvAmount" prefHeight="32" promptText="Amount (Rs.)" styleClass="field-input" HBox.hgrow="ALWAYS" />
+                    <TextField fx:id="txtInvQty" prefHeight="32" prefWidth="64"
+                               promptText="Qty" styleClass="field-input field-narrow" />
+                    <TextField fx:id="txtInvAmount" prefHeight="32"
+                               promptText="Amount (Rs.)" styleClass="field-input"
+                               HBox.hgrow="ALWAYS" />
                 </HBox>
 
-                <Button fx:id="btnAddToInvoice" maxWidth="1.7976931348623157E308" onAction="#onAddToInvoice" styleClass="btn-add-inv" text="＋  Add Line" />
+                <Button fx:id="btnAddToInvoice" maxWidth="1.7976931348623157E308"
+                        onAction="#onAddToInvoice"
+                        styleClass="btn-add-inv" text="＋  Add Line" />
             </VBox>
 
             <VBox spacing="8" styleClass="gen-box">
                 <padding>
                     <Insets bottom="18" left="18" right="18" top="10" />
                 </padding>
-                <Button fx:id="btnGenerate" maxWidth="1.7976931348623157E308" onAction="#onGenerateInvoice" styleClass="btn-generate" text="Generate Invoice" />
-                <Button fx:id="btnDeselect" maxWidth="1.7976931348623157E308" onAction="#onDeselect" styleClass="btn-deselect" text="Close" />
+                <Button fx:id="btnGenerate" maxWidth="1.7976931348623157E308"
+                        onAction="#onGenerateInvoice"
+                        styleClass="btn-generate" text="Generate Invoice" />
+                <Button fx:id="btnDeselect" maxWidth="1.7976931348623157E308"
+                        onAction="#onDeselect"
+                        styleClass="btn-deselect" text="Close" />
             </VBox>
 
         </VBox>
