@@ -27,6 +27,7 @@ import java.time.LocalDate;
 import java.util.*;
 
 public class InvoicesController implements Initializable {
+
     @FXML private Button btnNewInvoice;
     @FXML private TableView<InvoiceRow>            tblInvoices;
     @FXML private TableColumn<InvoiceRow, String>  colDate;
@@ -53,6 +54,7 @@ public class InvoicesController implements Initializable {
     @FXML private Button            btnAddToInvoice;
     @FXML private Button            btnGenerate;
     @FXML private Button            btnDeselect;
+
     private final ObservableList<InvoiceRow> invoiceList =
             FXCollections.observableArrayList();
     private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
@@ -63,6 +65,7 @@ public class InvoicesController implements Initializable {
     private InvoiceRow    selectedInvoice      = null;
     private InvoiceDetail currentInvoiceDetail = null;
     private boolean       isEditMode           = false;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setupTableColumns();
@@ -71,7 +74,7 @@ public class InvoicesController implements Initializable {
         loadProductMap();
         loadFromLocal();
         tblInvoices.setItems(invoiceList);
-        disableDetailPanel();
+        hideDetailPanel(); // hidden by default, not dimmed
     }
 
     private void loadProductMap() {
@@ -96,7 +99,8 @@ public class InvoicesController implements Initializable {
         colType.setCellFactory(col -> new TableCell<>() {
             private final Label pill = new Label();
             {
-                pill.setStyle("-fx-padding: 2 9 2 9; -fx-background-radius: 20; -fx-font-size: 10px; -fx-font-weight: bold;");
+                pill.setStyle("-fx-padding: 2 9 2 9; -fx-background-radius: 20; " +
+                        "-fx-font-size: 10px; -fx-font-weight: bold;");
             }
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -117,7 +121,8 @@ public class InvoicesController implements Initializable {
             @Override
             protected void updateItem(Double item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? null : "Rs. " + String.format("%,.0f", item));
+                setText(empty || item == null ? null :
+                        "Rs. " + String.format("%,.0f", item));
             }
         });
 
@@ -144,8 +149,7 @@ public class InvoicesController implements Initializable {
     }
 
     private void setupEventHandlers() {
-        tblInvoices.getSelectionModel().selectedItemProperty()
-                .addListener((obs, old, nw) -> { if (nw != null) onViewInvoice(nw); });
+        // Removed table selection listener — panel only opens via View button
     }
 
     @FXML
@@ -157,16 +161,17 @@ public class InvoicesController implements Initializable {
     @FXML
     private void onSearch(javafx.scene.input.KeyEvent event) {
         String q = txtSearch.getText().toLowerCase().trim();
-        tblInvoices.setItems(q.isEmpty() ? invoiceList : invoiceList.filtered(inv ->
-                inv.getCustomer().toLowerCase().contains(q) ||
-                        inv.getDate().toLowerCase().contains(q)     ||
-                        inv.getInvoiceId().toLowerCase().contains(q)));
+        tblInvoices.setItems(q.isEmpty() ? invoiceList :
+                invoiceList.filtered(inv ->
+                        inv.getCustomer().toLowerCase().contains(q) ||
+                                inv.getDate().toLowerCase().contains(q)     ||
+                                inv.getInvoiceId().toLowerCase().contains(q)));
     }
 
     private void onViewInvoice(InvoiceRow invoice) {
         selectedInvoice = invoice;
         isEditMode      = true;
-        enableDetailPanel();
+        showDetailPanel();
         loadInvoiceDetail(invoice);
     }
 
@@ -196,13 +201,17 @@ public class InvoicesController implements Initializable {
 
         if ("Sales".equals(type)) {
             String product = cboInvProduct.getValue();
-            if (product == null || product.isBlank()) { showError("Please select a product."); return; }
+            if (product == null || product.isBlank()) {
+                showError("Please select a product."); return;
+            }
             description = product;
             Product p = productMap.get(product);
             productId = p != null ? p.getId() : null;
         } else {
             String service = txtInvService.getText().trim();
-            if (service.isBlank()) { showError("Please enter a service description."); return; }
+            if (service.isBlank()) {
+                showError("Please enter a service description."); return;
+            }
             description = service;
         }
 
@@ -210,14 +219,15 @@ public class InvoicesController implements Initializable {
         String amountStr = txtInvAmount.getText().trim();
 
         if (qtyStr.isBlank() || amountStr.isBlank()) {
-            showError("Please enter quantity and amount.");
-            return;
+            showError("Please enter quantity and amount."); return;
         }
 
         try {
             int    qty    = Integer.parseInt(qtyStr);
             double amount = Double.parseDouble(amountStr);
-            if (qty <= 0 || amount <= 0) { showError("Quantity and amount must be greater than 0."); return; }
+            if (qty <= 0 || amount <= 0) {
+                showError("Quantity and amount must be greater than 0."); return;
+            }
 
             LineItem item = new LineItem(description, type, qty, amount, productId);
             currentInvoiceDetail.addLineItem(item);
@@ -229,6 +239,7 @@ public class InvoicesController implements Initializable {
             showError("Invalid quantity or amount.");
         }
     }
+
     private void addLineItemToPanel(LineItem item) {
         HBox row = new HBox(10);
         row.getStyleClass().add("line-item-row");
@@ -270,12 +281,14 @@ public class InvoicesController implements Initializable {
 
     @FXML
     private void onGenerateInvoice(ActionEvent event) {
-        if (currentInvoiceDetail == null || currentInvoiceDetail.getLineItems().isEmpty()) {
+        if (currentInvoiceDetail == null ||
+                currentInvoiceDetail.getLineItems().isEmpty()) {
             showError("Add at least one line item before generating.");
             return;
         }
-        String invoiceId = isEditMode ? selectedInvoice.getInvoiceId() : generateInvoiceId();
-        String type      = currentInvoiceDetail.getLineItems().get(0).getType();
+        String invoiceId = isEditMode ?
+                selectedInvoice.getInvoiceId() : generateInvoiceId();
+        String type = currentInvoiceDetail.getLineItems().get(0).getType();
 
         InvoiceRow row = new InvoiceRow(invoiceId, LocalDate.now().toString(),
                 currentInvoiceDetail.getCustomer(), type,
@@ -324,7 +337,7 @@ public class InvoicesController implements Initializable {
 
     @FXML
     private void onDeselect(ActionEvent event) {
-        disableDetailPanel();
+        hideDetailPanel();
         selectedInvoice      = null;
         currentInvoiceDetail = null;
         tblInvoices.getSelectionModel().clearSelection();
@@ -361,21 +374,27 @@ public class InvoicesController implements Initializable {
         clearLineItemInputs();
     }
 
-    private void enableDetailPanel() {
+    // ── Show/hide (no dim/glass effect) ──────────────────────────────────────
+
+    private void showDetailPanel() {
+        rightPanel.setVisible(true);
+        rightPanel.setManaged(true);
         rightPanel.setDisable(false);
         rightPanel.setOpacity(1.0);
     }
 
-    private void disableDetailPanel() {
-        rightPanel.setDisable(true);
-        rightPanel.setOpacity(0.45);
+    private void hideDetailPanel() {
+        rightPanel.setVisible(false);
+        rightPanel.setManaged(false);
         clearDetailPanel();
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+
     private void updateTotals() {
         if (currentInvoiceDetail == null) return;
-        lblSubtotal.setText("Rs. " + String.format("%,.2f", currentInvoiceDetail.getSubtotal()));
-        lblTax.setText("Rs. "      + String.format("%,.2f", currentInvoiceDetail.getTax()));
+        lblSubtotal.setText("Rs. "  + String.format("%,.2f", currentInvoiceDetail.getSubtotal()));
+        lblTax.setText("Rs. "       + String.format("%,.2f", currentInvoiceDetail.getTax()));
         lblGrandTotal.setText("Rs. "+ String.format("%,.2f", currentInvoiceDetail.getGrandTotal()));
     }
 

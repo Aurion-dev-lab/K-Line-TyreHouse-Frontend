@@ -6,10 +6,10 @@ import com.gui.kline.utils.AlertUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
-
-import java.io.IOException;
+import javafx.stage.StageStyle;
 
 public class App extends Application {
+
     @Override
     public void start(Stage stage) throws IOException {
         try {

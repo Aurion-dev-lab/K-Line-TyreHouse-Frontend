@@ -16,72 +16,90 @@
 <AnchorPane prefHeight="700.0" prefWidth="1200.0" styleClass="quick-actions-panel" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gui.kline.controller.LayoutController">
     <children>
         <VBox fx:id="sidebarContainer" prefWidth="260.0" styleClass="sidebar" stylesheets="@../css/sidebar.css" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.topAnchor="0">
-         <AnchorPane prefHeight="81.0" prefWidth="260.0">
-            <children>
-                   <StackPane layoutX="14.0" layoutY="21.0" styleClass="logo-container">
-                       <FontIcon iconColor="white" iconLiteral="fas-wrench" iconSize="20" />
-                   </StackPane>
-                   <Label fx:id="lblLogo" layoutX="83.0" layoutY="27.0" prefHeight="27.0" prefWidth="134.0" styleClass="logo-text" text="Auto Services" />
-            </children>
-         </AnchorPane>
-
+            <AnchorPane prefHeight="81.0" prefWidth="260.0">
+                <children>
+                    <StackPane layoutX="14.0" layoutY="21.0" styleClass="logo-container">
+                        <FontIcon iconColor="white" iconLiteral="fas-wrench" iconSize="20" />
+                    </StackPane>
+                    <Label fx:id="lblLogo" layoutX="83.0" layoutY="27.0" prefHeight="27.0" prefWidth="134.0" styleClass="logo-text" text="Auto Services" />
+                </children>
+            </AnchorPane>
             <ScrollPane fitToWidth="true" styleClass="nav-scroll" VBox.vgrow="ALWAYS">
                 <VBox spacing="2">
                     <padding><Insets left="10" right="10" /></padding>
+
                     <Button fx:id="btnDashboard" maxWidth="Infinity" onAction="#onDashboard" prefWidth="232.0" styleClass="nav-button" text="  Dashboard">
                         <graphic><FontIcon iconLiteral="fas-th-large" /></graphic>
                     </Button>
+
                     <Button fx:id="btnWorkers" maxWidth="Infinity" onAction="#onWorkers" styleClass="nav-button" text="  Workers">
                         <graphic><FontIcon iconLiteral="fas-users" /></graphic>
                     </Button>
+
                     <Button fx:id="btnInventory" maxWidth="Infinity" onAction="#onInventory" styleClass="nav-button" text="   Inventory">
                         <graphic><FontIcon iconLiteral="fas-box" /></graphic>
                     </Button>
+
                     <Button fx:id="btnInvoices" maxWidth="Infinity" onAction="#onInvoices" styleClass="nav-button" text="    Invoices &amp; Billing">
                         <graphic><FontIcon iconLiteral="fas-file-alt" /></graphic>
                     </Button>
+
                     <Button fx:id="btnSales" maxWidth="Infinity" onAction="#onSales" styleClass="nav-button" text="   Credit Sales">
                         <graphic><FontIcon iconLiteral="fas-shopping-cart" /></graphic>
                     </Button>
+
+                    <Button fx:id="btnServices" maxWidth="Infinity" onAction="#onServices" styleClass="nav-button" text="   Services">
+                        <graphic><FontIcon iconLiteral="fas-tools" /></graphic>
+                    </Button>
+
                     <Button fx:id="btnTyreExports" maxWidth="Infinity" onAction="#onTyreExports" styleClass="nav-button" text="  Tyre Exports">
                         <graphic><FontIcon iconLiteral="fas-truck" /></graphic>
                     </Button>
+
                     <Button fx:id="btnSalary" maxWidth="Infinity" onAction="#onSalary" styleClass="nav-button" text="     Salary Management">
-                        <graphic><FontIcon iconLiteral="fas-dollar-sign" text="" /></graphic>
+                        <graphic><FontIcon iconLiteral="fas-dollar-sign" /></graphic>
                     </Button>
+
                     <Button fx:id="btnAnalytics" maxWidth="Infinity" onAction="#onAnalytics" styleClass="nav-button" text="   Analytics Charts">
                         <graphic><FontIcon iconLiteral="fas-chart-line" /></graphic>
                     </Button>
+
                     <Button fx:id="btnReports" maxWidth="Infinity" onAction="#onReports" styleClass="nav-button" text="   Reports">
                         <graphic><FontIcon iconLiteral="fas-chart-bar" /></graphic>
                     </Button>
 
                     <Region prefHeight="16" />
-      
-                                <Button fx:id="btnQuickActions" maxWidth="Infinity" onAction="#onQuickActions" prefHeight="42.0" prefWidth="218.0" styleClass="quick-action-button" text="   Manage Quick Actions">
-                        <graphic>
-                     <FontIcon iconColor="white" iconLiteral="fas-bolt" text="" />
-                  </graphic>
-                    </Button>
-      
-                    <Region prefHeight="16" />
 
+                    <Button fx:id="btnQuickActions" maxWidth="Infinity" onAction="#onQuickActions" prefHeight="42.0" prefWidth="218.0" styleClass="quick-action-button" text="    Manage Quick Actions">
+                        <graphic>
+                            <FontIcon iconColor="white" iconLiteral="fas-bolt" />
+                        </graphic>
+                    </Button>
+
+                    <Region prefHeight="16" />
                 </VBox>
             </ScrollPane>
 
             <Separator styleClass="sidebar-separator" />
+
             <Button fx:id="btnCollapse" maxWidth="Infinity" onAction="#onCollapse" styleClass="nav-button, collapse-btn" text="Collapse">
                 <padding><Insets bottom="18" left="20" right="20" top="18" /></padding>
-                <graphic><FontIcon fx:id="iconCollapse" iconLiteral="fas-angle-double-left" /></graphic>
+                <graphic>
+                    <FontIcon fx:id="iconCollapse" iconLiteral="fas-angle-double-left" />
+                </graphic>
             </Button>
         </VBox>
 
         <HBox fx:id="headerbar" alignment="CENTER_LEFT" prefHeight="77.0" spacing="12" styleClass="header-bar" stylesheets="@../css/sidebar.css" AnchorPane.leftAnchor="260.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <padding><Insets left="24" right="16" /></padding>
+
             <Label fx:id="lblPageTitle" styleClass="header-title" text="Dashboard" />
             <Region HBox.hgrow="ALWAYS" />
+
             <Button fx:id="btnHideQuick" onAction="#onHideQuick" styleClass="hide-quick-button" text="Hide Quick">
-                <graphic><FontIcon iconColor="#f59e0b" iconLiteral="fas-bolt" iconSize="14" /></graphic>
+                <graphic>
+                    <FontIcon iconColor="#f59e0b" iconLiteral="fas-bolt" iconSize="14" />
+                </graphic>
             </Button>
             <Button fx:id="btnUpload" onAction="#onUpload" styleClass="hide-quick-button" text="Upload">
                 <graphic><FontIcon iconColor="#10b981" iconLiteral="fas-cloud-upload-alt" iconSize="14" /></graphic>
@@ -99,10 +117,11 @@
             </StackPane>
         </HBox>
 
-        <AnchorPane fx:id="contentPane" layoutY="67.2" prefHeight="700.0" prefWidth="681.0" style="-fx-background-color: #f9fafb;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="260.0" AnchorPane.rightAnchor="260.0" AnchorPane.topAnchor="67.0" />
+        <AnchorPane fx:id="contentPane" style="-fx-background-color: #f9fafb;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="260.0" AnchorPane.rightAnchor="260.0" AnchorPane.topAnchor="67.0" />
 
         <VBox fx:id="quickHide" prefHeight="733.0" prefWidth="260.0" stylesheets="@../css/sidebar.css" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="67.0">
             <children>
+
                 <VBox spacing="5">
                     <padding><Insets bottom="15" left="15" right="15" top="15" /></padding>
                     <HBox alignment="CENTER_LEFT" spacing="8">
@@ -114,7 +133,7 @@
 
                 <Separator />
 
-                <AnchorPane style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
+                <AnchorPane style="-fx-background-color: transparent; -fx-border-color: transparent;">
                     <VBox prefHeight="238.0" prefWidth="260.0" spacing="10">
                         <padding><Insets bottom="15" left="10" right="10" top="15" /></padding>
 
@@ -174,7 +193,9 @@
                         <Label fx:id="lblTotalQuickPrice" styleClass="stats-total-price" text="Rs. 0" />
                     </HBox>
                 </VBox>
+
             </children>
         </VBox>
+
     </children>
 </AnchorPane>

@@ -28,9 +28,23 @@ public class LayoutController {
     private boolean quickActionsVisible = true, isCollapsed = false;
     private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
 
-    private static final double SIDEBAR_FULL = 260.0;
+    private static final double SIDEBAR_FULL  = 260.0;
     private static final double SIDEBAR_SMALL = 65.0;
-    private static final double QUICK_WIDTH = 260.0;
+    private static final double QUICK_WIDTH   = 260.0;
+
+    private static final String[] NAV_TEXTS = {
+            "   Dashboard",
+            "   Workers",
+            "    Inventory",
+            "     Invoices & Billing",
+            "    Credit Sales",
+            "    Services",
+            "   Tyre Exports",
+            "      Salary Management",
+            "    Analytics Charts",
+            "    Reports",
+            "    Manage Quick Actions"
+    };
 
     @FXML
     public void initialize() {
@@ -40,10 +54,9 @@ public class LayoutController {
 
     @FXML
     private void onHideQuick() {
-        if (!(lblPageTitle.getText().equals("Dashboard") ||
-                lblPageTitle.getText().equals("Services"))) {
-            return;
-        }
+        String title = lblPageTitle.getText();
+        if (!(title.equals("Dashboard") || title.equals("Services"))) return;
+
         quickActionsVisible = !quickActionsVisible;
 
         quickHide.setVisible(quickActionsVisible);
@@ -68,6 +81,18 @@ public class LayoutController {
 
         iconCollapse.setIconLiteral(isCollapsed ? "fas-angle-double-right" : "fas-angle-double-left");
         btnCollapse.setText(isCollapsed ? "" : "Collapse");
+
+        Button[] navButtons = {
+                btnDashboard, btnWorkers, btnInventory, btnInvoices,
+                btnSales, btnServices, btnTyreExports, btnSalary,
+                btnAnalytics, btnReports, btnQuickActions
+        };
+
+        for (int i = 0; i < navButtons.length; i++) {
+            if (navButtons[i] != null) {
+                navButtons[i].setText(isCollapsed ? "" : NAV_TEXTS[i]);
+            }
+        }
 
         updateLeftAnchors(sideWidth);
     }
@@ -103,15 +128,16 @@ public class LayoutController {
         AnchorPane.setRightAnchor(contentPane, showQuick ? QUICK_WIDTH : 0.0);
     }
 
-    @FXML private void onDashboard()   { setActive(btnDashboard, "Dashboard", "dashboard"); }
-    @FXML private void onWorkers()     { setActive(btnWorkers, "Workers", "workers"); }
-    @FXML private void onInventory()   { setActive(btnInventory, "Inventory", "inventory"); }
-    @FXML private void onInvoices()    { setActive(btnInvoices, "Invoices & Billing", "invoices"); }
-    @FXML private void onSales()       { setActive(btnSales, "Credit Sales", "credit-sales"); }
-    @FXML private void onTyreExports() { setActive(btnTyreExports, "Tyre Exports", "tyre-exports"); }
-    @FXML private void onSalary()      { setActive(btnSalary, "Salary Management", "salary"); }
-    @FXML private void onAnalytics()   { setActive(btnAnalytics, "Analytics Charts", "analytics"); }
-    @FXML private void onReports()     { setActive(btnReports, "Reports", "reports"); }
+    @FXML private void onDashboard()   { setActive(btnDashboard,   "Dashboard",         "dashboard");   }
+    @FXML private void onWorkers()     { setActive(btnWorkers,     "Workers",            "workers");     }
+    @FXML private void onInventory()   { setActive(btnInventory,   "Inventory",          "inventory");   }
+    @FXML private void onInvoices()    { setActive(btnInvoices,    "Invoices & Billing", "invoices");    }
+    @FXML private void onSales()       { setActive(btnSales,       "Credit Sales",       "credit-sales");}
+    @FXML private void onServices()    { setActive(btnServices,    "Services",           "services");    }
+    @FXML private void onTyreExports() { setActive(btnTyreExports, "Tyre Exports",       "tyre-exports");}
+    @FXML private void onSalary()      { setActive(btnSalary,      "Salary Management",  "salary");      }
+    @FXML private void onAnalytics()   { setActive(btnAnalytics,   "Analytics Charts",   "analytics");   }
+    @FXML private void onReports()     { setActive(btnReports,     "Reports",            "reports");     }
 
     @FXML private void onQuickActions() {
         System.out.println("Manage Quick Actions clicked");

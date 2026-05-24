@@ -20,10 +20,13 @@
             <Insets bottom="18" left="28" right="28" top="22" />
         </padding>
         <VBox spacing="3" HBox.hgrow="ALWAYS">
-            <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;" text="Credit Sales Management" />
-            <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;" text="Track credit sales with parts &amp; due dates" />
+            <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;"
+                   text="Credit Sales Management" />
+            <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"
+                   text="Track credit sales with parts &amp; due dates" />
         </VBox>
-        <Button fx:id="btnNewCredit" onAction="#onNewCredit" styleClass="btn-primary" text="＋  New Credit Sale" />
+        <Button fx:id="btnNewCredit" onAction="#onNewCredit"
+                styleClass="btn-primary" text="＋  New Credit Sale" />
     </HBox>
 
     <HBox spacing="14" VBox.vgrow="ALWAYS">
@@ -31,6 +34,7 @@
             <Insets bottom="14" left="20" right="20" top="0" />
         </padding>
 
+        <!-- ── Credit sales list (always visible, expands when panel hidden) ── -->
         <VBox spacing="0" styleClass="left-card" HBox.hgrow="ALWAYS">
 
             <HBox alignment="CENTER_LEFT" spacing="12" styleClass="table-header-bar">
@@ -38,17 +42,20 @@
                     <Insets bottom="13" left="20" right="16" top="13" />
                 </padding>
                 <Label styleClass="card-title" text="Credit Sales List" HBox.hgrow="ALWAYS" />
-                <TextField fx:id="txtSearch" onKeyReleased="#onSearch" prefHeight="32" prefWidth="200" promptText="⌕  Search…" styleClass="search-field" />
+                <TextField fx:id="txtSearch" onKeyReleased="#onSearch"
+                           prefHeight="32" prefWidth="200"
+                           promptText="⌕  Search…" styleClass="search-field" />
             </HBox>
 
-            <TableView fx:id="tblCreditSales" maxHeight="1.7976931348623157E308" styleClass="main-table" VBox.vgrow="ALWAYS">
+            <TableView fx:id="tblCreditSales" maxHeight="1.7976931348623157E308"
+                       styleClass="main-table" VBox.vgrow="ALWAYS">
                 <columns>
-                    <TableColumn fx:id="colDate" prefWidth="100" text="DATE" />
+                    <TableColumn fx:id="colDate"     prefWidth="100" text="DATE" />
                     <TableColumn fx:id="colCustomer" prefWidth="150" text="CUSTOMER" />
-                    <TableColumn fx:id="colDueDate" prefWidth="100" text="DUE DATE" />
-                    <TableColumn fx:id="colAmount" prefWidth="100" text="AMOUNT" />
-                    <TableColumn fx:id="colStatus" prefWidth="90" text="STATUS" />
-                    <TableColumn fx:id="colAction" prefWidth="70" text="VIEW" />
+                    <TableColumn fx:id="colDueDate"  prefWidth="100" text="DUE DATE" />
+                    <TableColumn fx:id="colAmount"   prefWidth="100" text="AMOUNT" />
+                    <TableColumn fx:id="colStatus"   prefWidth="90"  text="STATUS" />
+                    <TableColumn fx:id="colAction"   prefWidth="70"  text="VIEW" />
                 </columns>
                 <columnResizePolicy>
                     <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -57,14 +64,18 @@
 
         </VBox>
 
-        <VBox fx:id="rightPanel" minWidth="310" prefWidth="355" spacing="0" styleClass="right-panel">
+        <!-- ── Right panel: hidden until View is clicked ── -->
+        <VBox fx:id="rightPanel"
+              visible="false" managed="false"
+              minWidth="310" prefWidth="355"
+              spacing="0" styleClass="right-panel">
 
             <HBox alignment="CENTER_LEFT" spacing="8" styleClass="panel-header">
                 <padding>
                     <Insets bottom="15" left="18" right="18" top="15" />
                 </padding>
                 <Label styleClass="panel-title" text="Credit Sale Detail" HBox.hgrow="ALWAYS" />
-                <Label fx:id="lblCreditId" styleClass="inv-badge" text="#—" />
+                <Label fx:id="lblCreditId"    styleClass="inv-badge"    text="#—" />
                 <Label fx:id="lblCreditBadge" styleClass="credit-badge" text="CREDIT" />
             </HBox>
 
@@ -84,14 +95,15 @@
 
             <Separator styleClass="pnl-sep" />
 
-            <!-- Line Items (Parts) -->
             <Label styleClass="section-mini-label" text="PARTS">
                 <VBox.margin>
                     <Insets bottom="4" left="18" top="10" />
                 </VBox.margin>
             </Label>
 
-            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="items-scroll" vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS">
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                        styleClass="items-scroll" vbarPolicy="AS_NEEDED"
+                        VBox.vgrow="ALWAYS">
                 <content>
                     <VBox fx:id="vboxParts" spacing="8" styleClass="line-items-box" />
                 </content>
@@ -137,24 +149,35 @@
                 </padding>
                 <Label styleClass="section-mini-label" text="ADD PART TO THIS SALE" />
 
-                <ChoiceBox fx:id="cboPartCategory" maxWidth="1.7976931348623157E308" prefHeight="32" styleClass="field-choice" />
+                <ChoiceBox fx:id="cboPartCategory" maxWidth="1.7976931348623157E308"
+                           prefHeight="32" styleClass="field-choice" />
 
-                <TextField fx:id="txtPartDesc" prefHeight="32" promptText="Part description…" styleClass="field-input" />
+                <TextField fx:id="txtPartDesc" prefHeight="32"
+                           promptText="Part description…" styleClass="field-input" />
 
                 <HBox spacing="6">
-                    <TextField fx:id="txtPartQty" prefHeight="32" prefWidth="64" promptText="Qty" styleClass="field-input field-narrow" />
-                    <TextField fx:id="txtPartPrice" prefHeight="32" promptText="Unit Price (Rs.)" styleClass="field-input" HBox.hgrow="ALWAYS" />
+                    <TextField fx:id="txtPartQty" prefHeight="32" prefWidth="64"
+                               promptText="Qty" styleClass="field-input field-narrow" />
+                    <TextField fx:id="txtPartPrice" prefHeight="32"
+                               promptText="Unit Price (Rs.)" styleClass="field-input"
+                               HBox.hgrow="ALWAYS" />
                 </HBox>
 
-                <Button fx:id="btnAddPart" maxWidth="1.7976931348623157E308" onAction="#onAddPart" styleClass="btn-add-inv" text="＋  Add Part" />
+                <Button fx:id="btnAddPart" maxWidth="1.7976931348623157E308"
+                        onAction="#onAddPart"
+                        styleClass="btn-add-inv" text="＋  Add Part" />
             </VBox>
 
             <VBox spacing="8" styleClass="gen-box">
                 <padding>
                     <Insets bottom="18" left="18" right="18" top="10" />
                 </padding>
-                <Button fx:id="btnGenerateSale" maxWidth="1.7976931348623157E308" onAction="#onGenerateSale" styleClass="btn-generate" text="Create Credit Sale" />
-                <Button fx:id="btnDeselect" maxWidth="1.7976931348623157E308" onAction="#onDeselect" styleClass="btn-deselect" text="Close" />
+                <Button fx:id="btnGenerateSale" maxWidth="1.7976931348623157E308"
+                        onAction="#onGenerateSale"
+                        styleClass="btn-generate" text="Create Credit Sale" />
+                <Button fx:id="btnDeselect" maxWidth="1.7976931348623157E308"
+                        onAction="#onDeselect"
+                        styleClass="btn-deselect" text="Close" />
             </VBox>
 
         </VBox>
