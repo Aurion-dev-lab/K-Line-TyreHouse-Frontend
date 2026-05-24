@@ -1,5 +1,8 @@
 package com.gui.kline.controller;
 
+import com.gui.kline.data.SyncQueueReader;
+import com.gui.kline.data.SyncQueueRepository;
+import com.gui.kline.utils.JsonUtil;
 import com.gui.kline.models.CreditSaleDetail;
 import com.gui.kline.models.Part;
 import com.gui.kline.models.ViewModel;
@@ -50,6 +53,7 @@ public class CreditSalesController implements Initializable {
 
     private final ObservableList<CreditSaleRow> creditSaleList =
             FXCollections.observableArrayList();
+    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
 
     private CreditSaleRow    selectedSale      = null;
     private CreditSaleDetail currentSaleDetail = null;
@@ -62,8 +66,8 @@ public class CreditSalesController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         setupTableColumns();
         setupChoiceBoxes();
-        // No table selection listener — panel only opens via View button
-        loadSampleData();
+        setupEventHandlers();
+        loadFromLocal();
         tblCreditSales.setItems(creditSaleList);
         hideDetailPanel(); // hidden by default, not dimmed
     }
@@ -275,6 +279,7 @@ public class CreditSalesController implements Initializable {
                 "PENDING");
 
         if (!isEditMode) creditSaleList.add(0, row);
+        enqueueCreditSale(row, currentSaleDetail);
         showSuccess("Credit sale " + (isEditMode ? "updated" : "created") + " successfully.");
         onDeselect();
     }
@@ -302,11 +307,7 @@ public class CreditSalesController implements Initializable {
         lblSaleDate.setText(sale.getDate());
 
         vboxParts.getChildren().clear();
-        Part mockPart = new Part("Engine Oil 5W-30 (1L)", "Consumables", 2, sale.getAmount() / 2);
-        currentSaleDetail.addPart(mockPart);
-        addPartToPanel(mockPart);
-
-        updateTotals();
+        updateTotalsFromRow(sale);
         clearPartInputs();
     }
 
@@ -346,16 +347,18 @@ public class CreditSalesController implements Initializable {
         lblAmountDue.setText("Rs. "  + String.format("%,.2f", currentSaleDetail.getAmountDue()));
     }
 
+    private void updateTotalsFromRow(CreditSaleRow row) {
+        lblSubtotal.setText("Rs. " + String.format("%,.2f", row.getAmount()));
+        lblPaid.setText("Rs. 0.00");
+        lblAmountDue.setText("Rs. " + String.format("%,.2f", row.getAmount()));
+    }
+
     private String generateCreditId() { return "CS" + System.currentTimeMillis(); }
 
-    private void loadSampleData() {
-        creditSaleList.addAll(
-                new CreditSaleRow("CS001", "2024-01-15", "John Doe",       "2024-02-15", 15000.00, "PENDING"),
-                new CreditSaleRow("CS002", "2024-01-16", "Jane Smith",     "2024-02-16",  8500.00, "PARTIAL"),
-                new CreditSaleRow("CS003", "2024-01-17", "ABC Corp",       "2024-02-17", 25000.00, "PAID"),
-                new CreditSaleRow("CS004", "2024-01-18", "XYZ Services",   "2024-02-18",  5000.00, "PENDING"),
-                new CreditSaleRow("CS005", "2024-01-19", "Tech Solutions", "2024-02-19", 18000.00, "PARTIAL")
-        );
+    private void loadFromLocal() {
+        SyncQueueReader reader = new SyncQueueReader();
+        List<CreditSaleRow> local = reader.loadCreditSales();
+        creditSaleList.setAll(local);
     }
 
     private void showError(String msg) {
@@ -366,6 +369,33 @@ public class CreditSalesController implements Initializable {
     private void showSuccess(String msg) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle("Success"); a.setHeaderText(null); a.setContentText(msg); a.showAndWait();
+    }
+
+    private void enqueueCreditSale(CreditSaleRow row, CreditSaleDetail detail) {
+        if (detail == null) {
+            return;
+        }
+        String[] parts = detail.getParts().stream()
+                .map(part -> JsonUtil.obj(
+                        JsonUtil.field("description", part.getDescription()),
+                        JsonUtil.field("category", part.getCategory()),
+                        JsonUtil.field("quantity", part.getQuantity()),
+                        JsonUtil.field("unitPrice", part.getUnitPrice()),
+                        JsonUtil.field("total", part.getTotal())
+                ))
+                .toArray(String[]::new);
+
+        String payload = JsonUtil.obj(
+                JsonUtil.field("creditId", row.getCreditId()),
+                JsonUtil.field("date", row.getDate()),
+                JsonUtil.field("customer", row.getCustomer()),
+                JsonUtil.field("dueDate", row.getDueDate()),
+                JsonUtil.field("amount", row.getAmount()),
+                JsonUtil.field("status", row.getStatus()),
+                JsonUtil.fieldRaw("parts", JsonUtil.array(parts))
+        );
+
+        syncQueueRepository.enqueue("credit_sale", payload);
     }
 
     public static class CreditSaleRow {

@@ -57,7 +57,6 @@ public class ReportsController implements Initializable {
 
         startDatePicker.valueProperty().addListener((obs, o, n) -> refresh());
         endDatePicker.valueProperty()  .addListener((obs, o, n) -> refresh());
-        loadSampleData();
         refresh();
     }
 
@@ -195,22 +194,11 @@ public class ReportsController implements Initializable {
     }
 
     private double computeWorkerCosts(LocalDate from, LocalDate to) {
-        return 4_700.0;
+        return 0.0;
     }
 
     private static String fmt(double value) {
         NF.setMaximumFractionDigits(0);
         return NF.format(value);
-    }
-
-
-    private void loadSampleData() {
-        LocalDate d = LocalDate.of(2026, 3, 29);
-
-        allSales.add(new SaleItem("Engine Oil 5W-30 (4L)", d, 2, 21_000, 4_000));
-        allSales.add(new SaleItem("Oil Filter - Toyota",   d, 1,  1_850,   650));
-
-        allServices.add(new ServiceItem("Full Service",    d, null, 5_500));
-        allServices.add(new ServiceItem("Wheel Alignment", d, null, 2_500));
     }
 }

@@ -1,5 +1,8 @@
 package com.gui.kline.controller.form;
 
+import com.gui.kline.data.LocalCatalogRepository;
+import com.gui.kline.data.SyncQueueRepository;
+import com.gui.kline.utils.JsonUtil;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
@@ -7,7 +10,7 @@ import javafx.stage.Stage;
 public class AddInvoiceController {
 
     @FXML private Label              lblInvoiceId;
-    @FXML private TextField          txtCustomerName;
+    @FXML private ComboBox<String>   cmbCustomerName;
     @FXML private TextField          txtPhone;
     @FXML private TextField          txtVehicleNumber;
     @FXML private ComboBox<String>   cmbInvoiceType;
@@ -21,21 +24,18 @@ public class AddInvoiceController {
     @FXML private Button             btnCancel;
     @FXML private Button             btnSave;
 
+    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
+    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
+
     @FXML
     public void initialize() {
         lblInvoiceId.setText("#INV-" + String.format("%04d", (int)(Math.random() * 9000 + 1000)));
         cmbInvoiceType.getItems().addAll("Sale", "Service");
         cmbInvoiceType.getSelectionModel().selectFirst();
+        cmbCustomerName.setEditable(true);
+        cmbCustomerName.getItems().setAll(catalogRepository.getCustomerNames());
+        cmbProduct.getItems().setAll(catalogRepository.getProductNames());
         showSaleField();
-        cmbProduct.getItems().addAll(
-                "Engine Oil 5W-30 (1L)",
-                "Air Filter",
-                "Brake Pads (Set)",
-                "Spark Plugs (Set of 4)",
-                "Timing Belt Kit",
-                "Coolant (1L)",
-                "Wiper Blades (Pair)"
-        );
 
         txtLabour.textProperty().addListener((o, old, v)   -> recalculate());
         txtParts.textProperty().addListener((o, old, v)    -> recalculate());
@@ -98,10 +98,23 @@ public class AddInvoiceController {
 
         String type = cmbInvoiceType.getValue();
         String detail = "Sale".equals(type) ? cmbProduct.getValue() : txtServiceDesc.getText();
+        String customerName = getCustomerName();
 
-        System.out.printf("%s Invoice — Customer: %s | Phone: %s | Vehicle: %s | Detail: %s | Total: %s RS.%n",
-                type, txtCustomerName.getText(), txtPhone.getText(),
-                txtVehicleNumber.getText(), detail, lblTotal.getText());
+        String payload = JsonUtil.obj(
+                JsonUtil.field("invoiceId", lblInvoiceId.getText().replace("#", "")),
+                JsonUtil.field("date", java.time.LocalDate.now().toString()),
+                JsonUtil.field("customer", customerName),
+                JsonUtil.field("phone", txtPhone.getText().trim()),
+                JsonUtil.field("vehicle", txtVehicleNumber.getText().trim()),
+                JsonUtil.field("type", type),
+                JsonUtil.field("detail", detail),
+                JsonUtil.field("labour", parse(txtLabour.getText())),
+                JsonUtil.field("parts", parse(txtParts.getText())),
+                JsonUtil.field("discount", parse(txtDiscount.getText())),
+                JsonUtil.field("total", parse(lblTotal.getText()))
+        );
+        syncQueueRepository.enqueue("invoice", payload);
+        catalogRepository.saveCustomer(customerName, txtPhone.getText().trim());
 
         closeDialog();
     }
@@ -110,7 +123,7 @@ public class AddInvoiceController {
     private void handleCancel() { closeDialog(); }
 
     private boolean validate() {
-        if (txtCustomerName.getText().isBlank())  { alert("Customer name is required.");   return false; }
+        if (getCustomerName().isBlank())  { alert("Customer name is required.");   return false; }
         if (txtPhone.getText().isBlank())          { alert("Phone number is required.");    return false; }
         if (txtVehicleNumber.getText().isBlank())  { alert("Vehicle number is required.");  return false; }
         if (cmbInvoiceType.getValue() == null)    { alert("Please select an invoice type."); return false; }
@@ -122,6 +135,15 @@ public class AddInvoiceController {
             alert("Please describe the service."); return false;
         }
         return true;
+    }
+
+    private String getCustomerName() {
+        String value = cmbCustomerName.getValue();
+        if (value != null && !value.isBlank()) {
+            return value.trim();
+        }
+        String typed = cmbCustomerName.getEditor().getText();
+        return typed == null ? "" : typed.trim();
     }
 
     private void alert(String msg) {

@@ -1,6 +1,10 @@
 package com.gui.kline.controller;
 
+import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.service.NavigationService;
+import com.gui.kline.service.SyncService;
+import com.gui.kline.utils.AlertUtil;
+import com.gui.kline.utils.JsonUtil;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -15,13 +19,14 @@ public class LayoutController {
     @FXML private TextField txtSearch;
     @FXML private FontIcon iconCollapse;
 
-    @FXML private Button btnHideQuick, btnCollapse;
+    @FXML private Button btnHideQuick, btnCollapse, btnUpload;
     @FXML private Button btnDashboard, btnWorkers, btnInventory, btnInvoices,
-            btnSales, btnServices, btnTyreExports, btnSalary,
+            btnSales, btnTyreExports, btnSalary,
             btnAnalytics, btnReports, btnQuickActions;
 
     private Button activeButton;
     private boolean quickActionsVisible = true, isCollapsed = false;
+    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
 
     private static final double SIDEBAR_FULL  = 260.0;
     private static final double SIDEBAR_SMALL = 65.0;
@@ -142,7 +147,40 @@ public class LayoutController {
         System.out.println("Searching: " + q);
     }
 
-    @FXML private void onQuickPolish()   { System.out.println("Quick Polish added");   }
-    @FXML private void onTyreAirFill()   { System.out.println("Tyre Air Fill added");  }
-    @FXML private void onCoolantTopup()  { System.out.println("Coolant Top-up added"); }
+    @FXML
+    private void onQuickPolish() {
+        enqueueQuickService("Quick Polish", 500);
+        System.out.println("Quick Polish added");
+    }
+
+    @FXML
+    private void onTyreAirFill() {
+        enqueueQuickService("Tyre Air Fill", 100);
+        System.out.println("Tyre Air Fill added");
+    }
+
+    @FXML
+    private void onCoolantTopup() {
+        enqueueQuickService("Coolant Top-up", 350);
+        System.out.println("Coolant Top-up added");
+    }
+
+    @FXML
+    private void onUpload() {
+        SyncService.SyncResult result = new SyncService().syncPending();
+        if (result.getFailed() > 0) {
+            AlertUtil.showError("Upload failed", result.getMessage());
+        } else {
+            AlertUtil.showInfo("Upload complete", result.getMessage());
+        }
+    }
+
+    private void enqueueQuickService(String service, double price) {
+        String payload = JsonUtil.obj(
+                JsonUtil.field("service", service),
+                JsonUtil.field("price", price),
+                JsonUtil.field("date", java.time.LocalDate.now().toString())
+        );
+        syncQueueRepository.enqueue("quick_service", payload);
+    }
 }

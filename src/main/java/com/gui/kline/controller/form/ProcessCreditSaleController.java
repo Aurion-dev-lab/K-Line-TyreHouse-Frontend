@@ -1,6 +1,9 @@
 package com.gui.kline.controller.form;
 
+import com.gui.kline.data.LocalCatalogRepository;
+import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.Part;
+import com.gui.kline.utils.JsonUtil;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -16,7 +19,7 @@ import java.util.*;
 public class ProcessCreditSaleController {
 
     @FXML private Label                lblCreditId;
-    @FXML private TextField           txtCustomerName;
+    @FXML private ComboBox<String>    cmbCustomerName;
     @FXML private TextField           txtPhone;
     @FXML private TextField           txtVehicleNumber;
     @FXML private DatePicker          dpSaleDate;
@@ -34,6 +37,8 @@ public class ProcessCreditSaleController {
 
     private List<Part> addedParts = new ArrayList<>();
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
+    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
 
     @FXML
     public void initialize() {
@@ -41,6 +46,8 @@ public class ProcessCreditSaleController {
 
         dpSaleDate.setValue(LocalDate.now());
         dpDueDate.setValue(LocalDate.now().plusDays(30)); // 30-day default
+        cmbCustomerName.setEditable(true);
+        cmbCustomerName.getItems().setAll(catalogRepository.getCustomerNames());
         cboPaymentTerms.setItems(FXCollections.observableArrayList(
                 "Net 15 (15 days)",
                 "Net 30 (30 days)",
@@ -168,7 +175,7 @@ public class ProcessCreditSaleController {
 
     @FXML
     private void onCreate() {
-        String customerName = txtCustomerName.getText().trim();
+        String customerName = getCustomerName();
         String phone = txtPhone.getText().trim();
         String vehicle = txtVehicleNumber.getText().trim();
 
@@ -202,33 +209,41 @@ public class ProcessCreditSaleController {
         String terms = cboPaymentTerms.getValue();
         double total = addedParts.stream().mapToDouble(Part::getTotal).sum();
 
-        System.out.printf(
-                "NEW CREDIT SALE%n" +
-                        "════════════════════════════════════════%n" +
-                        "Credit ID: %s%n" +
-                        "Customer: %s%n" +
-                        "Phone: %s%n" +
-                        "Vehicle: %s%n" +
-                        "Sale Date: %s%n" +
-                        "Due Date: %s%n" +
-                        "Payment Terms: %s%n" +
-                        "────────────────────────────────────────%n" +
-                        "Parts Added: %d%n" +
-                        "Total Amount: Rs. %.2f%n" +
-                        "════════════════════════════════════════%n",
-                creditId, customerName, phone, vehicle,
-                saleDate, dueDate, terms,
-                addedParts.size(), total
-        );
+        String[] parts = addedParts.stream()
+                .map(part -> JsonUtil.obj(
+                        JsonUtil.field("description", part.getDescription()),
+                        JsonUtil.field("category", part.getCategory()),
+                        JsonUtil.field("quantity", part.getQuantity()),
+                        JsonUtil.field("unitPrice", part.getUnitPrice()),
+                        JsonUtil.field("total", part.getTotal())
+                ))
+                .toArray(String[]::new);
 
-        for (Part part : addedParts) {
-            System.out.printf("  • %s (%s) - %d × Rs. %.2f = Rs. %.2f%n",
-                    part.getDescription(), part.getCategory(),
-                    part.getQuantity(), part.getUnitPrice(), part.getTotal());
-        }
+        String payload = JsonUtil.obj(
+                JsonUtil.field("creditId", creditId),
+                JsonUtil.field("customer", customerName),
+                JsonUtil.field("phone", phone),
+                JsonUtil.field("vehicle", vehicle),
+                JsonUtil.field("saleDate", saleDate.toString()),
+                JsonUtil.field("dueDate", dueDate.toString()),
+                JsonUtil.field("paymentTerms", terms),
+                JsonUtil.field("amount", total),
+                JsonUtil.fieldRaw("parts", JsonUtil.array(parts))
+        );
+        syncQueueRepository.enqueue("credit_sale", payload);
+        catalogRepository.saveCustomer(customerName, phone);
 
         showSuccess("Credit sale created successfully!");
         closeDialog();
+    }
+
+    private String getCustomerName() {
+        String value = cmbCustomerName.getValue();
+        if (value != null && !value.isBlank()) {
+            return value.trim();
+        }
+        String typed = cmbCustomerName.getEditor().getText();
+        return typed == null ? "" : typed.trim();
     }
 
     @FXML

@@ -15,8 +15,8 @@
 <?import javafx.scene.layout.VBox?>
 
 <AnchorPane style="-fx-background-color: rgba(0,0,0,0.5);"
-            xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
+            xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.gui.kline.controller.form.AddInvoiceController">
 
     <StackPane AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
@@ -48,9 +48,9 @@
                     </columnConstraints>
                     <VBox spacing="8" GridPane.columnIndex="0">
                         <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="CUSTOMER NAME"/>
-                        <TextField fx:id="txtCustomerName" promptText="e.g. John Doe"
-                                   style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
-                                          -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
+                        <ComboBox fx:id="cmbCustomerName" promptText="e.g. John Doe" editable="true"
+                                  style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                         -fx-padding: 8; -fx-border-color: transparent; -fx-font-size: 14px;"/>
                     </VBox>
                     <VBox spacing="8" GridPane.columnIndex="1">
                         <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="PHONE NUMBER"/>

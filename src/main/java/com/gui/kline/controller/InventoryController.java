@@ -1,8 +1,11 @@
 package com.gui.kline.controller;
 
 import com.gui.kline.controller.form.ProductFormController;
+import com.gui.kline.data.LocalCatalogRepository;
+import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.Product;
 import com.gui.kline.models.ViewModel;
+import com.gui.kline.utils.JsonUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -23,6 +26,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class InventoryController implements Initializable {
@@ -33,23 +37,22 @@ public class InventoryController implements Initializable {
     @FXML private Label     lblUnitsVal;
     @FXML private Label     lblLowVal;
     private static final int LOW_STOCK_THRESHOLD = 5;
+    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
+    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
 
     private final ObservableList<Product> masterList   = FXCollections.observableArrayList();
     private final FilteredList<Product>   filteredList = new FilteredList<>(masterList, p -> true);
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        seedData();
+        loadFromLocal();
         filteredList.addListener((ListChangeListener<Product>) c -> rebuildCards());
         rebuildCards();
         refreshStats();
     }
-    private void seedData() {
-        masterList.addAll(
-                new Product("Engine Oil 5W-30 (4L)", "Lubricants",  8500,  10500, 15),
-                new Product("Bridgestone 195/65R15", "Tyres",       22000, 26500,  8),
-                new Product("Brake Pads - Front",    "Spare Parts",  4500,   6200,  3),
-                new Product("Oil Filter - Toyota",   "Spare Parts",  1200,   1850, 20)
-        );
+
+    private void loadFromLocal() {
+        List<Product> local = catalogRepository.loadProducts();
+        masterList.setAll(local);
     }
 
     @FXML
@@ -72,11 +75,19 @@ public class InventoryController implements Initializable {
     private void handleFilter() {
     }
 
-    public void addProduct(Product p)    { masterList.add(p); refreshStats(); }
+    public void addProduct(Product p) {
+        masterList.add(p);
+        catalogRepository.saveProduct(p);
+        enqueueProduct("create", p);
+        refreshStats();
+    }
+
     public void deleteProduct(Product p) { masterList.remove(p); refreshStats(); }
 
     public void updateProduct(Product updated) {
         masterList.replaceAll(p -> p.getId().equals(updated.getId()) ? updated : p);
+        catalogRepository.saveProduct(updated);
+        enqueueProduct("update", updated);
         refreshStats();
     }
 
@@ -213,5 +224,18 @@ public class InventoryController implements Initializable {
             if (product == null) addProduct(saved);
             else updateProduct(saved);
         });
+    }
+
+    private void enqueueProduct(String operation, Product product) {
+        String payload = JsonUtil.obj(
+                JsonUtil.field("operation", operation),
+                JsonUtil.field("productId", product.getId()),
+                JsonUtil.field("name", product.getName()),
+                JsonUtil.field("category", product.getCategory()),
+                JsonUtil.field("buyPrice", product.getBuyPrice()),
+                JsonUtil.field("sellPrice", product.getSellPrice()),
+                JsonUtil.field("stock", product.getStock())
+        );
+        syncQueueRepository.enqueue("product", payload);
     }
 }

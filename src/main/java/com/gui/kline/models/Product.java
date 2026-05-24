@@ -20,6 +20,16 @@ public class Product {
         this.stock.set(stock);
     }
 
+    public Product(String id, String name, String category, double buyPrice,
+                   double sellPrice, int stock) {
+        this.id.set(id);
+        this.name.set(name);
+        this.category.set(category);
+        this.buyPrice.set(buyPrice);
+        this.sellPrice.set(sellPrice);
+        this.stock.set(stock);
+    }
+
     public String  getId()        { return id.get(); }
     public String  getName()      { return name.get(); }
     public String  getCategory()  { return category.get(); }
@@ -39,6 +49,7 @@ public class Product {
     public void setBuyPrice(double v)  { buyPrice.set(v); }
     public void setSellPrice(double v) { sellPrice.set(v); }
     public void setStock(int v)        { stock.set(v); }
+    public void setId(String v)        { id.set(v); }
 
     public double getProfit() { return getSellPrice() - getBuyPrice(); }
     public boolean isLowStock() { return getStock() <= 5; }

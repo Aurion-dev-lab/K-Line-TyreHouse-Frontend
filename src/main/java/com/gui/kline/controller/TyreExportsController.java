@@ -1,5 +1,9 @@
 package com.gui.kline.controller;
 
+import com.gui.kline.controller.form.NewExportDialogController;
+import com.gui.kline.data.SyncQueueReader;
+import com.gui.kline.data.SyncQueueRepository;
+import com.gui.kline.utils.JsonUtil;
 import com.gui.kline.models.ExportRecord;
 import com.gui.kline.models.ViewModel;
 import javafx.collections.FXCollections;
@@ -24,6 +28,7 @@ import javafx.stage.Stage;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class TyreExportsController implements Initializable {
@@ -42,6 +47,7 @@ public class TyreExportsController implements Initializable {
     private       FilteredList<ExportRecord>   filteredList;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");
+    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -50,22 +56,36 @@ public class TyreExportsController implements Initializable {
             rebuildCards();
             refreshStats();
         });
-        loadSampleData();
+        loadFromLocal();
     }
 
-    private void loadSampleData() {
-        masterList.addAll(
-                new ExportRecord("Lanka Tyre Traders",  20, 520000, 440000, 10000, LocalDate.of(2026, 3, 29), "DELIVERED"),
-                new ExportRecord("Colombo Auto Parts",  12, 336000, 288000,  6000, LocalDate.of(2026, 3, 28), "IN TRANSPORT"),
-                new ExportRecord("Southern Motors",      8, 200000, 168000,  4000, LocalDate.of(2026, 3, 27), "PAID"),
-                new ExportRecord("Kandy Wheels Hub",    15, 412500, 345000,  7500, LocalDate.of(2026, 3, 29), "PENDING")
-        );
+    private void loadFromLocal() {
+        SyncQueueReader reader = new SyncQueueReader();
+        List<ExportRecord> local = reader.loadTyreExports();
+        masterList.setAll(local);
     }
 
     @FXML
     private void handleNewExport(ActionEvent e) {
         Stage owner = (Stage) ((Node) e.getSource()).getScene().getWindow();
-        ViewModel.INSTANCE.getViewsFactory().getForm("form/new-export-dialog", owner);
+        NewExportDialogController form =
+                ViewModel.INSTANCE.getViewsFactory().getForm("form/new-export-dialog", owner);
+        if (form == null) {
+            return;
+        }
+        form.setOnSave(result -> {
+            ExportRecord record = new ExportRecord(
+                    result.company(),
+                    result.tyres(),
+                    result.custPrice(),
+                    result.compPrice(),
+                    result.serviceFee(),
+                    result.date(),
+                    result.status()
+            );
+            masterList.add(0, record);
+            enqueueExport(record);
+        });
     }
 
     @FXML
@@ -215,6 +235,19 @@ public class TyreExportsController implements Initializable {
         r.setStatus(next);
         rebuildCards();
         refreshStats();
+    }
+
+    private void enqueueExport(ExportRecord r) {
+        String payload = JsonUtil.obj(
+                JsonUtil.field("company", r.getCompany()),
+                JsonUtil.field("tyres", r.getTyres()),
+                JsonUtil.field("custPrice", r.getCustPrice()),
+                JsonUtil.field("compPrice", r.getCompPrice()),
+                JsonUtil.field("serviceFee", r.getServiceCharge()),
+                JsonUtil.field("date", r.getDate().toString()),
+                JsonUtil.field("status", r.getStatus())
+        );
+        syncQueueRepository.enqueue("tyre_export", payload);
     }
 
     private String initials(String name) {

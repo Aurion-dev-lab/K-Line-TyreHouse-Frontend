@@ -1,5 +1,8 @@
 package com.gui.kline.controller.form;
 
+import com.gui.kline.data.SyncQueueRepository;
+import com.gui.kline.utils.JsonUtil;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextField;
@@ -13,6 +16,8 @@ public class RecordServiceDialogController {
     @FXML private TextField   txtPrice;
     @FXML private DatePicker  datePicker;
 
+    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
+
     @FXML
     public void initialize() {
         datePicker.setValue(LocalDate.now());
@@ -25,7 +30,14 @@ public class RecordServiceDialogController {
         String price   = txtPrice.getText().trim();
         LocalDate date = datePicker.getValue();
 
-        System.out.println("Saving service: " + name + " | Rs." + price + " | " + date);
+        String payload = JsonUtil.obj(
+                JsonUtil.field("service", name),
+                JsonUtil.field("remark", remark),
+                JsonUtil.field("price", price),
+                JsonUtil.field("date", date != null ? date.toString() : LocalDate.now().toString())
+        );
+        syncQueueRepository.enqueue("service", payload);
+
 
         closeDialog();
     }
