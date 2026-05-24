@@ -1,5 +1,9 @@
 package com.gui.kline.controller;
 
+import com.gui.kline.data.LocalCatalogRepository;
+import com.gui.kline.data.SyncQueueReader;
+import com.gui.kline.data.SyncQueueRepository;
+import com.gui.kline.utils.JsonUtil;
 import com.gui.kline.models.InvoiceDetail;
 import com.gui.kline.models.InvoiceRow;
 import com.gui.kline.models.LineItem;
@@ -40,7 +44,7 @@ public class InvoicesController implements Initializable {
     @FXML private Label lblTax;
     @FXML private Label lblGrandTotal;
     @FXML private ChoiceBox<String> cboInvType;
-    @FXML private ChoiceBox<String> cboInvProduct;
+    @FXML private ComboBox<String> cboInvProduct;
     @FXML private TextField         txtInvService;
     @FXML private TextField         txtInvQty;
     @FXML private TextField         txtInvAmount;
@@ -49,6 +53,8 @@ public class InvoicesController implements Initializable {
     @FXML private Button            btnDeselect;
     private final ObservableList<InvoiceRow> invoiceList =
             FXCollections.observableArrayList();
+    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
+    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
 
     private InvoiceRow    selectedInvoice      = null;
     private InvoiceDetail currentInvoiceDetail = null;
@@ -58,7 +64,7 @@ public class InvoicesController implements Initializable {
         setupTableColumns();
         setupChoiceBoxes();
         setupEventHandlers();
-        loadSampleData();
+        loadFromLocal();
         tblInvoices.setItems(invoiceList);
         disableDetailPanel();
     }
@@ -122,8 +128,7 @@ public class InvoicesController implements Initializable {
     private void setupChoiceBoxes() {
         cboInvType.setItems(FXCollections.observableArrayList("Sales", "Service"));
         cboInvType.getSelectionModel().selectFirst();
-        cboInvProduct.setItems(FXCollections.observableArrayList(
-                "Product A", "Product B", "Product C", "Product D"));
+        cboInvProduct.setItems(FXCollections.observableArrayList(catalogRepository.getProductNames()));
     }
 
     private void setupEventHandlers() {
@@ -258,11 +263,12 @@ public class InvoicesController implements Initializable {
         String type      = currentInvoiceDetail.getLineItems().get(0).getType();
 
         InvoiceRow row = new InvoiceRow(invoiceId, LocalDate.now().toString(),
-                "Sample Customer", type,
+                "", type,
                 currentInvoiceDetail.getLineItems().size(),
                 currentInvoiceDetail.getGrandTotal());
 
         if (!isEditMode) invoiceList.add(0, row);
+        enqueueInvoice(row, currentInvoiceDetail);
         showSuccess("Invoice " + (isEditMode ? "updated" : "created") + " successfully.");
         onDeselect(event);
     }
@@ -279,7 +285,7 @@ public class InvoicesController implements Initializable {
     private void loadInvoiceDetail(InvoiceRow invoice) {
         currentInvoiceDetail = new InvoiceDetail();
         currentInvoiceDetail.setInvoiceId(invoice.getInvoiceId());
-        currentInvoiceDetail.setCustomer("Sample Customer");
+        currentInvoiceDetail.setCustomer(invoice.getCustomer());
         currentInvoiceDetail.setDate(invoice.getDate());
         currentInvoiceDetail.setType(invoice.getType());
 
@@ -289,12 +295,7 @@ public class InvoicesController implements Initializable {
         lblInvoiceType.setText(invoice.getType());
 
         vboxLineItems.getChildren().clear();
-        String itemName = "Sales".equals(invoice.getType()) ? "Product A" : "Service A";
-        LineItem mock = new LineItem(itemName, invoice.getType(), 2, invoice.getTotal() / 2);
-        currentInvoiceDetail.addLineItem(mock);
-        addLineItemToPanel(mock);
-
-        updateTotals();
+        updateTotalsFromRow(invoice);
         clearLineItemInputs();
     }
 
@@ -328,17 +329,49 @@ public class InvoicesController implements Initializable {
         lblGrandTotal.setText("Rs. "+ String.format("%,.2f", currentInvoiceDetail.getGrandTotal()));
     }
 
+    private void updateTotalsFromRow(InvoiceRow row) {
+        lblSubtotal.setText("Rs. " + String.format("%,.2f", row.getTotal()));
+        lblTax.setText("Rs. 0.00");
+        lblGrandTotal.setText("Rs. " + String.format("%,.2f", row.getTotal()));
+    }
+
     private String generateInvoiceId() { return "INV" + System.currentTimeMillis(); }
 
-    private void loadSampleData() {
-        invoiceList.addAll(
-                new InvoiceRow("INV001", "2024-01-15", "John Doe",       "Sales",   3, 15000.00),
-                new InvoiceRow("INV002", "2024-01-16", "Jane Smith",     "Service", 2,  8500.00),
-                new InvoiceRow("INV003", "2024-01-17", "ABC Corp",       "Sales",   5, 25000.00),
-                new InvoiceRow("INV004", "2024-01-18", "XYZ Services",   "Service", 1,  5000.00),
-                new InvoiceRow("INV005", "2024-01-19", "Tech Solutions", "Sales",   4, 18000.00)
+    private void enqueueInvoice(InvoiceRow row, InvoiceDetail detail) {
+        if (detail == null) {
+            return;
+        }
+        String[] items = detail.getLineItems().stream()
+                .map(item -> JsonUtil.obj(
+                        JsonUtil.field("description", item.getDescription()),
+                        JsonUtil.field("type", item.getType()),
+                        JsonUtil.field("qty", item.getQty()),
+                        JsonUtil.field("unitPrice", item.getUnitPrice()),
+                        JsonUtil.field("total", item.getTotal())
+                ))
+                .toArray(String[]::new);
+
+        String payload = JsonUtil.obj(
+                JsonUtil.field("invoiceId", row.getInvoiceId()),
+                JsonUtil.field("date", row.getDate()),
+                JsonUtil.field("customer", detail.getCustomer()),
+                JsonUtil.field("type", row.getType()),
+                JsonUtil.field("itemCount", detail.getLineItems().size()),
+                JsonUtil.field("subtotal", detail.getSubtotal()),
+                JsonUtil.field("tax", detail.getTax()),
+                JsonUtil.field("grandTotal", detail.getGrandTotal()),
+                JsonUtil.fieldRaw("items", JsonUtil.array(items))
         );
+
+        syncQueueRepository.enqueue("invoice", payload);
     }
+
+    private void loadFromLocal() {
+        SyncQueueReader reader = new SyncQueueReader();
+        List<InvoiceRow> local = reader.loadInvoices();
+        invoiceList.setAll(local);
+    }
+
 
     private void showError(String msg) {
         Alert a = new Alert(Alert.AlertType.ERROR);
