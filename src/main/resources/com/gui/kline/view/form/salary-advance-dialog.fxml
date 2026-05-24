@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane styleClass="modal-overlay"
+            stylesheets="@../../css/salary-advance-dialog.css"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.gui.kline.controller.form.SalaryAdvanceController">
+
+    <StackPane AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+               AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+
+        <VBox styleClass="modal-card" maxWidth="480" maxHeight="480" spacing="25">
+            <padding>
+                <Insets top="40" left="35" right="35" bottom="40" />
+            </padding>
+
+            <Label text="Record Salary Advance" styleClass="modal-title-plain" />
+
+            <VBox spacing="18">
+
+                <VBox spacing="8">
+                    <Label text="SELECT WORKER" styleClass="form-label-bold" />
+                    <ComboBox fx:id="cmbWorker"
+                              promptText="Choose a worker..."
+                              styleClass="form-combo-minimal"
+                              maxWidth="Infinity" />
+                </VBox>
+
+                <GridPane hgap="15">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="50" />
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="50" />
+                    </columnConstraints>
+
+                    <VBox spacing="8" GridPane.columnIndex="0">
+                        <Label text="AMOUNT (RS.)" styleClass="form-label-bold" />
+                        <TextField fx:id="txtAmount" promptText="0.00" styleClass="form-input-minimal" />
+                    </VBox>
+
+                    <VBox spacing="8" GridPane.columnIndex="1">
+                        <Label text="DATE" styleClass="form-label-bold" />
+                        <DatePicker fx:id="datePicker" styleClass="form-datepicker-minimal" maxWidth="Infinity" />
+                    </VBox>
+                </GridPane>
+
+                <VBox spacing="8">
+                    <Label text="NOTE (OPTIONAL)" styleClass="form-label-bold" />
+                    <TextField fx:id="txtNote"
+                               promptText="e.g. Family emergency"
+                               styleClass="form-input-minimal" />
+                </VBox>
+            </VBox>
+
+            <HBox alignment="CENTER_RIGHT" spacing="25">
+                <padding><Insets top="10" /></padding>
+
+                <Button fx:id="btnCancel" text="Cancel" styleClass="btn-cancel-simple"
+                        onAction="#onCancel" prefHeight="50" />
+
+                <Button fx:id="btnSave" text="Save Advance" styleClass="btn-save-primary"
+                        onAction="#onSave" prefWidth="200" prefHeight="50" />
+            </HBox>
+
+        </VBox>
+    </StackPane>
+</AnchorPane>

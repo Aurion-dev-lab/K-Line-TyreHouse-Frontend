@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="700.0" stylesheets="@../css/service.css" prefWidth="1000.0"
+            style="-fx-background-color: #f3f4f6;"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.gui.kline.controller.ServicesController">
+    <children>
+        <VBox spacing="25.0" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="30.0"
+              AnchorPane.rightAnchor="30.0" AnchorPane.topAnchor="30.0">
+            <children>
+                <HBox alignment="CENTER_LEFT">
+                    <children>
+                        <VBox spacing="5.0">
+                            <children>
+                                <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;"
+                                       text="Service Management" />
+                                <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"
+                                       text="Track garage work and service records" />
+                            </children>
+                        </VBox>
+                        <Region HBox.hgrow="ALWAYS" />
+
+                        <Button fx:id="btnRecordService"
+                                graphicTextGap="10.0"
+                                styleClass="record-service-btn"
+                                text="+ Record New Service"
+                                onAction="#handleRecordNewService" />
+                    </children>
+                </HBox>
+
+                <HBox spacing="25.0" VBox.vgrow="ALWAYS">
+                    <children>
+                        <VBox styleClass="table-card" HBox.hgrow="ALWAYS">
+                            <children>
+                                <HBox alignment="CENTER_LEFT" spacing="15.0">
+                                    <padding><Insets bottom="20.0" left="20.0" right="20.0" top="20.0" /></padding>
+                                    <Label style="-fx-font-weight: bold; -fx-font-size: 16px;"
+                                           text="Recent Service Records" />
+
+                                    <TextField fx:id="txtFilter"
+                                               promptText="Filter services..."
+                                               styleClass="filter-field"
+                                               onKeyReleased="#handleFilter" />
+
+                                    <Region HBox.hgrow="ALWAYS" />
+
+                                    <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="date-range-picker">
+                                        <DatePicker fx:id="dpFrom"
+                                                    prefWidth="120.0"
+                                                    promptText="mm/dd/yyyy"
+                                                    onAction="#handleDateFilter" />
+                                        <Label text="to" />
+                                        <DatePicker fx:id="dpTo"
+                                                    prefWidth="120.0"
+                                                    promptText="mm/dd/yyyy"
+                                                    onAction="#handleDateFilter" />
+                                    </HBox>
+                                </HBox>
+
+                                <TableView fx:id="tblServices" VBox.vgrow="ALWAYS">
+                                    <columns>
+                                        <TableColumn fx:id="colDate"    prefWidth="150.0" text="DATE" />
+                                        <TableColumn fx:id="colService" prefWidth="200.0" text="SERVICE" />
+                                        <TableColumn fx:id="colRemark"  prefWidth="200.0" text="REMARK/NOTE" />
+                                        <TableColumn fx:id="colPrice"   prefWidth="120.0" text="PRICE" />
+                                    </columns>
+                                    <columnResizePolicy>
+                                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                    </columnResizePolicy>
+                                </TableView>
+                            </children>
+                        </VBox>
+
+                        <VBox prefWidth="300.0" spacing="25.0" styleClass="insights-card">
+                            <children>
+                                <Label style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"
+                                       text="Service Insights" />
+
+                                <VBox spacing="15.0">
+                                    <children>
+                                        <HBox alignment="CENTER_LEFT">
+                                            <children>
+                                                <Label style="-fx-text-fill: #9ca3af;" text="Total Services" />
+                                                <Region HBox.hgrow="ALWAYS" />
+                                                <Label fx:id="lblTotalServices"
+                                                       style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"
+                                                       text="0" />
+                                            </children>
+                                        </HBox>
+                                        <HBox alignment="CENTER_LEFT">
+                                            <children>
+                                                <Label style="-fx-text-fill: #9ca3af;" text="Total Revenue" />
+                                                <Region HBox.hgrow="ALWAYS" />
+                                                <Label fx:id="lblTotalRevenue"
+                                                       style="-fx-text-fill: #10b981; -fx-font-size: 20px; -fx-font-weight: bold;"
+                                                       text="Rs. 0" />
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </VBox>
+
+                                <Separator opacity="0.1" />
+
+                                <VBox spacing="15.0">
+                                    <children>
+                                        <Label style="-fx-text-fill: #6b7280; -fx-font-size: 12px; -fx-font-weight: bold;"
+                                               text="COMMON SERVICES" />
+                                        <FlowPane fx:id="flowCommonServices" hgap="8.0" vgap="10.0">
+                                            <children>
+                                                <Label styleClass="service-tag" text="DAG Tyre Service" />
+                                                <Label styleClass="service-tag" text="Tyre Change" />
+                                                <Label styleClass="service-tag" text="Oil Change" />
+                                                <Label styleClass="service-tag" text="Engine Repair" />
+                                                <Label styleClass="service-tag" text="Brake Service" />
+                                            </children>
+                                        </FlowPane>
+                                    </children>
+                                </VBox>
+                            </children>
+                            <padding>
+                                <Insets bottom="30.0" left="25.0" right="25.0" top="30.0" />
+                            </padding>
+                        </VBox>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>

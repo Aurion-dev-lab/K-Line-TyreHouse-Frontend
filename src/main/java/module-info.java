@@ -4,6 +4,7 @@ module com.gui.kline {
 
     requires org.kordamp.ikonli.javafx;
     requires org.kordamp.bootstrapfx.core;
+    requires java.desktop;
 
     opens com.gui.kline to javafx.fxml;
     opens com.gui.kline.view to javafx.fxml;
@@ -14,4 +15,7 @@ module com.gui.kline {
 
 
     opens com.gui.kline.controller to javafx.fxml;
+    exports com.gui.kline.controller.form;
+    opens com.gui.kline.controller.form to javafx.fxml;
+    opens com.gui.kline.models to javafx.base;
 }

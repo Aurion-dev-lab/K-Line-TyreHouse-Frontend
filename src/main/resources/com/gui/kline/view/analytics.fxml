@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.AreaChart?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+
+<GridPane hgap="20.0" vgap="20.0" style="-fx-background-color: #f4f7f6;"
+          xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+          fx:controller="com.gui.kline.controller.AnalyticsController">
+
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+
+    <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+    </columnConstraints>
+
+    <rowConstraints>
+        <RowConstraints minHeight="10.0" prefHeight="300.0" vgrow="SOMETIMES" />
+        <RowConstraints minHeight="10.0" prefHeight="300.0" vgrow="SOMETIMES" />
+    </rowConstraints>
+
+    <VBox style="-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);" GridPane.columnIndex="0" GridPane.rowIndex="0">
+        <children>
+            <Label text="📈 Revenue &amp; Profit Trend" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-padding: 15;"/>
+            <AreaChart fx:id="revenueTrendChart" legendSide="BOTTOM">
+                <xAxis><CategoryAxis side="BOTTOM" /></xAxis>
+                <yAxis><NumberAxis side="LEFT" /></yAxis>
+            </AreaChart>
+        </children>
+    </VBox>
+
+    <VBox style="-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);" GridPane.columnIndex="1" GridPane.rowIndex="0">
+        <children>
+            <Label text="📦 Inventory Distribution" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-padding: 15;"/>
+            <PieChart fx:id="inventoryPieChart" clockwise="true" labelsVisible="false" />
+        </children>
+    </VBox>
+
+    <VBox style="-fx-background-color: white; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);"
+          GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="1">
+        <children>
+            <Label text="🔧 Sales vs Services Revenue" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-padding: 15;"/>
+            <BarChart fx:id="salesServicesChart">
+                <xAxis><CategoryAxis side="BOTTOM" /></xAxis>
+                <yAxis><NumberAxis side="LEFT" /></yAxis>
+            </BarChart>
+        </children>
+    </VBox>
+
+</GridPane>
