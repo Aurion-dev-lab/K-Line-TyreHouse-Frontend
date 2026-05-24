@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane styleClass="modal-overlay"
+           stylesheets="@../../css/record-service-dialog.css"
+           xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.gui.kline.controller.form.RecordServiceDialogController">
+
+    <StackPane AnchorPane.topAnchor="0"
+               AnchorPane.bottomAnchor="0"
+               AnchorPane.leftAnchor="0"
+               AnchorPane.rightAnchor="0">
+        <VBox styleClass="modal-card" maxWidth="560" minWidth="400" maxHeight="480" spacing="0">
+
+        <Label text="Record New Service" styleClass="modal-title">
+            <VBox.margin><Insets top="28" left="28" right="28" bottom="20" /></VBox.margin>
+        </Label>
+
+        <Region styleClass="modal-divider" prefHeight="1" maxHeight="1" />
+
+        <VBox spacing="18">
+            <padding><Insets top="24" left="28" right="28" bottom="8" /></padding>
+
+            <VBox spacing="6">
+                <Label text="SERVICE REMARK" styleClass="form-label" />
+                <TextField fx:id="txtRemark"
+                          promptText="e.g. Engine oil low, need to check brakes next time"
+                          styleClass="form-textarea"
+                          prefHeight="72" />
+            </VBox>
+
+            <VBox spacing="6">
+                <Label text="SERVICE NAME" styleClass="form-label" />
+                <TextField fx:id="txtServiceName"
+                           promptText="e.g. Tyre Change"
+                           styleClass="form-input" />
+            </VBox>
+
+            <GridPane hgap="16">
+                <columnConstraints>
+                    <ColumnConstraints hgrow="ALWAYS" />
+                    <ColumnConstraints hgrow="ALWAYS" />
+                </columnConstraints>
+                <rowConstraints>
+                    <RowConstraints />
+                </rowConstraints>
+
+                <VBox spacing="6" GridPane.columnIndex="0">
+                    <Label text="PRICE (RS.)" styleClass="form-label" />
+                    <TextField fx:id="txtPrice"
+                               promptText="0.00"
+                               styleClass="form-input" />
+                </VBox>
+
+                <VBox spacing="6" GridPane.columnIndex="1">
+                    <Label text="DATE" styleClass="form-label" />
+                    <DatePicker fx:id="datePicker"
+                                styleClass="form-datepicker"
+                                maxWidth="Infinity" />
+                </VBox>
+            </GridPane>
+
+        </VBox>
+
+        <Region styleClass="modal-divider" prefHeight="1" maxHeight="1">
+            <VBox.margin><Insets top="24" /></VBox.margin>
+        </Region>
+
+        <HBox alignment="CENTER_RIGHT" spacing="12">
+            <padding><Insets top="16" left="28" right="28" bottom="24" /></padding>
+            <Button fx:id="btnCancel"
+                    text="Cancel"
+                    styleClass="btn-cancel"
+                    onAction="#onCancel"
+                    prefWidth="110"
+                    prefHeight="42" />
+            <Button fx:id="btnSave"
+                    text="Save Record"
+                    styleClass="btn-save"
+                    onAction="#onSave"
+                    prefWidth="140"
+                    prefHeight="42" />
+        </HBox>
+
+    </VBox>
+    </StackPane>
+</AnchorPane>

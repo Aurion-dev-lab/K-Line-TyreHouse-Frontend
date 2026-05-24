@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane
+        prefHeight="660.0" prefWidth="860.0"
+        style="-fx-background-color: #F9FAFB;"
+        xmlns="http://javafx.com/javafx"
+        xmlns:fx="http://javafx.com/fxml"
+        fx:controller="com.gui.kline.controller.InventoryController">
+
+    <VBox spacing="0"
+          AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+          AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+
+        <HBox alignment="CENTER_LEFT" style="-fx-padding: 24 28 16 28;">
+            <VBox HBox.hgrow="ALWAYS">
+                <Label text="Inventory"
+                       style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                <Label text="Track and manage your vehicle parts stock"
+                       style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"/>
+            </VBox>
+            <Button fx:id="btnAdd" text="+ Add product" onAction="#handleAdd"
+                    style="-fx-background-color: #10B981; -fx-text-fill: white;
+                           -fx-font-size: 13px; -fx-font-weight: bold;
+                           -fx-padding: 9 18; -fx-background-radius: 8; -fx-cursor: hand;"/>
+        </HBox>
+
+        <HBox spacing="10" style="-fx-padding: 0 28 16 28;">
+            <VBox fx:id="statTotal" prefWidth="160"
+                  style="-fx-background-color: white; -fx-background-radius: 8;
+                         -fx-border-color: #E5E7EB; -fx-border-width: 1; -fx-border-radius: 8;
+                         -fx-padding: 10 14;">
+                <Label fx:id="lblTotalVal" text="0"
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                <Label text="Total products"
+                       style="-fx-font-size: 12px; -fx-text-fill: #6B7280;"/>
+            </VBox>
+            <VBox prefWidth="160"
+                  style="-fx-background-color: white; -fx-background-radius: 8;
+                         -fx-border-color: #E5E7EB; -fx-border-width: 1; -fx-border-radius: 8;
+                         -fx-padding: 10 14;">
+                <Label fx:id="lblUnitsVal" text="0"
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                <Label text="Units in stock"
+                       style="-fx-font-size: 12px; -fx-text-fill: #6B7280;"/>
+            </VBox>
+            <VBox prefWidth="160"
+                  style="-fx-background-color: white; -fx-background-radius: 8;
+                         -fx-border-color: #E5E7EB; -fx-border-width: 1; -fx-border-radius: 8;
+                         -fx-padding: 10 14;">
+                <Label fx:id="lblLowVal" text="0"
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #DC2626;"/>
+                <Label text="Low stock"
+                       style="-fx-font-size: 12px; -fx-text-fill: #6B7280;"/>
+            </VBox>
+        </HBox>
+
+        <HBox spacing="10" style="-fx-padding: 0 28 12 28;">
+            <TextField fx:id="txtSearch" promptText="Search by name or category…"
+                       onKeyReleased="#handleSearch" HBox.hgrow="ALWAYS"
+                       style="-fx-background-color: white;
+                              -fx-border-color: #D1D5DB; -fx-border-width: 1;
+                              -fx-border-radius: 8; -fx-background-radius: 8;
+                              -fx-padding: 8 12; -fx-font-size: 13px;"/>
+            <Button text="⧩  Filter" onAction="#handleFilter"
+                    style="-fx-background-color: transparent;
+                           -fx-border-color: #D1D5DB; -fx-border-width: 1;
+                           -fx-border-radius: 8; -fx-background-radius: 8;
+                           -fx-padding: 8 14; -fx-font-size: 13px;
+                           -fx-cursor: hand; -fx-text-fill: #374151;"/>
+        </HBox>
+
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                    style="-fx-background-color: transparent; -fx-background: transparent;
+                           -fx-border-color: transparent;">
+            <padding><Insets left="28" right="28" bottom="24"/></padding>
+            <VBox fx:id="cardContainer" spacing="10"/>
+        </ScrollPane>
+
+    </VBox>
+</AnchorPane>

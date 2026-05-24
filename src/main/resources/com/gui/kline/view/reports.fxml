@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.gui.kline.controller.ReportsController"
+            prefHeight="700.0" prefWidth="1100.0"
+            style="-fx-background-color: #F0F2F5;">
+
+    <ScrollPane AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+                AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"
+                fitToWidth="true" style="-fx-background: transparent; -fx-background-color: transparent;">
+
+        <VBox spacing="24" style="-fx-background-color: #F0F2F5;">
+            <padding>
+                <Insets top="28" right="32" bottom="32" left="32"/>
+            </padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="16">
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="Business Reports"
+                           style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    <Label text="Analyze your shop's financial performance"
+                           style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"/>
+                </VBox>
+
+                <HBox alignment="CENTER" spacing="8"
+                      style="-fx-background-color: white; -fx-background-radius: 8;
+                             -fx-border-color: #E5E7EB; -fx-border-radius: 8; -fx-padding: 6 14 6 14;">
+                    <Label text="📅" style="-fx-font-size: 13px;"/>
+                    <DatePicker fx:id="startDatePicker" promptText="From"
+                                style="-fx-background-color: transparent; -fx-border-color: transparent;
+                                       -fx-font-size: 13px; -fx-pref-width: 120;"/>
+                    <Label text="to" style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"/>
+                    <DatePicker fx:id="endDatePicker" promptText="To"
+                                style="-fx-background-color: transparent; -fx-border-color: transparent;
+                                       -fx-font-size: 13px; -fx-pref-width: 120;"/>
+                </HBox>
+
+                <Button fx:id="exportBtn" text="⬇  Export PDF" onAction="#handleExportPDF"
+                        style="-fx-background-color: #16A34A; -fx-text-fill: white;
+                               -fx-font-size: 13px; -fx-font-weight: bold;
+                               -fx-background-radius: 8; -fx-padding: 10 20 10 20;
+                               -fx-cursor: hand;"/>
+            </HBox>
+
+            <HBox spacing="16">
+                <VBox fx:id="totalSalesCard" spacing="12" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color: white; -fx-background-radius: 14;
+                             -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="📈" style="-fx-font-size: 18px;
+                                    -fx-background-color: #EFF6FF; -fx-background-radius: 8;
+                                    -fx-padding: 6 8 6 8;"/>
+                        <Label text="TOTAL SALES"
+                               style="-fx-font-size: 11px; -fx-font-weight: bold;
+                                      -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;"/>
+                    </HBox>
+                    <Label fx:id="totalSalesLabel" text="Rs. 0"
+                           style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                </VBox>
+
+                <VBox fx:id="grossProfitCard" spacing="12" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color: white; -fx-background-radius: 14;
+                             -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="💵" style="-fx-font-size: 18px;
+                                    -fx-background-color: #F0FDF4; -fx-background-radius: 8;
+                                    -fx-padding: 6 8 6 8;"/>
+                        <Label text="GROSS PROFIT"
+                               style="-fx-font-size: 11px; -fx-font-weight: bold;
+                                      -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;"/>
+                    </HBox>
+                    <Label fx:id="grossProfitLabel" text="Rs. 0"
+                           style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                </VBox>
+
+                <VBox fx:id="workerCostsCard" spacing="12" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color: white; -fx-background-radius: 14;
+                             -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="👥" style="-fx-font-size: 18px;
+                                    -fx-background-color: #FFF1F2; -fx-background-radius: 8;
+                                    -fx-padding: 6 8 6 8;"/>
+                        <Label text="WORKER COSTS"
+                               style="-fx-font-size: 11px; -fx-font-weight: bold;
+                                      -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;"/>
+                    </HBox>
+                    <Label fx:id="workerCostsLabel" text="Rs. 0"
+                           style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #e51444;"/>
+                </VBox>
+
+                <VBox fx:id="netIncomeCard" spacing="12" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color: #111827; -fx-background-radius: 14; -fx-padding: 20;">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="📊" style="-fx-font-size: 18px;
+                                    -fx-background-color: #0aa444; -fx-background-radius: 8;
+                                    -fx-padding: 6 8 6 8;"/>
+                        <Label text="NET INCOME"
+                               style="-fx-font-size: 11px; -fx-font-weight: bold;
+                                      -fx-text-fill: #9CA3AF; -fx-letter-spacing: 1.2;"/>
+                    </HBox>
+                    <Label fx:id="netIncomeLabel" text="Rs. 0"
+                           style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                </VBox>
+
+            </HBox>
+
+            <HBox spacing="16" VBox.vgrow="ALWAYS">
+
+                <VBox spacing="0" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color: white; -fx-background-radius: 14;
+                             -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
+                    <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
+                        <Label text="💲" style="-fx-font-size: 16px;"/>
+                        <Label text="Sales Breakdown"
+                               style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    </HBox>
+                    <Separator style="-fx-opacity: 0.5;"/>
+                    <VBox fx:id="salesBreakdownContainer" spacing="0"/>
+                </VBox>
+
+                <VBox spacing="0" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color: white; -fx-background-radius: 14;
+                             -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
+                    <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
+                        <Label text="🔧" style="-fx-font-size: 16px;"/>
+                        <Label text="Service Revenue"
+                               style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                    </HBox>
+                    <Separator style="-fx-opacity: 0.5;"/>
+                    <VBox fx:id="serviceRevenueContainer" spacing="0"/>
+                </VBox>
+
+            </HBox>
+
+        </VBox>
+    </ScrollPane>
+</AnchorPane>
