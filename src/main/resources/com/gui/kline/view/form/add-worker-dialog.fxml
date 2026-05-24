@@ -23,7 +23,7 @@
 
         <VBox maxWidth="500" maxHeight="480" spacing="0" style="-fx-background-color: white; -fx-background-radius: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 20, 0, 0, 10);">
 
-            <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1a1a2e;" text="Add New Worker">
+            <Label fx:id="lblTitle" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1a1a2e;" text="Add New Worker">
                 <VBox.margin><Insets bottom="20" left="32" right="32" top="32" /></VBox.margin>
             </Label>
 
