@@ -56,28 +56,52 @@ public class LocalCatalogRepository {
         }
     }
 
-    public List<Product> loadProducts() {
-        String sql = "SELECT id, name, category, buy_price, sell_price, stock FROM products ORDER BY name";
-        List<Product> products = new ArrayList<>();
-        try (Connection connection = DatabaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet rs = statement.executeQuery()) {
-            while (rs.next()) {
-                Product product = new Product(
-                        rs.getString("name"),
-                        rs.getString("category"),
-                        rs.getDouble("buy_price"),
-                        rs.getDouble("sell_price"),
-                        rs.getInt("stock")
-                );
-                product.setId(rs.getString("id"));
-                products.add(product);
-            }
-        } catch (SQLException ex) {
-            throw new IllegalStateException("Failed to load products", ex);
-        }
-        return products;
-    }
+     public List<Product> loadProducts() {
+         String sql = "SELECT id, name, category, buy_price, sell_price, stock FROM products ORDER BY name";
+         List<Product> products = new ArrayList<>();
+         try (Connection connection = DatabaseManager.getConnection();
+              PreparedStatement statement = connection.prepareStatement(sql);
+              ResultSet rs = statement.executeQuery()) {
+             while (rs.next()) {
+                 Product product = new Product(
+                         rs.getString("name"),
+                         rs.getString("category"),
+                         rs.getDouble("buy_price"),
+                         rs.getDouble("sell_price"),
+                         rs.getInt("stock")
+                 );
+                 product.setId(rs.getString("id"));
+                 products.add(product);
+             }
+         } catch (SQLException ex) {
+             throw new IllegalStateException("Failed to load products", ex);
+         }
+         return products;
+     }
+
+     public Product findProductById(String productId) {
+         String sql = "SELECT id, name, category, buy_price, sell_price, stock FROM products WHERE id = ?";
+         try (Connection connection = DatabaseManager.getConnection();
+              PreparedStatement statement = connection.prepareStatement(sql)) {
+             statement.setString(1, productId);
+             try (ResultSet rs = statement.executeQuery()) {
+                 if (rs.next()) {
+                     Product product = new Product(
+                             rs.getString("name"),
+                             rs.getString("category"),
+                             rs.getDouble("buy_price"),
+                             rs.getDouble("sell_price"),
+                             rs.getInt("stock")
+                     );
+                     product.setId(rs.getString("id"));
+                     return product;
+                 }
+             }
+         } catch (SQLException ex) {
+             throw new IllegalStateException("Failed to load product", ex);
+         }
+         return null;
+     }
 
     public void saveProduct(Product product) {
         if (product == null) {

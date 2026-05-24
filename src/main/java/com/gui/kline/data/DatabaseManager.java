@@ -22,7 +22,12 @@ public final class DatabaseManager {
         if (initialized) {
             return;
         }
-        try (Connection connection = getConnection(); Statement statement = connection.createStatement()) {
+        try {
+            // Test connection first
+            testDatabaseConnection();
+            
+            Connection connection = getConnection();
+            Statement statement = connection.createStatement();
             statement.execute("CREATE TABLE IF NOT EXISTS app_sync_state (" +
                     "id TINYINT PRIMARY KEY," +
                     "device_id VARCHAR(64) NOT NULL," +
@@ -52,13 +57,32 @@ public final class DatabaseManager {
                     "created_at DATETIME NOT NULL," +
                     "UNIQUE KEY uk_customer_name_phone (name, phone)" +
                     ")");
-            statement.execute("CREATE TABLE IF NOT EXISTS invoices (" +
-                    "id VARCHAR(36) PRIMARY KEY," +
-                    "invoice_id VARCHAR(64)," +
-                    "customer VARCHAR(255)," +
-                    "total DECIMAL(12,2) NOT NULL DEFAULT 0," +
-                    "created_at DATETIME NOT NULL" +
-                    ")");
+             statement.execute("CREATE TABLE IF NOT EXISTS invoices (" +
+                     "id VARCHAR(36) PRIMARY KEY," +
+                     "invoice_id VARCHAR(64) UNIQUE," +
+                     "customer VARCHAR(255)," +
+                     "invoice_date DATE," +
+                     "type VARCHAR(32)," +
+                     "status VARCHAR(32)," +
+                     "subtotal DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                     "tax DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                     "grand_total DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                     "created_at DATETIME NOT NULL," +
+                     "updated_at DATETIME" +
+                     ") ENGINE=InnoDB");
+             statement.execute("CREATE TABLE IF NOT EXISTS invoice_line_items (" +
+                     "id VARCHAR(36) PRIMARY KEY," +
+                     "invoice_id VARCHAR(64)," +
+                     "invoice_ref VARCHAR(36) NOT NULL," +
+                     "product_id VARCHAR(36)," +
+                     "description VARCHAR(255)," +
+                     "type VARCHAR(32)," +
+                     "qty INT," +
+                     "unit_price DECIMAL(12,2)," +
+                     "total DECIMAL(12,2)," +
+                     "created_at DATETIME NOT NULL," +
+                     "FOREIGN KEY (invoice_ref) REFERENCES invoices(id) ON DELETE CASCADE" +
+                     ") ENGINE=InnoDB");
             statement.execute("CREATE TABLE IF NOT EXISTS credit_sales (" +
                     "id VARCHAR(36) PRIMARY KEY," +
                     "credit_id VARCHAR(64)," +
@@ -118,6 +142,17 @@ public final class DatabaseManager {
                     ")");
             statement.execute("INSERT IGNORE INTO app_sync_state (id, device_id, last_sync_at) " +
                     "VALUES (1, UUID(), NULL)");
+            // Ensure new invoice columns exist on older databases
+            ensureColumnExists(connection, "invoices", "invoice_id", "VARCHAR(64)");
+            ensureColumnExists(connection, "invoices", "customer", "VARCHAR(255)");
+            ensureColumnExists(connection, "invoices", "invoice_date", "DATE");
+            ensureColumnExists(connection, "invoices", "type", "VARCHAR(32)");
+            ensureColumnExists(connection, "invoices", "status", "VARCHAR(32)");
+            ensureColumnExists(connection, "invoices", "subtotal", "DECIMAL(12,2)");
+            ensureColumnExists(connection, "invoices", "tax", "DECIMAL(12,2)");
+            ensureColumnExists(connection, "invoices", "grand_total", "DECIMAL(12,2)");
+            ensureColumnExists(connection, "invoices", "created_at", "DATETIME");
+            ensureColumnExists(connection, "invoices", "updated_at", "DATETIME");
             ensureColumnExists(connection, "workers", "salary_type", "VARCHAR(32)");
             ensureColumnExists(connection, "salary_advances", "worker_id", "VARCHAR(36)");
             ensureColumnExists(connection, "salary_advances", "note", "VARCHAR(255)");
@@ -128,13 +163,39 @@ public final class DatabaseManager {
             validateSchema(connection);
             initialized = true;
         } catch (SQLException ex) {
-            throw new IllegalStateException("Failed to initialize local database", ex);
+            System.err.println("=== DATABASE INITIALIZATION ERROR ===");
+            System.err.println("Database URL: " + DEFAULT_URL);
+            System.err.println("Database User: " + DEFAULT_USER);
+            System.err.println("Error Message: " + ex.getMessage());
+            ex.printStackTrace();
+            throw new IllegalStateException("Failed to initialize local database: " + ex.getMessage(), ex);
         }
     }
 
     public static Connection getConnection() throws SQLException {
         String url = getJdbcUrl();
         return DriverManager.getConnection(url, getJdbcUser(), getJdbcPassword());
+    }
+
+    /**
+     * Quick connection test used during init to provide a clearer error earlier.
+     * Throws SQLException if connection cannot be established.
+     */
+    public static void testDatabaseConnection() throws SQLException {
+        String url = getJdbcUrl();
+        String user = getJdbcUser();
+        String pass = getJdbcPassword();
+        try (Connection conn = DriverManager.getConnection(url, user, pass);
+             PreparedStatement stmt = conn.prepareStatement("SELECT 1");
+             ResultSet rs = stmt.executeQuery()) {
+            // successful connection
+        } catch (SQLException ex) {
+            System.err.println("=== DATABASE CONNECTION TEST FAILED ===");
+            System.err.println("JDBC URL: " + url);
+            System.err.println("JDBC USER: " + user);
+            System.err.println("ERROR: " + ex.getMessage());
+            throw ex;
+        }
     }
 
     public static String getJdbcUrl() {
@@ -191,11 +252,11 @@ public final class DatabaseManager {
     }
 
     private static void validateSchema(Connection connection) throws SQLException {
-        List<String> required = List.of(
-                "app_sync_state", "sync_queue", "products", "customers",
-                "invoices", "credit_sales", "services", "tyre_exports",
-                "workers", "worker_attendance", "salary_advances", "worker_credits", "quick_services"
-        );
+         List<String> required = List.of(
+                 "app_sync_state", "sync_queue", "products", "customers",
+                 "invoices", "invoice_line_items", "credit_sales", "services", "tyre_exports",
+                 "workers", "worker_attendance", "salary_advances", "worker_credits", "quick_services"
+         );
         String sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()";
         List<String> existing = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(sql);
