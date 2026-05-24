@@ -1,6 +1,9 @@
 package com.gui.kline.controller;
 
 import com.gui.kline.models.ViewModel;
+import com.gui.kline.service.AuthService;
+import com.gui.kline.utils.TokenManager;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -15,11 +18,15 @@ public class LoginController {
     @FXML private Label         errorLabel;
     @FXML private CheckBox      rememberMe;
 
+    private final AuthService authService = new AuthService();
+
     @FXML
     public void initialize() {
-        usernameField.textProperty().addListener((obs, o, n) -> errorLabel.setText(""));
-        passwordField.textProperty().addListener((obs, o, n) -> errorLabel.setText(""));
+        // Clear errors automatically as soon as the user starts typing again
+        usernameField.textProperty().addListener((obs, oldVal, newVal) -> errorLabel.setText(""));
+        passwordField.textProperty().addListener((obs, oldVal, newVal) -> errorLabel.setText(""));
 
+        // Allow pressing the 'Enter' key inside the password field to submit the form
         passwordField.setOnAction(this::handleLogin);
     }
 
@@ -33,13 +40,36 @@ public class LoginController {
             return;
         }
 
-        if (username.equals("admin") && password.equals("admin")) {
-            showError("");
-            ViewModel.INSTANCE.getViewsFactory().getView("main-layout");
-            handleClose(event);
-        } else {
-            showError("Invalid username or password.");
-        }
+        // 1. Enter UI processing state (disable controls to prevent double-submissions)
+        setUiLoadingState(true);
+        showError("Authenticating with system server...");
+
+        // 2. Dispatch credentials via the async service abstraction layer
+        authService.login(username, password, new AuthService.AuthCallback() {
+            @Override
+            public void onSuccess(String accessToken) {
+                // 3. Jump safely back to the JavaFX Application Thread before switching scenes
+                Platform.runLater(() -> {
+                    TokenManager.setAccessToken(accessToken);
+                    showError(""); // Clear message banner
+
+                    // Route to your dashboard main view container
+                    ViewModel.INSTANCE.getViewsFactory().getView("main-layout");
+
+                    // Close down the auxiliary login authentication window
+                    handleClose(event);
+                });
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                // 4. Return to UI thread to render error message and unlock fields
+                Platform.runLater(() -> {
+                    setUiLoadingState(false);
+                    showError(errorMessage);
+                });
+            }
+        });
     }
 
     @FXML
@@ -50,5 +80,12 @@ public class LoginController {
 
     private void showError(String message) {
         errorLabel.setText(message);
+    }
+
+    private void setUiLoadingState(boolean isLoading) {
+        loginButton.setDisable(isLoading);
+        usernameField.setDisable(isLoading);
+        passwordField.setDisable(isLoading);
+        rememberMe.setDisable(isLoading);
     }
 }

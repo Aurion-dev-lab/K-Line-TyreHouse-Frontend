@@ -3,6 +3,8 @@ package com.gui.kline.controller;
 import com.gui.kline.controller.form.ProductFormController;
 import com.gui.kline.models.Product;
 import com.gui.kline.models.ViewModel;
+import com.gui.kline.service.ProductService;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -32,24 +34,46 @@ public class InventoryController implements Initializable {
     @FXML private Label     lblTotalVal;
     @FXML private Label     lblUnitsVal;
     @FXML private Label     lblLowVal;
+
     private static final int LOW_STOCK_THRESHOLD = 5;
 
+    // Inject the service layer instance
+    private final ProductService productService = new ProductService();
     private final ObservableList<Product> masterList   = FXCollections.observableArrayList();
     private final FilteredList<Product>   filteredList = new FilteredList<>(masterList, p -> true);
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        seedData();
+        // Automatically rebuild cards when filteredList changes (via search queries)
         filteredList.addListener((ListChangeListener<Product>) c -> rebuildCards());
-        rebuildCards();
-        refreshStats();
+
+        // Fetch real-time inventories asynchronously from our background api service
+        loadInventoryData();
     }
-    private void seedData() {
-        masterList.addAll(
-                new Product("Engine Oil 5W-30 (4L)", "Lubricants",  8500,  10500, 15),
-                new Product("Bridgestone 195/65R15", "Tyres",       22000, 26500,  8),
-                new Product("Brake Pads - Front",    "Spare Parts",  4500,   6200,  3),
-                new Product("Oil Filter - Toyota",   "Spare Parts",  1200,   1850, 20)
-        );
+
+    /**
+     * Executes asynchronous sync requests via ProductService and handles threading boundaries cleanly.
+     */
+    private void loadInventoryData() {
+        productService.getAllProducts(new ProductService.ProductCallback() {
+            @Override
+            public void onSuccess(ObservableList<Product> products) {
+                // Return context to the JavaFX Application Thread before editing active UI layouts
+                Platform.runLater(() -> {
+                    masterList.setAll(products);
+                    rebuildCards();
+                    refreshStats();
+                });
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Platform.runLater(() -> {
+                    System.err.println("❌ inventory fetch mismatch: " + errorMessage);
+                    // Pro-tip: If you have an explicit error banner asset on your UI, update its visibility properties here
+                });
+            }
+        });
     }
 
     @FXML
@@ -70,6 +94,7 @@ public class InventoryController implements Initializable {
 
     @FXML
     private void handleFilter() {
+        // Placeholder for advanced category/stock filtering dropdown controls
     }
 
     public void addProduct(Product p)    { masterList.add(p); refreshStats(); }
