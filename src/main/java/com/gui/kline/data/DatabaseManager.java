@@ -1,0 +1,217 @@
+package com.gui.kline.data;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
+public final class DatabaseManager {
+    private static final String DEFAULT_URL = "jdbc:mysql://localhost:3306/kline_local?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+    private static final String DEFAULT_USER = "root";
+    private static final String DEFAULT_PASSWORD = "";
+    private static volatile boolean initialized = false;
+
+    private DatabaseManager() {
+    }
+
+    public static synchronized void init() {
+        if (initialized) {
+            return;
+        }
+        try (Connection connection = getConnection(); Statement statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE IF NOT EXISTS app_sync_state (" +
+                    "id TINYINT PRIMARY KEY," +
+                    "device_id VARCHAR(64) NOT NULL," +
+                    "last_sync_at DATETIME NULL" +
+                    ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS sync_queue (" +
+                    "id VARCHAR(36) PRIMARY KEY," +
+                    "entity_type VARCHAR(64) NOT NULL," +
+                    "payload JSON NOT NULL," +
+                    "status VARCHAR(16) NOT NULL," +
+                    "created_at DATETIME NOT NULL," +
+                    "last_error TEXT" +
+                    ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS products (" +
+                    "id VARCHAR(36) PRIMARY KEY," +
+                    "name VARCHAR(255) NOT NULL UNIQUE," +
+                    "category VARCHAR(128)," +
+                    "buy_price DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "sell_price DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "stock INT NOT NULL DEFAULT 0," +
+                    "updated_at DATETIME NOT NULL" +
+                    ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS customers (" +
+                    "id VARCHAR(36) PRIMARY KEY," +
+                    "name VARCHAR(255) NOT NULL," +
+                    "phone VARCHAR(32)," +
+                    "created_at DATETIME NOT NULL," +
+                    "UNIQUE KEY uk_customer_name_phone (name, phone)" +
+                    ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS invoices (" +
+                    "id VARCHAR(36) PRIMARY KEY," +
+                    "invoice_id VARCHAR(64)," +
+                    "customer VARCHAR(255)," +
+                    "total DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "created_at DATETIME NOT NULL" +
+                    ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS credit_sales (" +
+                    "id VARCHAR(36) PRIMARY KEY," +
+                    "credit_id VARCHAR(64)," +
+                    "customer VARCHAR(255)," +
+                    "amount DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "status VARCHAR(32)," +
+                    "created_at DATETIME NOT NULL" +
+                    ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS services (" +
+                    "id VARCHAR(36) PRIMARY KEY," +
+                    "name VARCHAR(255)," +
+                    "price DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "service_date DATE" +
+                    ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS tyre_exports (" +
+                    "id VARCHAR(36) PRIMARY KEY," +
+                    "company VARCHAR(255)," +
+                    "tyres INT NOT NULL DEFAULT 0," +
+                    "status VARCHAR(32)," +
+                    "export_date DATE" +
+                    ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS workers (" +
+                    "id VARCHAR(36) PRIMARY KEY," +
+                    "name VARCHAR(255) NOT NULL," +
+                    "phone VARCHAR(32)," +
+                    "role VARCHAR(128)," +
+                    "rate VARCHAR(64)," +
+                    "created_at DATETIME NOT NULL" +
+                    ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS worker_attendance (" +
+                    "id VARCHAR(36) PRIMARY KEY," +
+                    "worker_id VARCHAR(36) NOT NULL," +
+                    "attendance_date DATE NOT NULL," +
+                    "status VARCHAR(16) NOT NULL," +
+                    "created_at DATETIME NOT NULL," +
+                    "updated_at DATETIME NOT NULL," +
+                    "UNIQUE KEY uk_worker_date (worker_id, attendance_date)" +
+                    ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS salary_advances (" +
+                    "id VARCHAR(36) PRIMARY KEY," +
+                    "worker VARCHAR(255)," +
+                    "amount DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "advance_date DATE" +
+                    ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS worker_credits (" +
+                    "id VARCHAR(36) PRIMARY KEY," +
+                    "worker VARCHAR(255)," +
+                    "amount DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "credit_type VARCHAR(16)," +
+                    "credit_date DATE" +
+                    ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS quick_services (" +
+                    "id VARCHAR(36) PRIMARY KEY," +
+                    "service VARCHAR(255)," +
+                    "price DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "service_date DATE" +
+                    ")");
+            statement.execute("INSERT IGNORE INTO app_sync_state (id, device_id, last_sync_at) " +
+                    "VALUES (1, UUID(), NULL)");
+            ensureColumnExists(connection, "workers", "salary_type", "VARCHAR(32)");
+            ensureColumnExists(connection, "salary_advances", "worker_id", "VARCHAR(36)");
+            ensureColumnExists(connection, "salary_advances", "note", "VARCHAR(255)");
+            ensureColumnExists(connection, "salary_advances", "created_at", "DATETIME");
+            ensureColumnExists(connection, "worker_credits", "worker_id", "VARCHAR(36)");
+            ensureColumnExists(connection, "worker_credits", "note", "VARCHAR(255)");
+            ensureColumnExists(connection, "worker_credits", "created_at", "DATETIME");
+            validateSchema(connection);
+            initialized = true;
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to initialize local database", ex);
+        }
+    }
+
+    public static Connection getConnection() throws SQLException {
+        String url = getJdbcUrl();
+        return DriverManager.getConnection(url, getJdbcUser(), getJdbcPassword());
+    }
+
+    public static String getJdbcUrl() {
+        return getEnvOrProp("KLINE_DB_URL", "kline.dbUrl", DEFAULT_URL);
+    }
+
+    public static String getJdbcUser() {
+        return getEnvOrProp("KLINE_DB_USER", "kline.dbUser", DEFAULT_USER);
+    }
+
+    public static String getJdbcPassword() {
+        return getEnvOrProp("KLINE_DB_PASSWORD", "kline.dbPassword", DEFAULT_PASSWORD);
+    }
+
+    public static String getDeviceId() {
+        init();
+        String sql = "SELECT device_id FROM app_sync_state WHERE id = 1";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            return rs.next() ? rs.getString("device_id") : "";
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to read device id", ex);
+        }
+    }
+
+    private static String getEnvOrProp(String envKey, String propKey, String fallback) {
+        String env = System.getenv(envKey);
+        if (env != null && !env.isBlank()) {
+            return env;
+        }
+        String prop = System.getProperty(propKey);
+        if (prop != null && !prop.isBlank()) {
+            return prop;
+        }
+        return fallback;
+    }
+
+    private static void ensureColumnExists(Connection connection, String table, String column, String definition)
+            throws SQLException {
+        String sql = "SELECT COUNT(*) AS total FROM information_schema.columns " +
+                "WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, table);
+            statement.setString(2, column);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next() && rs.getInt("total") == 0) {
+                    try (Statement alter = connection.createStatement()) {
+                        alter.execute("ALTER TABLE " + table + " ADD COLUMN " + column + " " + definition);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void validateSchema(Connection connection) throws SQLException {
+        List<String> required = List.of(
+                "app_sync_state", "sync_queue", "products", "customers",
+                "invoices", "credit_sales", "services", "tyre_exports",
+                "workers", "worker_attendance", "salary_advances", "worker_credits", "quick_services"
+        );
+        String sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()";
+        List<String> existing = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            while (rs.next()) {
+                existing.add(rs.getString("table_name"));
+            }
+        }
+        List<String> missing = new ArrayList<>();
+        for (String table : required) {
+            if (!existing.contains(table)) {
+                missing.add(table);
+            }
+        }
+        if (!missing.isEmpty()) {
+            throw new IllegalStateException("Missing required tables: " + String.join(", ", missing));
+        }
+    }
+}
