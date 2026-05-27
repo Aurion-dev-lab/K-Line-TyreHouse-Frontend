@@ -4,11 +4,13 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
@@ -22,10 +24,11 @@
     <StackPane AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
                AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
 
-        <VBox maxWidth="560" maxHeight="480" spacing="0"
+        <VBox maxWidth="700" maxHeight="800" spacing="0"
               style="-fx-background-color: white; -fx-background-radius: 24;
                      -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 20, 0, 0, 10);">
 
+            <!-- Header: Invoice ID -->
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <VBox.margin><Insets bottom="4" left="32" right="32" top="32"/></VBox.margin>
                 <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1a1a2e;" text="New Invoice"/>
@@ -36,117 +39,171 @@
                        text="#INV-0001"/>
             </HBox>
 
-            <VBox spacing="20">
-                <padding><Insets bottom="32" left="32" right="32" top="16"/></padding>
+            <!-- Scrollable Content -->
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" VBox.vgrow="ALWAYS">
+                <VBox spacing="20" style="-fx-padding: 16 32 32 32;">
 
-                <Label style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #cbd5e1;" text="CUSTOMER DETAILS"/>
+                    <!-- CUSTOMER DETAILS -->
+                    <VBox spacing="8">
+                        <Label style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #cbd5e1;" text="CUSTOMER DETAILS"/>
+                        <GridPane hgap="16">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="55"/>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="45"/>
+                            </columnConstraints>
+                            <VBox spacing="8" GridPane.columnIndex="0">
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="CUSTOMER NAME"/>
+                                <ComboBox fx:id="cmbCustomerName" promptText="e.g. John Doe" editable="true"
+                                          style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                                 -fx-padding: 8; -fx-border-color: transparent; -fx-font-size: 14px;"/>
+                            </VBox>
+                            <VBox spacing="8" GridPane.columnIndex="1">
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="PHONE NUMBER"/>
+                                <TextField fx:id="txtPhone" promptText="07XXXXXXXX"
+                                           style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                                  -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
+                            </VBox>
+                            <rowConstraints><RowConstraints/></rowConstraints>
+                        </GridPane>
+                        <GridPane hgap="16">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="ALWAYS"/>
+                                <ColumnConstraints hgrow="ALWAYS"/>
+                            </columnConstraints>
+                            <VBox spacing="8" GridPane.columnIndex="0">
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="VEHICLE NUMBER"/>
+                                <TextField fx:id="txtVehicleNumber" promptText="WP ABC-1234"
+                                           style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                                  -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
+                            </VBox>
+                            <VBox spacing="8" GridPane.columnIndex="1">
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="INVOICE TYPE"/>
+                                <ComboBox fx:id="cmbInvoiceType" maxWidth="Infinity" promptText="Select type"
+                                          onAction="#handleTypeChange"
+                                          style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                                 -fx-padding: 8; -fx-border-color: transparent;"/>
+                            </VBox>
+                            <rowConstraints><RowConstraints/></rowConstraints>
+                        </GridPane>
+                    </VBox>
 
-                <GridPane hgap="16">
-                    <columnConstraints>
-                        <ColumnConstraints hgrow="ALWAYS" percentWidth="55"/>
-                        <ColumnConstraints hgrow="ALWAYS" percentWidth="45"/>
-                    </columnConstraints>
-                    <VBox spacing="8" GridPane.columnIndex="0">
-                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="CUSTOMER NAME"/>
-                        <ComboBox fx:id="cmbCustomerName" promptText="e.g. John Doe" editable="true"
-                                  style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
-                                         -fx-padding: 8; -fx-border-color: transparent; -fx-font-size: 14px;"/>
-                    </VBox>
-                    <VBox spacing="8" GridPane.columnIndex="1">
-                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="PHONE NUMBER"/>
-                        <TextField fx:id="txtPhone" promptText="07XXXXXXXX"
-                                   style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
-                                          -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
-                    </VBox>
-                    <rowConstraints><RowConstraints/></rowConstraints>
-                </GridPane>
-                <GridPane hgap="16">
-                    <columnConstraints>
-                        <ColumnConstraints hgrow="ALWAYS"/>
-                        <ColumnConstraints hgrow="ALWAYS"/>
-                    </columnConstraints>
-                    <VBox spacing="8" GridPane.columnIndex="0">
-                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="VEHICLE NUMBER"/>
-                        <TextField fx:id="txtVehicleNumber" promptText="WP ABC-1234"
-                                   style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
-                                          -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
-                    </VBox>
-                    <VBox spacing="8" GridPane.columnIndex="1">
-                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="INVOICE TYPE"/>
-                        <ComboBox fx:id="cmbInvoiceType" maxWidth="Infinity" promptText="Select type"
-                                  onAction="#handleTypeChange"
-                                  style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
-                                         -fx-padding: 8; -fx-border-color: transparent;"/>
-                    </VBox>
-                    <rowConstraints><RowConstraints/></rowConstraints>
-                </GridPane>
+                    <!-- ADD ITEM SECTION -->
+                    <VBox spacing="8">
+                        <Label style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #cbd5e1;" text="ADD ITEMS"/>
 
-                <Label style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #cbd5e1;" text="INVOICE DETAILS"/>
-                <VBox spacing="8">
-                    <Label fx:id="lblDynamicField"
-                           style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;"
-                           text="PRODUCT / SERVICE"/>
-                    <ComboBox fx:id="cmbProduct" maxWidth="Infinity" promptText="Choose a product…"
-                              style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
-                                     -fx-padding: 8; -fx-border-color: transparent;"
-                              managed="true" visible="true"/>
+                        <VBox spacing="8">
+                            <HBox alignment="CENTER_LEFT" spacing="12">
+                                <Label fx:id="lblDynamicField"
+                                       style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;"
+                                       text="PRODUCT / SERVICE"
+                                       HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="lblProductStock"
+                                       style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #10b981;"
+                                       text="Stock: —"/>
+                            </HBox>
+                            <ComboBox fx:id="cmbProduct" maxWidth="Infinity" promptText="Choose a product…"
+                                      style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                             -fx-padding: 8; -fx-border-color: transparent;"
+                                      managed="true" visible="true"/>
 
-                    <TextField fx:id="txtServiceDesc" promptText="e.g. Full engine service + oil change"
-                               style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
-                                      -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"
-                               managed="false" visible="false"/>
+                            <TextField fx:id="txtServiceDesc" promptText="e.g. Full engine service + oil change"
+                                       style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                              -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"
+                                       managed="false" visible="false"/>
+                        </VBox>
+
+                        <GridPane hgap="12">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="33"/>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="33"/>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="34"/>
+                            </columnConstraints>
+                            <VBox spacing="8" GridPane.columnIndex="0">
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="QUANTITY"/>
+                                <TextField fx:id="txtQuantity" promptText="1"
+                                           style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                                  -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
+                            </VBox>
+                            <VBox spacing="8" GridPane.columnIndex="1">
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="UNIT PRICE"/>
+                                <TextField fx:id="txtUnitPrice" promptText="0.00"
+                                           style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                                  -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
+                            </VBox>
+                            <VBox spacing="8" GridPane.columnIndex="2">
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text=""/>
+                                <Button fx:id="btnAddItem" onAction="#handleAddItem" prefHeight="40"
+                                        style="-fx-background-color: #3b82f6; -fx-background-radius: 12; -fx-text-fill: white;
+                                               -fx-font-weight: bold; -fx-cursor: hand;" text="+ Add Item"/>
+                            </VBox>
+                            <rowConstraints><RowConstraints/></rowConstraints>
+                        </GridPane>
+                    </VBox>
+
+                    <!-- LINE ITEMS DISPLAY -->
+                    <VBox spacing="8">
+                        <Label style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #cbd5e1;" text="INVOICE ITEMS"/>
+                        <VBox fx:id="vboxLineItems" spacing="8"
+                              style="-fx-border-color: #e0e0e0; -fx-border-radius: 12; -fx-padding: 12;
+                                     -fx-background-color: #f9f9f9;"/>
+                    </VBox>
+
+                    <!-- DISCOUNT & TOTALS -->
+                    <VBox spacing="12">
+                        <Label style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #cbd5e1;" text="BILLING"/>
+                        <GridPane hgap="16">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="ALWAYS"/>
+                                <ColumnConstraints hgrow="ALWAYS"/>
+                                <ColumnConstraints hgrow="ALWAYS"/>
+                            </columnConstraints>
+                            <VBox spacing="8" GridPane.columnIndex="0">
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="LABOUR (RS.)"/>
+                                <TextField fx:id="txtLabour" promptText="0.00"
+                                           style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                                  -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
+                            </VBox>
+                            <VBox spacing="8" GridPane.columnIndex="1">
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="PARTS (RS.)"/>
+                                <TextField fx:id="txtParts" promptText="0.00"
+                                           style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                                  -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
+                            </VBox>
+                            <VBox spacing="8" GridPane.columnIndex="2">
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="DISCOUNT (%)"/>
+                                <TextField fx:id="txtDiscount" promptText="0"
+                                           style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                                  -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
+                            </VBox>
+                            <rowConstraints><RowConstraints/></rowConstraints>
+                        </GridPane>
+
+                        <HBox alignment="CENTER_RIGHT" spacing="12"
+                              style="-fx-background-color: #f0fdf4; -fx-background-radius: 12; -fx-padding: 12 16 12 16;">
+                            <Label style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="TOTAL AMOUNT"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label style="-fx-font-size: 13px; -fx-text-fill: #94a3b8;" text="RS."/>
+                            <Label fx:id="lblTotal"
+                                   style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #00c853;"
+                                   text="0.00"/>
+                        </HBox>
+                    </VBox>
+
                 </VBox>
+            </ScrollPane>
 
-                <Label style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #cbd5e1;" text="BILLING DETAILS"/>
+            <!-- Action Buttons -->
+            <HBox alignment="CENTER_RIGHT" spacing="16"
+                  style="-fx-padding: 20 32 20 32; -fx-border-color: #e0e0e0; -fx-border-width: 1 0 0 0;">
+                <Button fx:id="btnCancel" onAction="#handleCancel" prefHeight="45" prefWidth="120"
+                        style="-fx-background-color: transparent; -fx-text-fill: #64748b;
+                               -fx-font-weight: bold; -fx-cursor: hand;" text="Cancel"/>
+                <Button fx:id="btnSave" onAction="#handleSave" prefHeight="50" prefWidth="180"
+                        style="-fx-background-color: #00c853; -fx-background-radius: 14; -fx-text-fill: white;
+                               -fx-font-weight: bold; -fx-font-size: 14px; -fx-cursor: hand;" text="Save Invoice"/>
+            </HBox>
 
-                <GridPane hgap="16">
-                    <columnConstraints>
-                        <ColumnConstraints hgrow="ALWAYS"/>
-                        <ColumnConstraints hgrow="ALWAYS"/>
-                        <ColumnConstraints hgrow="ALWAYS"/>
-                    </columnConstraints>
-                    <VBox spacing="8" GridPane.columnIndex="0">
-                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="LABOUR (RS.)"/>
-                        <TextField fx:id="txtLabour" promptText="0.00"
-                                   style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
-                                          -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
-                    </VBox>
-                    <VBox spacing="8" GridPane.columnIndex="1">
-                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="PARTS (RS.)"/>
-                        <TextField fx:id="txtParts" promptText="0.00"
-                                   style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
-                                          -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
-                    </VBox>
-                    <VBox spacing="8" GridPane.columnIndex="2">
-                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="DISCOUNT (%)"/>
-                        <TextField fx:id="txtDiscount" promptText="0"
-                                   style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
-                                          -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
-                    </VBox>
-                    <rowConstraints><RowConstraints/></rowConstraints>
-                </GridPane>
-
-                <HBox alignment="CENTER_RIGHT" spacing="12"
-                      style="-fx-background-color: #f0fdf4; -fx-background-radius: 12; -fx-padding: 12 16 12 16;">
-                    <Label style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="TOTAL AMOUNT"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Label style="-fx-font-size: 13px; -fx-text-fill: #94a3b8;" text="RS."/>
-                    <Label fx:id="lblTotal"
-                           style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #00c853;"
-                           text="0.00"/>
-                </HBox>
-
-                <HBox alignment="CENTER_RIGHT" spacing="16">
-                    <VBox.margin><Insets top="4"/></VBox.margin>
-                    <Button fx:id="btnCancel" onAction="#handleCancel" prefHeight="45" prefWidth="120"
-                            style="-fx-background-color: transparent; -fx-text-fill: #64748b;
-                                   -fx-font-weight: bold; -fx-cursor: hand;" text="Cancel"/>
-                    <Button fx:id="btnSave" onAction="#handleSave" prefHeight="50" prefWidth="180"
-                            style="-fx-background-color: #00c853; -fx-background-radius: 14; -fx-text-fill: white;
-                                   -fx-font-weight: bold; -fx-font-size: 14px; -fx-cursor: hand;" text="Save Invoice"/>
-                </HBox>
-
-            </VBox>
         </VBox>
     </StackPane>
 </AnchorPane>
+
