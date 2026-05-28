@@ -118,50 +118,8 @@
                 <Separator />
 
                 <AnchorPane style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
-                    <VBox prefHeight="238.0" prefWidth="260.0" spacing="10">
+                    <VBox fx:id="quickServiceList" prefHeight="238.0" prefWidth="260.0" spacing="10">
                         <padding><Insets bottom="15" left="10" right="10" top="15" /></padding>
-
-                        <Button maxWidth="Infinity" onAction="#onQuickPolish" styleClass="quick-service-btn">
-                            <graphic>
-                                <HBox alignment="CENTER_LEFT" spacing="12">
-                                    <StackPane styleClass="icon-bg-blue">
-                                        <FontIcon iconColor="white" iconLiteral="fas-wind" iconSize="16" />
-                                    </StackPane>
-                                    <VBox alignment="CENTER_LEFT">
-                                        <Label styleClass="service-title" text="Quick Polish" />
-                                        <Label styleClass="service-price" text="Rs. 500" />
-                                    </VBox>
-                                </HBox>
-                            </graphic>
-                        </Button>
-
-                        <Button maxWidth="Infinity" onAction="#onTyreAirFill" styleClass="quick-service-btn">
-                            <graphic>
-                                <HBox alignment="CENTER_LEFT" spacing="12">
-                                    <StackPane styleClass="icon-bg-green">
-                                        <FontIcon iconColor="white" iconLiteral="fas-tachometer-alt" iconSize="16" />
-                                    </StackPane>
-                                    <VBox alignment="CENTER_LEFT">
-                                        <Label styleClass="service-title" text="Tyre Air Fill" />
-                                        <Label styleClass="service-price" text="Rs. 100" />
-                                    </VBox>
-                                </HBox>
-                            </graphic>
-                        </Button>
-
-                        <Button maxWidth="Infinity" onAction="#onCoolantTopup" styleClass="quick-service-btn">
-                            <graphic>
-                                <HBox alignment="CENTER_LEFT" spacing="12">
-                                    <StackPane styleClass="icon-bg-cyan">
-                                        <FontIcon iconColor="white" iconLiteral="fas-tint" iconSize="16" />
-                                    </StackPane>
-                                    <VBox alignment="CENTER_LEFT">
-                                        <Label styleClass="service-title" text="Coolant Top-up" />
-                                        <Label styleClass="service-price" text="Rs. 350" />
-                                    </VBox>
-                                </HBox>
-                            </graphic>
-                        </Button>
                     </VBox>
                 </AnchorPane>
 

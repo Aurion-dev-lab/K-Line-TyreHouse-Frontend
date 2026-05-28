@@ -398,32 +398,27 @@ public class DashboardController implements Initializable {
     private void populateQuickActionsGrid() {
         if (quickActionsGrid == null) return;
 
-        // Clear only dynamic quick service nodes, preserve static shortcuts.
-        quickActionsGrid.getChildren().removeIf(node -> "quick-service".equals(node.getUserData()));
-
-        int startRow = getMaxRowIndex(quickActionsGrid) + 1;
+        quickActionsGrid.getChildren().clear();
 
         if (quickServices.isEmpty()) {
             Label emptyState = new Label("No quick services yet");
-            emptyState.setUserData("quick-service");
             emptyState.setStyle("-fx-text-fill: #e5e7eb; -fx-font-size: 12px;");
-            GridPane.setRowIndex(emptyState, startRow);
+            GridPane.setRowIndex(emptyState, 0);
             GridPane.setColumnIndex(emptyState, 0);
             GridPane.setColumnSpan(emptyState, 2);
             quickActionsGrid.getChildren().add(emptyState);
             return;
         }
-        
-        // Create buttons dynamically for each quick service
-        int row = startRow;
+
+        int row = 0;
         int col = 0;
-        
+
         for (QuickService service : quickServices) {
             Button btn = createQuickActionButton(service);
             GridPane.setColumnIndex(btn, col);
             GridPane.setRowIndex(btn, row);
             quickActionsGrid.getChildren().add(btn);
-            
+
             col++;
             if (col >= 2) {
                 col = 0;

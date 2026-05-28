@@ -1,5 +1,6 @@
 package com.gui.kline.controller;
 
+import com.gui.kline.data.DatabaseManager;
 import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.service.NavigationService;
@@ -7,10 +8,16 @@ import com.gui.kline.service.SyncService;
 import com.gui.kline.utils.AlertUtil;
 import com.gui.kline.utils.JsonUtil;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import org.kordamp.ikonli.javafx.FontIcon;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class LayoutController {
 
@@ -26,6 +33,10 @@ public class LayoutController {
             btnServices, btnSales, btnTyreExports, btnSalary,
             btnAnalytics, btnReports, btnQuickActions;
 
+    @FXML private VBox quickServiceList;
+    @FXML private Label lblTotalQuickCount;
+    @FXML private Label lblTotalQuickPrice;
+
     private Button activeButton;
     private boolean quickActionsVisible = true, isCollapsed = false;
     private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
@@ -38,6 +49,8 @@ public class LayoutController {
     public void initialize() {
         setActive(btnDashboard, "Dashboard", "dashboard");
         txtSearch.textProperty().addListener((obs, o, n) -> onSearch(n));
+        loadQuickActionsPanel();
+        loadQuickStats();
     }
 
     @FXML
@@ -127,20 +140,104 @@ public class LayoutController {
 
     @FXML
     private void onQuickPolish() {
-        enqueueQuickService("Quick Polish", 500);
-        System.out.println("Quick Polish added");
+        logQuickService("Quick Polish", 500);
     }
 
     @FXML
     private void onTyreAirFill() {
-        enqueueQuickService("Tyre Air Fill", 100);
-        System.out.println("Tyre Air Fill added");
+        logQuickService("Tyre Air Fill", 100);
     }
 
     @FXML
     private void onCoolantTopup() {
-        enqueueQuickService("Coolant Top-up", 350);
-        System.out.println("Coolant Top-up added");
+        logQuickService("Coolant Top-up", 350);
+    }
+
+    private void logQuickService(String service, double price) {
+        String insert = "INSERT INTO quick_services (id, service, price, service_date) VALUES (UUID(), ?, ?, ?)";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(insert)) {
+            ps.setString(1, service);
+            ps.setDouble(2, price);
+            ps.setDate(3, java.sql.Date.valueOf(java.time.LocalDate.now()));
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            System.err.println("Failed to log quick service: " + ex.getMessage());
+        }
+        enqueueQuickService(service, price);
+        loadQuickStats();
+    }
+
+    private void enqueueQuickService(String service, double price) {
+        String payload = JsonUtil.obj(
+                JsonUtil.field("service", service),
+                JsonUtil.field("price", price),
+                JsonUtil.field("date", java.time.LocalDate.now().toString())
+        );
+        syncQueueRepository.enqueue("quick_service", payload);
+    }
+
+    private void loadQuickActionsPanel() {
+        if (quickServiceList == null) return;
+        quickServiceList.getChildren().clear();
+
+        String sql = "SELECT service, price FROM quick_service_presets WHERE active = 1 ORDER BY service";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                String service = rs.getString("service");
+                double price = rs.getDouble("price");
+                quickServiceList.getChildren().add(buildQuickServiceButton(service, price));
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to load quick action presets: " + ex.getMessage());
+        }
+
+        if (quickServiceList.getChildren().isEmpty()) {
+            Label empty = new Label("No quick services yet");
+            empty.setStyle("-fx-text-fill: #9ca3af; -fx-font-size: 12px;");
+            quickServiceList.getChildren().add(empty);
+        }
+    }
+
+    private Button buildQuickServiceButton(String service, double price) {
+        Button button = new Button();
+        button.setMaxWidth(Double.MAX_VALUE);
+        button.getStyleClass().add("quick-service-btn");
+
+        VBox textBox = new VBox();
+        textBox.setAlignment(Pos.CENTER_LEFT);
+
+        Label title = new Label(service);
+        title.getStyleClass().add("service-title");
+
+        Label priceLabel = new Label("Rs. " + String.format("%.0f", price));
+        priceLabel.getStyleClass().add("service-price");
+
+        textBox.getChildren().addAll(title, priceLabel);
+
+        HBox content = new HBox(12, textBox);
+        content.setAlignment(Pos.CENTER_LEFT);
+        button.setGraphic(content);
+
+        button.setOnAction(e -> logQuickService(service, price));
+        return button;
+    }
+
+    private void loadQuickStats() {
+        if (lblTotalQuickCount == null || lblTotalQuickPrice == null) return;
+        String sql = "SELECT COUNT(*) AS total_count, COALESCE(SUM(price),0) AS total_sum FROM quick_services";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                lblTotalQuickCount.setText(String.valueOf(rs.getInt("total_count")));
+                lblTotalQuickPrice.setText("Rs. " + String.format("%.0f", rs.getDouble("total_sum")));
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to load quick service stats: " + ex.getMessage());
+        }
     }
 
     @FXML
@@ -151,14 +248,5 @@ public class LayoutController {
         } else {
             AlertUtil.showInfo("Upload complete", result.getMessage());
         }
-    }
-
-    private void enqueueQuickService(String service, double price) {
-        String payload = JsonUtil.obj(
-                JsonUtil.field("service", service),
-                JsonUtil.field("price", price),
-                JsonUtil.field("date", java.time.LocalDate.now().toString())
-        );
-        syncQueueRepository.enqueue("quick_service", payload);
     }
 }

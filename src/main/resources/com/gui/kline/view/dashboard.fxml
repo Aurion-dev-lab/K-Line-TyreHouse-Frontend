@@ -209,43 +209,6 @@
                                 <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
                                 <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
                             </columnConstraints>
-                            <children>
-                                <Button GridPane.rowIndex="0" GridPane.columnIndex="0"
-                                        text="New Invoice"
-                                        onAction="#handleQuickInvoice"
-                                        style="-fx-background-color: #111827; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 12 14; -fx-font-size: 12px; -fx-font-weight: bold;">
-                                    <graphic>
-                                        <Label text="🧾" style="-fx-font-size: 14px; -fx-text-fill: white;"/>
-                                    </graphic>
-                                </Button>
-
-                                <Button GridPane.rowIndex="0" GridPane.columnIndex="1"
-                                        text="Add Service"
-                                        onAction="#handleQuickService"
-                                        style="-fx-background-color: #111827; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 12 14; -fx-font-size: 12px; -fx-font-weight: bold;">
-                                    <graphic>
-                                        <Label text="🔧" style="-fx-font-size: 14px; -fx-text-fill: white;"/>
-                                    </graphic>
-                                </Button>
-
-                                <Button GridPane.rowIndex="1" GridPane.columnIndex="0"
-                                        text="New Customer"
-                                        onAction="#handleQuickCustomer"
-                                        style="-fx-background-color: #111827; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 12 14; -fx-font-size: 12px; -fx-font-weight: bold;">
-                                    <graphic>
-                                        <Label text="👤" style="-fx-font-size: 14px; -fx-text-fill: white;"/>
-                                    </graphic>
-                                </Button>
-
-                                <Button GridPane.rowIndex="1" GridPane.columnIndex="1"
-                                        text="Add Inventory"
-                                        onAction="#handleQuickInventory"
-                                        style="-fx-background-color: #111827; -fx-text-fill: white; -fx-background-radius: 10; -fx-padding: 12 14; -fx-font-size: 12px; -fx-font-weight: bold;">
-                                    <graphic>
-                                        <Label text="📦" style="-fx-font-size: 14px; -fx-text-fill: white;"/>
-                                    </graphic>
-                                </Button>
-                            </children>
                         </GridPane>
                     </VBox>
 
