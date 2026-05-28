@@ -101,6 +101,15 @@
                                                        text="Rs. 0" />
                                             </children>
                                         </HBox>
+                                        <HBox alignment="CENTER_LEFT">
+                                            <children>
+                                                <Label style="-fx-text-fill: #9ca3af;" text="Total Profit" />
+                                                <Region HBox.hgrow="ALWAYS" />
+                                                <Label fx:id="lblTotalProfit"
+                                                       style="-fx-text-fill: #fbbf24; -fx-font-size: 20px; -fx-font-weight: bold;"
+                                                       text="Rs. 0" />
+                                            </children>
+                                        </HBox>
                                     </children>
                                 </VBox>
 

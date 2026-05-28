@@ -87,15 +87,22 @@ public final class DatabaseManager {
                     "id VARCHAR(36) PRIMARY KEY," +
                     "credit_id VARCHAR(64)," +
                     "customer VARCHAR(255)," +
+                    "customer_name VARCHAR(255)," +
+                    "sale_date DATE," +
+                    "due_date DATE," +
+                    "subtotal DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "paid_amount DECIMAL(12,2) NOT NULL DEFAULT 0," +
                     "amount DECIMAL(12,2) NOT NULL DEFAULT 0," +
                     "status VARCHAR(32)," +
-                    "created_at DATETIME NOT NULL" +
+                    "created_at DATETIME NOT NULL," +
+                    "updated_at DATETIME" +
                     ")");
             statement.execute("CREATE TABLE IF NOT EXISTS services (" +
                     "id VARCHAR(36) PRIMARY KEY," +
                     "name VARCHAR(255)," +
                     "price DECIMAL(12,2) NOT NULL DEFAULT 0," +
-                    "service_date DATE" +
+                    "service_date DATE," +
+                    "remark VARCHAR(255)" +
                     ")");
             statement.execute("CREATE TABLE IF NOT EXISTS tyre_exports (" +
                     "id VARCHAR(36) PRIMARY KEY," +
@@ -140,6 +147,13 @@ public final class DatabaseManager {
                     "price DECIMAL(12,2) NOT NULL DEFAULT 0," +
                     "service_date DATE" +
                     ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS quick_service_presets (" +
+                    "id VARCHAR(36) PRIMARY KEY," +
+                    "service VARCHAR(255) NOT NULL," +
+                    "price DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "active TINYINT(1) NOT NULL DEFAULT 1," +
+                    "created_at DATETIME NOT NULL" +
+                    ")");
             statement.execute("INSERT IGNORE INTO app_sync_state (id, device_id, last_sync_at) " +
                     "VALUES (1, UUID(), NULL)");
             // Ensure new invoice columns exist on older databases
@@ -160,6 +174,15 @@ public final class DatabaseManager {
             ensureColumnExists(connection, "worker_credits", "worker_id", "VARCHAR(36)");
             ensureColumnExists(connection, "worker_credits", "note", "VARCHAR(255)");
             ensureColumnExists(connection, "worker_credits", "created_at", "DATETIME");
+            ensureColumnExists(connection, "services", "remark", "VARCHAR(255)");
+            ensureColumnExists(connection, "credit_sales", "customer_name", "VARCHAR(255)");
+            ensureColumnExists(connection, "credit_sales", "sale_date", "DATE");
+            ensureColumnExists(connection, "credit_sales", "due_date", "DATE");
+            ensureColumnExists(connection, "credit_sales", "subtotal", "DECIMAL(12,2)");
+            ensureColumnExists(connection, "credit_sales", "paid_amount", "DECIMAL(12,2)");
+            ensureColumnExists(connection, "credit_sales", "updated_at", "DATETIME");
+            ensureColumnExists(connection, "credit_sales", "amount", "DECIMAL(12,2)");
+            ensureColumnExists(connection, "credit_sales", "customer", "VARCHAR(255)");
             validateSchema(connection);
             initialized = true;
         } catch (SQLException ex) {
@@ -255,7 +278,8 @@ public final class DatabaseManager {
          List<String> required = List.of(
                  "app_sync_state", "sync_queue", "products", "customers",
                  "invoices", "invoice_line_items", "credit_sales", "services", "tyre_exports",
-                 "workers", "worker_attendance", "salary_advances", "worker_credits", "quick_services"
+                 "workers", "worker_attendance", "salary_advances", "worker_credits", "quick_services",
+                 "quick_service_presets"
          );
         String sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()";
         List<String> existing = new ArrayList<>();

@@ -1,6 +1,7 @@
 package com.gui.kline.controller;
 
 import com.gui.kline.data.SyncQueueRepository;
+import com.gui.kline.models.ViewModel;
 import com.gui.kline.service.NavigationService;
 import com.gui.kline.service.SyncService;
 import com.gui.kline.utils.AlertUtil;
@@ -8,6 +9,7 @@ import com.gui.kline.utils.JsonUtil;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.stage.Stage;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 public class LayoutController {
@@ -21,7 +23,7 @@ public class LayoutController {
 
     @FXML private Button btnHideQuick, btnCollapse, btnUpload;
     @FXML private Button btnDashboard, btnWorkers, btnInventory, btnInvoices,
-            btnSales, btnTyreExports, btnSalary,
+            btnServices, btnSales, btnTyreExports, btnSalary,
             btnAnalytics, btnReports, btnQuickActions;
 
     private Button activeButton;
@@ -107,6 +109,7 @@ public class LayoutController {
     @FXML private void onWorkers()     { setActive(btnWorkers, "Workers", "workers"); }
     @FXML private void onInventory()   { setActive(btnInventory, "Inventory", "inventory"); }
     @FXML private void onInvoices()    { setActive(btnInvoices, "Invoices & Billing", "invoices"); }
+    @FXML private void onServices()    { setActive(btnServices, "Services", "services"); }
     @FXML private void onSales()       { setActive(btnSales, "Credit Sales", "credit-sales"); }
     @FXML private void onTyreExports() { setActive(btnTyreExports, "Tyre Exports", "tyre-exports"); }
     @FXML private void onSalary()      { setActive(btnSalary, "Salary Management", "salary"); }
@@ -114,7 +117,8 @@ public class LayoutController {
     @FXML private void onReports()     { setActive(btnReports, "Reports", "reports"); }
 
     @FXML private void onQuickActions() {
-        System.out.println("Manage Quick Actions clicked");
+        Stage ownerStage = (Stage) btnQuickActions.getScene().getWindow();
+        ViewModel.INSTANCE.getViewsFactory().getForm("form/quick-service-presets-dialog", ownerStage);
     }
 
     private void onSearch(String q) {

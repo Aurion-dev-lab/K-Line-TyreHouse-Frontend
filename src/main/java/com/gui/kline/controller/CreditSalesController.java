@@ -2,6 +2,7 @@ package com.gui.kline.controller;
 
 import com.gui.kline.data.SyncQueueReader;
 import com.gui.kline.data.SyncQueueRepository;
+import com.gui.kline.data.LocalCreditSalesRepository;
 import com.gui.kline.utils.JsonUtil;
 import com.gui.kline.models.CreditSaleDetail;
 import com.gui.kline.models.Part;
@@ -53,6 +54,7 @@ public class CreditSalesController implements Initializable {
     private final ObservableList<CreditSaleRow> creditSaleList =
             FXCollections.observableArrayList();
     private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
+    private final LocalCreditSalesRepository creditSalesRepository = new LocalCreditSalesRepository();
 
     private CreditSaleRow         selectedSale       = null;
     private CreditSaleDetail currentSaleDetail  = null;
@@ -118,17 +120,34 @@ public class CreditSalesController implements Initializable {
         });
 
         colAction.setCellFactory(param -> new TableCell<>() {
-            private final Button btn = new Button("View");
+            private final HBox box = new HBox(6);
+            private final Button btnView = new Button("View");
+            private final Button btnEdit = new Button("Edit");
+            private final Button btnDelete = new Button("✕");
+            
             {
-                btn.setStyle("-fx-background-color: transparent; -fx-border-color: rgba(0,0,0,0.12); " +
-                        "-fx-border-radius: 6; -fx-font-size: 11px; -fx-text-fill: #666666; " +
-                        "-fx-padding: 4 10 4 10; -fx-cursor: hand;");
-                btn.setOnAction(e -> onViewCredit(getTableView().getItems().get(getIndex())));
+                btnView.setStyle("-fx-background-color: #3b82f6; -fx-border-color: #1e3a8a; " +
+                        "-fx-border-radius: 6; -fx-font-size: 11px; -fx-text-fill: #ffffff; " +
+                        "-fx-padding: 4 10 4 10; -fx-cursor: hand; -fx-font-weight: bold;");
+                btnEdit.setStyle("-fx-background-color: #f59e0b; -fx-border-color: #b45309; " +
+                        "-fx-border-radius: 6; -fx-font-size: 11px; -fx-text-fill: #ffffff; " +
+                        "-fx-padding: 4 10 4 10; -fx-cursor: hand; -fx-font-weight: bold;");
+                btnDelete.setStyle("-fx-background-color: #ef4444; -fx-border-color: #991b1b; " +
+                        "-fx-border-radius: 6; -fx-font-size: 11px; -fx-text-fill: #ffffff; " +
+                        "-fx-padding: 4 8 4 8; -fx-cursor: hand; -fx-font-weight: bold;");
+                
+                btnView.setOnAction(e -> onViewCredit(getTableView().getItems().get(getIndex())));
+                btnEdit.setOnAction(e -> onEditCredit(getTableView().getItems().get(getIndex())));
+                btnDelete.setOnAction(e -> onDeleteCredit(getTableView().getItems().get(getIndex())));
+                
+                box.setStyle("-fx-spacing: 6;");
+                box.getChildren().addAll(btnView, btnEdit, btnDelete);
             }
+            
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                setGraphic(empty ? null : btn);
+                setGraphic(empty ? null : box);
             }
         });
     }
@@ -163,9 +182,34 @@ public class CreditSalesController implements Initializable {
 
     private void onViewCredit(CreditSaleRow sale) {
         selectedSale = sale;
+        isEditMode = false;
+        enableDetailPanel();
+        loadSaleDetail(sale);
+    }
+    
+    private void onEditCredit(CreditSaleRow sale) {
+        selectedSale = sale;
         isEditMode = true;
         enableDetailPanel();
         loadSaleDetail(sale);
+    }
+    
+    private void onDeleteCredit(CreditSaleRow sale) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirm Delete");
+        confirm.setHeaderText("Delete Credit Sale?");
+        confirm.setContentText("Are you sure you want to delete credit sale #" + sale.getCreditId() + "?");
+        
+        if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+            try {
+                creditSalesRepository.deleteCreditSale(sale.getCreditId());
+                creditSaleList.remove(sale);
+                showSuccess("Credit sale deleted successfully");
+                onDeselect();
+            } catch (Exception ex) {
+                showError("Failed to delete: " + ex.getMessage());
+            }
+        }
     }
 
     @FXML
@@ -272,10 +316,17 @@ public class CreditSalesController implements Initializable {
                 "PENDING"
         );
 
-        if (!isEditMode) creditSaleList.add(0, row);
-        enqueueCreditSale(row, currentSaleDetail);
-        showSuccess("Credit sale " + (isEditMode ? "updated" : "created") + " successfully.");
-        onDeselect();
+        try {
+            // Save to database
+            creditSalesRepository.saveCreditSale(currentSaleDetail, row);
+            
+            if (!isEditMode) creditSaleList.add(0, row);
+            enqueueCreditSale(row, currentSaleDetail);
+            showSuccess("Credit sale " + (isEditMode ? "updated" : "created") + " successfully.");
+            onDeselect();
+        } catch (Exception ex) {
+            showError("Failed to save: " + ex.getMessage());
+        }
     }
 
     @FXML
@@ -344,9 +395,12 @@ public class CreditSalesController implements Initializable {
     private String generateCreditId() { return "CS" + System.currentTimeMillis(); }
 
     private void loadFromLocal() {
-        SyncQueueReader reader = new SyncQueueReader();
-        List<CreditSaleRow> local = reader.loadCreditSales();
-        creditSaleList.setAll(local);
+        try {
+            List<CreditSaleRow> local = creditSalesRepository.loadAllCreditSales();
+            creditSaleList.setAll(local);
+        } catch (Exception ex) {
+            showError("Failed to load credit sales: " + ex.getMessage());
+        }
     }
 
     private void showError(String msg) {

@@ -40,6 +40,9 @@
                     <Button fx:id="btnInvoices" maxWidth="Infinity" onAction="#onInvoices" styleClass="nav-button" text="    Invoices &amp; Billing">
                         <graphic><FontIcon iconLiteral="fas-file-alt" /></graphic>
                     </Button>
+                    <Button fx:id="btnServices" maxWidth="Infinity" onAction="#onServices" styleClass="nav-button" text="   Services">
+                        <graphic><FontIcon iconLiteral="fas-tools" /></graphic>
+                    </Button>
                     <Button fx:id="btnSales" maxWidth="Infinity" onAction="#onSales" styleClass="nav-button" text="   Credit Sales">
                         <graphic><FontIcon iconLiteral="fas-shopping-cart" /></graphic>
                     </Button>
