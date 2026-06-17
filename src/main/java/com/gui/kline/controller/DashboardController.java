@@ -2,6 +2,7 @@ package com.gui.kline.controller;
 
 import com.gui.kline.data.*;
 import com.gui.kline.models.Product;
+import com.gui.kline.models.ExportRecord;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.service.NavigationService;
 import com.gui.kline.utils.JsonUtil;
@@ -581,26 +582,42 @@ public class DashboardController implements Initializable {
         return invoices + creditSales + services + quickServicesTotal;
     }
 
-    private double sumProfit(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
-        double invoiceProfit = sumAmount(conn,
-                "SELECT COALESCE(SUM(il.qty * (il.unit_price - COALESCE(p.buy_price,0))),0) " +
-                        "FROM invoice_line_items il " +
-                        "LEFT JOIN products p ON p.id = il.product_id " +
-                        "JOIN invoices i ON i.id = il.invoice_ref " +
-                        "WHERE COALESCE(i.invoice_date, DATE(i.created_at)) BETWEEN ? AND ?",
-                startDate, endDate);
-        double creditSales = sumAmount(conn,
-                "SELECT COALESCE(SUM(COALESCE(subtotal, amount)),0) FROM credit_sales " +
-                        "WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ?",
-                startDate, endDate);
-        double services = sumAmount(conn,
-                "SELECT COALESCE(SUM(price),0) FROM services WHERE service_date BETWEEN ? AND ?",
-                startDate, endDate);
-        double quickServicesTotal = sumAmount(conn,
-                "SELECT COALESCE(SUM(price),0) FROM quick_services WHERE service_date BETWEEN ? AND ?",
-                startDate, endDate);
-        return invoiceProfit + creditSales + services + quickServicesTotal;
-    }
+     private double sumProfit(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
+         double invoiceProfit = sumAmount(conn,
+                 "SELECT COALESCE(SUM(il.qty * (il.unit_price - COALESCE(p.buy_price,0))),0) " +
+                         "FROM invoice_line_items il " +
+                         "LEFT JOIN products p ON p.id = il.product_id " +
+                         "JOIN invoices i ON i.id = il.invoice_ref " +
+                         "WHERE COALESCE(i.invoice_date, DATE(i.created_at)) BETWEEN ? AND ?",
+                 startDate, endDate);
+         double creditSalesProfit = sumAmount(conn,
+                 "SELECT COALESCE(SUM(COALESCE(subtotal, amount)),0) FROM credit_sales " +
+                         "WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ?",
+                 startDate, endDate);
+         double servicesProfit = sumAmount(conn,
+                 "SELECT COALESCE(SUM(price),0) FROM services WHERE service_date BETWEEN ? AND ?",
+                 startDate, endDate);
+         double quickServicesProfit = sumAmount(conn,
+                 "SELECT COALESCE(SUM(price),0) FROM quick_services WHERE service_date BETWEEN ? AND ?",
+                 startDate, endDate);
+         
+         // Add tyre exports profit from sync_queue (calculated from JSON payload)
+         double tyreExportsProfit = calculateTyreExportsProfit(startDate, endDate);
+         
+         return invoiceProfit + creditSalesProfit + servicesProfit + quickServicesProfit + tyreExportsProfit;
+     }
+
+     private double calculateTyreExportsProfit(LocalDate startDate, LocalDate endDate) {
+         SyncQueueReader reader = new SyncQueueReader();
+         List<ExportRecord> exports = reader.loadTyreExports();
+         return exports.stream()
+                 .filter(e -> {
+                     LocalDate date = e.getDate();
+                     return !date.isBefore(startDate) && !date.isAfter(endDate);
+                 })
+                 .mapToDouble(e -> (e.getCustPrice() - e.getCompPrice()) * e.getTyres() + e.getServiceCharge())
+                 .sum();
+     }
 
     private int countServices(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
         int services = countRows(conn,

@@ -84,21 +84,12 @@
 
                 <VBox spacing="12">
 
-                    <GridPane hgap="12">
-                        <columnConstraints>
-                            <ColumnConstraints hgrow="ALWAYS" percentWidth="35" />
-                            <ColumnConstraints hgrow="ALWAYS" percentWidth="65" />
-                        </columnConstraints>
-                        <VBox spacing="6" GridPane.columnIndex="0">
-                            <Label style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="CATEGORY" />
-                            <ChoiceBox fx:id="cboPartCategory" maxWidth="1.7976931348623157E308" style="-fx-background-color: #f8fafc; -fx-background-radius: 10;                                               -fx-padding: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 10;                                               -fx-border-width: 1; -fx-font-size: 12px;" />
-                        </VBox>
-                        <VBox spacing="6" GridPane.columnIndex="1">
-                            <Label style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="DESCRIPTION" />
-                            <TextField fx:id="txtPartDesc" promptText="Part name/model" style="-fx-background-color: #f8fafc; -fx-background-radius: 10;                                               -fx-padding: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 10;                                               -fx-border-width: 1; -fx-font-size: 12px;" />
-                        </VBox>
-                        <rowConstraints><RowConstraints /></rowConstraints>
-                    </GridPane>
+                    <VBox spacing="8">
+                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="SELECT PRODUCT FROM INVENTORY" />
+                        <ComboBox fx:id="cmbProduct" promptText="Choose a product..." style="-fx-background-color: #f8fafc; -fx-background-radius: 10;
+                                                       -fx-padding: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 10;
+                                                       -fx-border-width: 1; -fx-font-size: 12px;" />
+                    </VBox>
                <AnchorPane prefHeight="57.0" prefWidth="590.0">
                   <children>
       

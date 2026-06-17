@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
@@ -139,11 +140,10 @@
 
                 <ChoiceBox fx:id="cboPartCategory" maxWidth="1.7976931348623157E308" prefHeight="32" styleClass="field-choice" />
 
-                <TextField fx:id="txtPartDesc" prefHeight="32" promptText="Part description…" styleClass="field-input" />
+                <ComboBox fx:id="cboProduct" maxWidth="1.7976931348623157E308" prefHeight="32" promptText="Select Product..." styleClass="field-input" />
 
                 <HBox spacing="6">
                     <TextField fx:id="txtPartQty" prefHeight="32" prefWidth="64" promptText="Qty" styleClass="field-input field-narrow" />
-                    <TextField fx:id="txtPartPrice" prefHeight="32" promptText="Unit Price (Rs.)" styleClass="field-input" HBox.hgrow="ALWAYS" />
                 </HBox>
 
                 <Button fx:id="btnAddPart" maxWidth="1.7976931348623157E308" onAction="#onAddPart" styleClass="btn-add-inv" text="＋  Add Part" />

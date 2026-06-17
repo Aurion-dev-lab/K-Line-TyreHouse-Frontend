@@ -3,9 +3,11 @@ package com.gui.kline.controller;
 import com.gui.kline.data.SyncQueueReader;
 import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.data.LocalCreditSalesRepository;
+import com.gui.kline.data.LocalCatalogRepository;
 import com.gui.kline.utils.JsonUtil;
 import com.gui.kline.models.CreditSaleDetail;
 import com.gui.kline.models.Part;
+import com.gui.kline.models.Product;
 import com.gui.kline.models.ViewModel;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -44,9 +46,8 @@ public class CreditSalesController implements Initializable {
     @FXML private Label lblPaid;
     @FXML private Label lblAmountDue;
     @FXML private ChoiceBox<String> cboPartCategory;
-    @FXML private TextField         txtPartDesc;
+    @FXML private ComboBox<Product> cboProduct;
     @FXML private TextField         txtPartQty;
-    @FXML private TextField         txtPartPrice;
     @FXML private Button            btnAddPart;
     @FXML private Button            btnGenerateSale;
     @FXML private Button            btnDeselect;
@@ -55,6 +56,7 @@ public class CreditSalesController implements Initializable {
             FXCollections.observableArrayList();
     private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
     private final LocalCreditSalesRepository creditSalesRepository = new LocalCreditSalesRepository();
+    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
 
     private CreditSaleRow         selectedSale       = null;
     private CreditSaleDetail currentSaleDetail  = null;
@@ -156,6 +158,54 @@ public class CreditSalesController implements Initializable {
         cboPartCategory.setItems(FXCollections.observableArrayList(
                 "Engine Parts", "Suspension", "Electrical", "Body Parts", "Accessories", "Consumables"));
         cboPartCategory.getSelectionModel().selectFirst();
+        
+        // Load products for the selected category
+        loadProductsForCategory(cboPartCategory.getValue());
+        
+        cboPartCategory.getSelectionModel().selectedItemProperty().addListener((obs, old, nw) -> {
+            if (nw != null) {
+                loadProductsForCategory(nw);
+            }
+        });
+    }
+
+    private void loadProductsForCategory(String category) {
+        try {
+            List<Product> products = catalogRepository.getProductsByCategory(category);
+            ObservableList<Product> productList = FXCollections.observableArrayList(products);
+            cboProduct.setItems(productList);
+            
+            // Custom cell factory to display product name and stock
+            cboProduct.setCellFactory(param -> new ListCell<>() {
+                @Override
+                protected void updateItem(Product item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                    } else {
+                        setText(item.getName() + " (Stock: " + item.getStock() + ")");
+                    }
+                }
+            });
+            
+            cboProduct.setButtonCell(new ListCell<>() {
+                @Override
+                protected void updateItem(Product item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText("Select Product");
+                    } else {
+                        setText(item.getName() + " (Stock: " + item.getStock() + ")");
+                    }
+                }
+            });
+            
+            if (!productList.isEmpty()) {
+                cboProduct.getSelectionModel().selectFirst();
+            }
+        } catch (Exception ex) {
+            showError("Failed to load products: " + ex.getMessage());
+        }
     }
 
     private void setupEventHandlers() {
@@ -163,11 +213,20 @@ public class CreditSalesController implements Initializable {
                 .addListener((obs, old, nw) -> { if (nw != null) onViewCredit(nw); });
     }
 
-    @FXML
-    private void onNewCredit(ActionEvent event) {
-        Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        ViewModel.INSTANCE.getViewsFactory().getForm("form/credit-sale-dialog", ownerStage);
-    }
+     @FXML
+     private void onNewCredit(ActionEvent event) {
+         Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+         ViewModel.INSTANCE.getViewsFactory().getForm("form/credit-sale-dialog", ownerStage);
+         
+         // Add a listener to refresh table when dialog closes
+         Stage dialogStage = ViewModel.INSTANCE.getViewsFactory().getLastDialogStage();
+         if (dialogStage != null) {
+             dialogStage.setOnHidden(e -> {
+                 // Reload credit sales from database
+                 loadFromLocal();
+             });
+         }
+     }
 
     @FXML
     private void onSearch(javafx.scene.input.KeyEvent event) {
@@ -219,42 +278,46 @@ public class CreditSalesController implements Initializable {
             return;
         }
 
-        String category = cboPartCategory.getValue();
-        String desc = txtPartDesc.getText().trim();
-
-        if (category == null || category.isBlank()) {
-            showError("Please select a part category.");
-            return;
-        }
-        if (desc.isBlank()) {
-            showError("Please enter part description.");
+        Product selectedProduct = cboProduct.getValue();
+        
+        if (selectedProduct == null) {
+            showError("Please select a product.");
             return;
         }
 
         String qtyStr = txtPartQty.getText().trim();
-        String priceStr = txtPartPrice.getText().trim();
 
-        if (qtyStr.isBlank() || priceStr.isBlank()) {
-            showError("Please enter quantity and unit price.");
+        if (qtyStr.isBlank()) {
+            showError("Please enter quantity.");
             return;
         }
 
         try {
             int qty = Integer.parseInt(qtyStr);
-            double price = Double.parseDouble(priceStr);
-            if (qty <= 0 || price <= 0) {
-                showError("Quantity and price must be greater than 0.");
+            if (qty <= 0) {
+                showError("Quantity must be greater than 0.");
+                return;
+            }
+            
+            if (qty > selectedProduct.getStock()) {
+                showError("Insufficient stock. Available: " + selectedProduct.getStock());
                 return;
             }
 
-            Part part = new Part(desc, category, qty, price);
+            Part part = new Part(
+                    selectedProduct.getName(),
+                    selectedProduct.getCategory(),
+                    qty,
+                    selectedProduct.getSellPrice(),
+                    selectedProduct.getId()
+            );
             currentSaleDetail.addPart(part);
             addPartToPanel(part);
             clearPartInputs();
             updateTotals();
 
         } catch (NumberFormatException e) {
-            showError("Invalid quantity or price.");
+            showError("Invalid quantity.");
         }
     }
 
@@ -291,10 +354,9 @@ public class CreditSalesController implements Initializable {
     }
 
     private void clearPartInputs() {
-        txtPartDesc.clear();
         txtPartQty.clear();
-        txtPartPrice.clear();
         cboPartCategory.getSelectionModel().selectFirst();
+        loadProductsForCategory(cboPartCategory.getValue());
     }
 
     @FXML
@@ -423,7 +485,8 @@ public class CreditSalesController implements Initializable {
                         JsonUtil.field("category", part.getCategory()),
                         JsonUtil.field("quantity", part.getQuantity()),
                         JsonUtil.field("unitPrice", part.getUnitPrice()),
-                        JsonUtil.field("total", part.getTotal())
+                        JsonUtil.field("total", part.getTotal()),
+                        JsonUtil.field("productId", part.getProductId())
                 ))
                 .toArray(String[]::new);
 

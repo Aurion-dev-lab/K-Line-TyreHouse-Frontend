@@ -225,17 +225,32 @@ public class TyreExportsController implements Initializable {
         return btn;
     }
 
-    private void advanceStatus(ExportRecord r) {
-        String next = switch (r.getStatus()) {
-            case "PENDING"      -> "IN TRANSPORT";
-            case "IN TRANSPORT" -> "DELIVERED";
-            case "DELIVERED"    -> "PAID";
-            default             -> r.getStatus();
-        };
-        r.setStatus(next);
-        rebuildCards();
-        refreshStats();
-    }
+     private void advanceStatus(ExportRecord r) {
+         String next = switch (r.getStatus()) {
+             case "PENDING"      -> "IN TRANSPORT";
+             case "IN TRANSPORT" -> "DELIVERED";
+             case "DELIVERED"    -> "PAID";
+             default             -> r.getStatus();
+         };
+         r.setStatus(next);
+         // Persist the status change
+         enqueueStatusUpdate(r);
+         rebuildCards();
+         refreshStats();
+     }
+
+     private void enqueueStatusUpdate(ExportRecord r) {
+         String payload = JsonUtil.obj(
+                 JsonUtil.field("company", r.getCompany()),
+                 JsonUtil.field("tyres", r.getTyres()),
+                 JsonUtil.field("custPrice", r.getCustPrice()),
+                 JsonUtil.field("compPrice", r.getCompPrice()),
+                 JsonUtil.field("serviceFee", r.getServiceCharge()),
+                 JsonUtil.field("date", r.getDate().toString()),
+                 JsonUtil.field("status", r.getStatus())
+         );
+         syncQueueRepository.enqueue("tyre_export_update", payload);
+     }
 
     private void enqueueExport(ExportRecord r) {
         String payload = JsonUtil.obj(

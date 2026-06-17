@@ -10,8 +10,12 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class ViewFactory {
+    // Storage for last opened dialog stage
+    private Stage lastDialogStage;
+    
     public void getView(String view){
         try{
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gui/kline/view/" + view + ".fxml"));
@@ -59,6 +63,9 @@ public class ViewFactory {
             ownerStage.heightProperty().addListener((obs, oldVal, newVal) -> stage.setHeight(newVal.doubleValue()));
 
             stage.show();
+            
+            // Store reference so callers can access it
+            lastDialogStage = stage;
 
             return controller;
 
@@ -66,5 +73,10 @@ public class ViewFactory {
             e.printStackTrace();
             return null;
         }
+    }
+    
+    // New method to get the last opened dialog stage
+    public Stage getLastDialogStage() {
+        return lastDialogStage;
     }
 }

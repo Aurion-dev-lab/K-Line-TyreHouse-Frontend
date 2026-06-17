@@ -83,20 +83,33 @@ public final class DatabaseManager {
                      "created_at DATETIME NOT NULL," +
                      "FOREIGN KEY (invoice_ref) REFERENCES invoices(id) ON DELETE CASCADE" +
                      ") ENGINE=InnoDB");
-            statement.execute("CREATE TABLE IF NOT EXISTS credit_sales (" +
-                    "id VARCHAR(36) PRIMARY KEY," +
-                    "credit_id VARCHAR(64)," +
-                    "customer VARCHAR(255)," +
-                    "customer_name VARCHAR(255)," +
-                    "sale_date DATE," +
-                    "due_date DATE," +
-                    "subtotal DECIMAL(12,2) NOT NULL DEFAULT 0," +
-                    "paid_amount DECIMAL(12,2) NOT NULL DEFAULT 0," +
-                    "amount DECIMAL(12,2) NOT NULL DEFAULT 0," +
-                    "status VARCHAR(32)," +
-                    "created_at DATETIME NOT NULL," +
-                    "updated_at DATETIME" +
-                    ")");
+             statement.execute("CREATE TABLE IF NOT EXISTS credit_sales (" +
+                     "id VARCHAR(36) PRIMARY KEY," +
+                     "credit_id VARCHAR(64)," +
+                     "customer VARCHAR(255)," +
+                     "customer_name VARCHAR(255)," +
+                     "sale_date DATE," +
+                     "due_date DATE," +
+                     "subtotal DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                     "paid_amount DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                     "amount DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                     "status VARCHAR(32)," +
+                     "created_at DATETIME NOT NULL," +
+                     "updated_at DATETIME" +
+                     ")");
+             statement.execute("CREATE TABLE IF NOT EXISTS credit_sale_parts (" +
+                      "id VARCHAR(36) PRIMARY KEY," +
+                      "credit_sale_id VARCHAR(36) NOT NULL," +
+                      "product_id VARCHAR(36)," +
+                      "description VARCHAR(255)," +
+                      "quantity INT," +
+                      "unit_price DECIMAL(12,2)," +
+                      "total DECIMAL(12,2)," +
+                      "created_at DATETIME NOT NULL," +
+                      "FOREIGN KEY (credit_sale_id) REFERENCES credit_sales(id) ON DELETE CASCADE," +
+                      "FOREIGN KEY (product_id) REFERENCES products(id)," +
+                      "INDEX idx_credit_sale_id (credit_sale_id)" +
+                      ") ENGINE=InnoDB");
             statement.execute("CREATE TABLE IF NOT EXISTS services (" +
                     "id VARCHAR(36) PRIMARY KEY," +
                     "name VARCHAR(255)," +
@@ -175,15 +188,16 @@ public final class DatabaseManager {
             ensureColumnExists(connection, "worker_credits", "note", "VARCHAR(255)");
             ensureColumnExists(connection, "worker_credits", "created_at", "DATETIME");
             ensureColumnExists(connection, "services", "remark", "VARCHAR(255)");
-            ensureColumnExists(connection, "credit_sales", "customer_name", "VARCHAR(255)");
-            ensureColumnExists(connection, "credit_sales", "sale_date", "DATE");
-            ensureColumnExists(connection, "credit_sales", "due_date", "DATE");
-            ensureColumnExists(connection, "credit_sales", "subtotal", "DECIMAL(12,2)");
-            ensureColumnExists(connection, "credit_sales", "paid_amount", "DECIMAL(12,2)");
-            ensureColumnExists(connection, "credit_sales", "updated_at", "DATETIME");
-            ensureColumnExists(connection, "credit_sales", "amount", "DECIMAL(12,2)");
-            ensureColumnExists(connection, "credit_sales", "customer", "VARCHAR(255)");
-            validateSchema(connection);
+             ensureColumnExists(connection, "credit_sales", "customer_name", "VARCHAR(255)");
+             ensureColumnExists(connection, "credit_sales", "sale_date", "DATE");
+             ensureColumnExists(connection, "credit_sales", "due_date", "DATE");
+             ensureColumnExists(connection, "credit_sales", "subtotal", "DECIMAL(12,2)");
+             ensureColumnExists(connection, "credit_sales", "paid_amount", "DECIMAL(12,2)");
+             ensureColumnExists(connection, "credit_sales", "updated_at", "DATETIME");
+             ensureColumnExists(connection, "credit_sales", "amount", "DECIMAL(12,2)");
+             ensureColumnExists(connection, "credit_sales", "customer", "VARCHAR(255)");
+             ensureColumnExists(connection, "credit_sale_parts", "product_id", "VARCHAR(36)");
+             validateSchema(connection);
             initialized = true;
         } catch (SQLException ex) {
             System.err.println("=== DATABASE INITIALIZATION ERROR ===");
@@ -274,13 +288,13 @@ public final class DatabaseManager {
         }
     }
 
-    private static void validateSchema(Connection connection) throws SQLException {
-         List<String> required = List.of(
-                 "app_sync_state", "sync_queue", "products", "customers",
-                 "invoices", "invoice_line_items", "credit_sales", "services", "tyre_exports",
-                 "workers", "worker_attendance", "salary_advances", "worker_credits", "quick_services",
-                 "quick_service_presets"
-         );
+     private static void validateSchema(Connection connection) throws SQLException {
+          List<String> required = List.of(
+                  "app_sync_state", "sync_queue", "products", "customers",
+                  "invoices", "invoice_line_items", "credit_sales", "credit_sale_parts", "services", "tyre_exports",
+                  "workers", "worker_attendance", "salary_advances", "worker_credits", "quick_services",
+                  "quick_service_presets"
+          );
         String sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()";
         List<String> existing = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(sql);

@@ -11,69 +11,103 @@ import java.util.List;
 
 public class LocalCreditSalesRepository {
 
-    public void saveCreditSale(CreditSaleDetail detail, CreditSalesController.CreditSaleRow row) {
-        String sql = "INSERT INTO credit_sales (credit_id, sale_date, customer_name, due_date, subtotal, paid_amount, status, created_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, NOW()) " +
-                "ON DUPLICATE KEY UPDATE sale_date=?, customer_name=?, due_date=?, subtotal=?, paid_amount=?, status=?, updated_at=NOW()";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setString(1, row.getCreditId());
-            ps.setString(2, row.getDate());
-            ps.setString(3, row.getCustomer());
-            ps.setString(4, row.getDueDate());
-            ps.setDouble(5, row.getAmount());
-            ps.setDouble(6, detail.getPaid());
-            ps.setString(7, row.getStatus());
-            
-            // For update clause
-            ps.setString(8, row.getDate());
-            ps.setString(9, row.getCustomer());
-            ps.setString(10, row.getDueDate());
-            ps.setDouble(11, row.getAmount());
-            ps.setDouble(12, detail.getPaid());
-            ps.setString(13, row.getStatus());
-            
-            ps.executeUpdate();
-            
-            // Save parts
-            saveParts(detail.getCreditId(), detail.getParts());
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to save credit sale: " + e.getMessage());
-        }
-    }
+    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
 
-    private void saveParts(String creditId, List<Part> parts) {
-        String sql = "INSERT INTO credit_sale_parts (credit_id, description, category, quantity, unit_price, created_at) VALUES (?, ?, ?, ?, ?, NOW())";
-        
-        // Delete old parts first
-        String deleteSql = "DELETE FROM credit_sale_parts WHERE credit_id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement psDelete = conn.prepareStatement(deleteSql)) {
-            psDelete.setString(1, creditId);
-            psDelete.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete old parts: " + e.getMessage());
-        }
-        
-        // Insert new parts
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            for (Part part : parts) {
-                ps.setString(1, creditId);
-                ps.setString(2, part.getDescription());
-                ps.setString(3, part.getCategory());
-                ps.setInt(4, part.getQuantity());
-                ps.setDouble(5, part.getUnitPrice());
-                ps.addBatch();
-            }
-            ps.executeBatch();
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to save parts: " + e.getMessage());
-        }
-    }
+    public void saveCreditSale(CreditSaleDetail detail, CreditSalesController.CreditSaleRow row) {
+         String sql = "INSERT INTO credit_sales (id, credit_id, sale_date, customer_name, due_date, subtotal, paid_amount, status, created_at) " +
+                 "VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, NOW()) " +
+                 "ON DUPLICATE KEY UPDATE sale_date=?, customer_name=?, due_date=?, subtotal=?, paid_amount=?, status=?, updated_at=NOW()";
+         
+         try (Connection conn = getConnection();
+              PreparedStatement ps = conn.prepareStatement(sql)) {
+             
+             ps.setString(1, row.getCreditId());
+             ps.setString(2, row.getDate());
+             ps.setString(3, row.getCustomer());
+             ps.setString(4, row.getDueDate());
+             ps.setDouble(5, row.getAmount());
+             ps.setDouble(6, detail.getPaid());
+             ps.setString(7, row.getStatus());
+             
+             // For update clause
+             ps.setString(8, row.getDate());
+             ps.setString(9, row.getCustomer());
+             ps.setString(10, row.getDueDate());
+             ps.setDouble(11, row.getAmount());
+             ps.setDouble(12, detail.getPaid());
+             ps.setString(13, row.getStatus());
+             
+             ps.executeUpdate();
+             
+             // Save parts and update inventory
+             saveParts(row.getCreditId(), detail.getParts());
+             updateInventoryForCreditSale(detail.getParts());
+         } catch (SQLException e) {
+             throw new RuntimeException("Failed to save credit sale: " + e.getMessage());
+         }
+     }
+
+     private void saveParts(String creditId, List<Part> parts) {
+         // First get the credit_sales.id for the credit_id
+         String getIdSql = "SELECT id FROM credit_sales WHERE credit_id = ?";
+         String creditSaleId = null;
+         
+         try (Connection conn = getConnection();
+              PreparedStatement ps = conn.prepareStatement(getIdSql)) {
+             ps.setString(1, creditId);
+             ResultSet rs = ps.executeQuery();
+             if (rs.next()) {
+                 creditSaleId = rs.getString("id");
+             }
+         } catch (SQLException e) {
+             throw new RuntimeException("Failed to get credit sale id: " + e.getMessage());
+         }
+         
+         if (creditSaleId == null) {
+             throw new RuntimeException("Credit sale not found");
+         }
+         
+         // Delete old parts first
+         String deleteSql = "DELETE FROM credit_sale_parts WHERE credit_sale_id = ?";
+         try (Connection conn = getConnection();
+              PreparedStatement psDelete = conn.prepareStatement(deleteSql)) {
+             psDelete.setString(1, creditSaleId);
+             psDelete.executeUpdate();
+         } catch (SQLException e) {
+             throw new RuntimeException("Failed to delete old parts: " + e.getMessage());
+         }
+         
+         // Insert new parts
+         String sql = "INSERT INTO credit_sale_parts (id, credit_sale_id, product_id, description, quantity, unit_price, total, created_at) " +
+                 "VALUES (UUID(), ?, ?, ?, ?, ?, ?, NOW())";
+         
+         try (Connection conn = getConnection();
+              PreparedStatement ps = conn.prepareStatement(sql)) {
+             
+             final String finalCreditSaleId = creditSaleId;
+             for (Part part : parts) {
+                 ps.setString(1, finalCreditSaleId);
+                 ps.setString(2, part.getProductId());
+                 ps.setString(3, part.getDescription());
+                 ps.setInt(4, part.getQuantity());
+                 ps.setDouble(5, part.getUnitPrice());
+                 ps.setDouble(6, part.getTotal());
+                 ps.addBatch();
+             }
+             ps.executeBatch();
+         } catch (SQLException e) {
+             throw new RuntimeException("Failed to save parts: " + e.getMessage());
+         }
+     }
+
+     private void updateInventoryForCreditSale(List<Part> parts) {
+         for (Part part : parts) {
+             if (part.getProductId() != null) {
+                 // Reduce stock for each part added
+                 catalogRepository.updateProductStock(part.getProductId(), -part.getQuantity());
+             }
+         }
+     }
 
     public CreditSaleDetail loadCreditSaleDetail(String creditId) {
         String sql = "SELECT * FROM credit_sales WHERE credit_id = ?";
@@ -106,51 +140,99 @@ public class LocalCreditSalesRepository {
         return detail;
     }
 
-    private List<Part> loadParts(String creditId) {
-        String sql = "SELECT * FROM credit_sale_parts WHERE credit_id = ?";
-        List<Part> parts = new ArrayList<>();
-        
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setString(1, creditId);
-            ResultSet rs = ps.executeQuery();
-            
-            while (rs.next()) {
-                Part part = new Part(
-                    rs.getString("description"),
-                    rs.getString("category"),
-                    rs.getInt("quantity"),
-                    rs.getDouble("unit_price")
-                );
-                parts.add(part);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to load parts: " + e.getMessage());
-        }
-        
-        return parts;
-    }
+     private List<Part> loadParts(String creditId) {
+         // First get the credit_sales.id from credit_id
+         String getIdSql = "SELECT id FROM credit_sales WHERE credit_id = ?";
+         String creditSaleId = null;
+         
+         try (Connection conn = getConnection();
+              PreparedStatement ps = conn.prepareStatement(getIdSql)) {
+             ps.setString(1, creditId);
+             ResultSet rs = ps.executeQuery();
+             if (rs.next()) {
+                 creditSaleId = rs.getString("id");
+             }
+         } catch (SQLException e) {
+             return new ArrayList<>(); // Return empty list if credit sale not found
+         }
+         
+         if (creditSaleId == null) {
+             return new ArrayList<>();
+         }
+         
+         String sql = "SELECT * FROM credit_sale_parts WHERE credit_sale_id = ?";
+         List<Part> parts = new ArrayList<>();
+         
+         try (Connection conn = getConnection();
+              PreparedStatement ps = conn.prepareStatement(sql)) {
+             
+             ps.setString(1, creditSaleId);
+             ResultSet rs = ps.executeQuery();
+             
+             while (rs.next()) {
+                 Part part = new Part(
+                     rs.getString("description"),
+                     "",  // category not stored in new schema
+                     rs.getInt("quantity"),
+                     rs.getDouble("unit_price"),
+                     rs.getString("product_id")
+                 );
+                 parts.add(part);
+             }
+         } catch (SQLException e) {
+             throw new RuntimeException("Failed to load parts: " + e.getMessage());
+         }
+         
+         return parts;
+     }
 
-    public void deleteCreditSale(String creditId) {
-        String sql = "DELETE FROM credit_sales WHERE credit_id = ?";
-        
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            // Delete parts first
-            String deleteParts = "DELETE FROM credit_sale_parts WHERE credit_id = ?";
-            try (PreparedStatement psDelete = conn.prepareStatement(deleteParts)) {
-                psDelete.setString(1, creditId);
-                psDelete.executeUpdate();
-            }
-            
-            ps.setString(1, creditId);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete credit sale: " + e.getMessage());
-        }
-    }
+     public void deleteCreditSale(String creditId) {
+         // First, get the credit_sales.id
+         String getIdSql = "SELECT id FROM credit_sales WHERE credit_id = ?";
+         String creditSaleId = null;
+         
+         try (Connection conn = getConnection();
+              PreparedStatement ps = conn.prepareStatement(getIdSql)) {
+             ps.setString(1, creditId);
+             ResultSet rs = ps.executeQuery();
+             if (rs.next()) {
+                 creditSaleId = rs.getString("id");
+             }
+         } catch (SQLException e) {
+             throw new RuntimeException("Failed to get credit sale id: " + e.getMessage());
+         }
+         
+         if (creditSaleId == null) {
+             throw new RuntimeException("Credit sale not found");
+         }
+
+         // Load parts to restore inventory
+         List<Part> parts = loadParts(creditId);
+         for (Part part : parts) {
+             if (part.getProductId() != null) {
+                 // Restore stock
+                 catalogRepository.updateProductStock(part.getProductId(), part.getQuantity());
+             }
+         }
+
+         String sql = "DELETE FROM credit_sales WHERE credit_id = ?";
+         
+         try (Connection conn = getConnection();
+              PreparedStatement ps = conn.prepareStatement(sql)) {
+             
+             // Delete parts first
+             String deleteParts = "DELETE FROM credit_sale_parts WHERE credit_sale_id = ?";
+             try (PreparedStatement psDelete = conn.prepareStatement(deleteParts)) {
+                 psDelete.setString(1, creditSaleId);
+                 psDelete.executeUpdate();
+             }
+             
+             ps.setString(1, creditId);
+             ps.executeUpdate();
+         } catch (SQLException e) {
+             throw new RuntimeException("Failed to delete credit sale: " + e.getMessage());
+         }
+     }
 
     public void updatePayment(String creditId, double paidAmount) {
         String sql = "UPDATE credit_sales SET paid_amount = ?, status = ? WHERE credit_id = ?";
