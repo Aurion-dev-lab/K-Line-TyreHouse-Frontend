@@ -1,12 +1,29 @@
 package com.gui.kline.sync.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.gui.kline.sync.dto.SyncItemDto;
-import com.gui.kline.sync.model.*;
-import com.gui.kline.sync.repo.*;
+import java.time.LocalDate;
+
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.gui.kline.sync.dto.SyncItemDto;
+import com.gui.kline.sync.model.CreditSaleRecord;
+import com.gui.kline.sync.model.InvoiceRecord;
+import com.gui.kline.sync.model.ProductRecord;
+import com.gui.kline.sync.model.QuickServiceRecord;
+import com.gui.kline.sync.model.SalaryAdvanceRecord;
+import com.gui.kline.sync.model.ServiceRecord;
+import com.gui.kline.sync.model.TyreExportRecord;
+import com.gui.kline.sync.model.WorkerCreditRecord;
+import com.gui.kline.sync.model.WorkerRecord;
+import com.gui.kline.sync.repo.CreditSaleRecordRepository;
+import com.gui.kline.sync.repo.InvoiceRecordRepository;
+import com.gui.kline.sync.repo.ProductRecordRepository;
+import com.gui.kline.sync.repo.QuickServiceRecordRepository;
+import com.gui.kline.sync.repo.SalaryAdvanceRecordRepository;
+import com.gui.kline.sync.repo.ServiceRecordRepository;
+import com.gui.kline.sync.repo.TyreExportRecordRepository;
+import com.gui.kline.sync.repo.WorkerCreditRecordRepository;
+import com.gui.kline.sync.repo.WorkerRecordRepository;
 
 @Service
 public class SyncPersistService {
@@ -130,6 +147,7 @@ public class SyncPersistService {
         record.setDeviceId(deviceId);
         record.setOperation(text(payload, "operation"));
         record.setProductId(text(payload, "productId"));
+        record.setProductCode(text(payload, "productCode"));
         record.setName(text(payload, "name"));
         record.setCategory(text(payload, "category"));
         record.setBuyPrice(number(payload, "buyPrice"));

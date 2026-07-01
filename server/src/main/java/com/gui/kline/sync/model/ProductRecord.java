@@ -12,6 +12,7 @@ public class ProductRecord {
     private String deviceId;
     private String operation;
     private String productId;
+    private String productCode;
     private String name;
     private String category;
     private double buyPrice;
@@ -48,6 +49,14 @@ public class ProductRecord {
 
     public void setProductId(String productId) {
         this.productId = productId;
+    }
+
+    public String getProductCode() {
+        return productCode;
+    }
+
+    public void setProductCode(String productCode) {
+        this.productCode = productCode;
     }
 
     public String getName() {

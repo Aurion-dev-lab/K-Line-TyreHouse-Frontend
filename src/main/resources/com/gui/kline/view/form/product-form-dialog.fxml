@@ -37,6 +37,11 @@
                 </VBox>
 
                 <VBox spacing="8">
+                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="PRODUCT CODE" />
+                    <TextField fx:id="txtProductCode" promptText="e.g. PRD-1001" style="-fx-background-color: #f8fafc; -fx-background-radius: 12; -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;" />
+                </VBox>
+
+                <VBox spacing="8">
                     <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="CATEGORY" />
                     <ComboBox fx:id="cmbCategory" maxWidth="Infinity" promptText="e.g. Lubricants, Tyres, Spare Parts" style="-fx-background-color: #f8fafc; -fx-background-radius: 12; -fx-padding: 8; -fx-border-color: transparent;" />
                 </VBox>
@@ -66,8 +71,8 @@
                         <TextField fx:id="txtQuantity" promptText="0" style="-fx-background-color: #f8fafc; -fx-background-radius: 12; -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;" />
                     </VBox>
                     <VBox spacing="8" GridPane.columnIndex="1">
-                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="MIN STOCK ALERT" />
-                        <TextField fx:id="txtMinStock" promptText="5" style="-fx-background-color: #f8fafc; -fx-background-radius: 12; -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;" />
+                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="QUANTITY" />
+                        <TextField fx:id="txtQuantity" promptText="0" style="-fx-background-color: #f8fafc; -fx-background-radius: 12; -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;" />
                     </VBox>
                 </GridPane>
 

@@ -1,5 +1,9 @@
 package com.gui.kline.controller.form;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.gui.kline.data.LocalCatalogRepository;
 import com.gui.kline.data.LocalInvoiceRepository;
 import com.gui.kline.data.SyncQueueRepository;
@@ -8,19 +12,23 @@ import com.gui.kline.models.InvoiceRow;
 import com.gui.kline.models.LineItem;
 import com.gui.kline.models.Product;
 import com.gui.kline.utils.JsonUtil;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class AddInvoiceController {
 
@@ -30,7 +38,7 @@ public class AddInvoiceController {
     @FXML private TextField          txtVehicleNumber;
     @FXML private ComboBox<String>   cmbInvoiceType;
     @FXML private Label              lblDynamicField;
-    @FXML private ComboBox<String>   cmbProduct;
+    @FXML private ComboBox<Product>   cmbProduct;
     @FXML private TextField          txtServiceDesc;
     @FXML private TextField          txtQuantity;
     @FXML private TextField          txtUnitPrice;
@@ -47,7 +55,6 @@ public class AddInvoiceController {
     private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
     private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
     private final LocalInvoiceRepository invoiceRepository = new LocalInvoiceRepository();
-    private final Map<String, Product> productMap = new HashMap<>();
     private final List<LineItem> lineItems = new ArrayList<>();
     private String editInvoiceId = null;
     private InvoiceDetail originalDetail = null;
@@ -59,8 +66,6 @@ public class AddInvoiceController {
         cmbInvoiceType.getSelectionModel().selectFirst();
         cmbCustomerName.setEditable(true);
         cmbCustomerName.getItems().setAll(catalogRepository.getCustomerNames());
-        cmbProduct.getItems().setAll(catalogRepository.getProductNames());
-        
         loadProductData();
         showSaleField();
         
@@ -76,16 +81,28 @@ public class AddInvoiceController {
     }
 
     private void loadProductData() {
-        productMap.clear();
-        for (Product p : catalogRepository.loadProducts()) {
-            productMap.put(p.getName(), p);
-        }
+        ObservableList<Product> products = FXCollections.observableArrayList(catalogRepository.loadProducts());
+        cmbProduct.setItems(products);
+        cmbProduct.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(Product item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : formatProductLabel(item));
+            }
+        });
+        cmbProduct.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(Product item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "Select a product code" : formatProductLabel(item));
+            }
+        });
     }
 
     private void updateProductStock() {
-        String selected = cmbProduct.getValue();
-        if (selected != null && productMap.containsKey(selected)) {
-            Product p = productMap.get(selected);
+        Product selected = cmbProduct.getValue();
+        if (selected != null) {
+            Product p = selected;
             lblProductStock.setText("Stock: " + p.getStock() + " units");
         } else {
             lblProductStock.setText("Stock: —");
@@ -144,17 +161,16 @@ public class AddInvoiceController {
 
         try {
             if ("Sale".equals(type) || "Both".equals(type)) {
-                if (cmbProduct.getValue() != null && !cmbProduct.getValue().isBlank()) {
-                    String productName = cmbProduct.getValue();
-                    description = productName;
-                    Product p = productMap.get(productName);
-                    productId = p != null ? p.getId() : null;
+                Product selectedProduct = cmbProduct.getValue();
+                if (selectedProduct != null) {
+                    description = formatProductLabel(selectedProduct);
+                    productId = selectedProduct.getId();
 
                     qty = Integer.parseInt(txtQuantity.getText().trim());
                     price = Double.parseDouble(txtUnitPrice.getText().trim());
 
-                    if (p != null && p.getStock() < qty) {
-                        alert("Insufficient stock. Available: " + p.getStock());
+                    if (selectedProduct.getStock() < qty) {
+                        alert("Insufficient stock. Available: " + selectedProduct.getStock());
                         return;
                     }
 
@@ -311,6 +327,7 @@ public class AddInvoiceController {
                     String payload = JsonUtil.obj(
                             JsonUtil.field("operation", "update"),
                             JsonUtil.field("productId", product.getId()),
+                            JsonUtil.field("productCode", product.getCode()),
                             JsonUtil.field("name", product.getName()),
                             JsonUtil.field("category", product.getCategory()),
                             JsonUtil.field("buyPrice", product.getBuyPrice()),
@@ -411,6 +428,14 @@ public class AddInvoiceController {
         }
         String typed = cmbCustomerName.getEditor().getText();
         return typed == null ? "" : typed.trim();
+    }
+
+    private String formatProductLabel(Product product) {
+        String code = product.getCode();
+        if (code == null || code.isBlank()) {
+            return product.getName();
+        }
+        return code + " - " + product.getName();
     }
 
     @FXML

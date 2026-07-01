@@ -1,11 +1,16 @@
 package com.gui.kline.controller;
 
+import java.net.URL;
+import java.util.List;
+import java.util.ResourceBundle;
+
 import com.gui.kline.controller.form.ProductFormController;
 import com.gui.kline.data.LocalCatalogRepository;
 import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.Product;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.utils.JsonUtil;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -24,10 +29,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
-import java.net.URL;
-import java.util.List;
-import java.util.ResourceBundle;
 
 public class InventoryController implements Initializable {
 
@@ -66,6 +67,7 @@ public class InventoryController implements Initializable {
         String q = txtSearch.getText().trim().toLowerCase();
         filteredList.setPredicate(p ->
                 q.isEmpty()
+                        || p.getCode().toLowerCase().contains(q)
                         || p.getName().toLowerCase().contains(q)
                         || p.getCategory().toLowerCase().contains(q)
         );
@@ -112,6 +114,9 @@ public class InventoryController implements Initializable {
         Label name = new Label(p.getName());
         name.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #111827;");
 
+        Label code = new Label(p.getCode());
+        code.setStyle("-fx-font-size: 11px; -fx-text-fill: #6B7280;");
+
         Label cat = new Label(p.getCategory().toUpperCase());
         cat.setStyle(
                 "-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #374151;" +
@@ -129,7 +134,7 @@ public class InventoryController implements Initializable {
         HBox meta = new HBox(8, cat, buy, sell);
         meta.setAlignment(Pos.CENTER_LEFT);
 
-        VBox info = new VBox(4, name, meta);
+        VBox info = new VBox(4, name, code, meta);
         info.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(info, Priority.ALWAYS);
 
@@ -230,6 +235,7 @@ public class InventoryController implements Initializable {
         String payload = JsonUtil.obj(
                 JsonUtil.field("operation", operation),
                 JsonUtil.field("productId", product.getId()),
+            JsonUtil.field("productCode", product.getCode()),
                 JsonUtil.field("name", product.getName()),
                 JsonUtil.field("category", product.getCategory()),
                 JsonUtil.field("buyPrice", product.getBuyPrice()),

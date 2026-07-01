@@ -1,30 +1,41 @@
 package com.gui.kline.controller;
 
+import java.net.URL;
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
+
 import com.gui.kline.data.LocalCatalogRepository;
 import com.gui.kline.data.LocalInvoiceRepository;
 import com.gui.kline.data.SyncQueueReader;
 import com.gui.kline.data.SyncQueueRepository;
-import com.gui.kline.utils.JsonUtil;
 import com.gui.kline.models.InvoiceDetail;
 import com.gui.kline.models.InvoiceRow;
 import com.gui.kline.models.LineItem;
 import com.gui.kline.models.Product;
 import com.gui.kline.models.ViewModel;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.Node;
-import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import com.gui.kline.utils.JsonUtil;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
-import java.net.URL;
-import java.time.LocalDate;
-import java.util.*;
 
 public class InvoicesController implements Initializable {
     @FXML private Button btnNewInvoice;
@@ -71,7 +82,7 @@ public class InvoicesController implements Initializable {
     private void loadProductMap() {
         productMap.clear();
         for (Product p : catalogRepository.loadProducts()) {
-            productMap.put(p.getName(), p);
+            productMap.put(p.getId(), p);
         }
     }
 
@@ -287,7 +298,7 @@ public class InvoicesController implements Initializable {
     private void deductInventory(InvoiceDetail detail) {
         for (LineItem item : detail.getLineItems()) {
             if ("Sales".equals(item.getType()) && item.getProductId() != null) {
-                Product product = productMap.get(item.getDescription());
+                Product product = catalogRepository.findProductById(item.getProductId());
                 if (product != null) {
                     int newStock = product.getStock() - item.getQty();
                     if (newStock < 0) {
@@ -301,6 +312,7 @@ public class InvoicesController implements Initializable {
                     String payload = JsonUtil.obj(
                             JsonUtil.field("operation", "update"),
                             JsonUtil.field("productId", product.getId()),
+                            JsonUtil.field("productCode", product.getCode()),
                             JsonUtil.field("name", product.getName()),
                             JsonUtil.field("category", product.getCategory()),
                             JsonUtil.field("buyPrice", product.getBuyPrice()),
@@ -369,6 +381,7 @@ public class InvoicesController implements Initializable {
                     String payload = JsonUtil.obj(
                             JsonUtil.field("operation", "update"),
                             JsonUtil.field("productId", product.getId()),
+                            JsonUtil.field("productCode", product.getCode()),
                             JsonUtil.field("name", product.getName()),
                             JsonUtil.field("category", product.getCategory()),
                             JsonUtil.field("buyPrice", product.getBuyPrice()),

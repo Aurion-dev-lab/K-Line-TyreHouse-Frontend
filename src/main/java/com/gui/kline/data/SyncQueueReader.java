@@ -1,5 +1,12 @@
 package com.gui.kline.data;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -8,13 +15,6 @@ import com.gui.kline.controller.CreditSalesController;
 import com.gui.kline.models.ExportRecord;
 import com.gui.kline.models.InvoiceRow;
 import com.gui.kline.models.Product;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 public class SyncQueueReader {
     public List<InvoiceRow> loadInvoices() {
@@ -51,12 +51,15 @@ public class SyncQueueReader {
     public List<Product> loadProducts() {
         List<Product> products = new ArrayList<>();
         for (JsonObject payload : loadPayloads("product")) {
+            String code = getText(payload, "productCode", "");
             String name = getText(payload, "name", "Product");
             String category = getText(payload, "category", "Other");
             double buy = getNumber(payload, "buyPrice", 0.0);
             double sell = getNumber(payload, "sellPrice", 0.0);
             int stock = (int) getNumber(payload, "stock", 0.0);
-            products.add(new Product(name, category, buy, sell, stock));
+            Product product = new Product(name, category, buy, sell, stock);
+            product.setCode(code);
+            products.add(product);
         }
         return products;
     }

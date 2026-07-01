@@ -43,6 +43,7 @@ public final class DatabaseManager {
                     ")");
             statement.execute("CREATE TABLE IF NOT EXISTS products (" +
                     "id VARCHAR(36) PRIMARY KEY," +
+                       "product_code VARCHAR(64)," +
                     "name VARCHAR(255) NOT NULL UNIQUE," +
                     "category VARCHAR(128)," +
                     "buy_price DECIMAL(12,2) NOT NULL DEFAULT 0," +
@@ -197,6 +198,9 @@ public final class DatabaseManager {
              ensureColumnExists(connection, "credit_sales", "amount", "DECIMAL(12,2)");
              ensureColumnExists(connection, "credit_sales", "customer", "VARCHAR(255)");
              ensureColumnExists(connection, "credit_sale_parts", "product_id", "VARCHAR(36)");
+             ensureColumnExists(connection, "products", "product_code", "VARCHAR(64)");
+             backfillProductCodes(connection);
+             ensureUniqueIndex(connection, "products", "uk_products_product_code", "product_code");
              validateSchema(connection);
             initialized = true;
         } catch (SQLException ex) {
@@ -311,6 +315,30 @@ public final class DatabaseManager {
         }
         if (!missing.isEmpty()) {
             throw new IllegalStateException("Missing required tables: " + String.join(", ", missing));
+        }
+    }
+
+    private static void backfillProductCodes(Connection connection) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE products SET product_code = CONCAT('PRD-', UPPER(SUBSTRING(REPLACE(id, '-', ''), 1, 8))) " +
+                        "WHERE product_code IS NULL OR product_code = ''")) {
+            ps.executeUpdate();
+        }
+    }
+
+    private static void ensureUniqueIndex(Connection connection, String table, String indexName, String column)
+            throws SQLException {
+        String sql = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?";
+        try (PreparedStatement check = connection.prepareStatement(sql)) {
+            check.setString(1, table);
+            check.setString(2, indexName);
+            try (ResultSet rs = check.executeQuery()) {
+                if (rs.next() && rs.getInt(1) == 0) {
+                    try (Statement create = connection.createStatement()) {
+                        create.execute("ALTER TABLE " + table + " ADD UNIQUE INDEX " + indexName + " (" + column + ")");
+                    }
+                }
+            }
         }
     }
 }

@@ -1,24 +1,34 @@
 package com.gui.kline.controller.form;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.gui.kline.controller.CreditSalesController;
 import com.gui.kline.data.LocalCatalogRepository;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.data.LocalCreditSalesRepository;
+import com.gui.kline.data.SyncQueueRepository;
+import com.gui.kline.models.CreditSaleDetail;
 import com.gui.kline.models.Part;
 import com.gui.kline.models.Product;
-import com.gui.kline.models.CreditSaleDetail;
-import com.gui.kline.controller.CreditSalesController;
 import com.gui.kline.utils.JsonUtil;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.collections.FXCollections;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
 
 public class ProcessCreditSaleController {
 
@@ -29,7 +39,7 @@ public class ProcessCreditSaleController {
      @FXML private DatePicker          dpSaleDate;
      @FXML private DatePicker          dpDueDate;
      @FXML private ChoiceBox<String>   cboPaymentTerms;
-     @FXML private ComboBox<String>    cmbProduct;
+    @FXML private ComboBox<Product>   cmbProduct;
      @FXML private TextField           txtPartQty;
      @FXML private TextField           txtPartPrice;
      @FXML private Button              btnAddPart;
@@ -56,11 +66,22 @@ public class ProcessCreditSaleController {
          
          // Load products from inventory
          availableProducts = catalogRepository.loadProducts();
-         List<String> productNames = new ArrayList<>();
-         for (Product product : availableProducts) {
-             productNames.add(product.getName());
-         }
-         cmbProduct.setItems(FXCollections.observableArrayList(productNames));
+         ObservableList<Product> productItems = FXCollections.observableArrayList(availableProducts);
+         cmbProduct.setItems(productItems);
+         cmbProduct.setCellFactory(list -> new ListCell<>() {
+             @Override
+             protected void updateItem(Product item, boolean empty) {
+                 super.updateItem(item, empty);
+                 setText(empty || item == null ? null : formatProductLabel(item) + " (Stock: " + item.getStock() + ")");
+             }
+         });
+         cmbProduct.setButtonCell(new ListCell<>() {
+             @Override
+             protected void updateItem(Product item, boolean empty) {
+                 super.updateItem(item, empty);
+                 setText(empty || item == null ? "Select Product" : formatProductLabel(item) + " (Stock: " + item.getStock() + ")");
+             }
+         });
          cmbProduct.setOnAction(e -> onProductSelected());
          
          cboPaymentTerms.setItems(FXCollections.observableArrayList(
@@ -96,33 +117,22 @@ public class ProcessCreditSaleController {
      }
 
      private void onProductSelected() {
-         String selectedProductName = cmbProduct.getValue();
-         if (selectedProductName == null || selectedProductName.isBlank()) {
+         Product selectedProductName = cmbProduct.getValue();
+         if (selectedProductName == null) {
              txtPartPrice.clear();
              return;
          }
-
-         // Find the selected product
-         Product selectedProduct = availableProducts.stream()
-                 .filter(p -> p.getName().equals(selectedProductName))
-                 .findFirst()
-                 .orElse(null);
-
-         if (selectedProduct != null) {
-             // Auto-fill price
-             txtPartPrice.setText(String.valueOf(selectedProduct.getSellPrice()));
-             // Set quantity to 1 by default
-             txtPartQty.setText("1");
-         }
+         txtPartPrice.setText(String.valueOf(selectedProductName.getSellPrice()));
+         txtPartQty.setText("1");
      }
 
      @FXML
      private void onAddPart() {
-         String productName = cmbProduct.getValue();
+         Product selectedProduct = cmbProduct.getValue();
          String qtyStr = txtPartQty.getText().trim();
          String priceStr = txtPartPrice.getText().trim();
 
-         if (productName == null || productName.isBlank()) {
+         if (selectedProduct == null) {
              alert("Please select a product from inventory.");
              return;
          }
@@ -140,17 +150,6 @@ public class ProcessCreditSaleController {
                  return;
              }
 
-             // Find the selected product to validate stock
-             Product selectedProduct = availableProducts.stream()
-                     .filter(p -> p.getName().equals(productName))
-                     .findFirst()
-                     .orElse(null);
-
-             if (selectedProduct == null) {
-                 alert("Product not found in inventory.");
-                 return;
-             }
-
              // Validate stock
              if (selectedProduct.getStock() < qty) {
                  alert("Insufficient stock. Available: " + selectedProduct.getStock() + 
@@ -158,7 +157,7 @@ public class ProcessCreditSaleController {
                  return;
              }
 
-             Part part = new Part(selectedProduct.getName(), selectedProduct.getCategory(), qty, price, selectedProduct.getId());
+             Part part = new Part(formatProductLabel(selectedProduct), selectedProduct.getCategory(), qty, price, selectedProduct.getId());
              addedParts.add(part);
 
              addPartToUI(part);
@@ -302,6 +301,14 @@ public class ProcessCreditSaleController {
          }
          String typed = cmbCustomerName.getEditor().getText();
          return typed == null ? "" : typed.trim();
+     }
+
+     private String formatProductLabel(Product product) {
+         String code = product.getCode();
+         if (code == null || code.isBlank()) {
+             return product.getName();
+         }
+         return code + " - " + product.getName();
      }
 
      private void enqueueCreditSale(CreditSalesController.CreditSaleRow row, CreditSaleDetail detail) {

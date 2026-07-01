@@ -1,30 +1,41 @@
 package com.gui.kline.controller;
 
-import com.gui.kline.data.SyncQueueReader;
-import com.gui.kline.data.SyncQueueRepository;
-import com.gui.kline.data.LocalCreditSalesRepository;
+import java.net.URL;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.ResourceBundle;
+
 import com.gui.kline.data.LocalCatalogRepository;
-import com.gui.kline.utils.JsonUtil;
+import com.gui.kline.data.LocalCreditSalesRepository;
+import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.CreditSaleDetail;
 import com.gui.kline.models.Part;
 import com.gui.kline.models.Product;
 import com.gui.kline.models.ViewModel;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.Node;
-import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import com.gui.kline.utils.JsonUtil;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
-import java.net.URL;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
 
 public class CreditSalesController implements Initializable {
     @FXML private Button btnNewCredit;
@@ -183,7 +194,7 @@ public class CreditSalesController implements Initializable {
                     if (empty || item == null) {
                         setText(null);
                     } else {
-                        setText(item.getName() + " (Stock: " + item.getStock() + ")");
+                        setText(formatProductLabel(item) + " (Stock: " + item.getStock() + ")");
                     }
                 }
             });
@@ -195,7 +206,7 @@ public class CreditSalesController implements Initializable {
                     if (empty || item == null) {
                         setText("Select Product");
                     } else {
-                        setText(item.getName() + " (Stock: " + item.getStock() + ")");
+                        setText(formatProductLabel(item) + " (Stock: " + item.getStock() + ")");
                     }
                 }
             });
@@ -357,6 +368,14 @@ public class CreditSalesController implements Initializable {
         txtPartQty.clear();
         cboPartCategory.getSelectionModel().selectFirst();
         loadProductsForCategory(cboPartCategory.getValue());
+    }
+
+    private String formatProductLabel(Product product) {
+        String code = product.getCode();
+        if (code == null || code.isBlank()) {
+            return product.getName();
+        }
+        return code + " - " + product.getName();
     }
 
     @FXML

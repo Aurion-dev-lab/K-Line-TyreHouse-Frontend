@@ -1,26 +1,31 @@
 package com.gui.kline.controller.form;
 
-import com.gui.kline.models.Product;
-import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.*;
-import javafx.stage.Stage;
-
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
+
+import com.gui.kline.models.Product;
+
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 
 public class ProductFormController implements Initializable {
 
     @FXML private Label            lblTitle;
     @FXML private Label            lblBadge;
     @FXML private TextField        txtProductName;
+    @FXML private TextField        txtProductCode;
     @FXML private ComboBox<String> cmbCategory;
     @FXML private TextField        txtBuyPrice;
     @FXML private TextField        txtSellPrice;
     @FXML private TextField        txtQuantity;
-    @FXML private TextField        txtMinStock;
     @FXML private Button           btnSubmit;
     @FXML private Button           btnCancel;
 
@@ -42,11 +47,9 @@ public class ProductFormController implements Initializable {
                 "Lubricants", "Tyres", "Spare Parts",
                 "Batteries", "Filters", "Accessories", "Other"
         ));
-        txtMinStock.setText("5");
         enforceNumeric(txtBuyPrice);
         enforceNumeric(txtSellPrice);
         enforceNumeric(txtQuantity);
-        enforceNumeric(txtMinStock);
     }
 
     private void applyEditMode() {
@@ -63,6 +66,8 @@ public class ProductFormController implements Initializable {
         );
 
         txtProductName.setText(editingProduct.getName());
+        txtProductCode.setText(editingProduct.getCode());
+        txtProductCode.setDisable(true);
         cmbCategory.setValue(editingProduct.getCategory());
         txtBuyPrice.setText(String.format("%.2f", editingProduct.getBuyPrice()));
         txtSellPrice.setText(String.format("%.2f", editingProduct.getSellPrice()));
@@ -81,10 +86,12 @@ public class ProductFormController implements Initializable {
                     parseDouble(txtSellPrice),
                     parseInt(txtQuantity)
             );
+            newProduct.setCode(txtProductCode.getText().trim());
             if (onSave != null) onSave.accept(newProduct);
 
         } else {
             editingProduct.setName(txtProductName.getText().trim());
+            editingProduct.setCode(txtProductCode.getText().trim());
             editingProduct.setCategory(cmbCategory.getValue());
             editingProduct.setBuyPrice(parseDouble(txtBuyPrice));
             editingProduct.setSellPrice(parseDouble(txtSellPrice));
@@ -104,6 +111,8 @@ public class ProductFormController implements Initializable {
         StringBuilder errors = new StringBuilder();
         if (txtProductName.getText().trim().isEmpty())
             errors.append("• Product name is required.\n");
+        if (txtProductCode.getText().trim().isEmpty())
+            errors.append("• Product code is required.\n");
         if (cmbCategory.getValue() == null)
             errors.append("• Please select a category.\n");
         if (txtBuyPrice.getText().trim().isEmpty())
