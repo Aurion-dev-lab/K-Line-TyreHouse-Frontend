@@ -1,17 +1,21 @@
 package com.gui.kline.controller.form;
 
+import java.net.URL;
+import java.time.LocalDate;
+import java.util.ResourceBundle;
+import java.util.UUID;
+import java.util.function.Consumer;
+
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-
-import java.net.URL;
-import java.time.LocalDate;
-import java.util.ResourceBundle;
-import java.util.function.Consumer;
-import java.util.UUID;
 
 public class NewExportDialogController implements Initializable {
 
