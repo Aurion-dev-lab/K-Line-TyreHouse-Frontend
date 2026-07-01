@@ -127,15 +127,19 @@ public class SyncPersistService {
     }
 
     private void persistCreditSale(String syncId, String deviceId, JsonNode payload) {
-        if (creditSaleRepo.existsById(syncId)) return;
-        CreditSaleRecord record = new CreditSaleRecord();
-        record.setSyncId(syncId);
+        String creditId = text(payload, "creditId");
+        CreditSaleRecord record = creditId == null ? null : creditSaleRepo.findByCreditId(creditId);
+        if (record == null) {
+            record = new CreditSaleRecord();
+            record.setSyncId(syncId);
+        }
         record.setDeviceId(deviceId);
-        record.setCreditId(text(payload, "creditId"));
+        record.setCreditId(creditId);
         record.setDate(date(payload, "date"));
         record.setCustomer(text(payload, "customer"));
         record.setDueDate(date(payload, "dueDate"));
         record.setAmount(number(payload, "amount"));
+        record.setPaidAmount(number(payload, "paidAmount"));
         record.setStatus(text(payload, "status"));
         creditSaleRepo.save(record);
     }

@@ -17,6 +17,7 @@ public class CreditSaleRecord {
     private String customer;
     private LocalDate dueDate;
     private double amount;
+    private double paidAmount;
     private String status;
 
     public String getSyncId() {
@@ -73,6 +74,14 @@ public class CreditSaleRecord {
 
     public void setAmount(double amount) {
         this.amount = amount;
+    }
+
+    public double getPaidAmount() {
+        return paidAmount;
+    }
+
+    public void setPaidAmount(double paidAmount) {
+        this.paidAmount = paidAmount;
     }
 
     public String getStatus() {

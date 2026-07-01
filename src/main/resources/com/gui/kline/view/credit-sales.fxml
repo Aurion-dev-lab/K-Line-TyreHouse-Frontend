@@ -52,7 +52,7 @@
                     <TableColumn fx:id="colAction" prefWidth="70" text="VIEW" />
                 </columns>
                 <columnResizePolicy>
-                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                    <TableView fx:constant="UNCONSTRAINED_RESIZE_POLICY" />
                 </columnResizePolicy>
             </TableView>
 
@@ -154,6 +154,7 @@
                     <Insets bottom="18" left="18" right="18" top="10" />
                 </padding>
                 <Button fx:id="btnGenerateSale" maxWidth="1.7976931348623157E308" onAction="#onGenerateSale" styleClass="btn-generate" text="Create Credit Sale" />
+                <Button fx:id="btnSettleCredit" maxWidth="1.7976931348623157E308" onAction="#onSettleCredit" styleClass="btn-settle" text="Settle Credit" />
                 <Button fx:id="btnDeselect" maxWidth="1.7976931348623157E308" onAction="#onDeselect" styleClass="btn-deselect" text="Close" />
             </VBox>
 

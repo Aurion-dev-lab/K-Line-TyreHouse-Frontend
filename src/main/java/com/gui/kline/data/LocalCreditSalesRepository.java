@@ -39,6 +39,11 @@ public class LocalCreditSalesRepository {
              
              ps.executeUpdate();
              
+             List<Part> existingParts = loadParts(row.getCreditId());
+             if (!existingParts.isEmpty()) {
+                 restoreInventoryForCreditSale(existingParts);
+             }
+
              // Save parts and update inventory
              saveParts(row.getCreditId(), detail.getParts());
              updateInventoryForCreditSale(detail.getParts());
@@ -105,6 +110,14 @@ public class LocalCreditSalesRepository {
              if (part.getProductId() != null) {
                  // Reduce stock for each part added
                  catalogRepository.updateProductStock(part.getProductId(), -part.getQuantity());
+             }
+         }
+     }
+
+     private void restoreInventoryForCreditSale(List<Part> parts) {
+         for (Part part : parts) {
+             if (part.getProductId() != null) {
+                 catalogRepository.updateProductStock(part.getProductId(), part.getQuantity());
              }
          }
      }
@@ -282,6 +295,7 @@ public class LocalCreditSalesRepository {
                     rs.getString("customer_name"),
                     rs.getString("due_date"),
                     rs.getDouble("subtotal"),
+                    rs.getDouble("paid_amount"),
                     rs.getString("status")
                 );
                 sales.add(row);

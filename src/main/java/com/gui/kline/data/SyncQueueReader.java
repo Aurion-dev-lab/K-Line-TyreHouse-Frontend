@@ -35,17 +35,18 @@ public class SyncQueueReader {
     }
 
     public List<CreditSalesController.CreditSaleRow> loadCreditSales() {
-        List<CreditSalesController.CreditSaleRow> rows = new ArrayList<>();
+        java.util.Map<String, CreditSalesController.CreditSaleRow> rows = new java.util.LinkedHashMap<>();
         for (JsonObject payload : loadPayloads("credit_sale")) {
             String id = getText(payload, "creditId", "CS-");
             String date = getText(payload, "date", LocalDate.now().toString());
             String customer = getText(payload, "customer", "Customer");
             String dueDate = getText(payload, "dueDate", LocalDate.now().toString());
             double amount = getNumber(payload, "amount", 0.0);
+            double paidAmount = getNumber(payload, "paidAmount", 0.0);
             String status = getText(payload, "status", "PENDING");
-            rows.add(new CreditSalesController.CreditSaleRow(id, date, customer, dueDate, amount, status));
+            rows.put(id, new CreditSalesController.CreditSaleRow(id, date, customer, dueDate, amount, paidAmount, status));
         }
-        return rows;
+        return new ArrayList<>(rows.values());
     }
 
     public List<Product> loadProducts() {

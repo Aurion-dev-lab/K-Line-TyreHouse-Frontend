@@ -112,6 +112,27 @@
     -fx-opacity: 0;
 }
 
+.main-table .scroll-bar:horizontal {
+    -fx-pref-height: 12px;
+    -fx-max-height: 12px;
+    -fx-pref-width: 12px;
+    -fx-max-width: 12px;
+    -fx-opacity: 1;
+}
+
+.main-table .scroll-bar:horizontal .thumb {
+    -fx-background-color: #94a3b8;
+    -fx-background-radius: 6;
+}
+
+.main-table .scroll-bar:horizontal .track,
+.main-table .scroll-bar:horizontal .increment-button,
+.main-table .scroll-bar:horizontal .decrement-button {
+    -fx-background-color: transparent;
+    -fx-pref-width: 0;
+    -fx-pref-height: 0;
+}
+
 .right-panel {
     -fx-background-color: #111827;
     -fx-background-radius: 12;
@@ -314,6 +335,19 @@
     -fx-cursor: hand;
 }
 .btn-generate:hover { -fx-background-color: #059669; }
+
+.btn-settle {
+    -fx-background-color: #0f766e;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-padding: 10 0 10 0;
+    -fx-cursor: hand;
+}
+
+.btn-settle:hover { -fx-background-color: #115e59; }
 
 .btn-deselect {
     -fx-background-color: transparent;

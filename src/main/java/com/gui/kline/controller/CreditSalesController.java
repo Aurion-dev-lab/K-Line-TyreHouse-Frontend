@@ -4,6 +4,7 @@ import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 import com.gui.kline.data.LocalCatalogRepository;
@@ -31,6 +32,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -60,6 +62,7 @@ public class CreditSalesController implements Initializable {
     @FXML private ComboBox<Product> cboProduct;
     @FXML private TextField         txtPartQty;
     @FXML private Button            btnAddPart;
+    @FXML private Button            btnSettleCredit;
     @FXML private Button            btnGenerateSale;
     @FXML private Button            btnDeselect;
 
@@ -136,6 +139,7 @@ public class CreditSalesController implements Initializable {
             private final HBox box = new HBox(6);
             private final Button btnView = new Button("View");
             private final Button btnEdit = new Button("Edit");
+            private final Button btnSettle = new Button("Settle");
             private final Button btnDelete = new Button("✕");
             
             {
@@ -145,16 +149,20 @@ public class CreditSalesController implements Initializable {
                 btnEdit.setStyle("-fx-background-color: #f59e0b; -fx-border-color: #b45309; " +
                         "-fx-border-radius: 6; -fx-font-size: 11px; -fx-text-fill: #ffffff; " +
                         "-fx-padding: 4 10 4 10; -fx-cursor: hand; -fx-font-weight: bold;");
+                btnSettle.setStyle("-fx-background-color: #10b981; -fx-border-color: #047857; " +
+                    "-fx-border-radius: 6; -fx-font-size: 11px; -fx-text-fill: #ffffff; " +
+                    "-fx-padding: 4 10 4 10; -fx-cursor: hand; -fx-font-weight: bold;");
                 btnDelete.setStyle("-fx-background-color: #ef4444; -fx-border-color: #991b1b; " +
                         "-fx-border-radius: 6; -fx-font-size: 11px; -fx-text-fill: #ffffff; " +
                         "-fx-padding: 4 8 4 8; -fx-cursor: hand; -fx-font-weight: bold;");
                 
                 btnView.setOnAction(e -> onViewCredit(getTableView().getItems().get(getIndex())));
                 btnEdit.setOnAction(e -> onEditCredit(getTableView().getItems().get(getIndex())));
+                btnSettle.setOnAction(e -> onSettleCredit(getTableView().getItems().get(getIndex())));
                 btnDelete.setOnAction(e -> onDeleteCredit(getTableView().getItems().get(getIndex())));
                 
                 box.setStyle("-fx-spacing: 6;");
-                box.getChildren().addAll(btnView, btnEdit, btnDelete);
+                box.getChildren().addAll(btnView, btnEdit, btnSettle, btnDelete);
             }
             
             @Override
@@ -263,6 +271,13 @@ public class CreditSalesController implements Initializable {
         enableDetailPanel();
         loadSaleDetail(sale);
     }
+
+    private void onSettleCredit(CreditSaleRow sale) {
+        selectedSale = sale;
+        enableDetailPanel();
+        loadSaleDetail(sale);
+        settleSelectedCredit();
+    }
     
     private void onDeleteCredit(CreditSaleRow sale) {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
@@ -279,6 +294,65 @@ public class CreditSalesController implements Initializable {
             } catch (Exception ex) {
                 showError("Failed to delete: " + ex.getMessage());
             }
+        }
+    }
+
+    @FXML
+    private void onSettleCredit(ActionEvent event) {
+        settleSelectedCredit();
+    }
+
+    private void settleSelectedCredit() {
+        if (selectedSale == null || currentSaleDetail == null) {
+            showError("Select a credit sale first.");
+            return;
+        }
+
+        double amountDue = currentSaleDetail.getAmountDue();
+        if (amountDue <= 0.0) {
+            showSuccess("This credit sale is already settled.");
+            return;
+        }
+
+        TextInputDialog dialog = new TextInputDialog(String.format("%.2f", amountDue));
+        dialog.setTitle("Settle Credit");
+        dialog.setHeaderText("Record payment for " + selectedSale.getCustomer());
+        dialog.setContentText("Payment amount (balance Rs. " + String.format("%,.2f", amountDue) + "):");
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isEmpty()) {
+            return;
+        }
+
+        double paymentAmount;
+        try {
+            paymentAmount = Double.parseDouble(result.get().replace(",", "").trim());
+        } catch (NumberFormatException ex) {
+            showError("Invalid payment amount.");
+            return;
+        }
+
+        if (paymentAmount <= 0.0) {
+            showError("Payment amount must be greater than zero.");
+            return;
+        }
+        if (paymentAmount > amountDue) {
+            showError("Payment cannot exceed the outstanding balance.");
+            return;
+        }
+
+        double newPaidAmount = currentSaleDetail.getPaid() + paymentAmount;
+        String paymentStatus = paymentStatusFor(newPaidAmount, currentSaleDetail.getAmount());
+
+        try {
+            creditSalesRepository.updatePayment(selectedSale.getCreditId(), newPaidAmount);
+            currentSaleDetail.setPaid(newPaidAmount);
+            enqueueCreditSale(selectedSale.getCreditId(), currentSaleDetail, paymentStatus, "payment");
+            loadFromLocal();
+            refreshSelection(selectedSale.getCreditId());
+            showSuccess("Payment recorded successfully.");
+        } catch (Exception ex) {
+            showError("Failed to record payment: " + ex.getMessage());
         }
     }
 
@@ -394,7 +468,8 @@ public class CreditSalesController implements Initializable {
                 currentSaleDetail.getCustomer(),
                 dueDate.toString(),
                 currentSaleDetail.getAmount(),
-                "PENDING"
+                currentSaleDetail.getPaid(),
+            paymentStatusFor(currentSaleDetail.getPaid(), currentSaleDetail.getAmount())
         );
 
         try {
@@ -402,7 +477,7 @@ public class CreditSalesController implements Initializable {
             creditSalesRepository.saveCreditSale(currentSaleDetail, row);
             
             if (!isEditMode) creditSaleList.add(0, row);
-            enqueueCreditSale(row, currentSaleDetail);
+            enqueueCreditSale(row.getCreditId(), currentSaleDetail, row.getStatus(), isEditMode ? "update" : "create");
             showSuccess("Credit sale " + (isEditMode ? "updated" : "created") + " successfully.");
             onDeselect();
         } catch (Exception ex) {
@@ -421,11 +496,16 @@ public class CreditSalesController implements Initializable {
     }
 
     private void loadSaleDetail(CreditSaleRow sale) {
-        currentSaleDetail = new CreditSaleDetail();
-        currentSaleDetail.setCreditId(sale.getCreditId());
-        currentSaleDetail.setCustomer(sale.getCustomer());
-        currentSaleDetail.setDate(LocalDate.parse(sale.getDate(), DATE_FORMAT));
-        currentSaleDetail.setDueDate(LocalDate.parse(sale.getDueDate(), DATE_FORMAT));
+        CreditSaleDetail detail = creditSalesRepository.loadCreditSaleDetail(sale.getCreditId());
+        if (detail == null) {
+            detail = new CreditSaleDetail();
+            detail.setCreditId(sale.getCreditId());
+            detail.setCustomer(sale.getCustomer());
+            detail.setDate(LocalDate.parse(sale.getDate(), DATE_FORMAT));
+            detail.setDueDate(LocalDate.parse(sale.getDueDate(), DATE_FORMAT));
+            detail.setPaid(sale.getPaidAmount());
+        }
+        currentSaleDetail = detail;
 
         lblCreditId.setText("#" + sale.getCreditId());
         lblCreditBadge.setText("CREDIT");
@@ -433,8 +513,12 @@ public class CreditSalesController implements Initializable {
         lblSaleDate.setText(sale.getDate());
 
         vboxParts.getChildren().clear();
-        updateTotalsFromRow(sale);
+        for (Part part : currentSaleDetail.getParts()) {
+            addPartToPanel(part);
+        }
+        updateTotals();
         clearPartInputs();
+        updateActionState();
     }
 
     private void clearDetailPanel() {
@@ -447,6 +531,7 @@ public class CreditSalesController implements Initializable {
         lblPaid.setText("Rs. 0.00");
         lblAmountDue.setText("Rs. 0.00");
         clearPartInputs();
+        updateActionState();
     }
 
     private void enableDetailPanel() {
@@ -465,12 +550,44 @@ public class CreditSalesController implements Initializable {
         lblSubtotal.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getSubtotal()));
         lblPaid.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getPaid()));
         lblAmountDue.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getAmountDue()));
+        updateActionState();
     }
 
     private void updateTotalsFromRow(CreditSaleRow row) {
         lblSubtotal.setText("Rs. " + String.format("%,.2f", row.getAmount()));
-        lblPaid.setText("Rs. 0.00");
-        lblAmountDue.setText("Rs. " + String.format("%,.2f", row.getAmount()));
+        lblPaid.setText("Rs. " + String.format("%,.2f", row.getPaidAmount()));
+        lblAmountDue.setText("Rs. " + String.format("%,.2f", row.getBalanceAmount()));
+        updateActionState();
+    }
+
+    private void updateActionState() {
+        boolean hasSelection = currentSaleDetail != null;
+        boolean hasBalance = hasSelection && currentSaleDetail.getAmountDue() > 0.0;
+        if (btnSettleCredit != null) {
+            btnSettleCredit.setDisable(!hasSelection || !hasBalance);
+        }
+    }
+
+    private void refreshSelection(String creditId) {
+        CreditSaleRow refreshed = creditSaleList.stream()
+                .filter(row -> row.getCreditId().equals(creditId))
+                .findFirst()
+                .orElse(null);
+        if (refreshed != null) {
+            onViewCredit(refreshed);
+        } else {
+            onDeselect();
+        }
+    }
+
+    private String paymentStatusFor(double paidAmount, double totalAmount) {
+        if (paidAmount <= 0.0) {
+            return "PENDING";
+        }
+        if (paidAmount >= totalAmount) {
+            return "PAID";
+        }
+        return "PARTIAL";
     }
 
     private String generateCreditId() { return "CS" + System.currentTimeMillis(); }
@@ -494,7 +611,7 @@ public class CreditSalesController implements Initializable {
         a.setTitle("Success"); a.setHeaderText(null); a.setContentText(msg); a.showAndWait();
     }
 
-    private void enqueueCreditSale(CreditSaleRow row, CreditSaleDetail detail) {
+    private void enqueueCreditSale(String creditId, CreditSaleDetail detail, String status, String operation) {
         if (detail == null) {
             return;
         }
@@ -510,12 +627,15 @@ public class CreditSalesController implements Initializable {
                 .toArray(String[]::new);
 
         String payload = JsonUtil.obj(
-                JsonUtil.field("creditId", row.getCreditId()),
-                JsonUtil.field("date", row.getDate()),
-                JsonUtil.field("customer", row.getCustomer()),
-                JsonUtil.field("dueDate", row.getDueDate()),
-                JsonUtil.field("amount", row.getAmount()),
-                JsonUtil.field("status", row.getStatus()),
+        JsonUtil.field("operation", operation),
+        JsonUtil.field("creditId", creditId),
+        JsonUtil.field("date", detail.getDate() == null ? LocalDate.now().toString() : detail.getDate().toString()),
+        JsonUtil.field("customer", detail.getCustomer()),
+        JsonUtil.field("dueDate", detail.getDueDate() == null ? LocalDate.now().toString() : detail.getDueDate().toString()),
+        JsonUtil.field("amount", detail.getAmount()),
+        JsonUtil.field("paidAmount", detail.getPaid()),
+        JsonUtil.field("balanceAmount", detail.getAmountDue()),
+        JsonUtil.field("status", status),
                 JsonUtil.fieldRaw("parts", JsonUtil.array(parts))
         );
 
@@ -525,14 +645,21 @@ public class CreditSalesController implements Initializable {
     public static class CreditSaleRow {
         private final String creditId, date, customer, dueDate, status;
         private final double amount;
+        private final double paidAmount;
 
         public CreditSaleRow(String creditId, String date, String customer,
                              String dueDate, double amount, String status) {
+            this(creditId, date, customer, dueDate, amount, 0.0, status);
+        }
+
+        public CreditSaleRow(String creditId, String date, String customer,
+                             String dueDate, double amount, double paidAmount, String status) {
             this.creditId = creditId;
             this.date = date;
             this.customer = customer;
             this.dueDate = dueDate;
             this.amount = amount;
+            this.paidAmount = paidAmount;
             this.status = status;
         }
 
@@ -541,6 +668,8 @@ public class CreditSalesController implements Initializable {
         public String getCustomer() { return customer; }
         public String getDueDate() { return dueDate; }
         public double getAmount() { return amount; }
+        public double getPaidAmount() { return paidAmount; }
+        public double getBalanceAmount() { return Math.max(0.0, amount - paidAmount); }
         public String getStatus() { return status; }
     }
 }
