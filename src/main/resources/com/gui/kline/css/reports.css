@@ -1,0 +1,521 @@
+/**
+ * Reports Section CSS Styles
+ * Custom styling for the Reports module
+ */
+
+/* Report container styles */
+.reports-container {
+    -fx-background-color: #F0F2F5;
+}
+
+/* Report cards */
+.report-card {
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-border-color: #E5E7EB;
+    -fx-border-radius: 14;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 10, 0, 0, 0);
+}
+
+.report-card:hover {
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.12), 10, 0, 0, 0);
+}
+
+/* Metric cards */
+.metric-card {
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-border-color: #E5E7EB;
+    -fx-border-radius: 14;
+    -fx-padding: 20;
+}
+
+.metric-card-green {
+    -fx-background-color: #111827;
+    -fx-background-radius: 14;
+    -fx-padding: 20;
+}
+
+/* Report sections */
+.report-section {
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-border-color: #E5E7EB;
+    -fx-border-radius: 14;
+    -fx-padding: 20;
+}
+
+.report-section-header {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+    -fx-padding: 0 0 16 0;
+}
+
+/* Report rows */
+.report-row {
+    -fx-padding: 12 0 12 0;
+    -fx-border-color: transparent;
+}
+
+.report-row:hover {
+    -fx-background-color: #F9FAFB;
+}
+
+/* Sales report specific styles */
+.sales-report-item {
+    -fx-padding: 14 0 14 0;
+    -fx-border-bottom-color: #E5E7EB;
+    -fx-border-bottom-width: 1;
+}
+
+.service-report-item {
+    -fx-padding: 14 0 14 0;
+    -fx-border-bottom-color: #E5E7EB;
+    -fx-border-bottom-width: 1;
+}
+
+/* Expense categories */
+.expense-category-header {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+    -fx-padding: 8 0 8 0;
+}
+
+/* Top products */
+.top-product-row {
+    -fx-padding: 12 0 12 0;
+    -fx-border-bottom-color: #E5E7EB;
+    -fx-border-bottom-width: 1;
+}
+
+.top-product-row:hover {
+    -fx-background-color: #F9FAFB;
+}
+
+/* Daily summary */
+.daily-summary-row {
+    -fx-padding: 12 0 12 0;
+    -fx-border-bottom-color: #E5E7EB;
+    -fx-border-bottom-width: 1;
+}
+
+/* Customer analysis */
+.customer-row {
+    -fx-padding: 12 0 12 0;
+    -fx-border-bottom-color: #E5E7EB;
+    -fx-border-bottom-width: 1;
+}
+
+/* Tab styles */
+.report-tab {
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+}
+
+.report-tab:selected {
+    -fx-background-color: #111827;
+    -fx-text-fill: white;
+}
+
+/* Header styles */
+.reports-header {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.reports-subheader {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6B7280;
+}
+
+/* Date range selector */
+.date-range-selector {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-border-color: #E5E7EB;
+    -fx-border-radius: 8;
+    -fx-padding: 6 14 6 14;
+}
+
+/* Button styles */
+.export-button {
+    -fx-background-color: #16A34A;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+}
+
+.export-button:hover {
+    -fx-background-color: #059669;
+}
+
+.refresh-button {
+    -fx-background-color: #2563EB;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+}
+
+.refresh-button:hover {
+    -fx-background-color: #1D4ED8;
+}
+
+/* Search field */
+.report-search-field {
+    -fx-font-size: 13px;
+    -fx-background-radius: 8;
+    -fx-padding: 8 12 8 12;
+    -fx-background-color: white;
+    -fx-border-color: #E5E7EB;
+    -fx-border-radius: 8;
+}
+
+/* Combo box */
+.report-combo-box {
+    -fx-font-size: 13px;
+    -fx-background-radius: 8;
+    -fx-padding: 8 12 8 12;
+    -fx-background-color: white;
+    -fx-border-color: #E5E7EB;
+    -fx-border-radius: 8;
+}
+
+/* Scroll pane */
+.report-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+/* Separator */
+.report-separator {
+    -fx-opacity: 0.5;
+    -fx-background-color: #E5E7EB;
+}
+
+/* Empty state */
+.empty-state {
+    -fx-text-fill: #9CA3AF;
+    -fx-font-size: 13px;
+    -fx-padding: 20 0 0 0;
+}
+
+/* Positive values (green) */
+.positive-value {
+    -fx-text-fill: #16A34A;
+    -fx-font-weight: bold;
+}
+
+/* Negative values (red) */
+.negative-value {
+    -fx-text-fill: #DC2626;
+    -fx-font-weight: bold;
+}
+
+/* Revenue values (blue) */
+.revenue-value {
+    -fx-text-fill: #2563EB;
+    -fx-font-weight: bold;
+}
+
+/* Expense values (red) */
+.expense-value {
+    -fx-text-fill: #DC2626;
+    -fx-font-weight: bold;
+}
+
+/* Tab pane styling */
+.reports-tab-pane {
+    -fx-background-color: #F0F2F5;
+}
+
+.reports-tab-pane > *.tab-header-area > *.headers-region > *.tab-header-background {
+    -fx-background-color: #F0F2F5;
+}
+
+.reports-tab-pane > *.tab-header-area > *.headers-region > *.tab {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #6B7280;
+    -fx-padding: 8 16 8 16;
+}
+
+.reports-tab-pane > *.tab-header-area > *.headers-region > *.tab:selected {
+    -fx-background-color: #111827;
+    -fx-text-fill: white;
+    -fx-border-radius: 8 8 0 0;
+}
+
+.reports-tab-pane > *.tab-content-area {
+    -fx-background-color: #F0F2F5;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* Card icons */
+.card-icon {
+    -fx-font-size: 18px;
+    -fx-background-radius: 8;
+    -fx-padding: 6 8 6 8;
+}
+
+.card-icon-sales {
+    -fx-background-color: #EFF6FF;
+}
+
+.card-icon-profit {
+    -fx-background-color: #F0FDF4;
+}
+
+.card-icon-costs {
+    -fx-background-color: #FFF1F2;
+}
+
+.card-icon-income {
+    -fx-background-color: #0aa444;
+}
+
+/* Status indicators */
+.status-indicator {
+    -fx-background-radius: 50%;
+    -fx-min-width: 8px;
+    -fx-min-height: 8px;
+}
+
+.status-indicator-paid {
+    -fx-background-color: #16A34A;
+}
+
+.status-indicator-pending {
+    -fx-background-color: #F59E0B;
+}
+
+.status-indicator-overdue {
+    -fx-background-color: #DC2626;
+}
+
+/* Progress bars */
+.report-progress-bar {
+    -fx-pref-height: 8;
+    -fx-background-radius: 4;
+    -fx-background-color: #E5E7EB;
+}
+
+.report-progress-bar > *.bar {
+    -fx-background-radius: 4;
+    -fx-background-color: #16A34A;
+}
+
+/* Tooltip styling */
+.report-tooltip {
+    -fx-background-color: #111827;
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-padding: 8 12 8 12;
+    -fx-background-radius: 6;
+}
+
+/* Badge styling */
+.report-badge {
+    -fx-background-radius: 12;
+    -fx-padding: 4 8 4 8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.report-badge-success {
+    -fx-background-color: #D1FAE5;
+    -fx-text-fill: #065F46;
+}
+
+.report-badge-warning {
+    -fx-background-color: #FEF3C7;
+    -fx-text-fill: #92400E;
+}
+
+.report-badge-danger {
+    -fx-background-color: #FEE2E2;
+    -fx-text-fill: #991B1B;
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+    .metric-card {
+        -fx-padding: 16;
+    }
+    
+    .metric-card > *.label {
+        -fx-font-size: 22px;
+    }
+}
+
+/* Print styles */
+@media print {
+    .reports-container {
+        -fx-background-color: white;
+    }
+    
+    .metric-card {
+        -fx-border-color: #E5E7EB;
+        -fx-border-width: 1;
+    }
+}
+
+/* Animations */
+.report-fade-in {
+    -fx-opacity: 0;
+    -fx-animate-opacity: 1;
+    -fx-animation-duration: 300ms;
+}
+
+.report-slide-in {
+    -fx-translate-y: 20;
+    -fx-opacity: 0;
+    -fx-animate-translate-y: 0;
+    -fx-animate-opacity: 1;
+    -fx-animation-duration: 300ms;
+}
+
+/* Chart styles (for future chart integration) */
+.report-chart {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-padding: 16;
+}
+
+.chart-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+    -fx-padding: 0 0 12 0;
+}
+
+/* Legend styles */
+.chart-legend {
+    -fx-padding: 8 0 0 0;
+}
+
+.legend-item {
+    -fx-padding: 4 8 4 8;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.legend-color {
+    -fx-min-width: 12px;
+    -fx-min-height: 12px;
+    -fx-background-radius: 2;
+}
+
+/* Filter styles */
+.filter-panel {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-border-color: #E5E7EB;
+    -fx-border-radius: 8;
+    -fx-padding: 12;
+}
+
+.filter-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6B7280;
+    -fx-padding: 0 0 8 0;
+}
+
+/* Date picker styling */
+.report-date-picker {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-size: 13px;
+    -fx-pref-width: 120;
+}
+
+.report-date-picker > *.arrow-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #6B7280;
+}
+
+.report-date-picker:focused {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+/* Export dialog styling */
+.export-dialog {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-padding: 24;
+}
+
+.export-dialog > *.label.content {
+    -fx-font-size: 14px;
+    -fx-text-fill: #111827;
+}
+
+.export-dialog > *.button-bar > *.container {
+    -fx-padding: 16 0 0 0;
+}
+
+.export-dialog > *.button-bar > *.container > *.button {
+    -fx-min-width: 80px;
+    -fx-background-radius: 8;
+    -fx-padding: 10 20 10 20;
+}
+
+/* Loading indicator */
+.loading-indicator {
+    -fx-background-color: rgba(0, 0, 0, 0.5);
+    -fx-background-radius: 8;
+    -fx-padding: 16;
+    -fx-alignment: CENTER;
+}
+
+.spinner {
+    -fx-min-width: 32px;
+    -fx-min-height: 32px;
+    -fx-max-width: 32px;
+    -fx-max-height: 32px;
+}
+
+/* Error state */
+.error-state {
+    -fx-background-color: #FEE2E2;
+    -fx-background-radius: 8;
+    -fx-padding: 12;
+    -fx-text-fill: #991B1B;
+}
+
+/* Success state */
+.success-state {
+    -fx-background-color: #D1FAE5;
+    -fx-background-radius: 8;
+    -fx-padding: 12;
+    -fx-text-fill: #065F46;
+}
+
+/* Warning state */
+.warning-state {
+    -fx-background-color: #FEF3C7;
+    -fx-background-radius: 8;
+    -fx-padding: 12;
+    -fx-text-fill: #92400E;
+}
+
+/* Info state */
+.info-state {
+    -fx-background-color: #DBEAFE;
+    -fx-background-radius: 8;
+    -fx-padding: 12;
+    -fx-text-fill: #1E40AF;
+}
