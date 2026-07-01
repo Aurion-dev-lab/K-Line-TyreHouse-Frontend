@@ -157,15 +157,24 @@ public class SyncPersistService {
     }
 
     private void persistTyreExport(String syncId, String deviceId, JsonNode payload) {
-        if (tyreExportRepo.existsById(syncId)) return;
-        TyreExportRecord record = new TyreExportRecord();
-        record.setSyncId(syncId);
+        String exportId = text(payload, "exportId");
+        TyreExportRecord record = exportId == null ? null : tyreExportRepo.findByExportId(exportId);
+        if (record == null) {
+            record = new TyreExportRecord();
+            record.setSyncId(syncId);
+            record.setExportId(exportId == null || exportId.isBlank() ? syncId : exportId);
+        }
         record.setDeviceId(deviceId);
+        record.setOperation(text(payload, "operation"));
         record.setCompany(text(payload, "company"));
         record.setTyres(intNumber(payload, "tyres"));
         record.setCustPrice(number(payload, "custPrice"));
         record.setCompPrice(number(payload, "compPrice"));
         record.setServiceFee(number(payload, "serviceFee"));
+        record.setPaidAmount(number(payload, "paidAmount"));
+        record.setTotalAmount(number(payload, "totalAmount"));
+        record.setBalanceAmount(number(payload, "balanceAmount"));
+        record.setPaymentStatus(text(payload, "paymentStatus"));
         record.setDate(date(payload, "date"));
         record.setStatus(text(payload, "status"));
         tyreExportRepo.save(record);

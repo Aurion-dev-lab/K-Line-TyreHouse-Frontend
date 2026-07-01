@@ -68,7 +68,7 @@
                          -fx-padding: 10 14;">
                 <Label fx:id="lblPending" text="0"
                        style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #D97706;"/>
-                <Label text="Pending"
+                <Label text="Credit due"
                        style="-fx-font-size: 12px; -fx-text-fill: #6B7280;"/>
             </VBox>
         </HBox>

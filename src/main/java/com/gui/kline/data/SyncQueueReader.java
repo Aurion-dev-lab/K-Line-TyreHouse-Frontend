@@ -65,19 +65,34 @@ public class SyncQueueReader {
     }
 
     public List<ExportRecord> loadTyreExports() {
-        List<ExportRecord> records = new ArrayList<>();
+        java.util.Map<String, ExportRecord> records = new java.util.LinkedHashMap<>();
         for (JsonObject payload : loadPayloads("tyre_export")) {
+            String exportId = getText(payload, "exportId", resolveExportKey(payload));
+            String operation = getText(payload, "operation", "create");
             String company = getText(payload, "company", "Company");
             int tyres = (int) getNumber(payload, "tyres", 0.0);
             double cust = getNumber(payload, "custPrice", 0.0);
             double comp = getNumber(payload, "compPrice", 0.0);
             double service = getNumber(payload, "serviceFee", 0.0);
+            double total = getNumber(payload, "totalAmount", cust * tyres + service);
+            double paid = getNumber(payload, "paidAmount", 0.0);
+            double balance = getNumber(payload, "balanceAmount", Math.max(0.0, total - paid));
+            String paymentStatus = getText(payload, "paymentStatus", paymentStatusFor(balance, paid));
             String dateStr = getText(payload, "date", LocalDate.now().toString());
             LocalDate date = LocalDate.parse(dateStr);
             String status = getText(payload, "status", "PENDING");
-            records.add(new ExportRecord(company, tyres, cust, comp, service, date, status));
+
+            ExportRecord current = records.get(exportId);
+            if (current == null || "create".equalsIgnoreCase(operation)) {
+                records.put(exportId, new ExportRecord(exportId, company, tyres, cust, comp, service,
+                        total, paid, balance, paymentStatus, date, status));
+            } else {
+                current = mergeExport(current, company, tyres, cust, comp, service, total, paid, balance,
+                        paymentStatus, date, status);
+                records.put(exportId, current);
+            }
         }
-        return records;
+        return new ArrayList<>(records.values());
     }
 
     private List<JsonObject> loadPayloads(String entityType) {
@@ -120,6 +135,49 @@ public class SyncQueueReader {
         if (el == null || el.isJsonNull() || !el.isJsonArray()) return 0;
         JsonArray array = el.getAsJsonArray();
         return array.size();
+    }
+
+    private String resolveExportKey(JsonObject payload) {
+        return getText(payload, "company", "Company") + "|"
+                + getText(payload, "date", LocalDate.now().toString()) + "|"
+                + (int) getNumber(payload, "tyres", 0.0) + "|"
+                + getNumber(payload, "custPrice", 0.0) + "|"
+                + getNumber(payload, "compPrice", 0.0) + "|"
+                + getNumber(payload, "serviceFee", 0.0);
+    }
+
+    private String paymentStatusFor(double balance, double paid) {
+        if (balance <= 0.0 && paid > 0.0) return "PAID";
+        if (paid > 0.0) return "PARTIAL";
+        return "CREDIT";
+    }
+
+    private ExportRecord mergeExport(ExportRecord record,
+                                     String company,
+                                     int tyres,
+                                     double cust,
+                                     double comp,
+                                     double service,
+                                     double total,
+                                     double paid,
+                                     double balance,
+                                     String paymentStatus,
+                                     LocalDate date,
+                                     String status) {
+        record.setExportId(record.getExportId().isBlank() ? resolveExportKeyFromFields(company, date, tyres, cust, comp, service) : record.getExportId());
+        record.companyProperty().set(company);
+        record.tyresProperty().set(tyres);
+        record.serviceChargeProperty().set(service);
+        record.setPaidAmount(paid);
+        record.setTotalAmount(total);
+        record.setBalanceAmount(balance);
+        record.setPaymentStatus(paymentStatus);
+        record.setStatus(status);
+        return record;
+    }
+
+    private String resolveExportKeyFromFields(String company, LocalDate date, int tyres, double cust, double comp, double service) {
+        return company + "|" + date + "|" + tyres + "|" + cust + "|" + comp + "|" + service;
     }
 }
 

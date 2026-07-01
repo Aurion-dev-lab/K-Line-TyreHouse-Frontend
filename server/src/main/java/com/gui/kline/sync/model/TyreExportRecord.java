@@ -11,12 +11,18 @@ import java.time.LocalDate;
 public class TyreExportRecord {
     @Id
     private String syncId;
+    private String exportId;
     private String deviceId;
+    private String operation;
     private String company;
     private int tyres;
     private double custPrice;
     private double compPrice;
     private double serviceFee;
+    private double paidAmount;
+    private double totalAmount;
+    private double balanceAmount;
+    private String paymentStatus;
     private LocalDate date;
     private String status;
 
@@ -34,6 +40,22 @@ public class TyreExportRecord {
 
     public void setDeviceId(String deviceId) {
         this.deviceId = deviceId;
+    }
+
+    public String getExportId() {
+        return exportId;
+    }
+
+    public void setExportId(String exportId) {
+        this.exportId = exportId;
+    }
+
+    public String getOperation() {
+        return operation;
+    }
+
+    public void setOperation(String operation) {
+        this.operation = operation;
     }
 
     public String getCompany() {
@@ -74,6 +96,38 @@ public class TyreExportRecord {
 
     public void setServiceFee(double serviceFee) {
         this.serviceFee = serviceFee;
+    }
+
+    public double getPaidAmount() {
+        return paidAmount;
+    }
+
+    public void setPaidAmount(double paidAmount) {
+        this.paidAmount = paidAmount;
+    }
+
+    public double getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(double totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public double getBalanceAmount() {
+        return balanceAmount;
+    }
+
+    public void setBalanceAmount(double balanceAmount) {
+        this.balanceAmount = balanceAmount;
+    }
+
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
     }
 
     public LocalDate getDate() {

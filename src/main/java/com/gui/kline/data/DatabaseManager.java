@@ -120,10 +120,20 @@ public final class DatabaseManager {
                     ")");
             statement.execute("CREATE TABLE IF NOT EXISTS tyre_exports (" +
                     "id VARCHAR(36) PRIMARY KEY," +
+                    "export_id VARCHAR(64)," +
+                    "operation VARCHAR(32)," +
                     "company VARCHAR(255)," +
                     "tyres INT NOT NULL DEFAULT 0," +
+                    "cust_price DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "comp_price DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "service_fee DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "paid_amount DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "total_amount DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "balance_amount DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "payment_status VARCHAR(32)," +
                     "status VARCHAR(32)," +
-                    "export_date DATE" +
+                    "export_date DATE," +
+                    "updated_at DATETIME" +
                     ")");
             statement.execute("CREATE TABLE IF NOT EXISTS workers (" +
                     "id VARCHAR(36) PRIMARY KEY," +
@@ -189,6 +199,16 @@ public final class DatabaseManager {
             ensureColumnExists(connection, "worker_credits", "note", "VARCHAR(255)");
             ensureColumnExists(connection, "worker_credits", "created_at", "DATETIME");
             ensureColumnExists(connection, "services", "remark", "VARCHAR(255)");
+            ensureColumnExists(connection, "tyre_exports", "export_id", "VARCHAR(64)");
+            ensureColumnExists(connection, "tyre_exports", "operation", "VARCHAR(32)");
+            ensureColumnExists(connection, "tyre_exports", "cust_price", "DECIMAL(12,2)");
+            ensureColumnExists(connection, "tyre_exports", "comp_price", "DECIMAL(12,2)");
+            ensureColumnExists(connection, "tyre_exports", "service_fee", "DECIMAL(12,2)");
+            ensureColumnExists(connection, "tyre_exports", "paid_amount", "DECIMAL(12,2)");
+            ensureColumnExists(connection, "tyre_exports", "total_amount", "DECIMAL(12,2)");
+            ensureColumnExists(connection, "tyre_exports", "balance_amount", "DECIMAL(12,2)");
+            ensureColumnExists(connection, "tyre_exports", "payment_status", "VARCHAR(32)");
+            ensureColumnExists(connection, "tyre_exports", "updated_at", "DATETIME");
              ensureColumnExists(connection, "credit_sales", "customer_name", "VARCHAR(255)");
              ensureColumnExists(connection, "credit_sales", "sale_date", "DATE");
              ensureColumnExists(connection, "credit_sales", "due_date", "DATE");
@@ -201,6 +221,7 @@ public final class DatabaseManager {
              ensureColumnExists(connection, "products", "product_code", "VARCHAR(64)");
              backfillProductCodes(connection);
              ensureUniqueIndex(connection, "products", "uk_products_product_code", "product_code");
+             ensureUniqueIndex(connection, "tyre_exports", "uk_tyre_exports_export_id", "export_id");
              validateSchema(connection);
             initialized = true;
         } catch (SQLException ex) {
@@ -208,7 +229,6 @@ public final class DatabaseManager {
             System.err.println("Database URL: " + DEFAULT_URL);
             System.err.println("Database User: " + DEFAULT_USER);
             System.err.println("Error Message: " + ex.getMessage());
-            ex.printStackTrace();
             throw new IllegalStateException("Failed to initialize local database: " + ex.getMessage(), ex);
         }
     }
@@ -227,9 +247,8 @@ public final class DatabaseManager {
         String user = getJdbcUser();
         String pass = getJdbcPassword();
         try (Connection conn = DriverManager.getConnection(url, user, pass);
-             PreparedStatement stmt = conn.prepareStatement("SELECT 1");
-             ResultSet rs = stmt.executeQuery()) {
-            // successful connection
+             PreparedStatement stmt = conn.prepareStatement("SELECT 1")) {
+            stmt.executeQuery();
         } catch (SQLException ex) {
             System.err.println("=== DATABASE CONNECTION TEST FAILED ===");
             System.err.println("JDBC URL: " + url);
