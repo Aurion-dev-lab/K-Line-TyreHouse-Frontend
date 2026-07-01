@@ -11,7 +11,7 @@ import java.io.IOException;
 
 public class App extends Application {
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(Stage primaryStage) throws IOException {
         try {
             DatabaseManager.init();
         } catch (RuntimeException ex) {
@@ -19,6 +19,11 @@ public class App extends Application {
             Platform.exit();
             return;
         }
+        
+        // Store the primary stage for proper window management
+        ViewModel.INSTANCE.getViewsFactory().setPrimaryStage(primaryStage);
+        
+        // Load the main layout
         ViewModel.INSTANCE.getViewsFactory().getView("main-layout");
     }
 

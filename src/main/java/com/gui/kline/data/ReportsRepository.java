@@ -26,7 +26,7 @@ public class ReportsRepository {
         
         // Get data from invoices and line items
         String sql = "SELECT " +
-                "    il.invoice_date as sale_date, " +
+                "    i.invoice_date as sale_date, " +
                 "    p.name as product_name, " +
                 "    il.qty as quantity, " +
                 "    il.total as revenue, " +
@@ -34,8 +34,8 @@ public class ReportsRepository {
                 "FROM invoice_line_items il " +
                 "LEFT JOIN invoices i ON il.invoice_id = i.invoice_id " +
                 "LEFT JOIN products p ON il.product_id = p.id " +
-                "WHERE il.invoice_date BETWEEN ? AND ? " +
-                "ORDER BY il.invoice_date DESC, p.name";
+                "WHERE i.invoice_date BETWEEN ? AND ? " +
+                "ORDER BY i.invoice_date DESC, p.name";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -330,7 +330,8 @@ public class ReportsRepository {
         // Total sales revenue
         String salesSql = "SELECT COALESCE(SUM(il.total), 0) as total_sales " +
                 "FROM invoice_line_items il " +
-                "WHERE il.invoice_date BETWEEN ? AND ?";
+                "LEFT JOIN invoices i ON il.invoice_id = i.invoice_id " +
+                "WHERE i.invoice_date BETWEEN ? AND ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(salesSql)) {
@@ -467,8 +468,9 @@ public class ReportsRepository {
                 "    SUM(il.qty) as total_quantity, " +
                 "    SUM(il.total) as total_revenue " +
                 "FROM invoice_line_items il " +
+                "LEFT JOIN invoices i ON il.invoice_id = i.invoice_id " +
                 "LEFT JOIN products p ON il.product_id = p.id " +
-                "WHERE il.invoice_date BETWEEN ? AND ? " +
+                "WHERE i.invoice_date BETWEEN ? AND ? " +
                 "GROUP BY p.id, p.name " +
                 "ORDER BY total_revenue DESC " +
                 "LIMIT ?";
@@ -503,14 +505,15 @@ public class ReportsRepository {
         ObservableList<DailySummary> dailySummaries = FXCollections.observableArrayList();
         
         String sql = "SELECT " +
-                "    il.invoice_date as sale_date, " +
+                "    i.invoice_date as sale_date, " +
                 "    COUNT(DISTINCT il.invoice_id) as invoice_count, " +
                 "    SUM(il.qty) as total_items, " +
                 "    SUM(il.total) as total_revenue " +
                 "FROM invoice_line_items il " +
-                "WHERE il.invoice_date BETWEEN ? AND ? " +
-                "GROUP BY il.invoice_date " +
-                "ORDER BY il.invoice_date";
+                "LEFT JOIN invoices i ON il.invoice_id = i.invoice_id " +
+                "WHERE i.invoice_date BETWEEN ? AND ? " +
+                "GROUP BY i.invoice_date " +
+                "ORDER BY i.invoice_date";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
