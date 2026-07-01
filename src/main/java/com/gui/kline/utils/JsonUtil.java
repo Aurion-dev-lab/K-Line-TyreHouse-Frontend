@@ -1,5 +1,8 @@
 package com.gui.kline.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.util.StringJoiner;
 
 public final class JsonUtil {
@@ -59,6 +62,16 @@ public final class JsonUtil {
                 .replace("\n", "\\n")
                 .replace("\r", "\\r")
                 .replace("\t", "\\t");
+    }
+    
+    /**
+     * Creates and configures an ObjectMapper for JSON serialization/deserialization
+     */
+    public static ObjectMapper createObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return mapper;
     }
 }
 

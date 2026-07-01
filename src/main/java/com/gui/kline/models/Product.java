@@ -1,7 +1,9 @@
 package com.gui.kline.models;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -15,6 +17,7 @@ public class Product {
     private final DoubleProperty  buyPrice  = new SimpleDoubleProperty();
     private final DoubleProperty  sellPrice = new SimpleDoubleProperty();
     private final IntegerProperty stock     = new SimpleIntegerProperty();
+    private final BooleanProperty active    = new SimpleBooleanProperty(true);
 
     public Product(String name, String category, double buyPrice,
                    double sellPrice, int stock) {
@@ -51,11 +54,13 @@ public class Product {
 
     public String  getId()        { return id.get(); }
     public String  getCode()      { return code.get(); }
+    public String  getProductCode() { return code.get(); }
     public String  getName()      { return name.get(); }
     public String  getCategory()  { return category.get(); }
     public double  getBuyPrice()  { return buyPrice.get(); }
     public double  getSellPrice() { return sellPrice.get(); }
     public int     getStock()     { return stock.get(); }
+    public boolean  isActive()    { return active.get(); }
 
     public StringProperty  idProperty()        { return id; }
     public StringProperty  codeProperty()      { return code; }
@@ -64,6 +69,7 @@ public class Product {
     public DoubleProperty  buyPriceProperty()  { return buyPrice; }
     public DoubleProperty  sellPriceProperty() { return sellPrice; }
     public IntegerProperty stockProperty()     { return stock; }
+    public BooleanProperty activeProperty()   { return active; }
 
     public void setName(String v)      { name.set(v); }
     public void setCode(String v)      { code.set(v == null ? "" : v.trim()); }
@@ -71,6 +77,7 @@ public class Product {
     public void setBuyPrice(double v)  { buyPrice.set(v); }
     public void setSellPrice(double v) { sellPrice.set(v); }
     public void setStock(int v)        { stock.set(v); }
+    public void setActive(boolean v)    { active.set(v); }
     public void setId(String v)        { id.set(v); }
 
     public double getProfit() { return getSellPrice() - getBuyPrice(); }

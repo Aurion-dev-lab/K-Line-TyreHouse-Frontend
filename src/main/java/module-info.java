@@ -9,6 +9,10 @@ module com.gui.kline {
     requires java.net.http;
     requires mysql.connector.j;
     requires com.google.gson;
+    requires com.fasterxml.jackson.databind;
+    requires com.fasterxml.jackson.core;
+    requires com.fasterxml.jackson.datatype.jsr310;
+    requires okhttp3;
 
     opens com.gui.kline to javafx.fxml;
     opens com.gui.kline.view to javafx.fxml;
