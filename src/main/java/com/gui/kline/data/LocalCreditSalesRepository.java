@@ -5,6 +5,7 @@ import com.gui.kline.models.CreditSaleDetail;
 import com.gui.kline.models.Part;
 
 import java.sql.*;
+import com.gui.kline.data.DatabaseManager;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,7 @@ public class LocalCreditSalesRepository {
                  "VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, NOW()) " +
                  "ON DUPLICATE KEY UPDATE sale_date=?, customer_name=?, due_date=?, subtotal=?, paid_amount=?, status=?, updated_at=NOW()";
          
-         try (Connection conn = getConnection();
+         try (Connection conn = DatabaseManager.getConnection();
               PreparedStatement ps = conn.prepareStatement(sql)) {
              
              ps.setString(1, row.getCreditId());
@@ -57,7 +58,7 @@ public class LocalCreditSalesRepository {
          String getIdSql = "SELECT id FROM credit_sales WHERE credit_id = ?";
          String creditSaleId = null;
          
-         try (Connection conn = getConnection();
+         try (Connection conn = DatabaseManager.getConnection();
               PreparedStatement ps = conn.prepareStatement(getIdSql)) {
              ps.setString(1, creditId);
              ResultSet rs = ps.executeQuery();
@@ -74,7 +75,7 @@ public class LocalCreditSalesRepository {
          
          // Delete old parts first
          String deleteSql = "DELETE FROM credit_sale_parts WHERE credit_sale_id = ?";
-         try (Connection conn = getConnection();
+         try (Connection conn = DatabaseManager.getConnection();
               PreparedStatement psDelete = conn.prepareStatement(deleteSql)) {
              psDelete.setString(1, creditSaleId);
              psDelete.executeUpdate();
@@ -86,7 +87,7 @@ public class LocalCreditSalesRepository {
          String sql = "INSERT INTO credit_sale_parts (id, credit_sale_id, product_id, description, quantity, unit_price, total, created_at) " +
                  "VALUES (UUID(), ?, ?, ?, ?, ?, ?, NOW())";
          
-         try (Connection conn = getConnection();
+         try (Connection conn = DatabaseManager.getConnection();
               PreparedStatement ps = conn.prepareStatement(sql)) {
              
              final String finalCreditSaleId = creditSaleId;
@@ -126,7 +127,7 @@ public class LocalCreditSalesRepository {
         String sql = "SELECT * FROM credit_sales WHERE credit_id = ?";
         CreditSaleDetail detail = null;
         
-        try (Connection conn = getConnection();
+        try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, creditId);
@@ -158,7 +159,7 @@ public class LocalCreditSalesRepository {
          String getIdSql = "SELECT id FROM credit_sales WHERE credit_id = ?";
          String creditSaleId = null;
          
-         try (Connection conn = getConnection();
+         try (Connection conn = DatabaseManager.getConnection();
               PreparedStatement ps = conn.prepareStatement(getIdSql)) {
              ps.setString(1, creditId);
              ResultSet rs = ps.executeQuery();
@@ -176,7 +177,7 @@ public class LocalCreditSalesRepository {
          String sql = "SELECT * FROM credit_sale_parts WHERE credit_sale_id = ?";
          List<Part> parts = new ArrayList<>();
          
-         try (Connection conn = getConnection();
+         try (Connection conn = DatabaseManager.getConnection();
               PreparedStatement ps = conn.prepareStatement(sql)) {
              
              ps.setString(1, creditSaleId);
@@ -204,7 +205,7 @@ public class LocalCreditSalesRepository {
          String getIdSql = "SELECT id FROM credit_sales WHERE credit_id = ?";
          String creditSaleId = null;
          
-         try (Connection conn = getConnection();
+         try (Connection conn = DatabaseManager.getConnection();
               PreparedStatement ps = conn.prepareStatement(getIdSql)) {
              ps.setString(1, creditId);
              ResultSet rs = ps.executeQuery();
@@ -230,7 +231,7 @@ public class LocalCreditSalesRepository {
 
          String sql = "DELETE FROM credit_sales WHERE credit_id = ?";
          
-         try (Connection conn = getConnection();
+         try (Connection conn = DatabaseManager.getConnection();
               PreparedStatement ps = conn.prepareStatement(sql)) {
              
              // Delete parts first
@@ -250,7 +251,7 @@ public class LocalCreditSalesRepository {
     public void updatePayment(String creditId, double paidAmount) {
         String sql = "UPDATE credit_sales SET paid_amount = ?, status = ? WHERE credit_id = ?";
         
-        try (Connection conn = getConnection();
+        try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setDouble(1, paidAmount);
@@ -266,7 +267,7 @@ public class LocalCreditSalesRepository {
 
     private double getTotalAmount(String creditId) {
         String sql = "SELECT subtotal FROM credit_sales WHERE credit_id = ?";
-        try (Connection conn = getConnection();
+        try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, creditId);
@@ -284,7 +285,7 @@ public class LocalCreditSalesRepository {
         String sql = "SELECT * FROM credit_sales ORDER BY sale_date DESC";
         List<CreditSalesController.CreditSaleRow> sales = new ArrayList<>();
         
-        try (Connection conn = getConnection();
+        try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             
@@ -307,8 +308,6 @@ public class LocalCreditSalesRepository {
         return sales;
     }
 
-    private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection("jdbc:mysql://localhost:3306/kline_local", "root", "");
-    }
+
 }
 
