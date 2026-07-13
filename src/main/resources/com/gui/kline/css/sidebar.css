@@ -328,3 +328,73 @@
     -fx-text-fill: #166534;
     -fx-font-weight: bold;
 }
+
+/* ── Quick Actions Sidebar Scroll ── */
+
+.quick-scroll {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.quick-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.quick-scroll > .scroll-bar:vertical {
+    -fx-pref-width: 4px;
+    -fx-background-color: transparent;
+}
+
+.quick-scroll > .scroll-bar:vertical .thumb {
+    -fx-background-color: #d1d5db;
+    -fx-background-radius: 2;
+}
+
+.quick-scroll > .scroll-bar:vertical .track,
+.quick-scroll > .scroll-bar:vertical .track-background,
+.quick-scroll > .scroll-bar:vertical .increment-button,
+.quick-scroll > .scroll-bar:vertical .decrement-button,
+.quick-scroll > .scroll-bar:vertical .increment-arrow,
+.quick-scroll > .scroll-bar:vertical .decrement-arrow {
+    -fx-background-color: transparent;
+    -fx-pref-height: 0;
+    -fx-pref-width: 0;
+}
+
+/* ── Dashboard Quick Actions Scroll ── */
+
+.dashboard-quick-scroll {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.dashboard-quick-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.dashboard-quick-scroll > .scroll-bar:vertical {
+    -fx-pref-width: 4px;
+    -fx-background-color: transparent;
+}
+
+.dashboard-quick-scroll > .scroll-bar:vertical .thumb {
+    -fx-background-color: #475569;
+    -fx-background-radius: 2;
+}
+
+.dashboard-quick-scroll > .scroll-bar:vertical .track,
+.dashboard-quick-scroll > .scroll-bar:vertical .track-background,
+.dashboard-quick-scroll > .scroll-bar:vertical .increment-button,
+.dashboard-quick-scroll > .scroll-bar:vertical .decrement-button,
+.dashboard-quick-scroll > .scroll-bar:vertical .increment-arrow,
+.dashboard-quick-scroll > .scroll-bar:vertical .decrement-arrow {
+    -fx-background-color: transparent;
+    -fx-pref-height: 0;
+    -fx-pref-width: 0;
+}
+
+.dashboard-quick-scroll > .scroll-bar:horizontal {
+    -fx-pref-height: 0;
+}

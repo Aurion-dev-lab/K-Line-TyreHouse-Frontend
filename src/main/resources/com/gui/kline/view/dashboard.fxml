@@ -9,6 +9,7 @@
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -201,15 +202,22 @@
 
                     <VBox spacing="12.0" VBox.vgrow="ALWAYS"
                           style="-fx-background-color: #1a1a2e; -fx-background-radius: 14; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 8, 0, 0, 2);">
-                        <Label text="Quick Actions"
-                               style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                        <HBox alignment="CENTER_LEFT">
+                            <Label text="Quick Actions"
+                                   style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Button text="⛶" onAction="#handleExpandQuickActions"
+                                    style="-fx-background-color: #334155; -fx-text-fill: white; -fx-font-size: 14px; -fx-cursor: hand; -fx-background-radius: 6; -fx-padding: 4 8;" />
+                        </HBox>
 
-                        <GridPane fx:id="quickActionsGrid" hgap="12.0" vgap="12.0">
-                            <columnConstraints>
-                                <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
-                                <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
-                            </columnConstraints>
-                        </GridPane>
+                        <ScrollPane fitToWidth="true" styleClass="dashboard-quick-scroll" VBox.vgrow="ALWAYS">
+                            <GridPane fx:id="quickActionsGrid" hgap="12.0" vgap="12.0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                                </columnConstraints>
+                            </GridPane>
+                        </ScrollPane>
                     </VBox>
 
                 </VBox>

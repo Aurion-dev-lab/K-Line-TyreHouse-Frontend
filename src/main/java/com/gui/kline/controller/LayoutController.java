@@ -181,14 +181,15 @@ public class LayoutController {
         if (quickServiceList == null) return;
         quickServiceList.getChildren().clear();
 
-        String sql = "SELECT service, price FROM quick_service_presets WHERE active = 1 ORDER BY service";
+        String sql = "SELECT service, price, icon FROM quick_service_presets WHERE active = 1 ORDER BY service";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 String service = rs.getString("service");
                 double price = rs.getDouble("price");
-                quickServiceList.getChildren().add(buildQuickServiceButton(service, price));
+                String icon = rs.getString("icon");
+                quickServiceList.getChildren().add(buildQuickServiceButton(service, price, icon));
             }
         } catch (SQLException ex) {
             System.err.println("Failed to load quick action presets: " + ex.getMessage());
@@ -201,10 +202,14 @@ public class LayoutController {
         }
     }
 
-    private Button buildQuickServiceButton(String service, double price) {
+    private Button buildQuickServiceButton(String service, double price, String iconLiteral) {
         Button button = new Button();
         button.setMaxWidth(Double.MAX_VALUE);
         button.getStyleClass().add("quick-service-btn");
+
+        FontIcon icon = new FontIcon(iconLiteral != null ? iconLiteral : "fas-bolt");
+        icon.setIconSize(18);
+        icon.setIconColor(javafx.scene.paint.Color.web("#f59e0b"));
 
         VBox textBox = new VBox();
         textBox.setAlignment(Pos.CENTER_LEFT);
@@ -217,7 +222,7 @@ public class LayoutController {
 
         textBox.getChildren().addAll(title, priceLabel);
 
-        HBox content = new HBox(12, textBox);
+        HBox content = new HBox(12, icon, textBox);
         content.setAlignment(Pos.CENTER_LEFT);
         button.setGraphic(content);
 

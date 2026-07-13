@@ -1,5 +1,6 @@
 package com.gui.kline.controller;
 
+import com.gui.kline.controller.form.QuickActionsPopupController;
 import com.gui.kline.data.*;
 import com.gui.kline.models.Product;
 import com.gui.kline.models.ExportRecord;
@@ -21,6 +22,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.net.URL;
 import java.sql.Connection;
@@ -374,7 +377,7 @@ public class DashboardController implements Initializable {
     private void loadQuickServices() {
         try {
             quickServices.clear();
-            String sql = "SELECT id, service, price FROM quick_service_presets WHERE active = 1 ORDER BY service";
+            String sql = "SELECT id, service, price, icon FROM quick_service_presets WHERE active = 1 ORDER BY service";
             try (Connection conn = DatabaseManager.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql);
                  ResultSet rs = ps.executeQuery()) {
@@ -383,7 +386,8 @@ public class DashboardController implements Initializable {
                     QuickService qs = new QuickService(
                             rs.getString("id"),
                             rs.getString("service"),
-                            rs.getDouble("price")
+                            rs.getDouble("price"),
+                            rs.getString("icon")
                     );
                     quickServices.add(qs);
                 }
@@ -440,8 +444,9 @@ public class DashboardController implements Initializable {
         content.setAlignment(Pos.CENTER);
         content.setSpacing(6.0);
         
-        Label icon = new Label(getServiceIcon(service.name));
-        icon.setStyle("-fx-font-size: 20px;");
+        FontIcon icon = new FontIcon(service.icon != null ? service.icon : "fas-bolt");
+        icon.setIconSize(24);
+        icon.setIconColor(javafx.scene.paint.Color.web("#f59e0b"));
         
         Label name = new Label(service.name);
         name.setStyle("-fx-text-fill: white; -fx-font-size: 12px;");
@@ -457,16 +462,6 @@ public class DashboardController implements Initializable {
         return btn;
     }
     
-    private String getServiceIcon(String serviceName) {
-        return switch (serviceName.toLowerCase()) {
-            case "quick polish" -> "✨";
-            case "tyre air fill" -> "🛞";
-            case "coolant top-up" -> "💧";
-            case "brake fluid check" -> "🔧";
-            default -> "⚙";
-        };
-    }
-    
     private void handleQuickServiceAction(QuickService service) {
         // Confirm and log a quick service entry without a full invoice.
         Alert dialog = new Alert(Alert.AlertType.CONFIRMATION);
@@ -478,6 +473,36 @@ public class DashboardController implements Initializable {
         if (result.isPresent() && result.get() == ButtonType.OK) {
             logQuickService(service);
             refreshData();
+        }
+    }
+
+    @FXML
+    private void handleExpandQuickActions() {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                    getClass().getResource("/com/gui/kline/view/form/quick-actions-popup.fxml"));
+            javafx.scene.Parent root = loader.load();
+            QuickActionsPopupController controller = loader.getController();
+
+            // Convert inner QuickService list to popup's QuickService list
+            List<QuickActionsPopupController.QuickService> popupServices = new ArrayList<>();
+            for (QuickService qs : quickServices) {
+                popupServices.add(new QuickActionsPopupController.QuickService(
+                        qs.id, qs.name, qs.price, qs.icon));
+            }
+            controller.setServices(popupServices);
+            controller.setOnActionLogged(this::refreshData);
+
+            Stage stage = new Stage();
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.initOwner(quickActionsGrid.getScene().getWindow());
+            javafx.scene.Scene scene = new javafx.scene.Scene(root);
+            scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
+            stage.setScene(scene);
+            stage.show();
+        } catch (Exception ex) {
+            System.err.println("Error opening quick actions popup: " + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 
@@ -720,11 +745,13 @@ public class DashboardController implements Initializable {
         String id;
         String name;
         double price;
+        String icon;
         
-        QuickService(String id, String name, double price) {
+        QuickService(String id, String name, double price, String icon) {
             this.id = id;
             this.name = name;
             this.price = price;
+            this.icon = icon;
         }
     }
 }

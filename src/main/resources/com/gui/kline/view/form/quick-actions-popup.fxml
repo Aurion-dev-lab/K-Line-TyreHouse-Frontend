@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane prefWidth="600.0" prefHeight="500.0"
+            style="-fx-background-color: #1a1a2e; -fx-background-radius: 16;"
+            xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.gui.kline.controller.form.QuickActionsPopupController">
+    <children>
+        <VBox spacing="16.0" AnchorPane.topAnchor="20.0" AnchorPane.leftAnchor="20.0"
+              AnchorPane.rightAnchor="20.0" AnchorPane.bottomAnchor="20.0">
+            <children>
+                <HBox alignment="CENTER_LEFT">
+                    <VBox spacing="4.0">
+                        <Label text="Quick Actions"
+                               style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;" />
+                        <Label fx:id="lblSubtitle" text="Select a service to log it instantly"
+                               style="-fx-font-size: 12px; -fx-text-fill: #94a3b8;" />
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button text="✕" onAction="#handleClose"
+                            style="-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-font-size: 18px; -fx-cursor: hand; -fx-padding: 4 8;" />
+                </HBox>
+
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                            style="-fx-background: transparent; -fx-background-color: transparent; -fx-border-color: transparent;">
+                    <GridPane fx:id="actionsGrid" hgap="12.0" vgap="12.0">
+                        <columnConstraints>
+                            <ColumnConstraints hgrow="ALWAYS" percentWidth="33.33" />
+                            <ColumnConstraints hgrow="ALWAYS" percentWidth="33.33" />
+                            <ColumnConstraints hgrow="ALWAYS" percentWidth="33.33" />
+                        </columnConstraints>
+                    </GridPane>
+                </ScrollPane>
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>

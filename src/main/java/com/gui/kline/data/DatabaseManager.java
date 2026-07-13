@@ -12,7 +12,7 @@ import java.util.List;
 public final class DatabaseManager {
     private static final String DEFAULT_URL = "jdbc:mysql://localhost:3306/kline_local?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
     private static final String DEFAULT_USER = "root";
-    private static final String DEFAULT_PASSWORD = "1234";
+    private static final String DEFAULT_PASSWORD = "";
     private static volatile boolean initialized = false;
 
     private DatabaseManager() {
@@ -228,6 +228,7 @@ public final class DatabaseManager {
                     "service VARCHAR(255) NOT NULL," +
                     "price DECIMAL(12,2) NOT NULL DEFAULT 0," +
                     "active TINYINT(1) NOT NULL DEFAULT 1," +
+                    "icon VARCHAR(50) DEFAULT 'fas-bolt'," +
                     "created_at DATETIME NOT NULL" +
                     ")");
             statement.execute("INSERT IGNORE INTO app_sync_state (id, device_id, last_sync_at) " +

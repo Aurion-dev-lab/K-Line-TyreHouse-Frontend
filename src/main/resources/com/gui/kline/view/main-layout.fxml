@@ -117,13 +117,11 @@
 
                 <Separator />
 
-                <AnchorPane style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
-                    <VBox fx:id="quickServiceList" prefHeight="238.0" prefWidth="260.0" spacing="10">
+                <ScrollPane fitToWidth="true" styleClass="quick-scroll" VBox.vgrow="ALWAYS">
+                    <VBox fx:id="quickServiceList" prefWidth="260.0" spacing="10">
                         <padding><Insets bottom="15" left="10" right="10" top="15" /></padding>
                     </VBox>
-                </AnchorPane>
-
-                <Region prefWidth="236.0" VBox.vgrow="ALWAYS" />
+                </ScrollPane>
 
                 <VBox spacing="10" styleClass="stats-container">
                     <VBox.margin><Insets bottom="15" left="10" right="10" /></VBox.margin>
