@@ -6,6 +6,7 @@ import com.gui.kline.models.Product;
 import com.gui.kline.models.ExportRecord;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.service.NavigationService;
+import com.gui.kline.utils.BackgroundTask;
 import com.gui.kline.utils.JsonUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -79,12 +80,117 @@ public class DashboardController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         setupDatePickers();
         setupChartRangeCombo();
-        loadKpiData();
-        loadQuickServiceStats();
+        applyChartStyles();
+
+        // Load data-heavy sections on background threads to prevent UI freeze
+        BackgroundTask.run(this::loadKpiDataSync, this::applyKpiData);
+        BackgroundTask.run(this::loadQuickServiceStatsSync, this::applyQuickServiceStats);
+        BackgroundTask.run(this::loadQuickServicesSync, services -> {
+            quickServices = services;
+            populateQuickActionsGrid();
+        });
+
         loadChartData("Last 7 Days");
         loadStockAlerts();
-        loadQuickServices();
-        applyChartStyles();
+    }
+
+    // Holder for background-loaded KPI data
+    private static class KPIMetricsData {
+        KPIMetrics current;
+        KPIMetrics previous;
+    }
+
+    private KPIMetricsData loadKpiDataSync() {
+        LocalDate startDate = startDatePicker.getValue() != null ? startDatePicker.getValue() : LocalDate.now().minusDays(30);
+        LocalDate endDate = endDatePicker.getValue() != null ? endDatePicker.getValue() : LocalDate.now();
+
+        KPIMetricsData data = new KPIMetricsData();
+        data.current = calculateMetrics(startDate, endDate);
+
+        long daysDiff = ChronoUnit.DAYS.between(startDate, endDate);
+        LocalDate prevStart = startDate.minusDays(daysDiff + 1);
+        LocalDate prevEnd = startDate.minusDays(1);
+        data.previous = calculateMetrics(prevStart, prevEnd);
+        return data;
+    }
+
+    private void applyKpiData(KPIMetricsData data) {
+        // Called on FX thread - takes the pre-computed metrics and updates labels
+        try {
+            KPIMetrics current = data.current;
+            KPIMetrics previous = data.previous;
+
+            periodSalesLabel.setText("Rs. " + formatAmount(current.sales));
+            periodProfitLabel.setText("Rs. " + formatAmount(current.profit));
+            periodServicesLabel.setText(String.valueOf(current.services));
+            activeWorkersLabel.setText(String.valueOf(current.workers));
+
+            double salesTrend = calculateTrendPercent(previous.sales, current.sales);
+            double profitTrend = calculateTrendPercent(previous.profit, current.profit);
+            double servicesTrend = calculateTrendPercent(previous.services, current.services);
+            double workersTrend = calculateTrendPercent(previous.workers, current.workers);
+
+            setSalesTrend(salesTrend);
+            setProfitTrend(profitTrend);
+            setServicesTrend(servicesTrend);
+            setWorkersTrend(workersTrend);
+        } catch (Exception ex) {
+            System.err.println("Error loading KPI data: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    private QuickServiceStats loadQuickServiceStatsSync() {
+        if (quickServiceCountLabel == null || quickServiceRevenueLabel == null) {
+            return new QuickServiceStats(0, 0);
+        }
+        LocalDate startDate = startDatePicker.getValue() != null ? startDatePicker.getValue() : LocalDate.now().minusDays(30);
+        LocalDate endDate = endDatePicker.getValue() != null ? endDatePicker.getValue() : LocalDate.now();
+        try (Connection conn = DatabaseManager.getConnection()) {
+            int count = countRows(conn,
+                    "SELECT COUNT(*) FROM quick_services WHERE service_date BETWEEN ? AND ?",
+                    startDate, endDate);
+            double revenue = sumAmount(conn,
+                    "SELECT COALESCE(SUM(price),0) FROM quick_services WHERE service_date BETWEEN ? AND ?",
+                    startDate, endDate);
+            return new QuickServiceStats(count, revenue);
+        } catch (SQLException ex) {
+            System.err.println("Error loading quick service stats: " + ex.getMessage());
+            return new QuickServiceStats(0, 0);
+        }
+    }
+
+    private void applyQuickServiceStats(QuickServiceStats stats) {
+        if (quickServiceCountLabel != null && quickServiceRevenueLabel != null) {
+            quickServiceCountLabel.setText(String.valueOf(stats.count));
+            quickServiceRevenueLabel.setText("Rs. " + formatAmount(stats.revenue));
+        }
+    }
+
+    private static class QuickServiceStats {
+        final int count;
+        final double revenue;
+        QuickServiceStats(int count, double revenue) { this.count = count; this.revenue = revenue; }
+    }
+
+    private List<QuickService> loadQuickServicesSync() {
+        List<QuickService> services = new ArrayList<>();
+        String sql = "SELECT id, service, price, icon FROM quick_service_presets WHERE active = 1 ORDER BY service";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                services.add(new QuickService(
+                        rs.getString("id"),
+                        rs.getString("service"),
+                        rs.getDouble("price"),
+                        rs.getString("icon")
+                ));
+            }
+        } catch (SQLException ex) {
+            System.err.println("Error loading quick services: " + ex.getMessage());
+        }
+        return services;
     }
 
     private void setupDatePickers() {

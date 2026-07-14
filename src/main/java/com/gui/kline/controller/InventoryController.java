@@ -11,6 +11,7 @@ import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.Product;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.utils.AlertUtil;
+import com.gui.kline.utils.BackgroundTask;
 import com.gui.kline.utils.ImagePathUtil;
 import com.gui.kline.utils.JsonUtil;
 
@@ -54,10 +55,14 @@ public class InventoryController implements Initializable {
     private final FilteredList<Product>   filteredList = new FilteredList<>(masterList, p -> true);
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        loadFromLocal();
+        // Load products on background thread to prevent UI freeze
+        BackgroundTask.run(catalogRepository::loadProducts, products -> {
+            masterList.setAll(products);
+            rebuildCards();
+            refreshStats();
+        });
+
         filteredList.addListener((ListChangeListener<Product>) c -> rebuildCards());
-        rebuildCards();
-        refreshStats();
     }
 
     private void loadFromLocal() {

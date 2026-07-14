@@ -6,6 +6,7 @@ import com.gui.kline.models.ViewModel;
 import com.gui.kline.service.NavigationService;
 import com.gui.kline.service.SyncService;
 import com.gui.kline.utils.AlertUtil;
+import com.gui.kline.utils.BackgroundTask;
 import com.gui.kline.utils.JsonUtil;
 import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
@@ -334,26 +335,23 @@ public class LayoutController {
             return;
         }
 
-        String searchTerm = "%" + query.trim() + "%";
+        String queryTrimmed = query.trim();
+        String searchTerm = "%" + queryTrimmed + "%";
 
-        // Collect all search results from each table
-        List<SearchResult> allResults = new ArrayList<>();
-
-        // 1. Search Products
-        searchProducts(searchTerm, allResults);
-        // 2. Search Workers
-        searchWorkers(searchTerm, allResults);
-        // 3. Search Customers (via invoices/credit_sales)
-        searchInvoices(searchTerm, allResults);
-        // 4. Search Credit Sales
-        searchCreditSales(searchTerm, allResults);
-        // 5. Search Tyre Exports
-        searchTyreExports(searchTerm, allResults);
-        // 6. Search Services
-        searchServices(searchTerm, allResults);
-
-        // Render results in the dropdown
-        renderSearchResults(allResults, query.trim());
+        // Run all DB queries on a background thread to prevent UI lag
+        BackgroundTask.run(
+                () -> {
+                    List<SearchResult> allResults = new ArrayList<>();
+                    searchProducts(searchTerm, allResults);
+                    searchWorkers(searchTerm, allResults);
+                    searchInvoices(searchTerm, allResults);
+                    searchCreditSales(searchTerm, allResults);
+                    searchTyreExports(searchTerm, allResults);
+                    searchServices(searchTerm, allResults);
+                    return allResults;
+                },
+                results -> renderSearchResults(results, queryTrimmed)
+        );
     }
 
     private void renderSearchResults(List<SearchResult> results, String query) {
