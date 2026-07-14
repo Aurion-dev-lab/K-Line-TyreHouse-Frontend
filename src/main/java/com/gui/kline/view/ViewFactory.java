@@ -1,5 +1,6 @@
 package com.gui.kline.view;
 
+import com.gui.kline.controller.LayoutController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -16,6 +17,7 @@ public class ViewFactory {
     // Storage for primary stage and last opened dialog stage
     private Stage primaryStage;
     private Stage lastDialogStage;
+    private LayoutController layoutController;
     
     public void setPrimaryStage(Stage primaryStage) {
         this.primaryStage = primaryStage;
@@ -23,6 +25,20 @@ public class ViewFactory {
     
     public Stage getPrimaryStage() {
         return primaryStage;
+    }
+    
+    public void setLayoutController(LayoutController controller) {
+        this.layoutController = controller;
+    }
+    
+    public LayoutController getLayoutController() {
+        return layoutController;
+    }
+    
+    public void updateQuickStats() {
+        if (layoutController != null) {
+            layoutController.loadQuickStats();
+        }
     }
     
     public void getView(String view) {

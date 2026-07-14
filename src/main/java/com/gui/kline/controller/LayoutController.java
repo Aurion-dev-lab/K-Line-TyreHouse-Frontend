@@ -51,6 +51,8 @@ public class LayoutController {
         txtSearch.textProperty().addListener((obs, o, n) -> onSearch(n));
         loadQuickActionsPanel();
         loadQuickStats();
+        // Register this controller with ViewFactory for cross-controller communication
+        ViewModel.INSTANCE.getViewsFactory().setLayoutController(this);
     }
 
     @FXML
@@ -230,7 +232,7 @@ public class LayoutController {
         return button;
     }
 
-    private void loadQuickStats() {
+    public void loadQuickStats() {
         if (lblTotalQuickCount == null || lblTotalQuickPrice == null) return;
         String sql = "SELECT COUNT(*) AS total_count, COALESCE(SUM(price),0) AS total_sum FROM quick_services";
         try (Connection conn = DatabaseManager.getConnection();

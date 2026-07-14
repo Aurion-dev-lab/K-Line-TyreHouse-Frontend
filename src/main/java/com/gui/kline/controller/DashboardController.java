@@ -463,17 +463,11 @@ public class DashboardController implements Initializable {
     }
     
     private void handleQuickServiceAction(QuickService service) {
-        // Confirm and log a quick service entry without a full invoice.
-        Alert dialog = new Alert(Alert.AlertType.CONFIRMATION);
-        dialog.setTitle("Log Quick Service");
-        dialog.setHeaderText(null);
-        dialog.setContentText("Log " + service.name + " for Rs. " + String.format("%.0f", service.price) + "?");
-        
-        Optional<ButtonType> result = dialog.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            logQuickService(service);
-            refreshData();
-        }
+        // Log a quick service entry without a full invoice (no confirmation dialog)
+        logQuickService(service);
+        refreshData();
+        // Update sidebar quick stats
+        ViewModel.INSTANCE.getViewsFactory().updateQuickStats();
     }
 
     @FXML
