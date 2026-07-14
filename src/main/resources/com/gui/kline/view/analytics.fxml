@@ -35,7 +35,7 @@
             <Label text="📈 Revenue &amp; Profit Trend" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-padding: 15;"/>
             <AreaChart fx:id="revenueTrendChart" legendSide="BOTTOM">
                 <xAxis><CategoryAxis side="BOTTOM" /></xAxis>
-                <yAxis><NumberAxis side="LEFT" /></yAxis>
+                <yAxis><NumberAxis side="LEFT" lowerBound="0" /></yAxis>
             </AreaChart>
         </children>
     </VBox>
