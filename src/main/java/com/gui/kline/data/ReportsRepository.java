@@ -27,15 +27,15 @@ public class ReportsRepository {
         // Get data from invoices and line items
         String sql = "SELECT " +
                 "    i.invoice_date as sale_date, " +
-                "    p.name as product_name, " +
+                "    COALESCE(p.name, il.description) as product_name, " +
                 "    il.qty as quantity, " +
                 "    il.total as revenue, " +
-                "    (il.unit_price - p.buy_price) * il.qty as profit " +
+                "    (il.unit_price - COALESCE(p.buy_price, 0)) * il.qty as profit " +
                 "FROM invoice_line_items il " +
                 "LEFT JOIN invoices i ON il.invoice_id = i.invoice_id " +
                 "LEFT JOIN products p ON il.product_id = p.id " +
-                "WHERE i.invoice_date BETWEEN ? AND ? " +
-                "ORDER BY i.invoice_date DESC, p.name";
+                "WHERE i.status = 'completed' AND i.invoice_date BETWEEN ? AND ? " +
+                "ORDER BY i.invoice_date DESC, product_name";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -292,7 +292,7 @@ public class ReportsRepository {
         String salesSql = "SELECT COALESCE(SUM(il.total), 0) as total_sales " +
                 "FROM invoice_line_items il " +
                 "LEFT JOIN invoices i ON il.invoice_id = i.invoice_id " +
-                "WHERE i.invoice_date BETWEEN ? AND ?";
+                "WHERE i.status = 'completed' AND i.invoice_date BETWEEN ? AND ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(salesSql)) {
@@ -388,6 +388,12 @@ public class ReportsRepository {
         } catch (SQLException ex) {
             System.err.println("Failed to calculate total expenses: " + ex.getMessage());
         }
+
+        // Product cost is incurred when a quotation is generated as a completed
+        // invoice. Service and labour lines have no inventory cost, so they add
+        // their full amount to profit.
+        summary.setTotalExpenses(summary.getTotalExpenses()
+                + getCompletedInvoiceProductCost(startDate, endDate));
         
         summary.setWorkerCosts(getWorkerCosts(startDate, endDate));
         
@@ -398,6 +404,26 @@ public class ReportsRepository {
         summary.setNetProfit(totalRevenue - totalCosts);
         
         return summary;
+    }
+
+    private double getCompletedInvoiceProductCost(LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT COALESCE(SUM(il.qty * COALESCE(p.buy_price, 0)), 0) " +
+                "FROM invoice_line_items il " +
+                "JOIN invoices i ON i.id = il.invoice_ref " +
+                "LEFT JOIN products p ON p.id = il.product_id " +
+                "WHERE i.status = 'completed' AND i.invoice_date BETWEEN ? AND ?";
+
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setDate(1, Date.valueOf(startDate));
+            statement.setDate(2, Date.valueOf(endDate));
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? rs.getDouble(1) : 0.0;
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to calculate completed invoice product cost: " + ex.getMessage());
+            return 0.0;
+        }
     }
 
     /**
@@ -413,7 +439,7 @@ public class ReportsRepository {
                 "FROM invoice_line_items il " +
                 "LEFT JOIN invoices i ON il.invoice_id = i.invoice_id " +
                 "LEFT JOIN products p ON il.product_id = p.id " +
-                "WHERE i.invoice_date BETWEEN ? AND ? " +
+                "WHERE i.status = 'completed' AND i.invoice_date BETWEEN ? AND ? " +
                 "GROUP BY p.id, p.name " +
                 "ORDER BY total_revenue DESC " +
                 "LIMIT ?";
@@ -454,7 +480,7 @@ public class ReportsRepository {
                 "    SUM(il.total) as total_revenue " +
                 "FROM invoice_line_items il " +
                 "LEFT JOIN invoices i ON il.invoice_id = i.invoice_id " +
-                "WHERE i.invoice_date BETWEEN ? AND ? " +
+                "WHERE i.status = 'completed' AND i.invoice_date BETWEEN ? AND ? " +
                 "GROUP BY i.invoice_date " +
                 "ORDER BY i.invoice_date";
         

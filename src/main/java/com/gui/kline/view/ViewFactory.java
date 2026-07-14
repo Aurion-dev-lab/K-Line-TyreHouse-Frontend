@@ -49,25 +49,30 @@ public class ViewFactory {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gui/kline/view/" + view + ".fxml"));
             Parent root = loader.load();
-            Stage stage = new Stage();
-            stage.setTitle("K-Line - " + view);
-            
+
+            Stage stage;
+            if (view.equals("main-layout") && primaryStage != null) {
+                // Reuse the real primary stage so window ownership stays consistent
+                // and the application only exits when this window is closed.
+                stage = primaryStage;
+            } else {
+                stage = new Stage();
+                stage.setTitle("K-Line - " + view);
+            }
+
             // Use provided owner or fall back to primary stage
             Stage actualOwner = ownerStage != null ? ownerStage : primaryStage;
-            
+
             // If owner stage is available, make this window a child of it
-            if (actualOwner != null) {
+            if (actualOwner != null && !view.equals("main-layout")) {
                 stage.initOwner(actualOwner);
-                // Don't make main layout modal - only dialogs should be modal
-                if (!view.equals("main-layout")) {
-                    stage.initModality(Modality.WINDOW_MODAL);
-                }
+                stage.initModality(Modality.WINDOW_MODAL);
             }
-            
+
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.show();
-            
+
             // Store reference
             lastDialogStage = stage;
         } catch (Exception e) {

@@ -46,7 +46,12 @@ public class LineItem {
     public double getUnitPrice() { return unitPrice; }
     public void setUnitPrice(double unitPrice) { this.unitPrice = unitPrice; }
     
-    public double getTotal() { return total; }
+    /**
+     * A line item's amount is always derived from its quantity and unit price.
+     * Keeping this calculation here prevents quotation totals from becoming
+     * stale (or remaining at the default Rs. 0.00) when either value changes.
+     */
+    public double getTotal() { return qty * unitPrice; }
     public void setTotal(double total) { this.total = total; }
     public String getProductId() { return productId; }
     public void setProductId(String productId) { this.productId = productId; }
@@ -79,5 +84,4 @@ public class LineItem {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
-
 

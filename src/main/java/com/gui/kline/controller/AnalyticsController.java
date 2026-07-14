@@ -55,7 +55,7 @@ public class AnalyticsController {
             // Load invoice revenue
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT COALESCE(invoice_date, DATE(created_at)) as d, SUM(grand_total) as total " +
-                    "FROM invoices WHERE COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d")) {
+                    "FROM invoices WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d")) {
                 ps.setDate(1, Date.valueOf(startDate));
                 ps.setDate(2, Date.valueOf(endDate));
                 try (ResultSet rs = ps.executeQuery()) {
@@ -200,7 +200,7 @@ public class AnalyticsController {
             // Load invoice totals by date
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT COALESCE(invoice_date, DATE(created_at)) as d, SUM(grand_total) as total " +
-                    "FROM invoices WHERE COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d")) {
+                    "FROM invoices WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d")) {
                 ps.setDate(1, Date.valueOf(startDate));
                 ps.setDate(2, Date.valueOf(endDate));
                 try (ResultSet rs = ps.executeQuery()) {

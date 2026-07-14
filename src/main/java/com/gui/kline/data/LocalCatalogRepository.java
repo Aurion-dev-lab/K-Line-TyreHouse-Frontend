@@ -56,6 +56,26 @@ public class LocalCatalogRepository {
         }
     }
 
+    public String getCustomerPhone(String name) {
+        if (name == null || name.isBlank()) {
+            return "";
+        }
+        String sql = "SELECT phone FROM customers WHERE name = ? LIMIT 1";
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, name.trim());
+            try (ResultSet rs = statement.executeQuery()) {
+                if (!rs.next()) {
+                    return "";
+                }
+                String phone = rs.getString("phone");
+                return phone == null ? "" : phone;
+            }
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to read customer phone", ex);
+        }
+    }
+
       public List<Product> loadProducts() {
           String sql = "SELECT id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
                       "brand, description, vehicle_type, material, supplier_name, created_at FROM products ORDER BY product_code, name";

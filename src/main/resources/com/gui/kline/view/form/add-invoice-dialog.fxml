@@ -31,7 +31,7 @@
             <!-- Header: Invoice ID -->
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <VBox.margin><Insets bottom="4" left="32" right="32" top="32"/></VBox.margin>
-                <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1a1a2e;" text="New Invoice"/>
+                <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1a1a2e;" text="New Quotation"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Label fx:id="lblInvoiceId"
                        style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #00c853;
@@ -106,6 +106,13 @@
                                              -fx-padding: 8; -fx-border-color: transparent;"
                                       managed="true" visible="true"/>
 
+                            <TextField fx:id="txtProductSearch" promptText="Search by product code, name, category, or brand…"
+                                       style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                              -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 13px;"/>
+
+                            <Label fx:id="lblStockError" managed="false" textFill="#dc2626" visible="false"
+                                   style="-fx-font-size: 12px; -fx-font-weight: bold;" />
+
                             <TextField fx:id="txtServiceDesc" promptText="e.g. Full engine service + oil change"
                                        style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
                                               -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"
@@ -164,13 +171,13 @@
                                                   -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
                             </VBox>
                             <VBox spacing="8" GridPane.columnIndex="1">
-                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="PARTS (RS.)"/>
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="ADDITIONAL PARTS (RS.)"/>
                                 <TextField fx:id="txtParts" promptText="0.00"
                                            style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
                                                   -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
                             </VBox>
                             <VBox spacing="8" GridPane.columnIndex="2">
-                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="DISCOUNT (%)"/>
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="DISCOUNT (RS.)"/>
                                 <TextField fx:id="txtDiscount" promptText="0"
                                            style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
                                                   -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
@@ -200,10 +207,9 @@
                                -fx-font-weight: bold; -fx-cursor: hand;" text="Cancel"/>
                 <Button fx:id="btnSave" onAction="#handleSave" prefHeight="50" prefWidth="180"
                         style="-fx-background-color: #00c853; -fx-background-radius: 14; -fx-text-fill: white;
-                               -fx-font-weight: bold; -fx-font-size: 14px; -fx-cursor: hand;" text="Save Invoice"/>
+                               -fx-font-weight: bold; -fx-font-size: 14px; -fx-cursor: hand;" text="Save Quotation"/>
             </HBox>
 
         </VBox>
     </StackPane>
 </AnchorPane>
-

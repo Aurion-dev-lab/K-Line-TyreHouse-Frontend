@@ -13,6 +13,7 @@ module com.gui.kline {
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.datatype.jsr310;
     requires okhttp3;
+    requires com.github.librepdf.openpdf;
 
     opens com.gui.kline to javafx.fxml;
     opens com.gui.kline.view to javafx.fxml;

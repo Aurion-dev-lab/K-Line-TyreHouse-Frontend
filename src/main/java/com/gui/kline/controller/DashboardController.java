@@ -545,7 +545,7 @@ public class DashboardController implements Initializable {
         try (Connection conn = DatabaseManager.getConnection()) {
             collectTotalsByDate(conn,
                     "SELECT COALESCE(invoice_date, DATE(created_at)) AS d, SUM(grand_total) AS total " +
-                            "FROM invoices WHERE COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d",
+                            "FROM invoices WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d",
                     startDate, endDate, totals);
             collectTotalsByDate(conn,
                     "SELECT COALESCE(sale_date, DATE(created_at)) AS d, SUM(COALESCE(subtotal, amount)) AS total " +
@@ -586,7 +586,7 @@ public class DashboardController implements Initializable {
     private double sumRevenue(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
         double invoices = sumAmount(conn,
                 "SELECT COALESCE(SUM(grand_total),0) FROM invoices " +
-                        "WHERE COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?",
+                        "WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?",
                 startDate, endDate);
         double creditSales = sumAmount(conn,
                 "SELECT COALESCE(SUM(COALESCE(subtotal, amount)),0) FROM credit_sales " +
@@ -607,7 +607,7 @@ public class DashboardController implements Initializable {
                          "FROM invoice_line_items il " +
                          "LEFT JOIN products p ON p.id = il.product_id " +
                          "JOIN invoices i ON i.id = il.invoice_ref " +
-                         "WHERE COALESCE(i.invoice_date, DATE(i.created_at)) BETWEEN ? AND ?",
+                         "WHERE i.status = 'completed' AND COALESCE(i.invoice_date, DATE(i.created_at)) BETWEEN ? AND ?",
                  startDate, endDate);
          double creditSalesProfit = sumAmount(conn,
                  "SELECT COALESCE(SUM(COALESCE(subtotal, amount)),0) FROM credit_sales " +
