@@ -280,10 +280,20 @@ public class CreditSalesController implements Initializable {
     }
     
     private void onDeleteCredit(CreditSaleRow sale) {
+        // Get owner window to prevent alert from opening as separate window in full-screen mode
+        javafx.stage.Window owner = null;
+        if (tblCreditSales != null && tblCreditSales.getScene() != null) {
+            owner = tblCreditSales.getScene().getWindow();
+        }
+
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Confirm Delete");
         confirm.setHeaderText("Delete Credit Sale?");
         confirm.setContentText("Are you sure you want to delete credit sale #" + sale.getCreditId() + "?");
+        if (owner != null) {
+            confirm.initOwner(owner);
+            confirm.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
         
         if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             try {

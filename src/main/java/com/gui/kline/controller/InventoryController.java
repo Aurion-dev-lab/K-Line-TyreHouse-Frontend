@@ -38,7 +38,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 public class InventoryController implements Initializable {
 
@@ -99,10 +101,18 @@ public class InventoryController implements Initializable {
     }
 
     public void deleteProduct(Product p) {
+        // Get owner window from the card container's scene to prevent
+        // the alert from opening as a separate window in full-screen mode
+        Window owner = cardContainer.getScene() != null ? cardContainer.getScene().getWindow() : null;
+
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Delete Product");
         confirm.setHeaderText(null);
         confirm.setContentText("Are you sure you want to delete '" + p.getName() + "'?\nThis action cannot be undone.");
+        if (owner != null) {
+            confirm.initOwner(owner);
+            confirm.initModality(Modality.WINDOW_MODAL);
+        }
 
         confirm.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
@@ -111,9 +121,17 @@ public class InventoryController implements Initializable {
                     catalogRepository.deleteProduct(p);
                     enqueueProduct("delete", p);
                     refreshStats();
-                    AlertUtil.showSuccess("Success", "Product Deleted Successfully");
+                    if (owner != null) {
+                        AlertUtil.showSuccess(owner, "Success", "Product Deleted Successfully");
+                    } else {
+                        AlertUtil.showSuccess("Success", "Product Deleted Successfully");
+                    }
                 } catch (Exception ex) {
-                    AlertUtil.showError("Error", "Failed to delete product: " + ex.getMessage());
+                    if (owner != null) {
+                        AlertUtil.showError(owner, "Error", "Failed to delete product: " + ex.getMessage());
+                    } else {
+                        AlertUtil.showError("Error", "Failed to delete product: " + ex.getMessage());
+                    }
                 }
             }
         });

@@ -196,10 +196,21 @@ public class WorkerManagementController {
         if (worker == null) {
             return;
         }
+
+        // Get owner window to prevent alert from opening as separate window in full-screen mode
+        javafx.stage.Window owner = null;
+        if (attendanceRowsContainer != null && attendanceRowsContainer.getScene() != null) {
+            owner = attendanceRowsContainer.getScene().getWindow();
+        }
+
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Delete Worker");
         confirm.setHeaderText(null);
         confirm.setContentText("Delete " + worker.getName() + " and related attendance?");
+        if (owner != null) {
+            confirm.initOwner(owner);
+            confirm.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isEmpty() || result.get() != ButtonType.OK) {
             return;
