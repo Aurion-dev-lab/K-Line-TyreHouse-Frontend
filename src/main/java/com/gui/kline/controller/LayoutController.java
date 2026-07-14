@@ -41,9 +41,23 @@ public class LayoutController {
     private boolean quickActionsVisible = true, isCollapsed = false;
     private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
 
-    private static final double SIDEBAR_FULL = 260.0;
+    private static final double SIDEBAR_FULL  = 260.0;
     private static final double SIDEBAR_SMALL = 65.0;
-    private static final double QUICK_WIDTH = 260.0;
+    private static final double QUICK_WIDTH   = 260.0;
+
+    private static final String[] NAV_TEXTS = {
+            "   Dashboard",
+            "   Workers",
+            "    Inventory",
+            "     Invoices & Billing",
+            "    Credit Sales",
+            "    Services",
+            "   Tyre Exports",
+            "      Salary Management",
+            "    Analytics Charts",
+            "    Reports",
+            "    Manage Quick Actions"
+    };
 
     @FXML
     public void initialize() {
@@ -57,10 +71,9 @@ public class LayoutController {
 
     @FXML
     private void onHideQuick() {
-        if (!(lblPageTitle.getText().equals("Dashboard") ||
-                lblPageTitle.getText().equals("Services"))) {
-            return;
-        }
+        String title = lblPageTitle.getText();
+        if (!(title.equals("Dashboard") || title.equals("Services"))) return;
+
         quickActionsVisible = !quickActionsVisible;
 
         quickHide.setVisible(quickActionsVisible);
@@ -85,6 +98,18 @@ public class LayoutController {
 
         iconCollapse.setIconLiteral(isCollapsed ? "fas-angle-double-right" : "fas-angle-double-left");
         btnCollapse.setText(isCollapsed ? "" : "Collapse");
+
+        Button[] navButtons = {
+                btnDashboard, btnWorkers, btnInventory, btnInvoices,
+                btnSales, btnServices, btnTyreExports, btnSalary,
+                btnAnalytics, btnReports, btnQuickActions
+        };
+
+        for (int i = 0; i < navButtons.length; i++) {
+            if (navButtons[i] != null) {
+                navButtons[i].setText(isCollapsed ? "" : NAV_TEXTS[i]);
+            }
+        }
 
         updateLeftAnchors(sideWidth);
     }

@@ -23,8 +23,8 @@
 <AnchorPane
         prefHeight="780.0" prefWidth="1100.0"
         style="-fx-background-color: #f0f2f5;"
-        xmlns="http://javafx.com/javafx/17"
-        xmlns:fx="http://javafx.com/fxml/1"
+        xmlns="http://javafx.com/javafx"
+        xmlns:fx="http://javafx.com/fxml"
         fx:controller="com.gui.kline.controller.DashboardController">
 
     <children>
