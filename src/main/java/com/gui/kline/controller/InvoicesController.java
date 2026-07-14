@@ -380,9 +380,13 @@ public class InvoicesController implements Initializable {
         Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
         confirmDialog.setTitle("Delete Invoice");
         confirmDialog.setHeaderText("Are you sure?");
-        confirmDialog.setContentText("This will permanently delete invoice #" + invoice.getInvoiceId() + 
+        confirmDialog.setContentText("This will permanently delete invoice #" + invoice.getInvoiceId() +
                 "\n\nInventory will be restored for any products sold.");
-        
+        // Own the dialog to the main window so it doesn't open as a separate window
+        if (tblInvoices.getScene() != null && tblInvoices.getScene().getWindow() != null) {
+            confirmDialog.initOwner(tblInvoices.getScene().getWindow());
+        }
+
         if (confirmDialog.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             try {
                 // Restore inventory before deletion
