@@ -1,7 +1,19 @@
 package com.gui.kline.controller;
 
+import java.net.URL;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Optional;
+import java.util.ResourceBundle;
+
+import com.gui.kline.controller.form.NewExportDialogController;
+import com.gui.kline.data.SyncQueueReader;
+import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.ExportRecord;
 import com.gui.kline.models.ViewModel;
+import com.gui.kline.utils.JsonUtil;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -16,15 +28,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
-import java.net.URL;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.ResourceBundle;
 
 public class TyreExportsController implements Initializable {
 
@@ -42,6 +50,7 @@ public class TyreExportsController implements Initializable {
     private       FilteredList<ExportRecord>   filteredList;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");
+    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -50,22 +59,41 @@ public class TyreExportsController implements Initializable {
             rebuildCards();
             refreshStats();
         });
-        loadSampleData();
+        loadFromLocal();
     }
 
-    private void loadSampleData() {
-        masterList.addAll(
-                new ExportRecord("Lanka Tyre Traders",  20, 520000, 440000, 10000, LocalDate.of(2026, 3, 29), "DELIVERED"),
-                new ExportRecord("Colombo Auto Parts",  12, 336000, 288000,  6000, LocalDate.of(2026, 3, 28), "IN TRANSPORT"),
-                new ExportRecord("Southern Motors",      8, 200000, 168000,  4000, LocalDate.of(2026, 3, 27), "PAID"),
-                new ExportRecord("Kandy Wheels Hub",    15, 412500, 345000,  7500, LocalDate.of(2026, 3, 29), "PENDING")
-        );
+    private void loadFromLocal() {
+        SyncQueueReader reader = new SyncQueueReader();
+        List<ExportRecord> local = reader.loadTyreExports();
+        masterList.setAll(local);
     }
 
     @FXML
     private void handleNewExport(ActionEvent e) {
         Stage owner = (Stage) ((Node) e.getSource()).getScene().getWindow();
-        ViewModel.INSTANCE.getViewsFactory().getForm("form/new-export-dialog", owner);
+        NewExportDialogController form =
+                ViewModel.INSTANCE.getViewsFactory().getForm("form/new-export-dialog", owner);
+        if (form == null) {
+            return;
+        }
+        form.setOnSave(result -> {
+            ExportRecord record = new ExportRecord(
+                result.exportId(),
+                    result.company(),
+                    result.tyres(),
+                    result.custPrice(),
+                    result.compPrice(),
+                    result.serviceFee(),
+                result.totalAmount(),
+                result.paidAmount(),
+                result.balanceAmount(),
+                result.paymentStatus(),
+                    result.date(),
+                    result.status()
+            );
+            masterList.add(0, record);
+            enqueueExport(record);
+        });
     }
 
     @FXML
@@ -80,7 +108,10 @@ public class TyreExportsController implements Initializable {
         LocalDate to      = dpTo.getValue();
 
         filteredList.setPredicate(r -> {
-            boolean matchText = keyword.isEmpty() || r.getCompany().toLowerCase().contains(keyword);
+            boolean matchText = keyword.isEmpty()
+                    || r.getCompany().toLowerCase().contains(keyword)
+                    || r.getStatus().toLowerCase().contains(keyword)
+                    || r.getPaymentStatus().toLowerCase().contains(keyword);
             boolean matchDate = (from == null || !r.getDate().isBefore(from))
                     && (to   == null || !r.getDate().isAfter(to));
             return matchText && matchDate;
@@ -91,7 +122,7 @@ public class TyreExportsController implements Initializable {
         int    shipments = filteredList.size();
         int    tyres     = filteredList.stream().mapToInt(ExportRecord::getTyres).sum();
         double profit    = filteredList.stream().mapToDouble(this::calcProfit).sum();
-        long   pending   = filteredList.stream().filter(r -> "PENDING".equals(r.getStatus())).count();
+        long   pending   = filteredList.stream().filter(r -> r.getBalanceAmount() > 0).count();
 
         lblShipments.setText(String.valueOf(shipments));
         lblTyres.setText(String.valueOf(tyres));
@@ -122,6 +153,8 @@ public class TyreExportsController implements Initializable {
         Label name = new Label(r.getCompany());
         name.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #111827;");
 
+        Label exportId = chip(r.getExportId().isBlank() ? "draft export" : r.getExportId());
+
         Label tyresLbl   = chip(r.getTyres() + " tyres");
         Label custLbl    = chip("Cust  Rs. " + String.format("%,.0f", r.getCustPrice()));
         Label compLbl    = chip("Comp  Rs. " + String.format("%,.0f", r.getCompPrice()));
@@ -137,7 +170,7 @@ public class TyreExportsController implements Initializable {
         HBox sep1 = separator();
         HBox sep2 = separator();
 
-        HBox meta = new HBox(8, tyresLbl, sep1, custLbl, compLbl, sep2, serviceLbl, dateLbl);
+        HBox meta = new HBox(8, exportId, tyresLbl, sep1, custLbl, compLbl, sep2, serviceLbl, dateLbl);
         meta.setAlignment(Pos.CENTER_LEFT);
 
         VBox info = new VBox(5, name, meta);
@@ -152,12 +185,15 @@ public class TyreExportsController implements Initializable {
         VBox profitBox = new VBox(2, profitAmt, profitLbl);
         profitBox.setAlignment(Pos.CENTER_RIGHT);
 
-        Label badge = new Label(r.getStatus());
-        badge.setStyle(statusStyle(r.getStatus()));
+        Label shipmentBadge = new Label(r.getStatus());
+        shipmentBadge.setStyle(statusStyle(r.getStatus()));
+
+        Label paymentBadge = new Label(r.getPaymentStatus() + "  " + (r.getBalanceAmount() > 0 ? "Due Rs. " + String.format("%,.0f", r.getBalanceAmount()) : "Settled"));
+        paymentBadge.setStyle(paymentStatusStyle(r.getPaymentStatus(), r.getBalanceAmount()));
 
         Node actionNode = buildActionNode(r);
 
-        VBox rightCol = new VBox(6, profitBox, badge, actionNode);
+        VBox rightCol = new VBox(6, profitBox, shipmentBadge, paymentBadge, actionNode);
         rightCol.setAlignment(Pos.CENTER_RIGHT);
         rightCol.setMinWidth(160);
 
@@ -180,41 +216,140 @@ public class TyreExportsController implements Initializable {
     }
 
     private Node buildActionNode(ExportRecord r) {
-        String label = switch (r.getStatus()) {
+        String shipmentLabel = switch (r.getStatus()) {
             case "PENDING"      -> "Mark as transport";
             case "IN TRANSPORT" -> "Mark as delivered";
-            case "DELIVERED"    -> "Mark as paid";
+            case "DELIVERED"    -> r.getBalanceAmount() > 0 ? null : "Mark as paid";
             default             -> null;
         };
 
-        if (label == null) {
+        VBox box = new VBox(6);
+        box.setAlignment(Pos.CENTER_RIGHT);
+
+        if (shipmentLabel != null) {
+            Button btn = new Button(shipmentLabel);
+            btn.setStyle(
+                    "-fx-background-color: transparent;" +
+                            "-fx-border-color: #E5E7EB; -fx-border-width: 1;" +
+                            "-fx-border-radius: 8; -fx-background-radius: 8;" +
+                            "-fx-font-size: 12px; -fx-text-fill: #4F46E5;" +
+                            "-fx-font-weight: bold; -fx-padding: 5 10; -fx-cursor: hand;"
+            );
+            btn.setOnAction(e -> advanceStatus(r));
+            box.getChildren().add(btn);
+        }
+
+        if (r.getBalanceAmount() > 0) {
+            Button payBtn = new Button("Receive payment");
+            payBtn.setStyle(
+                    "-fx-background-color: #ecfeff;" +
+                            "-fx-border-color: #22c55e; -fx-border-width: 1;" +
+                            "-fx-border-radius: 8; -fx-background-radius: 8;" +
+                            "-fx-font-size: 12px; -fx-text-fill: #166534;" +
+                            "-fx-font-weight: bold; -fx-padding: 5 10; -fx-cursor: hand;"
+            );
+            payBtn.setOnAction(e -> collectPayment(r));
+            box.getChildren().add(payBtn);
+        }
+
+        if (box.getChildren().isEmpty()) {
             Label done = new Label("✔  Done");
             done.setStyle("-fx-font-size: 13px; -fx-text-fill: #10B981;");
             return done;
         }
-
-        Button btn = new Button(label);
-        btn.setStyle(
-                "-fx-background-color: transparent;" +
-                        "-fx-border-color: #E5E7EB; -fx-border-width: 1;" +
-                        "-fx-border-radius: 8; -fx-background-radius: 8;" +
-                        "-fx-font-size: 12px; -fx-text-fill: #4F46E5;" +
-                        "-fx-font-weight: bold; -fx-padding: 5 10; -fx-cursor: hand;"
-        );
-        btn.setOnAction(e -> advanceStatus(r));
-        return btn;
+        return box;
     }
 
-    private void advanceStatus(ExportRecord r) {
-        String next = switch (r.getStatus()) {
-            case "PENDING"      -> "IN TRANSPORT";
-            case "IN TRANSPORT" -> "DELIVERED";
-            case "DELIVERED"    -> "PAID";
-            default             -> r.getStatus();
-        };
-        r.setStatus(next);
+     private void advanceStatus(ExportRecord r) {
+         if ("DELIVERED".equals(r.getStatus()) && r.getBalanceAmount() > 0) {
+             return;
+         }
+         String next = switch (r.getStatus()) {
+             case "PENDING"      -> "IN TRANSPORT";
+             case "IN TRANSPORT" -> "DELIVERED";
+             case "DELIVERED"    -> "PAID";
+             default             -> r.getStatus();
+         };
+         r.setStatus(next);
+         enqueueExportUpdate(r, "update_status");
+         rebuildCards();
+         refreshStats();
+     }
+
+    private void collectPayment(ExportRecord r) {
+        TextInputDialog dialog = new TextInputDialog(String.format("%,.0f", r.getBalanceAmount()));
+        dialog.setTitle("Receive Payment");
+        dialog.setHeaderText("Record payment for " + r.getCompany());
+        dialog.setContentText("Payment amount (balance Rs. " + String.format("%,.0f", r.getBalanceAmount()) + "):");
+
+        Optional<String> value = dialog.showAndWait();
+        if (value.isEmpty()) {
+            return;
+        }
+
+        double amount;
+        try {
+            amount = Double.parseDouble(value.get().replace(",", "").trim());
+        } catch (NumberFormatException ex) {
+            return;
+        }
+
+        if (amount <= 0) {
+            return;
+        }
+
+        double newPaid = r.getPaidAmount() + amount;
+        if (newPaid >= r.getTotalAmount()) {
+            newPaid = r.getTotalAmount();
+        }
+        double newBalance = Math.max(0.0, r.getTotalAmount() - newPaid);
+        String paymentStatus = newBalance == 0.0 ? "PAID" : "PARTIAL";
+
+        r.setPaidAmount(newPaid);
+        r.setBalanceAmount(newBalance);
+        r.setPaymentStatus(paymentStatus);
+
+        enqueueExportUpdate(r, "record_payment");
         rebuildCards();
         refreshStats();
+    }
+
+     private void enqueueExportUpdate(ExportRecord r, String operation) {
+         String payload = JsonUtil.obj(
+                 JsonUtil.field("operation", operation),
+                 JsonUtil.field("exportId", r.getExportId()),
+                 JsonUtil.field("company", r.getCompany()),
+                 JsonUtil.field("tyres", r.getTyres()),
+                 JsonUtil.field("custPrice", r.getCustPrice()),
+                 JsonUtil.field("compPrice", r.getCompPrice()),
+                 JsonUtil.field("serviceFee", r.getServiceCharge()),
+                 JsonUtil.field("paidAmount", r.getPaidAmount()),
+                 JsonUtil.field("totalAmount", r.getTotalAmount()),
+                 JsonUtil.field("balanceAmount", r.getBalanceAmount()),
+                 JsonUtil.field("paymentStatus", r.getPaymentStatus()),
+                 JsonUtil.field("date", r.getDate().toString()),
+                 JsonUtil.field("status", r.getStatus())
+         );
+         syncQueueRepository.enqueue("tyre_export", payload);
+     }
+
+    private void enqueueExport(ExportRecord r) {
+        String payload = JsonUtil.obj(
+                JsonUtil.field("operation", "create"),
+                JsonUtil.field("exportId", r.getExportId()),
+                JsonUtil.field("company", r.getCompany()),
+                JsonUtil.field("tyres", r.getTyres()),
+                JsonUtil.field("custPrice", r.getCustPrice()),
+                JsonUtil.field("compPrice", r.getCompPrice()),
+                JsonUtil.field("serviceFee", r.getServiceCharge()),
+                JsonUtil.field("paidAmount", r.getPaidAmount()),
+                JsonUtil.field("totalAmount", r.getTotalAmount()),
+                JsonUtil.field("balanceAmount", r.getBalanceAmount()),
+                JsonUtil.field("paymentStatus", r.getPaymentStatus()),
+                JsonUtil.field("date", r.getDate().toString()),
+                JsonUtil.field("status", r.getStatus())
+        );
+        syncQueueRepository.enqueue("tyre_export", payload);
     }
 
     private String initials(String name) {
@@ -248,5 +383,15 @@ public class TyreExportsController implements Initializable {
         };
         return colors + " -fx-background-radius: 20; -fx-padding: 3 10;" +
                 " -fx-font-size: 11px; -fx-font-weight: bold;";
+    }
+
+    private String paymentStatusStyle(String paymentStatus, double balanceAmount) {
+        if (balanceAmount <= 0.0 || "PAID".equals(paymentStatus)) {
+            return "-fx-background-color: #DCFCE7; -fx-text-fill: #166534; -fx-background-radius: 20; -fx-padding: 3 10; -fx-font-size: 11px; -fx-font-weight: bold;";
+        }
+        if ("PARTIAL".equals(paymentStatus)) {
+            return "-fx-background-color: #DBEAFE; -fx-text-fill: #1E40AF; -fx-background-radius: 20; -fx-padding: 3 10; -fx-font-size: 11px; -fx-font-weight: bold;";
+        }
+        return "-fx-background-color: #FEF3C7; -fx-text-fill: #92400E; -fx-background-radius: 20; -fx-padding: 3 10; -fx-font-size: 11px; -fx-font-weight: bold;";
     }
 }

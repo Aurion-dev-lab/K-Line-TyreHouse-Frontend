@@ -9,6 +9,7 @@
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -181,69 +182,42 @@
                         </VBox>
                     </VBox>
 
+                    <VBox spacing="10.0"
+                          style="-fx-background-color: white; -fx-background-radius: 14; -fx-padding: 16; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);">
+                        <Label text="Quick Services"
+                               style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1a1a2e;"/>
+                        <HBox alignment="CENTER_LEFT">
+                            <Label text="Total Count" style="-fx-text-fill: #6b7280; -fx-font-size: 12px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="quickServiceCountLabel" text="0"
+                                   style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT">
+                            <Label text="Total Revenue" style="-fx-text-fill: #6b7280; -fx-font-size: 12px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="quickServiceRevenueLabel" text="Rs. 0"
+                                   style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #10b981;"/>
+                        </HBox>
+                    </VBox>
+
                     <VBox spacing="12.0" VBox.vgrow="ALWAYS"
                           style="-fx-background-color: #1a1a2e; -fx-background-radius: 14; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 8, 0, 0, 2);">
-                        <Label text="Quick Actions"
-                               style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                        <HBox alignment="CENTER_LEFT">
+                            <Label text="Quick Actions"
+                                   style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Button text="⛶" onAction="#handleExpandQuickActions"
+                                    style="-fx-background-color: #334155; -fx-text-fill: white; -fx-font-size: 14px; -fx-cursor: hand; -fx-background-radius: 6; -fx-padding: 4 8;" />
+                        </HBox>
 
-                        <GridPane hgap="12.0" vgap="12.0">
-                            <columnConstraints>
-                                <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
-                                <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
-                            </columnConstraints>
-                            <rowConstraints>
-                                <RowConstraints minHeight="80.0"/>
-                                <RowConstraints minHeight="80.0"/>
-                            </rowConstraints>
-
-                            <Button GridPane.columnIndex="0" GridPane.rowIndex="0"
-                                    fx:id="newSaleBtn" onAction="#handleNewSale"
-                                    maxWidth="Infinity" maxHeight="Infinity"
-                                    style="-fx-background-color: #22303c; -fx-background-radius: 10; -fx-text-fill: white; -fx-font-size: 12px; -fx-cursor: hand;">
-                                <graphic>
-                                    <VBox alignment="CENTER" spacing="6.0">
-                                        <Label text="➕" style="-fx-font-size: 20px; -fx-text-fill: #22c55e;"/>
-                                        <Label text="New Sale" style="-fx-text-fill: white; -fx-font-size: 12px;"/>
-                                    </VBox>
-                                </graphic>
-                            </Button>
-
-                            <Button GridPane.columnIndex="1" GridPane.rowIndex="0"
-                                    fx:id="addServiceBtn" onAction="#handleAddService"
-                                    maxWidth="Infinity" maxHeight="Infinity"
-                                    style="-fx-background-color: #22303c; -fx-background-radius: 10; -fx-text-fill: white; -fx-font-size: 12px; -fx-cursor: hand;">
-                                <graphic>
-                                    <VBox alignment="CENTER" spacing="6.0">
-                                        <Label text="🔧" style="-fx-font-size: 20px; -fx-text-fill: #3b82f6;"/>
-                                        <Label text="Add Service" style="-fx-text-fill: white; -fx-font-size: 12px;"/>
-                                    </VBox>
-                                </graphic>
-                            </Button>
-
-                            <Button GridPane.columnIndex="0" GridPane.rowIndex="1"
-                                    fx:id="logWorkBtn" onAction="#handleLogWork"
-                                    maxWidth="Infinity" maxHeight="Infinity"
-                                    style="-fx-background-color: #22303c; -fx-background-radius: 10; -fx-text-fill: white; -fx-font-size: 12px; -fx-cursor: hand;">
-                                <graphic>
-                                    <VBox alignment="CENTER" spacing="6.0">
-                                        <Label text="👥" style="-fx-font-size: 20px; -fx-text-fill: #3b82f6;"/>
-                                        <Label text="Log Work" style="-fx-text-fill: white; -fx-font-size: 12px;"/>
-                                    </VBox>
-                                </graphic>
-                            </Button>
-
-                            <Button GridPane.columnIndex="1" GridPane.rowIndex="1"
-                                    fx:id="newExportBtn" onAction="#handleNewExport"
-                                    maxWidth="Infinity" maxHeight="Infinity"
-                                    style="-fx-background-color: #22303c; -fx-background-radius: 10; -fx-text-fill: white; -fx-font-size: 12px; -fx-cursor: hand;">
-                                <graphic>
-                                    <VBox alignment="CENTER" spacing="6.0">
-                                        <Label text="🚚" style="-fx-font-size: 20px; -fx-text-fill: #f97316;"/>
-                                        <Label text="New Export" style="-fx-text-fill: white; -fx-font-size: 12px;"/>
-                                    </VBox>
-                                </graphic>
-                            </Button>
-                        </GridPane>
+                        <ScrollPane fitToWidth="true" styleClass="dashboard-quick-scroll" VBox.vgrow="ALWAYS">
+                            <GridPane fx:id="quickActionsGrid" hgap="12.0" vgap="12.0">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                                </columnConstraints>
+                            </GridPane>
+                        </ScrollPane>
                     </VBox>
 
                 </VBox>

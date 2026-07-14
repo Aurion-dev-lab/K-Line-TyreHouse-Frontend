@@ -13,8 +13,8 @@
 <AnchorPane
         prefHeight="700.0" prefWidth="1000.0"
         style="-fx-background-color: #F9FAFB;"
-        xmlns="http://javafx.com/javafx"
-        xmlns:fx="http://javafx.com/fxml"
+        xmlns="http://javafx.com/javafx/17"
+        xmlns:fx="http://javafx.com/fxml/1"
         fx:controller="com.gui.kline.controller.TyreExportsController">
 
     <VBox spacing="0"
@@ -68,7 +68,7 @@
                          -fx-padding: 10 14;">
                 <Label fx:id="lblPending" text="0"
                        style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #D97706;"/>
-                <Label text="Pending"
+                <Label text="Credit due"
                        style="-fx-font-size: 12px; -fx-text-fill: #6B7280;"/>
             </VBox>
         </HBox>

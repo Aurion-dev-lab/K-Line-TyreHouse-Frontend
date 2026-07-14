@@ -17,8 +17,8 @@
 
 <AnchorPane styleClass="modal-overlay"
             stylesheets="@../../css/new-export-dialog.css"
-            xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
+            xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.gui.kline.controller.form.NewExportDialogController">
 
     <StackPane AnchorPane.topAnchor="0"
@@ -66,6 +66,38 @@
                     </VBox>
                 </GridPane>
 
+                <VBox spacing="10" style="-fx-background-color: #F9FAFB; -fx-background-radius: 10; -fx-border-color: #E5E7EB; -fx-border-radius: 10; -fx-border-width: 1; -fx-padding: 14;">
+                    <Label text="PAYMENT SUMMARY" styleClass="form-label" />
+                    <GridPane hgap="14" vgap="10">
+                        <columnConstraints>
+                            <ColumnConstraints hgrow="ALWAYS" />
+                            <ColumnConstraints hgrow="ALWAYS" />
+                            <ColumnConstraints hgrow="ALWAYS" />
+                            <ColumnConstraints hgrow="ALWAYS" />
+                        </columnConstraints>
+
+                        <VBox spacing="3" style="-fx-background-color: white; -fx-background-radius: 8; -fx-padding: 10; -fx-border-color: #E5E7EB; -fx-border-radius: 8;" GridPane.columnIndex="0">
+                            <Label text="TOTAL CHARGE" styleClass="form-label" />
+                            <Label fx:id="lblTotalAmount" text="Rs. 0" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #111827;" />
+                        </VBox>
+
+                        <VBox spacing="3" style="-fx-background-color: white; -fx-background-radius: 8; -fx-padding: 10; -fx-border-color: #E5E7EB; -fx-border-radius: 8;" GridPane.columnIndex="1">
+                            <Label text="PAID NOW" styleClass="form-label" />
+                            <Label fx:id="lblPaidAmount" text="Rs. 0" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #059669;" />
+                        </VBox>
+
+                        <VBox spacing="3" style="-fx-background-color: white; -fx-background-radius: 8; -fx-padding: 10; -fx-border-color: #E5E7EB; -fx-border-radius: 8;" GridPane.columnIndex="2">
+                            <Label text="BALANCE DUE" styleClass="form-label" />
+                            <Label fx:id="lblBalanceAmount" text="Rs. 0" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #DC2626;" />
+                        </VBox>
+
+                        <VBox spacing="3" style="-fx-background-color: white; -fx-background-radius: 8; -fx-padding: 10; -fx-border-color: #E5E7EB; -fx-border-radius: 8;" GridPane.columnIndex="3">
+                            <Label text="PAYMENT STATUS" styleClass="form-label" />
+                            <Label fx:id="lblPaymentStatus" text="CREDIT" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #F59E0B;" />
+                        </VBox>
+                    </GridPane>
+                </VBox>
+
                 <GridPane hgap="16">
                     <columnConstraints>
                         <ColumnConstraints hgrow="ALWAYS" />
@@ -74,14 +106,14 @@
                     <rowConstraints><RowConstraints /></rowConstraints>
 
                     <VBox spacing="6" GridPane.columnIndex="0">
-                        <Label text="CUSTOMER PAID (RS.)" styleClass="form-label" />
-                        <TextField fx:id="txtCustomerPaid"
+                        <Label text="CUSTOMER PRICE (RS. / TYRE)" styleClass="form-label" />
+                        <TextField fx:id="txtCustomerPrice"
                                    promptText="0.00"
                                    styleClass="form-input-green" />
                     </VBox>
 
                     <VBox spacing="6" GridPane.columnIndex="1">
-                        <Label text="COMPANY PRICE (COST)" styleClass="form-label" />
+                        <Label text="COMPANY PRICE (COST PER TYRE)" styleClass="form-label" />
                         <TextField fx:id="txtCompanyPrice"
                                    promptText="0.00"
                                    styleClass="form-input-red" />
@@ -96,19 +128,26 @@
                     <rowConstraints><RowConstraints /></rowConstraints>
 
                     <VBox spacing="6" GridPane.columnIndex="0">
-                        <Label text="DATE SENT" styleClass="form-label" />
-                        <DatePicker fx:id="dpDateSent"
-                                    styleClass="form-datepicker"
-                                    maxWidth="Infinity" />
+                        <Label text="PAID NOW (RS.)" styleClass="form-label" />
+                        <TextField fx:id="txtPaidNow"
+                                   promptText="0.00"
+                                   styleClass="form-input-green" />
                     </VBox>
 
                     <VBox spacing="6" GridPane.columnIndex="1">
-                        <Label text="INITIAL STATUS" styleClass="form-label" />
+                        <Label text="SHIPMENT STATUS" styleClass="form-label" />
                         <ComboBox fx:id="cmbStatus"
                                   styleClass="form-combobox"
                                   maxWidth="Infinity" />
                     </VBox>
                 </GridPane>
+
+                <VBox spacing="6">
+                    <Label text="DATE SENT" styleClass="form-label" />
+                    <DatePicker fx:id="dpDateSent"
+                                styleClass="form-datepicker"
+                                maxWidth="Infinity" />
+                </VBox>
 
             </VBox>
 

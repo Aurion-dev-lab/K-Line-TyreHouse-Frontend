@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="860.0" prefWidth="1100.0" style="-fx-background-color: #f0f2f5;" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.gui.kline.controller.WorkerManagementController">
+<AnchorPane prefHeight="860.0" prefWidth="1100.0" style="-fx-background-color: #f0f2f5;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gui.kline.controller.WorkerManagementController">
    <children>
       <VBox spacing="20.0" AnchorPane.bottomAnchor="24.0" AnchorPane.leftAnchor="24.0" AnchorPane.rightAnchor="24.0" AnchorPane.topAnchor="24.0">
 
@@ -58,14 +58,16 @@
                      </HBox>
                   </HBox>
 
-                  <HBox style="-fx-padding: 10 20; -fx-border-color: transparent transparent #f0f2f5 transparent;">
-                     <Label prefWidth="200.0" style="-fx-font-size: 11px; -fx-text-fill: #aaaaaa; -fx-font-weight: bold;" text="WORKER" />
-                     <Label prefWidth="150.0" style="-fx-font-size: 11px; -fx-text-fill: #aaaaaa; -fx-font-weight: bold;" text="DAILY RATE" />
-                     <Label style="-fx-font-size: 11px; -fx-text-fill: #aaaaaa; -fx-font-weight: bold;" text="MARK ATTENDANCE" HBox.hgrow="ALWAYS" />
-                     <Region HBox.hgrow="ALWAYS" />
-                     <Label alignment="CENTER_RIGHT" prefWidth="100.0" style="-fx-font-size: 11px; -fx-text-fill: #aaaaaa; -fx-font-weight: bold;" text="ACTIONS" />
-                  </HBox>
-                  <VBox fx:id="attendanceRowsContainer" />
+                   <HBox style="-fx-padding: 10 20; -fx-border-color: transparent transparent #f0f2f5 transparent;">
+                      <Label prefWidth="200.0" style="-fx-font-size: 11px; -fx-text-fill: #aaaaaa; -fx-font-weight: bold;" text="WORKER" />
+                      <Label prefWidth="150.0" style="-fx-font-size: 11px; -fx-text-fill: #aaaaaa; -fx-font-weight: bold;" text="DAILY RATE" />
+                      <Label style="-fx-font-size: 11px; -fx-text-fill: #aaaaaa; -fx-font-weight: bold;" text="MARK ATTENDANCE" HBox.hgrow="ALWAYS" />
+                      <Region HBox.hgrow="ALWAYS" />
+                      <Label alignment="CENTER_RIGHT" prefWidth="100.0" style="-fx-font-size: 11px; -fx-text-fill: #aaaaaa; -fx-font-weight: bold;" text="ACTIONS" />
+                   </HBox>
+                   <ScrollPane fitToWidth="true" maxHeight="200.0" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
+                      <VBox fx:id="attendanceRowsContainer" />
+                   </ScrollPane>
                </VBox>
 
                <VBox style="-fx-background-color: white; -fx-background-radius: 14; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);" VBox.vgrow="ALWAYS">
@@ -88,7 +90,7 @@
                      <Region HBox.hgrow="ALWAYS" />
                      <Label alignment="CENTER_RIGHT" prefWidth="100.0" style="-fx-font-size: 11px; -fx-text-fill: #aaaaaa; -fx-font-weight: bold;" text="STATUS" />
                   </HBox>
-                  <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
+                  <ScrollPane fitToWidth="true" maxHeight="300.0" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
                      <VBox fx:id="historyRowsContainer" />
                   </ScrollPane>
                </VBox>
@@ -97,7 +99,9 @@
             <VBox minWidth="320.0" spacing="0.0" style="-fx-background-color: #1a1a2e; -fx-background-radius: 14; -fx-padding: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 4);">
                <Label style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;" text="Monthly Summary" />
                <Label fx:id="monthlySummaryMonthLabel" style="-fx-font-size: 11px; -fx-text-fill: #888888; -fx-padding: 4 0 20 0;" text="CURRENT MONTH: 2026-04" />
-               <VBox fx:id="monthlySummaryContainer" spacing="16.0" VBox.vgrow="ALWAYS" />
+               <ScrollPane fitToWidth="true" maxHeight="400.0" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
+                  <VBox fx:id="monthlySummaryContainer" spacing="16.0" />
+               </ScrollPane>
             </VBox>
 
          </HBox>

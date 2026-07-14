@@ -1,5 +1,6 @@
 package com.gui.kline.view;
 
+import com.gui.kline.controller.LayoutController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -10,18 +11,68 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class ViewFactory {
-    public void getView(String view){
-        try{
+    // Storage for primary stage and last opened dialog stage
+    private Stage primaryStage;
+    private Stage lastDialogStage;
+    private LayoutController layoutController;
+    
+    public void setPrimaryStage(Stage primaryStage) {
+        this.primaryStage = primaryStage;
+    }
+    
+    public Stage getPrimaryStage() {
+        return primaryStage;
+    }
+    
+    public void setLayoutController(LayoutController controller) {
+        this.layoutController = controller;
+    }
+    
+    public LayoutController getLayoutController() {
+        return layoutController;
+    }
+    
+    public void updateQuickStats() {
+        if (layoutController != null) {
+            layoutController.loadQuickStats();
+        }
+    }
+    
+    public void getView(String view) {
+        getView(view, primaryStage);
+    }
+    
+    public void getView(String view, Stage ownerStage) {
+        try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gui/kline/view/" + view + ".fxml"));
-            Scene scene = new Scene(loader.load());
+            Parent root = loader.load();
             Stage stage = new Stage();
-            stage.setScene(scene);
+            stage.setTitle("K-Line - " + view);
+            
+            // Use provided owner or fall back to primary stage
+            Stage actualOwner = ownerStage != null ? ownerStage : primaryStage;
+            
+            // If owner stage is available, make this window a child of it
+            if (actualOwner != null) {
+                stage.initOwner(actualOwner);
+                // Don't make main layout modal - only dialogs should be modal
+                if (!view.equals("main-layout")) {
+                    stage.initModality(Modality.WINDOW_MODAL);
+                }
+            }
+            
+            Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.show();
-        } catch (Exception e){
-            System.out.println(e.getMessage());
+            
+            // Store reference
+            lastDialogStage = stage;
+        } catch (Exception e) {
+            System.out.println("Error loading view: " + view + " - " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -43,22 +94,37 @@ public class ViewFactory {
 
             Stage stage = new Stage();
             stage.initStyle(StageStyle.TRANSPARENT);
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.initOwner(ownerStage);
+            
+            // Use provided owner or fall back to primary stage
+            Stage actualOwner = ownerStage != null ? ownerStage : primaryStage;
+            
+            // Only set modality and owner if owner stage is available
+            if (actualOwner != null) {
+                stage.initModality(Modality.APPLICATION_MODAL);
+                stage.initOwner(actualOwner);
 
-            Scene scene = new Scene(root, ownerStage.getWidth(), ownerStage.getHeight());
-            scene.setFill(Color.TRANSPARENT);
-            stage.setScene(scene);
+                Scene scene = new Scene(root, actualOwner.getWidth(), actualOwner.getHeight());
+                scene.setFill(Color.TRANSPARENT);
+                stage.setScene(scene);
 
-            stage.setX(ownerStage.getX());
-            stage.setY(ownerStage.getY());
+                stage.setX(actualOwner.getX());
+                stage.setY(actualOwner.getY());
 
-            ownerStage.xProperty().addListener((obs, oldVal, newVal) -> stage.setX(newVal.doubleValue()));
-            ownerStage.yProperty().addListener((obs, oldVal, newVal) -> stage.setY(newVal.doubleValue()));
-            ownerStage.widthProperty().addListener((obs, oldVal, newVal) -> stage.setWidth(newVal.doubleValue()));
-            ownerStage.heightProperty().addListener((obs, oldVal, newVal) -> stage.setHeight(newVal.doubleValue()));
+                actualOwner.xProperty().addListener((obs, oldVal, newVal) -> stage.setX(newVal.doubleValue()));
+                actualOwner.yProperty().addListener((obs, oldVal, newVal) -> stage.setY(newVal.doubleValue()));
+                actualOwner.widthProperty().addListener((obs, oldVal, newVal) -> stage.setWidth(newVal.doubleValue()));
+                actualOwner.heightProperty().addListener((obs, oldVal, newVal) -> stage.setHeight(newVal.doubleValue()));
+            } else {
+                // If no owner, create a regular scene
+                Scene scene = new Scene(root);
+                scene.setFill(Color.TRANSPARENT);
+                stage.setScene(scene);
+            }
 
             stage.show();
+            
+            // Store reference so callers can access it
+            lastDialogStage = stage;
 
             return controller;
 
@@ -66,5 +132,10 @@ public class ViewFactory {
             e.printStackTrace();
             return null;
         }
+    }
+    
+    // New method to get the last opened dialog stage
+    public Stage getLastDialogStage() {
+        return lastDialogStage;
     }
 }
