@@ -7,17 +7,23 @@ import com.gui.kline.service.NavigationService;
 import com.gui.kline.service.SyncService;
 import com.gui.kline.utils.AlertUtil;
 import com.gui.kline.utils.JsonUtil;
+import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LayoutController {
 
@@ -37,9 +43,14 @@ public class LayoutController {
     @FXML private Label lblTotalQuickCount;
     @FXML private Label lblTotalQuickPrice;
 
+    // Search dropdown (Popup floats above all other nodes)
+    private final Popup searchPopup = new Popup();
+    private final VBox searchResultsList = new VBox();
+
     private Button activeButton;
     private boolean quickActionsVisible = true, isCollapsed = false;
     private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
+    private final PauseTransition searchDebounce = new PauseTransition(Duration.millis(250));
 
     private static final double SIDEBAR_FULL = 260.0;
     private static final double SIDEBAR_SMALL = 65.0;
@@ -48,7 +59,33 @@ public class LayoutController {
     @FXML
     public void initialize() {
         setActive(btnDashboard, "Dashboard", "dashboard");
-        txtSearch.textProperty().addListener((obs, o, n) -> onSearch(n));
+
+        // Debounced search: wait until user stops typing for 250ms
+        searchDebounce.setOnFinished(e -> performSearch(txtSearch.getText()));
+        txtSearch.textProperty().addListener((obs, o, n) -> {
+            searchDebounce.stop();
+            searchDebounce.playFromStart();
+        });
+
+        // Hide search results on Escape key
+        txtSearch.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ESCAPE) {
+                hideSearchResults();
+            }
+        });
+
+        // Hide search results when focus is lost (with small delay for click handling)
+        txtSearch.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) {
+                PauseTransition delay = new PauseTransition(Duration.millis(200));
+                delay.setOnFinished(e -> hideSearchResults());
+                delay.play();
+            }
+        });
+
+        // Initialize search popup
+        buildSearchPopup();
+
         loadQuickActionsPanel();
         loadQuickStats();
         // Register this controller with ViewFactory for cross-controller communication
@@ -134,10 +171,6 @@ public class LayoutController {
     @FXML private void onQuickActions() {
         Stage ownerStage = (Stage) btnQuickActions.getScene().getWindow();
         ViewModel.INSTANCE.getViewsFactory().getForm("form/quick-service-presets-dialog", ownerStage);
-    }
-
-    private void onSearch(String q) {
-        System.out.println("Searching: " + q);
     }
 
     @FXML
@@ -257,6 +290,352 @@ public class LayoutController {
             AlertUtil.showError("Upload failed", result.getMessage());
         } else {
             AlertUtil.showInfo("Upload complete", result.getMessage());
+        }
+    }
+
+    // ── Global Search Implementation ──
+
+    private void buildSearchPopup() {
+        // Wrap the results list in a ScrollPane inside a styled VBox
+        ScrollPane scrollPane = new ScrollPane(searchResultsList);
+        scrollPane.setFitToWidth(true);
+        scrollPane.getStyleClass().add("search-results-scroll");
+
+        VBox container = new VBox(scrollPane);
+        container.getStyleClass().add("search-results-popup");
+        container.setPrefWidth(360);
+        container.setMaxHeight(400);
+        container.getStylesheets().add(
+                getClass().getResource("/com/gui/kline/css/search-dropdown.css").toExternalForm()
+        );
+
+        searchPopup.getContent().add(container);
+        searchPopup.setAutoHide(false); // We control hiding manually
+    }
+
+    private void hideSearchResults() {
+        searchPopup.hide();
+        searchResultsList.getChildren().clear();
+    }
+
+    private void showSearchResults() {
+        if (searchPopup.isShowing()) return;
+
+        // Position the popup below the search field
+        Stage stage = (Stage) txtSearch.getScene().getWindow();
+        double x = txtSearch.localToScreen(txtSearch.getBoundsInLocal()).getMinX();
+        double y = txtSearch.localToScreen(txtSearch.getBoundsInLocal()).getMaxY() + 4;
+        searchPopup.show(stage, x, y);
+    }
+
+    private void performSearch(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            hideSearchResults();
+            return;
+        }
+
+        String searchTerm = "%" + query.trim() + "%";
+
+        // Collect all search results from each table
+        List<SearchResult> allResults = new ArrayList<>();
+
+        // 1. Search Products
+        searchProducts(searchTerm, allResults);
+        // 2. Search Workers
+        searchWorkers(searchTerm, allResults);
+        // 3. Search Customers (via invoices/credit_sales)
+        searchInvoices(searchTerm, allResults);
+        // 4. Search Credit Sales
+        searchCreditSales(searchTerm, allResults);
+        // 5. Search Tyre Exports
+        searchTyreExports(searchTerm, allResults);
+        // 6. Search Services
+        searchServices(searchTerm, allResults);
+
+        // Render results in the dropdown
+        renderSearchResults(allResults, query.trim());
+    }
+
+    private void renderSearchResults(List<SearchResult> results, String query) {
+        searchResultsList.getChildren().clear();
+
+        if (results.isEmpty()) {
+            Label noResults = new Label("No results found for \"" + query + "\"");
+            noResults.getStyleClass().add("search-no-results");
+            searchResultsList.getChildren().add(noResults);
+            showSearchResults();
+            return;
+        }
+
+        // Group results by category
+        String currentCategory = "";
+        for (SearchResult result : results) {
+            if (!result.category.equals(currentCategory)) {
+                currentCategory = result.category;
+                Label sectionHeader = new Label(currentCategory.toUpperCase());
+                sectionHeader.getStyleClass().add("search-section-header");
+                searchResultsList.getChildren().add(sectionHeader);
+            }
+            searchResultsList.getChildren().add(buildSearchResultItem(result));
+        }
+
+        showSearchResults();
+    }
+
+    private HBox buildSearchResultItem(SearchResult result) {
+        HBox item = new HBox(10);
+        item.setAlignment(Pos.CENTER_LEFT);
+        item.getStyleClass().add("search-result-item");
+
+        // Icon based on category
+        FontIcon icon = new FontIcon(getIconForCategory(result.category));
+        icon.setIconSize(16);
+        icon.setIconColor(javafx.scene.paint.Color.web(getIconColorForCategory(result.category)));
+        icon.getStyleClass().add("search-result-icon");
+
+        VBox textBox = new VBox(2);
+        textBox.setAlignment(Pos.CENTER_LEFT);
+
+        Label title = new Label(result.title);
+        title.getStyleClass().add("search-result-title");
+
+        Label subtitle = new Label(result.subtitle);
+        subtitle.getStyleClass().add("search-result-subtitle");
+
+        textBox.getChildren().addAll(title, subtitle);
+
+        item.getChildren().addAll(icon, textBox);
+
+        // Click handler to navigate
+        item.setOnMouseClicked(e -> {
+            hideSearchResults();
+            txtSearch.clear();
+            navigateToSearchResult(result);
+        });
+
+        // Set cursor to hand
+        item.setCursor(javafx.scene.Cursor.HAND);
+
+        return item;
+    }
+
+    private void navigateToSearchResult(SearchResult result) {
+        switch (result.targetPage) {
+            case "inventory":
+                setActive(btnInventory, "Inventory", "inventory");
+                break;
+            case "workers":
+                setActive(btnWorkers, "Workers", "workers");
+                break;
+            case "invoices":
+                setActive(btnInvoices, "Invoices & Billing", "invoices");
+                break;
+            case "credit-sales":
+                setActive(btnSales, "Credit Sales", "credit-sales");
+                break;
+            case "tyre-exports":
+                setActive(btnTyreExports, "Tyre Exports", "tyre-exports");
+                break;
+            case "services":
+                setActive(btnServices, "Services", "services");
+                break;
+            default:
+                break;
+        }
+    }
+
+    private String getIconForCategory(String category) {
+        switch (category) {
+            case "Products": return "fas-box";
+            case "Workers": return "fas-users";
+            case "Invoices": return "fas-file-alt";
+            case "Credit Sales": return "fas-shopping-cart";
+            case "Tyre Exports": return "fas-truck";
+            case "Services": return "fas-tools";
+            default: return "fas-search";
+        }
+    }
+
+    private String getIconColorForCategory(String category) {
+        switch (category) {
+            case "Products": return "#3b82f6";
+            case "Workers": return "#10b981";
+            case "Invoices": return "#f59e0b";
+            case "Credit Sales": return "#8b5cf6";
+            case "Tyre Exports": return "#06b6d4";
+            case "Services": return "#ef4444";
+            default: return "#6b7280";
+        }
+    }
+
+    // ── Individual Search Methods ──
+
+    private void searchProducts(String searchTerm, List<SearchResult> results) {
+        String sql = "SELECT id, name, category, product_code, brand, stock FROM products " +
+                "WHERE name LIKE ? OR product_code LIKE ? OR brand LIKE ? OR category LIKE ? " +
+                "OR supplier_name LIKE ? OR description LIKE ? OR vehicle_type LIKE ? OR material LIKE ? " +
+                "ORDER BY name LIMIT 8";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 1; i <= 8; i++) ps.setString(i, searchTerm);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String id = rs.getString("id");
+                    String name = rs.getString("name");
+                    String category = rs.getString("category");
+                    String code = rs.getString("product_code");
+                    String brand = rs.getString("brand");
+                    int stock = rs.getInt("stock");
+                    String subtitle = (brand != null && !brand.isBlank() ? brand + " | " : "") +
+                            (category != null ? category : "") +
+                            " | Stock: " + stock;
+                    String displayCode = (code != null && !code.isBlank()) ? code + " - " : "";
+                    results.add(new SearchResult("Products", displayCode + name, subtitle, id, "inventory"));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Search products error: " + ex.getMessage());
+        }
+    }
+
+    private void searchWorkers(String searchTerm, List<SearchResult> results) {
+        String sql = "SELECT id, name, phone, role FROM workers " +
+                "WHERE name LIKE ? OR phone LIKE ? OR role LIKE ? " +
+                "ORDER BY name LIMIT 5";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 1; i <= 3; i++) ps.setString(i, searchTerm);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String id = rs.getString("id");
+                    String name = rs.getString("name");
+                    String phone = rs.getString("phone");
+                    String role = rs.getString("role");
+                    String subtitle = (role != null ? role : "") + (phone != null ? " | " + phone : "");
+                    results.add(new SearchResult("Workers", name, subtitle, id, "workers"));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Search workers error: " + ex.getMessage());
+        }
+    }
+
+    private void searchInvoices(String searchTerm, List<SearchResult> results) {
+        String sql = "SELECT id, invoice_id, customer, grand_total, status FROM invoices " +
+                "WHERE invoice_id LIKE ? OR customer LIKE ? " +
+                "ORDER BY invoice_date DESC LIMIT 5";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 1; i <= 2; i++) ps.setString(i, searchTerm);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String id = rs.getString("id");
+                    String invoiceId = rs.getString("invoice_id");
+                    String customer = rs.getString("customer");
+                    double total = rs.getDouble("grand_total");
+                    String status = rs.getString("status");
+                    String displayId = (invoiceId != null && !invoiceId.isBlank()) ? invoiceId : id.substring(0, 8);
+                    String subtitle = (customer != null ? customer : "N/A") +
+                            " | Rs. " + String.format("%.0f", total) +
+                            (status != null ? " | " + status : "");
+                    results.add(new SearchResult("Invoices", "Invoice " + displayId, subtitle, id, "invoices"));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Search invoices error: " + ex.getMessage());
+        }
+    }
+
+    private void searchCreditSales(String searchTerm, List<SearchResult> results) {
+        String sql = "SELECT id, credit_id, customer_name, amount, status FROM credit_sales " +
+                "WHERE customer_name LIKE ? OR credit_id LIKE ? OR customer LIKE ? " +
+                "ORDER BY sale_date DESC LIMIT 5";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 1; i <= 3; i++) ps.setString(i, searchTerm);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String id = rs.getString("id");
+                    String creditId = rs.getString("credit_id");
+                    String customer = rs.getString("customer_name");
+                    double amount = rs.getDouble("amount");
+                    String status = rs.getString("status");
+                    String displayId = (creditId != null && !creditId.isBlank()) ? creditId : id.substring(0, 8);
+                    String subtitle = (customer != null ? customer : "N/A") +
+                            " | Rs. " + String.format("%.0f", amount) +
+                            (status != null ? " | " + status : "");
+                    results.add(new SearchResult("Credit Sales", "Sale " + displayId, subtitle, id, "credit-sales"));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Search credit sales error: " + ex.getMessage());
+        }
+    }
+
+    private void searchTyreExports(String searchTerm, List<SearchResult> results) {
+        String sql = "SELECT id, export_id, company, operation, total_amount FROM tyre_exports " +
+                "WHERE company LIKE ? OR export_id LIKE ? OR operation LIKE ? " +
+                "ORDER BY export_date DESC LIMIT 5";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 1; i <= 3; i++) ps.setString(i, searchTerm);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String id = rs.getString("id");
+                    String exportId = rs.getString("export_id");
+                    String company = rs.getString("company");
+                    String operation = rs.getString("operation");
+                    double total = rs.getDouble("total_amount");
+                    String displayId = (exportId != null && !exportId.isBlank()) ? exportId : id.substring(0, 8);
+                    String subtitle = (company != null ? company : "N/A") +
+                            (operation != null ? " | " + operation : "") +
+                            " | Rs. " + String.format("%.0f", total);
+                    results.add(new SearchResult("Tyre Exports", "Export " + displayId, subtitle, id, "tyre-exports"));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Search tyre exports error: " + ex.getMessage());
+        }
+    }
+
+    private void searchServices(String searchTerm, List<SearchResult> results) {
+        String sql = "SELECT id, name, price, remark FROM services " +
+                "WHERE name LIKE ? OR remark LIKE ? " +
+                "ORDER BY service_date DESC LIMIT 5";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 1; i <= 2; i++) ps.setString(i, searchTerm);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String id = rs.getString("id");
+                    String name = rs.getString("name");
+                    double price = rs.getDouble("price");
+                    String remark = rs.getString("remark");
+                    String subtitle = "Rs. " + String.format("%.0f", price) +
+                            (remark != null && !remark.isBlank() ? " | " + remark : "");
+                    results.add(new SearchResult("Services", name, subtitle, id, "services"));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Search services error: " + ex.getMessage());
+        }
+    }
+
+    // ── Helper class for search results ──
+
+    private static class SearchResult {
+        final String category;
+        final String title;
+        final String subtitle;
+        final String entityId;
+        final String targetPage;
+
+        SearchResult(String category, String title, String subtitle, String entityId, String targetPage) {
+            this.category = category;
+            this.title = title;
+            this.subtitle = subtitle;
+            this.entityId = entityId;
+            this.targetPage = targetPage;
         }
     }
 }

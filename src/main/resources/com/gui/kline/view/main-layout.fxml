@@ -91,10 +91,10 @@
             </Button>
          <AnchorPane>
             <children>
-                  <HBox alignment="CENTER_LEFT" layoutY="16.0" prefWidth="200" spacing="6" styleClass="search-box">
-                      <FontIcon iconColor="#9ca3af" iconLiteral="fas-search" iconSize="13" />
-                      <TextField fx:id="txtSearch" promptText="Search..." styleClass="search-field" HBox.hgrow="ALWAYS" />
-                  </HBox>
+               <HBox alignment="CENTER_LEFT" layoutY="16.0" prefWidth="200" spacing="6" styleClass="search-box">
+                   <FontIcon iconColor="#9ca3af" iconLiteral="fas-search" iconSize="13" />
+                   <TextField fx:id="txtSearch" promptText="Search..." styleClass="search-field" HBox.hgrow="ALWAYS" />
+               </HBox>
             </children>
          </AnchorPane>
             <StackPane styleClass="user-avatar">

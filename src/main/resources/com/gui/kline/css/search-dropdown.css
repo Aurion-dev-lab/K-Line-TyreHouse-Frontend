@@ -1,0 +1,98 @@
+/* ── Search Results Dropdown ── */
+
+.search-results-popup {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 12, 0, 0, 4);
+    -fx-max-height: 400;
+    -fx-pref-width: 360;
+}
+
+.search-results-scroll {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.search-results-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.search-results-scroll > .scroll-bar:vertical {
+    -fx-pref-width: 4px;
+    -fx-background-color: transparent;
+}
+
+.search-results-scroll > .scroll-bar:vertical .thumb {
+    -fx-background-color: #d1d5db;
+    -fx-background-radius: 2;
+}
+
+.search-results-scroll > .scroll-bar:vertical .track,
+.search-results-scroll > .scroll-bar:vertical .track-background,
+.search-results-scroll > .scroll-bar:vertical .increment-button,
+.search-results-scroll > .scroll-bar:vertical .decrement-button,
+.search-results-scroll > .scroll-bar:vertical .increment-arrow,
+.search-results-scroll > .scroll-bar:vertical .decrement-arrow {
+    -fx-background-color: transparent;
+    -fx-pref-height: 0;
+    -fx-pref-width: 0;
+}
+
+.search-section-header {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6b7280;
+    -fx-padding: 8 12 4 12;
+    -fx-underline: false;
+    -fx-letter-spacing: 0.5px;
+}
+
+.search-result-item {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6;
+    -fx-padding: 8 12;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-alignment: center-left;
+}
+
+.search-result-item:hover {
+    -fx-background-color: #f3f4f6;
+}
+
+.search-result-item:pressed {
+    -fx-background-color: #e5e7eb;
+}
+
+.search-result-icon {
+    -fx-icon-size: 16;
+}
+
+.search-result-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.search-result-subtitle {
+    -fx-font-size: 11px;
+    -fx-text-fill: #9ca3af;
+}
+
+.search-no-results {
+    -fx-text-fill: #9ca3af;
+    -fx-font-size: 13px;
+    -fx-padding: 20 12;
+    -fx-alignment: center;
+}
+
+.search-loading {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 12px;
+    -fx-padding: 12;
+    -fx-alignment: center;
+}
