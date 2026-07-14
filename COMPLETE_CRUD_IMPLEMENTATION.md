@@ -15,7 +15,7 @@
 - New invoice type option: "Both"
 - Single invoice can have multiple line items:
   - Sales items (products with qty)
-  - Service items (labor + parts)
+  - Service items (labor + parts).
 - Flexible line item management
 - **Example**: Sell 4 tires + Installation service in ONE invoice
 
