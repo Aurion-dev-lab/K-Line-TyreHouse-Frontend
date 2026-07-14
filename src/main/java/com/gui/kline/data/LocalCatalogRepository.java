@@ -247,8 +247,12 @@ public class LocalCatalogRepository {
                 "brand = VALUES(brand), description = VALUES(description), vehicle_type = VALUES(vehicle_type), " +
                 "material = VALUES(material), supplier_name = VALUES(supplier_name), " +
                 "created_at = COALESCE(products.created_at, NOW()), updated_at = NOW()";
-        try (Connection connection = DatabaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        Connection connection = null;
+        try {
+            connection = DatabaseManager.getConnection();
+            connection.setAutoCommit(false);  // Disable auto-commit for transaction control
+            
+            PreparedStatement statement = connection.prepareStatement(sql);
             statement.setString(1, product.getId());
             statement.setString(2, product.getCode());
             statement.setString(3, product.getName());
@@ -276,8 +280,27 @@ public class LocalCatalogRepository {
             // Save product images
             saveProductImages(connection, product);
             
+            connection.commit();  // Explicitly commit transaction
+            
         } catch (SQLException ex) {
+            // Rollback on error
+            if (connection != null) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e) {
+                    System.err.println("Failed to rollback transaction: " + e.getMessage());
+                }
+            }
             throw new IllegalStateException("Failed to save product", ex);
+        } finally {
+            // Close connection
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    System.err.println("Failed to close connection: " + e.getMessage());
+                }
+            }
         }
     }
     
