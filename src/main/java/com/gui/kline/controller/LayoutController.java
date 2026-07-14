@@ -234,13 +234,16 @@ public class LayoutController {
 
     public void loadQuickStats() {
         if (lblTotalQuickCount == null || lblTotalQuickPrice == null) return;
-        String sql = "SELECT COUNT(*) AS total_count, COALESCE(SUM(price),0) AS total_sum FROM quick_services";
+        // Daily session stats - only count today's quick services
+        String sql = "SELECT COUNT(*) AS total_count, COALESCE(SUM(price),0) AS total_sum FROM quick_services WHERE service_date = ?";
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                lblTotalQuickCount.setText(String.valueOf(rs.getInt("total_count")));
-                lblTotalQuickPrice.setText("Rs. " + String.format("%.0f", rs.getDouble("total_sum")));
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, java.sql.Date.valueOf(java.time.LocalDate.now()));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    lblTotalQuickCount.setText(String.valueOf(rs.getInt("total_count")));
+                    lblTotalQuickPrice.setText("Rs. " + String.format("%.0f", rs.getDouble("total_sum")));
+                }
             }
         } catch (SQLException ex) {
             System.err.println("Failed to load quick service stats: " + ex.getMessage());

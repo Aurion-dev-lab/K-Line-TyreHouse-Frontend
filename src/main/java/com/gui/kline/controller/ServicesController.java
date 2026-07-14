@@ -1,14 +1,18 @@
 package com.gui.kline.controller;
 
 import com.gui.kline.data.DatabaseManager;
+import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.ServiceRecord;
 import com.gui.kline.models.ViewModel;
+import com.gui.kline.utils.JsonUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
@@ -18,7 +22,9 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.net.URL;
 import java.sql.Connection;
@@ -50,6 +56,9 @@ public class ServicesController implements Initializable {
     private TableColumn<ServiceRecord, String> colService;
 
     @FXML
+    private TableColumn<ServiceRecord, String> colActions;
+
+    @FXML
     private DatePicker dpFrom;
 
     @FXML
@@ -75,6 +84,7 @@ public class ServicesController implements Initializable {
 
     private final ObservableList<ServiceRecord> services = FXCollections.observableArrayList();
     private FilteredList<ServiceRecord> filteredServices;
+    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -82,6 +92,28 @@ public class ServicesController implements Initializable {
         colService.setCellValueFactory(data -> data.getValue().serviceProperty());
         colRemark.setCellValueFactory(data -> data.getValue().remarkProperty());
         colPrice.setCellValueFactory(data -> data.getValue().priceLabelProperty());
+        
+        // Set up actions column with delete button
+        colActions.setCellFactory(col -> new javafx.scene.control.TableCell<ServiceRecord, String>() {
+            private final Button deleteBtn = new Button();
+            {
+                deleteBtn.setGraphic(new FontIcon("fas-trash"));
+                deleteBtn.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
+                deleteBtn.setOnAction(e -> {
+                    ServiceRecord record = getTableView().getItems().get(getIndex());
+                    deleteService(record);
+                });
+            }
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(deleteBtn);
+                }
+            }
+        });
 
         filteredServices = new FilteredList<>(services, item -> true);
         tblServices.setItems(filteredServices);
@@ -125,11 +157,9 @@ public class ServicesController implements Initializable {
         services.clear();
         try (Connection conn = DatabaseManager.getConnection()) {
             loadServiceRows(conn,
-                    "SELECT service_date, name, remark, price FROM services",
-                    false);
-            loadServiceRows(conn,
-                    "SELECT service_date, service, NULL AS remark, price FROM quick_services",
-                    true);
+                    "SELECT id, service_date, name, remark, price FROM services",
+                    "services");
+            loadQuickServiceRows(conn);
             loadInvoiceServiceRows(conn);
         } catch (SQLException ex) {
             System.err.println("Error loading services: " + ex.getMessage());
@@ -138,27 +168,53 @@ public class ServicesController implements Initializable {
         services.sort(Comparator.comparing(ServiceRecord::getDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
     }
 
-    private void loadServiceRows(Connection conn, String sql, boolean markQuick) throws SQLException {
+    private void loadServiceRows(Connection conn, String sql, String sourceTable) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                java.sql.Date date = rs.getDate(1);
-                String name = rs.getString(2);
-                String remark = rs.getString(3);
-                double price = rs.getDouble(4);
+                String id = rs.getString(1);
+                java.sql.Date date = rs.getDate(2);
+                String name = rs.getString(3);
+                String remark = rs.getString(4);
+                double price = rs.getDouble(5);
 
                 LocalDate serviceDate = date != null ? date.toLocalDate() : null;
                 String finalRemark = remark != null ? remark : "";
-                if (markQuick) {
-                    finalRemark = finalRemark.isEmpty() ? "Quick service" : finalRemark + " (Quick)";
-                }
-                services.add(new ServiceRecord(serviceDate, name, finalRemark, price));
+                
+                ServiceRecord record = new ServiceRecord(serviceDate, name, finalRemark, price);
+                record.setId(id);
+                record.setSourceTable(sourceTable);
+                record.setIsQuickService("quick_services".equals(sourceTable));
+                services.add(record);
+            }
+        }
+    }
+
+    private void loadQuickServiceRows(Connection conn) throws SQLException {
+        String sql = "SELECT id, service_date, service, NULL AS remark, price FROM quick_services";
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                String id = rs.getString(1);
+                java.sql.Date date = rs.getDate(2);
+                String name = rs.getString(3);
+                String remark = rs.getString(4);
+                double price = rs.getDouble(5);
+
+                LocalDate serviceDate = date != null ? date.toLocalDate() : null;
+                String finalRemark = remark != null ? remark : "Quick service";
+                
+                ServiceRecord record = new ServiceRecord(serviceDate, name, finalRemark, price);
+                record.setId(id);
+                record.setSourceTable("quick_services");
+                record.setIsQuickService(true);
+                services.add(record);
             }
         }
     }
 
     private void loadInvoiceServiceRows(Connection conn) throws SQLException {
-        String sql = "SELECT COALESCE(i.invoice_date, DATE(i.created_at)) AS d, " +
+        String sql = "SELECT i.id, COALESCE(i.invoice_date, DATE(i.created_at)) AS d, " +
                 "il.description, COALESCE(il.total, il.qty * il.unit_price) AS total " +
                 "FROM invoice_line_items il " +
                 "JOIN invoices i ON i.id = il.invoice_ref " +
@@ -166,11 +222,17 @@ public class ServicesController implements Initializable {
         try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                java.sql.Date date = rs.getDate(1);
-                String name = rs.getString(2);
-                double price = rs.getDouble(3);
+                String id = rs.getString(1);
+                java.sql.Date date = rs.getDate(2);
+                String name = rs.getString(3);
+                double price = rs.getDouble(4);
                 LocalDate serviceDate = date != null ? date.toLocalDate() : null;
-                services.add(new ServiceRecord(serviceDate, name, "Invoiced service", price));
+                
+                ServiceRecord record = new ServiceRecord(serviceDate, name, "Invoiced service", price);
+                record.setId(id);
+                record.setSourceTable("invoice_line_items");
+                record.setIsQuickService(false);
+                services.add(record);
             }
         }
     }
@@ -226,5 +288,64 @@ public class ServicesController implements Initializable {
                     label.getStyleClass().add("service-tag");
                     flowCommonServices.getChildren().add(label);
                 });
+    }
+
+    private void deleteService(ServiceRecord record) {
+        if (record == null) {
+            return;
+        }
+
+        String id = record.getId();
+        String sourceTable = record.getSourceTable();
+        boolean isQuickService = record.getIsQuickService();
+
+        // Confirm deletion
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                javafx.scene.control.Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Service");
+        alert.setHeaderText(null);
+        alert.setContentText("Are you sure you want to delete this service?");
+
+        if (alert.showAndWait().orElse(javafx.scene.control.ButtonType.CANCEL) 
+                != javafx.scene.control.ButtonType.OK) {
+            return;
+        }
+
+        // Delete from appropriate table
+        try (Connection conn = DatabaseManager.getConnection()) {
+            if ("quick_services".equals(sourceTable)) {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM quick_services WHERE id = ?")) {
+                    ps.setString(1, id);
+                    ps.executeUpdate();
+                }
+            } else if ("services".equals(sourceTable)) {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM services WHERE id = ?")) {
+                    ps.setString(1, id);
+                    ps.executeUpdate();
+                }
+            } else if ("invoice_line_items".equals(sourceTable)) {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM invoice_line_items WHERE id = ?")) {
+                    ps.setString(1, id);
+                    ps.executeUpdate();
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Error deleting service: " + ex.getMessage());
+            return;
+        }
+
+        // Remove from list
+        services.remove(record);
+        applyFilters();
+        refreshTotals();
+        populateCommonServices();
+
+        // Update sidebar quick stats if it was a quick service
+        if (isQuickService) {
+            ViewModel.INSTANCE.getViewsFactory().updateQuickStats();
+        }
     }
 }

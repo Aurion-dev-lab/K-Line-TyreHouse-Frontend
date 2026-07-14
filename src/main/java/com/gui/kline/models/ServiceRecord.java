@@ -21,6 +21,10 @@ public class ServiceRecord {
     private final SimpleDoubleProperty priceProperty;
     private final SimpleStringProperty priceLabel;
     
+    // Source tracking for delete functionality
+    private String sourceTable;
+    private boolean isQuickService = false;
+    
     // Customer fields for sync
     private String customerId;
     private String customerName;
@@ -47,6 +51,12 @@ public class ServiceRecord {
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
+
+    public String getSourceTable() { return sourceTable; }
+    public void setSourceTable(String sourceTable) { this.sourceTable = sourceTable; }
+
+    public boolean getIsQuickService() { return isQuickService; }
+    public void setIsQuickService(boolean isQuickService) { this.isQuickService = isQuickService; }
 
     public LocalDate getDate() {
         return date;
@@ -124,6 +134,11 @@ public class ServiceRecord {
         return priceProperty;
     }
 
+    // Actions property for delete button
+    public SimpleStringProperty actionsProperty() {
+        return new SimpleStringProperty("");
+    }
+
     // Sync field getters and setters
     public String getSyncId() { return syncId; }
     public void setSyncId(String syncId) { this.syncId = syncId; }
@@ -143,4 +158,3 @@ public class ServiceRecord {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
-

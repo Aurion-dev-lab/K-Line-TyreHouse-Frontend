@@ -64,10 +64,11 @@
 
                                 <TableView fx:id="tblServices" VBox.vgrow="ALWAYS">
                                     <columns>
-                                        <TableColumn fx:id="colDate"    prefWidth="150.0" text="DATE" />
-                                        <TableColumn fx:id="colService" prefWidth="200.0" text="SERVICE" />
-                                        <TableColumn fx:id="colRemark"  prefWidth="200.0" text="REMARK/NOTE" />
-                                        <TableColumn fx:id="colPrice"   prefWidth="120.0" text="PRICE" />
+                                        <TableColumn fx:id="colDate"    prefWidth="120.0" text="DATE" />
+                                        <TableColumn fx:id="colService" prefWidth="180.0" text="SERVICE" />
+                                        <TableColumn fx:id="colRemark"  prefWidth="180.0" text="REMARK/NOTE" />
+                                        <TableColumn fx:id="colPrice"   prefWidth="100.0" text="PRICE" />
+                                        <TableColumn fx:id="colActions" prefWidth="80.0" text="ACTIONS" />
                                     </columns>
                                     <columnResizePolicy>
                                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
