@@ -1,6 +1,7 @@
 package com.gui.kline.data;
 
 import com.gui.kline.models.Product;
+import com.gui.kline.utils.ImagePathUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -365,6 +366,8 @@ public class LocalCatalogRepository {
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to delete product", ex);
         }
+        // Remove the physical image files from disk so they don't remain orphaned
+        ImagePathUtil.deleteImageFiles(product.getImagePaths());
     }
 
     private String formatProductLabel(String code, String name) {

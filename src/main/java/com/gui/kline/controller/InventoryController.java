@@ -11,6 +11,7 @@ import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.Product;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.utils.AlertUtil;
+import com.gui.kline.utils.ImagePathUtil;
 import com.gui.kline.utils.JsonUtil;
 
 import javafx.collections.FXCollections;
@@ -138,8 +139,8 @@ public class InventoryController implements Initializable {
         
         String imagePath = p.getImagePath();
         if (imagePath != null && !imagePath.isEmpty()) {
-            File imageFile = new File(imagePath);
-            if (imageFile.exists()) {
+            File imageFile = ImagePathUtil.resolve(imagePath);
+            if (imageFile != null && imageFile.exists()) {
                 try {
                     Image image = new Image(imageFile.toURI().toString());
                     productImage.setImage(image);
@@ -366,8 +367,8 @@ public class InventoryController implements Initializable {
             HBox imagesBox = new HBox(10);
             imagesBox.setPadding(new javafx.geometry.Insets(5, 0, 0, 0));
             for (String imagePath : product.getImagePaths()) {
-                File imageFile = new File(imagePath);
-                if (imageFile.exists()) {
+                File imageFile = ImagePathUtil.resolve(imagePath);
+                if (imageFile != null && imageFile.exists()) {
                     try {
                         Image image = new Image(imageFile.toURI().toString());
                         ImageView imageView = new ImageView(image);
