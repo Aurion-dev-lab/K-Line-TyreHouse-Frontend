@@ -56,32 +56,74 @@ public class LocalCatalogRepository {
         }
     }
 
-     public List<Product> loadProducts() {
-         String sql = "SELECT id, product_code, name, category, buy_price, sell_price, stock FROM products ORDER BY product_code, name";
-         List<Product> products = new ArrayList<>();
-         try (Connection connection = DatabaseManager.getConnection();
-              PreparedStatement statement = connection.prepareStatement(sql);
-              ResultSet rs = statement.executeQuery()) {
-             while (rs.next()) {
-                 Product product = new Product(
-                         rs.getString("id"),
-                         rs.getString("product_code"),
-                         rs.getString("name"),
-                         rs.getString("category"),
-                         rs.getDouble("buy_price"),
-                         rs.getDouble("sell_price"),
-                         rs.getInt("stock")
-                 );
-                 products.add(product);
-             }
-         } catch (SQLException ex) {
-             throw new IllegalStateException("Failed to load products", ex);
-         }
-         return products;
-     }
+      public List<Product> loadProducts() {
+          String sql = "SELECT id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
+                      "brand, description, vehicle_type, material, supplier_name, created_at FROM products ORDER BY product_code, name";
+          List<Product> products = new ArrayList<>();
+          try (Connection connection = DatabaseManager.getConnection();
+               PreparedStatement statement = connection.prepareStatement(sql);
+               ResultSet rs = statement.executeQuery()) {
+              while (rs.next()) {
+                  Product product = new Product(
+                          rs.getString("id"),
+                          rs.getString("product_code"),
+                          rs.getString("name"),
+                          rs.getString("category"),
+                          rs.getDouble("buy_price"),
+                          rs.getDouble("sell_price"),
+                          rs.getInt("stock"),
+                          rs.getInt("minimum_stock_alert"),
+                          rs.getString("brand"),
+                          rs.getString("description"),
+                          rs.getString("vehicle_type"),
+                          rs.getString("material"),
+                          rs.getString("supplier_name"),
+                          rs.getString("created_at"),
+                          new java.util.ArrayList<>()
+                  );
+                  products.add(product);
+              }
+              
+              // Load images for all products
+              loadProductImages(connection, products);
+              
+          } catch (SQLException ex) {
+              throw new IllegalStateException("Failed to load products", ex);
+          }
+          return products;
+      }
+      
+      private void loadProductImages(Connection connection, List<Product> products) throws SQLException {
+          if (products.isEmpty()) return;
+          
+          // Build list of product IDs
+          StringBuilder idsBuilder = new StringBuilder();
+          for (Product p : products) {
+              if (idsBuilder.length() > 0) idsBuilder.append(",");
+              idsBuilder.append("'").append(p.getId()).append("'");
+          }
+          
+          String sql = "SELECT product_id, image_path FROM product_images WHERE product_id IN (" + idsBuilder + ")";
+          try (PreparedStatement statement = connection.prepareStatement(sql);
+               ResultSet rs = statement.executeQuery()) {
+              while (rs.next()) {
+                  String productId = rs.getString("product_id");
+                  String imagePath = rs.getString("image_path");
+                  
+                  // Find product and add image
+                  for (Product p : products) {
+                      if (p.getId().equals(productId)) {
+                          p.addImagePath(imagePath);
+                          break;
+                      }
+                  }
+              }
+          }
+      }
 
     public Product findProductByCode(String productCode) {
-        String sql = "SELECT id, product_code, name, category, buy_price, sell_price, stock FROM products WHERE product_code = ?";
+        String sql = "SELECT id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
+                    "brand, description, vehicle_type, material, supplier_name, created_at, image_path FROM products WHERE product_code = ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, productCode);
@@ -94,7 +136,15 @@ public class LocalCatalogRepository {
                             rs.getString("category"),
                             rs.getDouble("buy_price"),
                             rs.getDouble("sell_price"),
-                            rs.getInt("stock")
+                            rs.getInt("stock"),
+                            rs.getInt("minimum_stock_alert"),
+                            rs.getString("brand"),
+                            rs.getString("description"),
+                            rs.getString("vehicle_type"),
+                            rs.getString("material"),
+                            rs.getString("supplier_name"),
+                            rs.getString("created_at"),
+                            rs.getString("image_path") != null ? java.util.Collections.singletonList(rs.getString("image_path")) : new java.util.ArrayList<>()
                     );
                 }
             }
@@ -105,7 +155,8 @@ public class LocalCatalogRepository {
     }
 
       public Product findProductById(String productId) {
-          String sql = "SELECT id, product_code, name, category, buy_price, sell_price, stock FROM products WHERE id = ?";
+          String sql = "SELECT id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
+                      "brand, description, vehicle_type, material, supplier_name, created_at, image_path FROM products WHERE id = ?";
           try (Connection connection = DatabaseManager.getConnection();
                PreparedStatement statement = connection.prepareStatement(sql)) {
               statement.setString(1, productId);
@@ -118,7 +169,15 @@ public class LocalCatalogRepository {
                               rs.getString("category"),
                               rs.getDouble("buy_price"),
                               rs.getDouble("sell_price"),
-                              rs.getInt("stock")
+                              rs.getInt("stock"),
+                              rs.getInt("minimum_stock_alert"),
+                              rs.getString("brand"),
+                              rs.getString("description"),
+                              rs.getString("vehicle_type"),
+                              rs.getString("material"),
+                              rs.getString("supplier_name"),
+                              rs.getString("created_at"),
+                              rs.getString("image_path") != null ? java.util.Collections.singletonList(rs.getString("image_path")) : new java.util.ArrayList<>()
                       );
                       return product;
                   }
@@ -130,7 +189,8 @@ public class LocalCatalogRepository {
       }
 
       public List<Product> getProductsByCategory(String category) {
-          String sql = "SELECT id, product_code, name, category, buy_price, sell_price, stock FROM products WHERE category = ? ORDER BY product_code, name";
+          String sql = "SELECT id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
+                      "brand, description, vehicle_type, material, supplier_name, created_at, image_path FROM products WHERE category = ? ORDER BY product_code, name";
           List<Product> products = new ArrayList<>();
           try (Connection connection = DatabaseManager.getConnection();
                PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -144,7 +204,15 @@ public class LocalCatalogRepository {
                               rs.getString("category"),
                               rs.getDouble("buy_price"),
                               rs.getDouble("sell_price"),
-                              rs.getInt("stock")
+                              rs.getInt("stock"),
+                              rs.getInt("minimum_stock_alert"),
+                              rs.getString("brand"),
+                              rs.getString("description"),
+                              rs.getString("vehicle_type"),
+                              rs.getString("material"),
+                              rs.getString("supplier_name"),
+                              rs.getString("created_at"),
+                              rs.getString("image_path") != null ? java.util.Collections.singletonList(rs.getString("image_path")) : new java.util.ArrayList<>()
                       );
                       products.add(product);
                   }
@@ -171,10 +239,14 @@ public class LocalCatalogRepository {
         if (product == null) {
             return;
         }
-        String sql = "INSERT INTO products (id, product_code, name, category, buy_price, sell_price, stock, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, NOW()) " +
+        String sql = "INSERT INTO products (id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
+                "brand, description, vehicle_type, material, supplier_name, created_at, updated_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()) " +
                 "ON DUPLICATE KEY UPDATE product_code = VALUES(product_code), category = VALUES(category), buy_price = VALUES(buy_price), " +
-                "sell_price = VALUES(sell_price), stock = VALUES(stock), updated_at = NOW()";
+                "sell_price = VALUES(sell_price), stock = VALUES(stock), minimum_stock_alert = VALUES(minimum_stock_alert), " +
+                "brand = VALUES(brand), description = VALUES(description), vehicle_type = VALUES(vehicle_type), " +
+                "material = VALUES(material), supplier_name = VALUES(supplier_name), created_at = VALUES(created_at), " +
+                "updated_at = NOW()";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, product.getId());
@@ -184,9 +256,63 @@ public class LocalCatalogRepository {
             statement.setDouble(5, product.getBuyPrice());
             statement.setDouble(6, product.getSellPrice());
             statement.setInt(7, product.getStock());
+            statement.setInt(8, product.getMinimumStockAlert());
+            statement.setString(9, product.getBrand());
+            statement.setString(10, product.getDescription());
+            statement.setString(11, product.getVehicleType());
+            statement.setString(12, product.getMaterial());
+            statement.setString(13, product.getSupplierName());
+            statement.setString(14, product.getCreatedDate());
             statement.executeUpdate();
+            
+            // Save product images
+            saveProductImages(connection, product);
+            
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to save product", ex);
+        }
+    }
+    
+    private void saveProductImages(Connection connection, Product product) throws SQLException {
+        // Delete existing images for this product
+        String deleteSql = "DELETE FROM product_images WHERE product_id = ?";
+        try (PreparedStatement deleteStmt = connection.prepareStatement(deleteSql)) {
+            deleteStmt.setString(1, product.getId());
+            deleteStmt.executeUpdate();
+        }
+        
+        // Insert new images
+        String insertSql = "INSERT INTO product_images (id, product_id, image_path, created_at) VALUES (UUID(), ?, ?, NOW())";
+        try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
+            for (String imagePath : product.getImagePaths()) {
+                insertStmt.setString(1, product.getId());
+                insertStmt.setString(2, imagePath);
+                insertStmt.addBatch();
+            }
+            insertStmt.executeBatch();
+        }
+    }
+
+    public void deleteProduct(Product product) {
+        if (product == null) {
+            return;
+        }
+        try (Connection connection = DatabaseManager.getConnection()) {
+            // Delete product images first
+            String deleteImagesSql = "DELETE FROM product_images WHERE product_id = ?";
+            try (PreparedStatement deleteImagesStmt = connection.prepareStatement(deleteImagesSql)) {
+                deleteImagesStmt.setString(1, product.getId());
+                deleteImagesStmt.executeUpdate();
+            }
+            
+            // Delete product
+            String deleteProductSql = "DELETE FROM products WHERE id = ?";
+            try (PreparedStatement deleteProductStmt = connection.prepareStatement(deleteProductSql)) {
+                deleteProductStmt.setString(1, product.getId());
+                deleteProductStmt.executeUpdate();
+            }
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to delete product", ex);
         }
     }
 

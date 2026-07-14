@@ -49,11 +49,29 @@ public final class DatabaseManager {
                     "buy_price DECIMAL(12,2) NOT NULL DEFAULT 0," +
                     "sell_price DECIMAL(12,2) NOT NULL DEFAULT 0," +
                     "stock INT NOT NULL DEFAULT 0," +
+                    "minimum_stock_alert INT NOT NULL DEFAULT 5," +
+                    "brand VARCHAR(128)," +
+                    "description TEXT," +
+                    "vehicle_type VARCHAR(128)," +
+                    "material VARCHAR(128)," +
+                    "supplier_name VARCHAR(255)," +
+                    "created_at DATETIME NOT NULL," +
                     "updated_at DATETIME NOT NULL," +
                     "sync_id VARCHAR(36)," +
                     "device_id VARCHAR(64)," +
                     "synced_at DATETIME," +
                     "sync_status BOOLEAN DEFAULT false" +
+                    ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS product_images (" +
+                    "id VARCHAR(36) PRIMARY KEY," +
+                    "product_id VARCHAR(36) NOT NULL," +
+                    "image_path VARCHAR(255) NOT NULL," +
+                    "created_at DATETIME NOT NULL," +
+                    "sync_id VARCHAR(36)," +
+                    "device_id VARCHAR(64)," +
+                    "synced_at DATETIME," +
+                    "sync_status BOOLEAN DEFAULT false," +
+                    "INDEX idx_product_id (product_id)" +
                     ")");
             statement.execute("CREATE TABLE IF NOT EXISTS customers (" +
                     "id VARCHAR(36) PRIMARY KEY," +
@@ -271,7 +289,15 @@ public final class DatabaseManager {
              ensureColumnExists(connection, "credit_sales", "amount", "DECIMAL(12,2)");
              ensureColumnExists(connection, "credit_sales", "customer", "VARCHAR(255)");
              ensureColumnExists(connection, "credit_sale_parts", "product_id", "VARCHAR(36)");
-             ensureColumnExists(connection, "products", "product_code", "VARCHAR(64)");
+              ensureColumnExists(connection, "products", "product_code", "VARCHAR(64)");
+             ensureColumnExists(connection, "products", "minimum_stock_alert", "INT DEFAULT 5");
+             ensureColumnExists(connection, "products", "image_path", "VARCHAR(255)");
+             ensureColumnExists(connection, "products", "brand", "VARCHAR(128)");
+             ensureColumnExists(connection, "products", "description", "TEXT");
+             ensureColumnExists(connection, "products", "vehicle_type", "VARCHAR(128)");
+             ensureColumnExists(connection, "products", "material", "VARCHAR(128)");
+             ensureColumnExists(connection, "products", "supplier_name", "VARCHAR(255)");
+             ensureColumnExists(connection, "products", "created_at", "DATETIME");
              
              // Add sync columns to all tables
              addSyncColumns(connection, "products");

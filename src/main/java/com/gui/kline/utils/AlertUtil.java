@@ -26,4 +26,17 @@ public class AlertUtil {
         alert.setContentText(message);
         alert.showAndWait();
     }
+    
+    public static void showSuccess(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.getDialogPane().setStyle(
+            "-fx-border-color: #16A34A;" +
+            "-fx-border-width: 2;" +
+            "-fx-border-radius: 8;"
+        );
+        alert.showAndWait();
+    }
 }
