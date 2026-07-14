@@ -185,7 +185,7 @@ public class SalaryController implements Initializable {
                 if (empty || v == null) { setGraphic(null); return; }
                 boolean paid = "PAID".equalsIgnoreCase(v);
                 boolean partiallyPaid = "PARTIALLY PAID".equalsIgnoreCase(v);
-                boolean noData = "NO DATA".equalsIgnoreCase(v);
+                boolean noData = "NO DATA".equalsIgnoreCase(v) || "NO PAYABLE".equalsIgnoreCase(v);
                 Label badge = new Label(v);
                 badge.setStyle(
                         "-fx-background-color: " + (paid ? "#d1fae5" : partiallyPaid ? "#dbeafe" : noData ? "#f3f4f6" : "#fef3c7") + ";" +
@@ -207,7 +207,9 @@ public class SalaryController implements Initializable {
                 super.updateItem(worker, empty);
                 if (empty || worker == null) { setGraphic(null); return; }
 
-                boolean canPay = worker.getRemainingPayable() > 0 && !"NO DATA".equalsIgnoreCase(worker.getStatus());
+                boolean canPay = worker.getRemainingPayable() > 0 &&
+                        !"NO DATA".equalsIgnoreCase(worker.getStatus()) &&
+                        !"NO PAYABLE".equalsIgnoreCase(worker.getStatus());
                 Button pay = new Button(canPay && worker.getPaidAmount() > 0 ? "Pay Balance" : "Pay");
                 pay.setDisable(!canPay);
                 pay.setStyle("-fx-background-color: " + (canPay ? "#059669" : "#d1d5db") + ";" +

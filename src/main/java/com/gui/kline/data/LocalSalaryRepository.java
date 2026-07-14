@@ -57,10 +57,13 @@ public class LocalSalaryRepository {
                     if (creditBalance == 0.0) {
                         creditBalance = creditsByName.getOrDefault(name, 0.0);
                     }
+                    // A settlement can never create extra salary; treat an over-settled
+                    // credit ledger as a zero outstanding balance for payroll purposes.
+                    creditBalance = Math.max(0, creditBalance);
 
                     double gross = (present + (halfDay * 0.5)) * rate;
                     double paidAmount = paidAmountsByWorkerId.getOrDefault(workerId, 0.0);
-                    double netPayable = gross - advances;
+                    double netPayable = Math.max(0, gross - advances - creditBalance);
                     String status = paymentStatus(netPayable, paidAmount);
 
                     salaries.add(new WorkerSalary(
@@ -152,7 +155,7 @@ public class LocalSalaryRepository {
     }
 
     private String paymentStatus(double totalPayable, double paidAmount) {
-        if (totalPayable <= 0) return "NO DATA";
+        if (totalPayable <= 0) return "NO PAYABLE";
         if (paidAmount >= totalPayable - 0.0001) return "PAID";
         if (paidAmount > 0) return "PARTIALLY PAID";
         return "READY";

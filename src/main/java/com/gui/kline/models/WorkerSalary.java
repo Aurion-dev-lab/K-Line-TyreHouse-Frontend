@@ -25,7 +25,8 @@ public class WorkerSalary {
     public double getGrossSalary()   { return grossSalary; }
     public double getAdvances()      { return advances; }
     public double getCreditBalance() { return creditBalance; }
-    public double getNetPayable()    { return grossSalary - advances; }
+    /** Cash salary due after salary advances and the worker's outstanding credit are deducted. */
+    public double getNetPayable()    { return Math.max(0, grossSalary - advances - creditBalance); }
     public double getPaidAmount()    { return paidAmount; }
     public double getRemainingPayable() { return Math.max(0, getNetPayable() - paidAmount); }
 
