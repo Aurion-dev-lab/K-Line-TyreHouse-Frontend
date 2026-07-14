@@ -241,12 +241,12 @@ public class LocalCatalogRepository {
         }
         String sql = "INSERT INTO products (id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
                 "brand, description, vehicle_type, material, supplier_name, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, NOW()), NOW()) " +
                 "ON DUPLICATE KEY UPDATE product_code = VALUES(product_code), category = VALUES(category), buy_price = VALUES(buy_price), " +
                 "sell_price = VALUES(sell_price), stock = VALUES(stock), minimum_stock_alert = VALUES(minimum_stock_alert), " +
                 "brand = VALUES(brand), description = VALUES(description), vehicle_type = VALUES(vehicle_type), " +
-                "material = VALUES(material), supplier_name = VALUES(supplier_name), created_at = VALUES(created_at), " +
-                "updated_at = NOW()";
+                "material = VALUES(material), supplier_name = VALUES(supplier_name), " +
+                "created_at = COALESCE(products.created_at, NOW()), updated_at = NOW()";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, product.getId());
@@ -262,7 +262,15 @@ public class LocalCatalogRepository {
             statement.setString(11, product.getVehicleType());
             statement.setString(12, product.getMaterial());
             statement.setString(13, product.getSupplierName());
-            statement.setString(14, product.getCreatedDate());
+            
+            // Handle empty created_date - use null so COALESCE kicks in
+            String createdDate = product.getCreatedDate();
+            if (createdDate == null || createdDate.isEmpty() || createdDate.equals("null")) {
+                statement.setString(14, null);
+            } else {
+                statement.setString(14, createdDate);
+            }
+            
             statement.executeUpdate();
             
             // Save product images
