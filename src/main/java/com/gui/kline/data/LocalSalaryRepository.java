@@ -9,8 +9,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class LocalSalaryRepository {
     private final LocalSalaryAdvanceRepository advanceRepository = new LocalSalaryAdvanceRepository();
@@ -21,6 +23,7 @@ public class LocalSalaryRepository {
         Map<String, Double> advancesByName = advanceRepository.sumAdvancesByWorkerName(from, to);
         Map<String, Double> creditsById = creditRepository.balanceByWorkerId(from, to);
         Map<String, Double> creditsByName = creditRepository.balanceByWorkerName(from, to);
+        Map<String, Double> paidAmountsByWorkerId = loadPaidAmountsByWorkerId(from, to);
 
         String sql = "SELECT w.id, w.name, w.role, w.rate, " +
                 "SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) AS present, " +
@@ -56,9 +59,12 @@ public class LocalSalaryRepository {
                     }
 
                     double gross = (present + (halfDay * 0.5)) * rate;
-                    String status = gross > 0 ? "READY" : "NO DATA";
+                    double paidAmount = paidAmountsByWorkerId.getOrDefault(workerId, 0.0);
+                    double netPayable = gross - advances;
+                    String status = paymentStatus(netPayable, paidAmount);
 
                     salaries.add(new WorkerSalary(
+                            workerId,
                             name,
                             role,
                             avatarColor(name),
@@ -68,6 +74,7 @@ public class LocalSalaryRepository {
                             gross,
                             advances,
                             creditBalance,
+                            paidAmount,
                             status
                     ));
                 }
@@ -76,6 +83,79 @@ public class LocalSalaryRepository {
             throw new IllegalStateException("Failed to load salaries", ex);
         }
         return salaries;
+    }
+
+    /** Saves a partial or complete payment for a worker and payroll period. */
+    public String paySalary(String workerId, String workerName, LocalDate from, LocalDate to,
+                            double paymentAmount, double totalPayable) {
+        if (workerId == null || workerId.isBlank() || from == null || to == null ||
+                paymentAmount <= 0 || totalPayable <= 0 || from.isAfter(to)) {
+            throw new IllegalArgumentException("A worker, valid payroll period, and positive payment amount are required.");
+        }
+        try (Connection connection = DatabaseManager.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                double alreadyPaid = 0;
+                String selectSql = "SELECT amount FROM salary_payments WHERE worker_id = ? AND period_from = ? AND period_to = ? FOR UPDATE";
+                try (PreparedStatement select = connection.prepareStatement(selectSql)) {
+                    select.setString(1, workerId);
+                    select.setDate(2, Date.valueOf(from));
+                    select.setDate(3, Date.valueOf(to));
+                    try (ResultSet rs = select.executeQuery()) {
+                        while (rs.next()) {
+                            alreadyPaid += rs.getDouble("amount");
+                        }
+                    }
+                }
+                if (alreadyPaid + paymentAmount > totalPayable + 0.0001) {
+                    throw new IllegalArgumentException(String.format("The payment exceeds the remaining balance of Rs. %,.2f.", totalPayable - alreadyPaid));
+                }
+
+                String paymentId = UUID.randomUUID().toString();
+                String insertSql = "INSERT INTO salary_payments (id, worker_id, worker, period_from, period_to, amount, paid_at) VALUES (?, ?, ?, ?, ?, ?, NOW())";
+                try (PreparedStatement insert = connection.prepareStatement(insertSql)) {
+                    insert.setString(1, paymentId);
+                    insert.setString(2, workerId);
+                    insert.setString(3, workerName);
+                    insert.setDate(4, Date.valueOf(from));
+                    insert.setDate(5, Date.valueOf(to));
+                    insert.setDouble(6, paymentAmount);
+                    insert.executeUpdate();
+                }
+                connection.commit();
+                return paymentId;
+            } catch (RuntimeException | SQLException ex) {
+                connection.rollback();
+                throw ex;
+            }
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to pay salary", ex);
+        }
+    }
+
+    private Map<String, Double> loadPaidAmountsByWorkerId(LocalDate from, LocalDate to) {
+        String sql = "SELECT worker_id, SUM(amount) AS amount FROM salary_payments WHERE period_from = ? AND period_to = ? GROUP BY worker_id";
+        Map<String, Double> paidAmounts = new HashMap<>();
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setDate(1, Date.valueOf(from));
+            statement.setDate(2, Date.valueOf(to));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    paidAmounts.put(rs.getString("worker_id"), rs.getDouble("amount"));
+                }
+            }
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to load salary payment status", ex);
+        }
+        return paidAmounts;
+    }
+
+    private String paymentStatus(double totalPayable, double paidAmount) {
+        if (totalPayable <= 0) return "NO DATA";
+        if (paidAmount >= totalPayable - 0.0001) return "PAID";
+        if (paidAmount > 0) return "PARTIALLY PAID";
+        return "READY";
     }
 
     private double parseRate(String rateText) {
@@ -98,4 +178,3 @@ public class LocalSalaryRepository {
         return palette[idx];
     }
 }
-

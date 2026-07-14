@@ -176,76 +176,19 @@ public class ReportsRepository {
      * Calculate total worker costs for the given period
      */
     public double getWorkerCosts(LocalDate startDate, LocalDate endDate) {
-        double totalCosts = 0.0;
-        
-        // Get salary advances paid during the period
-        String salaryAdvancesSql = "SELECT COALESCE(SUM(amount), 0) as total " +
-                "FROM salary_advances " +
-                "WHERE advance_date BETWEEN ? AND ?";
-        
+        String sql = "SELECT COALESCE(SUM(amount), 0) AS total FROM salary_payments " +
+                "WHERE DATE(paid_at) BETWEEN ? AND ?";
         try (Connection connection = DatabaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(salaryAdvancesSql)) {
-            
+             PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setDate(1, Date.valueOf(startDate));
             statement.setDate(2, Date.valueOf(endDate));
-            
             try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    totalCosts += rs.getDouble("total");
-                }
+                return rs.next() ? rs.getDouble("total") : 0.0;
             }
         } catch (SQLException ex) {
-            System.err.println("Failed to calculate salary advances: " + ex.getMessage());
+            System.err.println("Failed to calculate paid worker salaries: " + ex.getMessage());
+            return 0.0;
         }
-        
-        // Get worker credits (amounts given to workers)
-        String creditsSql = "SELECT COALESCE(SUM(amount), 0) as total " +
-                "FROM worker_credits " +
-                "WHERE credit_date BETWEEN ? AND ?";
-        
-        try (Connection connection = DatabaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(creditsSql)) {
-            
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
-            
-            try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    totalCosts += rs.getDouble("total");
-                }
-            }
-        } catch (SQLException ex) {
-            System.err.println("Failed to calculate worker credits: " + ex.getMessage());
-        }
-        
-        // Estimate daily wages based on worker attendance
-        // Assuming workers are paid daily, we need to estimate based on attendance
-        String attendanceSql = "SELECT COUNT(*) as total_days " +
-                "FROM worker_attendance wa " +
-                "JOIN workers w ON wa.worker_id = w.id " +
-                "WHERE wa.attendance_date BETWEEN ? AND ? " +
-                "AND wa.status = 'present' " +
-                "AND w.salary_type = 'daily'";
-        
-        try (Connection connection = DatabaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(attendanceSql)) {
-            
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
-            
-            try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    int totalDays = rs.getInt("total_days");
-                    // Estimate daily wage (this would need to be based on actual worker rates)
-                    // For now, use a default rate
-                    totalCosts += totalDays * 1500; // Default daily wage
-                }
-            }
-        } catch (SQLException ex) {
-            System.err.println("Failed to calculate worker attendance costs: " + ex.getMessage());
-        }
-        
-        return totalCosts;
     }
 
     /**
@@ -316,6 +259,24 @@ public class ReportsRepository {
             }
         } catch (SQLException ex) {
             System.err.println("Failed to load service fee expenses: " + ex.getMessage());
+        }
+
+        String salaryPaymentsSql = "SELECT DATE(paid_at) AS payment_date, worker, amount " +
+                "FROM salary_payments WHERE DATE(paid_at) BETWEEN ? AND ? ORDER BY paid_at DESC";
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(salaryPaymentsSql)) {
+            statement.setDate(1, Date.valueOf(startDate));
+            statement.setDate(2, Date.valueOf(endDate));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    LocalDate date = rs.getDate("payment_date").toLocalDate();
+                    String worker = rs.getString("worker");
+                    expenses.add(new ExpenseItem(date, "Salary payment - " + worker,
+                            rs.getDouble("amount"), "Worker Salary"));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to load salary payment expenses: " + ex.getMessage());
         }
         
         return expenses;
@@ -428,25 +389,7 @@ public class ReportsRepository {
             System.err.println("Failed to calculate total expenses: " + ex.getMessage());
         }
         
-        // Worker costs (salary advances)
-        String workerCostsSql = "SELECT COALESCE(SUM(amount), 0) as total_worker_costs " +
-                "FROM salary_advances " +
-                "WHERE advance_date BETWEEN ? AND ?";
-        
-        try (Connection connection = DatabaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(workerCostsSql)) {
-            
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
-            
-            try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    summary.setWorkerCosts(rs.getDouble("total_worker_costs"));
-                }
-            }
-        } catch (SQLException ex) {
-            System.err.println("Failed to calculate worker costs: " + ex.getMessage());
-        }
+        summary.setWorkerCosts(getWorkerCosts(startDate, endDate));
         
         // Calculate net profit
         double totalRevenue = summary.getTotalSales() + summary.getCreditSales() + 

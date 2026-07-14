@@ -11,6 +11,7 @@ import com.gui.kline.controller.form.GiveCreditDialogController;
 import com.gui.kline.controller.form.SalaryAdvanceController;
 import com.gui.kline.controller.form.SettleCreditDialogController;
 import com.gui.kline.data.SyncQueueRepository;
+import com.gui.kline.utils.AlertUtil;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -34,6 +35,7 @@ public class SalaryController implements Initializable {
     @FXML private Button btnRecordAdvance, btnGiveCredit, btnSettleCredit, btnExportPayroll;
 
     @FXML private Label lblNetPayout, lblGross;
+    @FXML private Label lblPaidSalary;
     @FXML private Label lblTotalAdvances;
     @FXML private Label lblCreditBalance;
     @FXML private Label lblActiveWorkers, lblWorkersSubtitle;
@@ -46,6 +48,7 @@ public class SalaryController implements Initializable {
     @FXML private TableColumn<WorkerSalary, Double>          colCreditBalance;
     @FXML private TableColumn<WorkerSalary, Double>          colNetPayable;
     @FXML private TableColumn<WorkerSalary, String>          colStatus;
+    @FXML private TableColumn<WorkerSalary, WorkerSalary>    colSalaryActions;
 
     @FXML private TableView<LedgerEntry>                     tblLedger;
     @FXML private TableColumn<LedgerEntry, String>           colLedgerDate;
@@ -180,9 +183,13 @@ public class SalaryController implements Initializable {
             @Override protected void updateItem(String v, boolean empty) {
                 super.updateItem(v, empty);
                 if (empty || v == null) { setGraphic(null); return; }
+                boolean paid = "PAID".equalsIgnoreCase(v);
+                boolean partiallyPaid = "PARTIALLY PAID".equalsIgnoreCase(v);
+                boolean noData = "NO DATA".equalsIgnoreCase(v);
                 Label badge = new Label(v);
                 badge.setStyle(
-                        "-fx-background-color: #d1fae5; -fx-text-fill: #065f46;" +
+                        "-fx-background-color: " + (paid ? "#d1fae5" : partiallyPaid ? "#dbeafe" : noData ? "#f3f4f6" : "#fef3c7") + ";" +
+                                "-fx-text-fill: " + (paid ? "#065f46" : partiallyPaid ? "#1d4ed8" : noData ? "#6b7280" : "#92400e") + ";" +
                                 "-fx-font-size: 11px; -fx-font-weight: bold;" +
                                 "-fx-background-radius: 20px; -fx-padding: 4 14 4 14;"
                 );
@@ -191,6 +198,58 @@ public class SalaryController implements Initializable {
                 setGraphic(wrap); setText(null);
                 setStyle("-fx-background-color: transparent;");
                 setAlignment(Pos.CENTER);
+            }
+        });
+
+        colSalaryActions.setCellValueFactory(d -> new SimpleObjectProperty<>(d.getValue()));
+        colSalaryActions.setCellFactory(col -> new TableCell<>() {
+            @Override protected void updateItem(WorkerSalary worker, boolean empty) {
+                super.updateItem(worker, empty);
+                if (empty || worker == null) { setGraphic(null); return; }
+
+                boolean canPay = worker.getRemainingPayable() > 0 && !"NO DATA".equalsIgnoreCase(worker.getStatus());
+                Button pay = new Button(canPay && worker.getPaidAmount() > 0 ? "Pay Balance" : "Pay");
+                pay.setDisable(!canPay);
+                pay.setStyle("-fx-background-color: " + (canPay ? "#059669" : "#d1d5db") + ";" +
+                        "-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 11px;" +
+                        "-fx-background-radius: 8px; -fx-padding: 6 14 6 14; -fx-cursor: hand;");
+                pay.setOnAction(event -> showPaymentEditor(worker));
+                HBox wrap = new HBox(pay);
+                wrap.setAlignment(Pos.CENTER);
+                setGraphic(wrap); setText(null);
+                setStyle("-fx-background-color: transparent;");
+                setAlignment(Pos.CENTER);
+            }
+
+            private void showPaymentEditor(WorkerSalary worker) {
+                TextField amount = new TextField(String.format("%.2f", worker.getRemainingPayable()));
+                amount.setPromptText("Amount");
+                amount.setPrefWidth(88);
+                amount.setStyle("-fx-font-size: 11px; -fx-background-radius: 7px; -fx-border-color: #9ca3af; -fx-border-radius: 7px;");
+
+                Button save = new Button("✓");
+                save.setStyle("-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 7px; -fx-cursor: hand;");
+                Button cancel = new Button("✕");
+                cancel.setStyle("-fx-background-color: #e5e7eb; -fx-text-fill: #374151; -fx-font-weight: bold; -fx-background-radius: 7px; -fx-cursor: hand;");
+
+                Label error = new Label();
+                error.setStyle("-fx-text-fill: #dc2626; -fx-font-size: 9px;");
+                HBox editor = new HBox(4, amount, save, cancel);
+                editor.setAlignment(Pos.CENTER);
+                VBox content = new VBox(2, editor, error);
+                content.setAlignment(Pos.CENTER);
+                setGraphic(content);
+
+                save.setOnAction(event -> {
+                    String errorMessage = paySalary(worker, amount.getText());
+                    if (errorMessage != null) {
+                        error.setText(errorMessage);
+                    }
+                });
+                amount.setOnAction(event -> save.fire());
+                cancel.setOnAction(event -> updateItem(worker, false));
+                amount.requestFocus();
+                amount.selectAll();
             }
         });
 
@@ -379,15 +438,58 @@ public class SalaryController implements Initializable {
         double gross   = salaryList.stream().mapToDouble(WorkerSalary::getGrossSalary).sum();
         double advances= salaryList.stream().mapToDouble(WorkerSalary::getAdvances).sum();
         double net     = salaryList.stream().mapToDouble(WorkerSalary::getNetPayable).sum();
+        double paid    = salaryList.stream().mapToDouble(WorkerSalary::getPaidAmount).sum();
         double credit  = ledgerList.stream()
                 .mapToDouble(e -> e.getType().equals("SETTLEMENT") ? -e.getAmount() : e.getAmount()).sum();
 
         lblNetPayout.setText(String.format("Rs. %,.0f", net));
         lblGross.setText(String.format("Gross: Rs. %,.0f", gross));
+        lblPaidSalary.setText(String.format("Rs. %,.0f", paid));
         lblTotalAdvances.setText(String.format("Rs. %,.0f", advances));
         lblCreditBalance.setText(String.format("Rs. %,.0f", credit));
         lblActiveWorkers.setText(String.valueOf(salaryList.size()));
         lblWorkersSubtitle.setText("Out of " + salaryList.size() + " registered");
+    }
+
+    /**
+     * Records an inline payment. A null return value means the payment was saved;
+     * otherwise the message is displayed in the table rather than in a new window.
+     */
+    private String paySalary(WorkerSalary worker, String enteredAmount) {
+        LocalDate from = dpFrom.getValue();
+        LocalDate to = dpTo.getValue();
+        if (from == null || to == null || from.isAfter(to)) {
+            return "Select a valid date range.";
+        }
+
+        double paymentAmount;
+        try {
+            paymentAmount = Double.parseDouble(enteredAmount.replace(",", "").trim());
+        } catch (NumberFormatException ex) {
+            return "Enter a valid amount.";
+        }
+        if (paymentAmount <= 0 || paymentAmount > worker.getRemainingPayable() + 0.0001) {
+            return String.format("Maximum: Rs. %,.2f", worker.getRemainingPayable());
+        }
+
+        try {
+            String paymentId = salaryRepository.paySalary(worker.getWorkerId(), worker.getName(), from, to,
+                    paymentAmount, worker.getNetPayable());
+            syncQueueRepository.enqueue("salary_payment", JsonUtil.obj(
+                    JsonUtil.field("id", paymentId),
+                    JsonUtil.field("workerId", worker.getWorkerId()),
+                    JsonUtil.field("worker", worker.getName()),
+                    JsonUtil.field("periodFrom", from.toString()),
+                    JsonUtil.field("periodTo", to.toString()),
+                    JsonUtil.field("amount", paymentAmount),
+                    JsonUtil.field("status", paymentAmount >= worker.getRemainingPayable() - 0.0001 ? "PAID" : "PARTIALLY PAID"),
+                    JsonUtil.field("op", "create")
+            ));
+            reloadData();
+            return null;
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            return ex.getMessage();
+        }
     }
 
 

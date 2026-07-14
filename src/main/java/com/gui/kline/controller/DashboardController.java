@@ -622,8 +622,11 @@ public class DashboardController implements Initializable {
          
          // Add tyre exports profit from sync_queue (calculated from JSON payload)
          double tyreExportsProfit = calculateTyreExportsProfit(startDate, endDate);
+         double paidSalaries = sumAmount(conn,
+                 "SELECT COALESCE(SUM(amount),0) FROM salary_payments WHERE DATE(paid_at) BETWEEN ? AND ?",
+                 startDate, endDate);
          
-         return invoiceProfit + creditSalesProfit + servicesProfit + quickServicesProfit + tyreExportsProfit;
+         return invoiceProfit + creditSalesProfit + servicesProfit + quickServicesProfit + tyreExportsProfit - paidSalaries;
      }
 
      private double calculateTyreExportsProfit(LocalDate startDate, LocalDate endDate) {

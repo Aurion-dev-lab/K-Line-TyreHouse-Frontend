@@ -43,6 +43,7 @@ public class AnalyticsController {
         
         try (Connection conn = DatabaseManager.getConnection()) {
             Map<LocalDate, Double> revenueByDate = new LinkedHashMap<>();
+            Map<LocalDate, Double> paidSalaryByDate = new HashMap<>();
             
             // Initialize all dates with 0
             LocalDate current = startDate;
@@ -119,14 +120,29 @@ public class AnalyticsController {
                 }
             }
             
-            // For profit, use same as revenue (since we don't track cost separately in this simple view)
+            // Salary Management records payments individually, including partial payments.
+            // Deduct each payment on its actual payment date for a meaningful profit trend.
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT DATE(paid_at) AS d, SUM(amount) AS total FROM salary_payments " +
+                    "WHERE DATE(paid_at) BETWEEN ? AND ? GROUP BY DATE(paid_at)")) {
+                ps.setDate(1, Date.valueOf(startDate));
+                ps.setDate(2, Date.valueOf(endDate));
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Date d = rs.getDate("d");
+                        if (d != null) {
+                            paidSalaryByDate.merge(d.toLocalDate(), rs.getDouble("total"), Double::sum);
+                        }
+                    }
+                }
+            }
             
             // Populate chart data
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM");
             revenueByDate.forEach((date, total) -> {
                 String label = date.format(formatter);
                 revenue.getData().add(new XYChart.Data<>(label, total));
-                profit.getData().add(new XYChart.Data<>(label, total));
+                profit.getData().add(new XYChart.Data<>(label, total - paidSalaryByDate.getOrDefault(date, 0.0)));
             });
             
         } catch (SQLException ex) {

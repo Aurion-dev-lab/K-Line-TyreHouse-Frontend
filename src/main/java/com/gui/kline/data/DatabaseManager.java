@@ -220,6 +220,20 @@ public final class DatabaseManager {
                     "synced_at DATETIME," +
                     "sync_status BOOLEAN DEFAULT false" +
                     ")");
+            statement.execute("CREATE TABLE IF NOT EXISTS salary_payments (" +
+                    "id VARCHAR(36) PRIMARY KEY," +
+                    "worker_id VARCHAR(36) NOT NULL," +
+                    "worker VARCHAR(255) NOT NULL," +
+                    "period_from DATE NOT NULL," +
+                    "period_to DATE NOT NULL," +
+                    "amount DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                    "paid_at DATETIME NOT NULL," +
+                    "sync_id VARCHAR(36)," +
+                    "device_id VARCHAR(64)," +
+                    "synced_at DATETIME," +
+                    "sync_status BOOLEAN DEFAULT false," +
+                    "INDEX idx_salary_payment_period (worker_id, period_from, period_to)" +
+                    ")");
             statement.execute("CREATE TABLE IF NOT EXISTS worker_credits (" +
                     "id VARCHAR(36) PRIMARY KEY," +
                     "worker VARCHAR(255)," +
@@ -266,6 +280,9 @@ public final class DatabaseManager {
             ensureColumnExists(connection, "salary_advances", "worker_id", "VARCHAR(36)");
             ensureColumnExists(connection, "salary_advances", "note", "VARCHAR(255)");
             ensureColumnExists(connection, "salary_advances", "created_at", "DATETIME");
+            // Salary payments are individual transactions so partial payments can be
+            // reported on the date they were actually made.
+            dropIndexIfExists(connection, "salary_payments", "uk_salary_payment_period");
             ensureColumnExists(connection, "worker_credits", "worker_id", "VARCHAR(36)");
             ensureColumnExists(connection, "worker_credits", "note", "VARCHAR(255)");
             ensureColumnExists(connection, "worker_credits", "created_at", "DATETIME");
@@ -311,6 +328,7 @@ public final class DatabaseManager {
              addSyncColumns(connection, "workers");
              addSyncColumns(connection, "worker_attendance");
              addSyncColumns(connection, "salary_advances");
+             addSyncColumns(connection, "salary_payments");
              addSyncColumns(connection, "worker_credits");
              addSyncColumns(connection, "quick_services");
              backfillProductCodes(connection);
@@ -409,7 +427,7 @@ public final class DatabaseManager {
           List<String> required = List.of(
                   "app_sync_state", "sync_queue", "products", "customers",
                   "invoices", "invoice_line_items", "credit_sales", "credit_sale_parts", "services", "tyre_exports",
-                  "workers", "worker_attendance", "salary_advances", "worker_credits", "quick_services",
+                  "workers", "worker_attendance", "salary_advances", "salary_payments", "worker_credits", "quick_services",
                   "quick_service_presets"
           );
         String sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()";
@@ -449,6 +467,21 @@ public final class DatabaseManager {
                 if (rs.next() && rs.getInt(1) == 0) {
                     try (Statement create = connection.createStatement()) {
                         create.execute("ALTER TABLE " + table + " ADD UNIQUE INDEX " + indexName + " (" + column + ")");
+                    }
+                }
+            }
+        }
+    }
+
+    private static void dropIndexIfExists(Connection connection, String table, String indexName) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?";
+        try (PreparedStatement check = connection.prepareStatement(sql)) {
+            check.setString(1, table);
+            check.setString(2, indexName);
+            try (ResultSet rs = check.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    try (Statement drop = connection.createStatement()) {
+                        drop.execute("DROP INDEX " + indexName + " ON " + table);
                     }
                 }
             }
