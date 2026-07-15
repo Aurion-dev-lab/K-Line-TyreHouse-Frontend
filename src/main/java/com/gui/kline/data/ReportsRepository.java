@@ -40,13 +40,13 @@ public class ReportsRepository {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
             
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    LocalDate date = rs.getDate("sale_date") != null ? 
-                        rs.getDate("sale_date").toLocalDate() : LocalDate.now();
+                    LocalDate date = rs.getString("sale_date") != null ? 
+                        LocalDate.parse(rs.getString("sale_date")) : LocalDate.now();
                     String productName = rs.getString("product_name");
                     if (productName == null || productName.isBlank()) {
                         productName = "Unknown Product";
@@ -79,13 +79,13 @@ public class ReportsRepository {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(creditSql)) {
             
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
             
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    LocalDate date = rs.getDate("sale_date") != null ? 
-                        rs.getDate("sale_date").toLocalDate() : LocalDate.now();
+                    LocalDate date = rs.getString("sale_date") != null ? 
+                        LocalDate.parse(rs.getString("sale_date")) : LocalDate.now();
                     String customerName = rs.getString("product_name");
                     if (customerName == null || customerName.isBlank()) {
                         customerName = "Credit Sale";
@@ -124,13 +124,13 @@ public class ReportsRepository {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
             
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    LocalDate date = rs.getDate("service_date") != null ? 
-                        rs.getDate("service_date").toLocalDate() : LocalDate.now();
+                    LocalDate date = rs.getString("service_date") != null ? 
+                        LocalDate.parse(rs.getString("service_date")) : LocalDate.now();
                     String name = rs.getString("name");
                     String assignedTo = rs.getString("assigned_to");
                     double fee = rs.getDouble("price");
@@ -152,13 +152,13 @@ public class ReportsRepository {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(quickSql)) {
             
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
             
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    LocalDate date = rs.getDate("service_date") != null ? 
-                        rs.getDate("service_date").toLocalDate() : LocalDate.now();
+                    LocalDate date = rs.getString("service_date") != null ? 
+                        LocalDate.parse(rs.getString("service_date")) : LocalDate.now();
                     String name = rs.getString("name");
                     double fee = rs.getDouble("price");
                     
@@ -180,8 +180,8 @@ public class ReportsRepository {
                 "WHERE DATE(paid_at) BETWEEN ? AND ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 return rs.next() ? rs.getDouble("total") : 0.0;
             }
@@ -211,13 +211,13 @@ public class ReportsRepository {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(tyreExportsSql)) {
             
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
             
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    LocalDate date = rs.getDate("export_date") != null ? 
-                        rs.getDate("export_date").toLocalDate() : LocalDate.now();
+                    LocalDate date = rs.getString("export_date") != null ? 
+                        LocalDate.parse(rs.getString("export_date")) : LocalDate.now();
                     String description = rs.getString("description");
                     double amount = rs.getDouble("amount");
                     String category = rs.getString("category");
@@ -243,13 +243,13 @@ public class ReportsRepository {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(serviceCostsSql)) {
             
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
             
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    LocalDate date = rs.getDate("export_date") != null ? 
-                        rs.getDate("export_date").toLocalDate() : LocalDate.now();
+                    LocalDate date = rs.getString("export_date") != null ? 
+                        LocalDate.parse(rs.getString("export_date")) : LocalDate.now();
                     String description = rs.getString("description");
                     double amount = rs.getDouble("amount");
                     String category = rs.getString("category");
@@ -265,11 +265,12 @@ public class ReportsRepository {
                 "FROM salary_payments WHERE DATE(paid_at) BETWEEN ? AND ? ORDER BY paid_at DESC";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(salaryPaymentsSql)) {
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    LocalDate date = rs.getDate("payment_date").toLocalDate();
+                    LocalDate date = rs.getString("payment_date") != null
+                        ? LocalDate.parse(rs.getString("payment_date")) : LocalDate.now();
                     String worker = rs.getString("worker");
                     expenses.add(new ExpenseItem(date, "Salary payment - " + worker,
                             rs.getDouble("amount"), "Worker Salary"));
@@ -297,8 +298,8 @@ public class ReportsRepository {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(salesSql)) {
             
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
             
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
@@ -317,8 +318,8 @@ public class ReportsRepository {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(creditSalesSql)) {
             
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
             
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
@@ -337,8 +338,8 @@ public class ReportsRepository {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(servicesSql)) {
             
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
             
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
@@ -357,8 +358,8 @@ public class ReportsRepository {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(quickServicesSql)) {
             
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
             
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
@@ -377,8 +378,8 @@ public class ReportsRepository {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(expensesSql)) {
             
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
             
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
@@ -421,8 +422,8 @@ public class ReportsRepository {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
             statement.setInt(3, limit);
             
             try (ResultSet rs = statement.executeQuery()) {
@@ -461,13 +462,13 @@ public class ReportsRepository {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
             
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    LocalDate date = rs.getDate("sale_date") != null ? 
-                        rs.getDate("sale_date").toLocalDate() : LocalDate.now();
+                    LocalDate date = rs.getString("sale_date") != null ? 
+                        LocalDate.parse(rs.getString("sale_date")) : LocalDate.now();
                     int invoiceCount = rs.getInt("invoice_count");
                     int totalItems = rs.getInt("total_items");
                     double totalRevenue = rs.getDouble("total_revenue");
@@ -501,8 +502,8 @@ public class ReportsRepository {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
             
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {

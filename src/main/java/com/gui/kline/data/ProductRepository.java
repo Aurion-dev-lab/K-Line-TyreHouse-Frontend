@@ -91,9 +91,9 @@ public class ProductRepository {
         
         String sql = "INSERT INTO products (id, product_code, name, category, buy_price, sell_price, stock) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?) " +
-                "ON DUPLICATE KEY UPDATE product_code = VALUES(product_code), name = VALUES(name), " +
-                "category = VALUES(category), buy_price = VALUES(buy_price), " +
-                "sell_price = VALUES(sell_price), stock = VALUES(stock)";
+                "ON CONFLICT(id) DO UPDATE SET product_code = excluded.product_code, name = excluded.name, " +
+                "category = excluded.category, buy_price = excluded.buy_price, " +
+                "sell_price = excluded.sell_price, stock = excluded.stock";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -121,7 +121,7 @@ public class ProductRepository {
      * Mark a product as synced
      */
     public void markAsSynced(String productId) {
-        String sql = "UPDATE products SET sync_status = true, synced_at = NOW() WHERE id = ?";
+        String sql = "UPDATE products SET sync_status = 1, synced_at = datetime('now') WHERE id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {

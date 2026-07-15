@@ -87,12 +87,12 @@ public class InvoiceLineItemRepository {
         
         String sql = "INSERT INTO invoice_line_items (id, invoice_id, invoice_ref, product_id, description, type, " +
                 "qty, unit_price, total, created_at, sync_id, device_id, synced_at, sync_status) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?) " +
-                "ON DUPLICATE KEY UPDATE invoice_id = VALUES(invoice_id), invoice_ref = VALUES(invoice_ref), " +
-                "product_id = VALUES(product_id), description = VALUES(description), type = VALUES(type), " +
-                "qty = VALUES(qty), unit_price = VALUES(unit_price), total = VALUES(total), " +
-                "sync_id = VALUES(sync_id), device_id = VALUES(device_id), " +
-                "synced_at = VALUES(synced_at), sync_status = VALUES(sync_status)";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?) " +
+                "ON CONFLICT(id) DO UPDATE SET invoice_id = excluded.invoice_id, invoice_ref = excluded.invoice_ref, " +
+                "product_id = excluded.product_id, description = excluded.description, type = excluded.type, " +
+                "qty = excluded.qty, unit_price = excluded.unit_price, total = excluded.total, " +
+                "sync_id = excluded.sync_id, device_id = excluded.device_id, " +
+                "synced_at = excluded.synced_at, sync_status = excluded.sync_status";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -108,8 +108,8 @@ public class InvoiceLineItemRepository {
             statement.setDouble(9, lineItem.getTotal());
             statement.setString(10, lineItem.getSyncId());
             statement.setString(11, lineItem.getDeviceId());
-            statement.setTimestamp(12, lineItem.getSyncedAt() != null ? Timestamp.valueOf(lineItem.getSyncedAt()) : null);
-            statement.setBoolean(13, lineItem.isSyncStatus());
+            statement.setString(12, lineItem.getSyncedAt() != null ? lineItem.getSyncedAt().toString() : null);
+            statement.setInt(13, lineItem.isSyncStatus() ? 1 : 0);
             
             statement.executeUpdate();
             
@@ -126,7 +126,7 @@ public class InvoiceLineItemRepository {
      * Mark a line item as synced
      */
     public void markAsSynced(String lineItemId) {
-        String sql = "UPDATE invoice_line_items SET sync_status = true, synced_at = NOW() WHERE id = ?";
+        String sql = "UPDATE invoice_line_items SET sync_status = 1, synced_at = datetime('now') WHERE id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {

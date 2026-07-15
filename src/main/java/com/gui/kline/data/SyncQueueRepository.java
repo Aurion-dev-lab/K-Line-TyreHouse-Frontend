@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public class SyncQueueRepository {
     public void enqueue(String entityType, String payload) {
-        String sql = "INSERT INTO sync_queue (id, entity_type, payload, status, created_at, last_error) VALUES (?, ?, ?, ?, NOW(), NULL)";
+        String sql = "INSERT INTO sync_queue (id, entity_type, payload, status, created_at, last_error) VALUES (?, ?, ?, ?, datetime('now'), NULL)";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, UUID.randomUUID().toString());

@@ -90,20 +90,19 @@ public class CreditSaleRepository {
                 "sale_date, due_date, subtotal, tax, discount, grand_total, amount, paid_amount, " +
                 "balance_due, status, notes, terms_and_conditions, payment_method, payment_reference, " +
                 "created_by, updated_by, cancelled_at, cancellation_reason, " +
-                "sync_id, device_id, synced_at, sync_status, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) " +
-                "ON DUPLICATE KEY UPDATE credit_id = VALUES(credit_id), customer_id = VALUES(customer_id), " +
-                "customer_name = VALUES(customer_name), customer_phone = VALUES(customer_phone), " +
-                "sale_date = VALUES(sale_date), due_date = VALUES(due_date), subtotal = VALUES(subtotal), " +
-                "tax = VALUES(tax), discount = VALUES(discount), grand_total = VALUES(grand_total), " +
-                "amount = VALUES(amount), paid_amount = VALUES(paid_amount), balance_due = VALUES(balance_due), " +
-                "status = VALUES(status), notes = VALUES(notes), terms_and_conditions = VALUES(terms_and_conditions), " +
-                "payment_method = VALUES(payment_method), payment_reference = VALUES(payment_reference), " +
-                "created_by = VALUES(created_by), updated_by = VALUES(updated_by), " +
-                "cancelled_at = VALUES(cancelled_at), cancellation_reason = VALUES(cancellation_reason), " +
-                "sync_id = VALUES(sync_id), device_id = VALUES(device_id), " +
-                "synced_at = VALUES(synced_at), sync_status = VALUES(sync_status), " +
-                "updated_at = NOW()";
+                "sync_id, device_id, synced_at, sync_status, created_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now')) " +
+                "ON CONFLICT(id) DO UPDATE SET credit_id = excluded.credit_id, customer_id = excluded.customer_id, " +
+                "customer_name = excluded.customer_name, customer_phone = excluded.customer_phone, " +
+                "sale_date = excluded.sale_date, due_date = excluded.due_date, subtotal = excluded.subtotal, " +
+                "tax = excluded.tax, discount = excluded.discount, grand_total = excluded.grand_total, " +
+                "amount = excluded.amount, paid_amount = excluded.paid_amount, balance_due = excluded.balance_due, " +
+                "status = excluded.status, notes = excluded.notes, terms_and_conditions = excluded.terms_and_conditions, " +
+                "payment_method = excluded.payment_method, payment_reference = excluded.payment_reference, " +
+                "created_by = excluded.created_by, updated_by = excluded.updated_by, " +
+                "cancelled_at = excluded.cancelled_at, cancellation_reason = excluded.cancellation_reason, " +
+                "sync_id = excluded.sync_id, device_id = excluded.device_id, " +
+                "synced_at = excluded.synced_at, sync_status = excluded.sync_status";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -113,8 +112,8 @@ public class CreditSaleRepository {
             statement.setString(3, creditSale.getCustomerId());
             statement.setString(4, creditSale.getCustomerName());
             statement.setString(5, creditSale.getCustomerPhone());
-            statement.setDate(6, creditSale.getSaleDate() != null ? Date.valueOf(creditSale.getSaleDate()) : null);
-            statement.setDate(7, creditSale.getDueDate() != null ? Date.valueOf(creditSale.getDueDate()) : null);
+            statement.setString(6, creditSale.getSaleDate() != null ? creditSale.getSaleDate().toString() : null);
+            statement.setString(7, creditSale.getDueDate() != null ? creditSale.getDueDate().toString() : null);
             statement.setDouble(8, creditSale.getSubtotal());
             statement.setDouble(9, creditSale.getTax());
             statement.setDouble(10, creditSale.getDiscount());
@@ -129,12 +128,12 @@ public class CreditSaleRepository {
             statement.setString(19, creditSale.getPaymentReference());
             statement.setString(20, creditSale.getCreatedBy());
             statement.setString(21, creditSale.getUpdatedBy());
-            statement.setTimestamp(22, creditSale.getCancelledAt() != null ? Timestamp.valueOf(creditSale.getCancelledAt()) : null);
+            statement.setString(22, creditSale.getCancelledAt() != null ? creditSale.getCancelledAt().toString() : null);
             statement.setString(23, creditSale.getCancellationReason());
             statement.setString(24, creditSale.getSyncId());
             statement.setString(25, creditSale.getDeviceId());
-            statement.setTimestamp(26, creditSale.getSyncedAt() != null ? Timestamp.valueOf(creditSale.getSyncedAt()) : null);
-            statement.setBoolean(27, creditSale.isSyncStatus());
+            statement.setString(26, creditSale.getSyncedAt() != null ? creditSale.getSyncedAt().toString() : null);
+            statement.setInt(27, creditSale.isSyncStatus() ? 1 : 0);
             
             statement.executeUpdate();
             
@@ -151,7 +150,7 @@ public class CreditSaleRepository {
      * Mark a credit sale as synced
      */
     public void markAsSynced(String creditSaleId) {
-        String sql = "UPDATE credit_sales SET sync_status = true, synced_at = NOW() WHERE id = ?";
+        String sql = "UPDATE credit_sales SET sync_status = 1, synced_at = datetime('now') WHERE id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {

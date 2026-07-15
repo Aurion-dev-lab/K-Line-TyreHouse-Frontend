@@ -689,13 +689,14 @@ public class DashboardController implements Initializable {
     }
 
     private void logQuickService(QuickService service) {
-        String insert = "INSERT INTO quick_services (id, service, price, service_date) VALUES (UUID(), ?, ?, ?)";
+        String insert = "INSERT INTO quick_services (id, service, price, service_date) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(insert)) {
             LocalDate today = LocalDate.now();
-            ps.setString(1, service.name);
-            ps.setDouble(2, service.price);
-            ps.setDate(3, java.sql.Date.valueOf(today));
+            ps.setString(1, java.util.UUID.randomUUID().toString());
+            ps.setString(2, service.name);
+            ps.setDouble(3, service.price);
+            ps.setString(4, today.toString());
             ps.executeUpdate();
         } catch (SQLException ex) {
             System.err.println("Error logging quick service: " + ex.getMessage());

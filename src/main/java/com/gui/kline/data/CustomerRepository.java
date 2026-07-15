@@ -88,19 +88,19 @@ public class CustomerRepository {
         String sql = "INSERT INTO customers (id, name, phone, company_name, alternate_phone, email, address, " +
                 "city, state, country, postal_code, tax_id, category, credit_limit, current_credit, " +
                 "active, date_of_birth, notes, loyalty_program_id, loyalty_points, member_since, " +
-                "sync_id, device_id, synced_at, sync_status, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) " +
-                "ON DUPLICATE KEY UPDATE name = VALUES(name), phone = VALUES(phone), " +
-                "company_name = VALUES(company_name), alternate_phone = VALUES(alternate_phone), " +
-                "email = VALUES(email), address = VALUES(address), city = VALUES(city), " +
-                "state = VALUES(state), country = VALUES(country), postal_code = VALUES(postal_code), " +
-                "tax_id = VALUES(tax_id), category = VALUES(category), credit_limit = VALUES(credit_limit), " +
-                "current_credit = VALUES(current_credit), active = VALUES(active), " +
-                "date_of_birth = VALUES(date_of_birth), notes = VALUES(notes), " +
-                "loyalty_program_id = VALUES(loyalty_program_id), loyalty_points = VALUES(loyalty_points), " +
-                "member_since = VALUES(member_since), sync_id = VALUES(sync_id), " +
-                "device_id = VALUES(device_id), synced_at = VALUES(synced_at), " +
-                "sync_status = VALUES(sync_status), updated_at = NOW()";
+                "sync_id, device_id, synced_at, sync_status, created_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now')) " +
+                "ON CONFLICT(id) DO UPDATE SET name = excluded.name, phone = excluded.phone, " +
+                "company_name = excluded.company_name, alternate_phone = excluded.alternate_phone, " +
+                "email = excluded.email, address = excluded.address, city = excluded.city, " +
+                "state = excluded.state, country = excluded.country, postal_code = excluded.postal_code, " +
+                "tax_id = excluded.tax_id, category = excluded.category, credit_limit = excluded.credit_limit, " +
+                "current_credit = excluded.current_credit, active = excluded.active, " +
+                "date_of_birth = excluded.date_of_birth, notes = excluded.notes, " +
+                "loyalty_program_id = excluded.loyalty_program_id, loyalty_points = excluded.loyalty_points, " +
+                "member_since = excluded.member_since, sync_id = excluded.sync_id, " +
+                "device_id = excluded.device_id, synced_at = excluded.synced_at, " +
+                "sync_status = excluded.sync_status";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -120,19 +120,19 @@ public class CustomerRepository {
             statement.setString(13, customer.getCategory());
             statement.setDouble(14, customer.getCreditLimit());
             statement.setDouble(15, customer.getCurrentCredit());
-            statement.setBoolean(16, customer.isActive());
-            statement.setTimestamp(17, customer.getDateOfBirth() != null ? 
-                Timestamp.valueOf(customer.getDateOfBirth().toLocalDate().atStartOfDay()) : null);
+            statement.setInt(16, customer.isActive() ? 1 : 0);
+            statement.setString(17, customer.getDateOfBirth() != null ?
+                customer.getDateOfBirth().toLocalDate().toString() : null);
             statement.setString(18, customer.getNotes());
             statement.setString(19, customer.getLoyaltyProgramId());
             statement.setDouble(20, customer.getLoyaltyPoints());
-            statement.setTimestamp(21, customer.getMemberSince() != null ? 
-                Timestamp.valueOf(customer.getMemberSince()) : null);
+            statement.setString(21, customer.getMemberSince() != null ?
+                customer.getMemberSince().toString() : null);
             statement.setString(22, customer.getSyncId());
             statement.setString(23, customer.getDeviceId());
-            statement.setTimestamp(24, customer.getSyncedAt() != null ? 
-                Timestamp.valueOf(customer.getSyncedAt()) : null);
-            statement.setBoolean(25, customer.isSyncStatus());
+            statement.setString(24, customer.getSyncedAt() != null ?
+                customer.getSyncedAt().toString() : null);
+            statement.setInt(25, customer.isSyncStatus() ? 1 : 0);
             
             statement.executeUpdate();
             
@@ -149,7 +149,7 @@ public class CustomerRepository {
      * Mark a customer as synced
      */
     public void markAsSynced(String customerId) {
-        String sql = "UPDATE customers SET sync_status = true, synced_at = NOW() WHERE id = ?";
+        String sql = "UPDATE customers SET sync_status = 1, synced_at = datetime('now') WHERE id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {

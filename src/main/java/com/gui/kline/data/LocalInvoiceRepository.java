@@ -15,19 +15,21 @@ public class LocalInvoiceRepository {
     public String saveInvoice(InvoiceDetail detail, InvoiceRow row) {
         String internalId = null;
         String sql = "INSERT INTO invoices (id, invoice_id, customer, invoice_date, type, status, subtotal, tax, grand_total, created_at) " +
-                "VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, NOW()) " +
-                "ON DUPLICATE KEY UPDATE customer = VALUES(customer), subtotal = VALUES(subtotal), tax = VALUES(tax), grand_total = VALUES(grand_total), updated_at = NOW()";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now')) " +
+                "ON CONFLICT(invoice_id) DO UPDATE SET customer = excluded.customer, subtotal = excluded.subtotal, " +
+                "tax = excluded.tax, grand_total = excluded.grand_total, updated_at = datetime('now')";
 
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, row.getInvoiceId());
-            statement.setString(2, detail.getCustomer());
-            statement.setString(3, row.getDate());
-            statement.setString(4, row.getType());
-            statement.setString(5, "completed");
-            statement.setDouble(6, detail.getSubtotal());
-            statement.setDouble(7, detail.getTax());
-            statement.setDouble(8, detail.getGrandTotal());
+            statement.setString(1, java.util.UUID.randomUUID().toString());
+            statement.setString(2, row.getInvoiceId());
+            statement.setString(3, detail.getCustomer());
+            statement.setString(4, row.getDate());
+            statement.setString(5, row.getType());
+            statement.setString(6, "completed");
+            statement.setDouble(7, detail.getSubtotal());
+            statement.setDouble(8, detail.getTax());
+            statement.setDouble(9, detail.getGrandTotal());
             statement.executeUpdate();
 
             // Retrieve internal id for the invoice
@@ -79,16 +81,17 @@ public class LocalInvoiceRepository {
      */
     private void saveInvoiceLineItemWithRef(Connection connection, String invoiceRef, String invoiceId, LineItem item, String productId) throws SQLException {
         String sql = "INSERT INTO invoice_line_items (id, invoice_id, invoice_ref, product_id, description, type, qty, unit_price, total, created_at) " +
-                "VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, invoiceId);
-            statement.setString(2, invoiceRef);
-            statement.setString(3, productId);
-            statement.setString(4, item.getDescription());
-            statement.setString(5, item.getType());
-            statement.setInt(6, item.getQty());
-            statement.setDouble(7, item.getUnitPrice());
-            statement.setDouble(8, item.getTotal());
+            statement.setString(1, java.util.UUID.randomUUID().toString());
+            statement.setString(2, invoiceId);
+            statement.setString(3, invoiceRef);
+            statement.setString(4, productId);
+            statement.setString(5, item.getDescription());
+            statement.setString(6, item.getType());
+            statement.setInt(7, item.getQty());
+            statement.setDouble(8, item.getUnitPrice());
+            statement.setDouble(9, item.getTotal());
             statement.executeUpdate();
         }
     }
@@ -171,7 +174,7 @@ public class LocalInvoiceRepository {
      * Update invoice status (completed, cancelled, etc.)
      */
     public void updateInvoiceStatus(String invoiceId, String status) {
-        String sql = "UPDATE invoices SET status = ?, updated_at = NOW() WHERE invoice_id = ?";
+        String sql = "UPDATE invoices SET status = ?, updated_at = datetime('now') WHERE invoice_id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {

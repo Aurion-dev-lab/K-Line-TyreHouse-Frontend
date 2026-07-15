@@ -23,12 +23,11 @@ public class LocalWorkerAttendanceRepository {
         List<WorkerAttendance> rows = new ArrayList<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(date));
+            statement.setString(1, date.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    LocalDate attendanceDate = rs.getDate("attendance_date") == null
-                            ? date
-                            : rs.getDate("attendance_date").toLocalDate();
+                    String dateStr = rs.getString("attendance_date");
+                    LocalDate attendanceDate = dateStr == null ? date : LocalDate.parse(dateStr);
                     rows.add(new WorkerAttendance(
                             rs.getString("id"),
                             rs.getString("name"),
@@ -47,14 +46,16 @@ public class LocalWorkerAttendanceRepository {
     }
 
     public void upsertAttendance(String workerId, LocalDate date, String status) {
+        // SQLite upsert via ON CONFLICT on the unique index (worker_id, attendance_date)
         String sql = "INSERT INTO worker_attendance (id, worker_id, attendance_date, status, created_at, updated_at) " +
-                "VALUES (UUID(), ?, ?, ?, NOW(), NOW()) " +
-                "ON DUPLICATE KEY UPDATE status = VALUES(status), updated_at = NOW()";
+                "VALUES (?, ?, ?, ?, datetime('now'), datetime('now')) " +
+                "ON CONFLICT(worker_id, attendance_date) DO UPDATE SET status = excluded.status, updated_at = datetime('now')";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, workerId);
-            statement.setDate(2, Date.valueOf(date));
-            statement.setString(3, status);
+            statement.setString(1, java.util.UUID.randomUUID().toString());
+            statement.setString(2, workerId);
+            statement.setString(3, date.toString());
+            statement.setString(4, status);
             statement.executeUpdate();
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to save attendance", ex);
@@ -70,13 +71,13 @@ public class LocalWorkerAttendanceRepository {
         List<WorkerAttendanceHistory> rows = new ArrayList<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(from));
-            statement.setDate(2, Date.valueOf(to));
+            statement.setString(1, from.toString());
+            statement.setString(2, to.toString());
             statement.setString(3, "%" + (nameFilter == null ? "" : nameFilter.trim()) + "%");
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     rows.add(new WorkerAttendanceHistory(
-                            rs.getDate("attendance_date").toLocalDate(),
+                            LocalDate.parse(rs.getString("attendance_date")),
                             rs.getString("name"),
                             rs.getString("status")
                     ));
@@ -101,8 +102,8 @@ public class LocalWorkerAttendanceRepository {
         List<WorkerMonthlySummary> rows = new ArrayList<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(start));
-            statement.setDate(2, Date.valueOf(end));
+            statement.setString(1, start.toString());
+            statement.setString(2, end.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     double days = rs.getDouble("days");

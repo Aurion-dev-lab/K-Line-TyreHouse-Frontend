@@ -32,6 +32,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -142,7 +143,8 @@ public class ServicesController implements Initializable {
     @FXML
     void handleRecordNewService(ActionEvent event) {
         Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        Stage formStage = ViewModel.INSTANCE.getViewsFactory().getForm("form/record-service-dialog", ownerStage);
+        ViewModel.INSTANCE.getViewsFactory().getForm("form/record-service-dialog", ownerStage);
+        Stage formStage = ViewModel.INSTANCE.getViewsFactory().getLastDialogStage();
         if (formStage != null) {
             formStage.setOnHidden(e -> {
                 loadServices();
@@ -173,12 +175,12 @@ public class ServicesController implements Initializable {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 String id = rs.getString(1);
-                java.sql.Date date = rs.getDate(2);
+                String dateStr = rs.getString(2);
                 String name = rs.getString(3);
                 String remark = rs.getString(4);
                 double price = rs.getDouble(5);
 
-                LocalDate serviceDate = date != null ? date.toLocalDate() : null;
+                LocalDate serviceDate = parseLocalDate(dateStr);
                 String finalRemark = remark != null ? remark : "";
                 
                 ServiceRecord record = new ServiceRecord(serviceDate, name, finalRemark, price);
@@ -196,12 +198,12 @@ public class ServicesController implements Initializable {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 String id = rs.getString(1);
-                java.sql.Date date = rs.getDate(2);
+                String dateStr = rs.getString(2);
                 String name = rs.getString(3);
                 String remark = rs.getString(4);
                 double price = rs.getDouble(5);
 
-                LocalDate serviceDate = date != null ? date.toLocalDate() : null;
+                LocalDate serviceDate = parseLocalDate(dateStr);
                 String finalRemark = remark != null ? remark : "Quick service";
                 
                 ServiceRecord record = new ServiceRecord(serviceDate, name, finalRemark, price);
@@ -223,16 +225,42 @@ public class ServicesController implements Initializable {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 String id = rs.getString(1);
-                java.sql.Date date = rs.getDate(2);
+                String dateStr = rs.getString(2);
                 String name = rs.getString(3);
                 double price = rs.getDouble(4);
-                LocalDate serviceDate = date != null ? date.toLocalDate() : null;
+                LocalDate serviceDate = parseLocalDate(dateStr);
                 
                 ServiceRecord record = new ServiceRecord(serviceDate, name, "Invoiced service", price);
                 record.setId(id);
                 record.setSourceTable("invoice_line_items");
                 record.setIsQuickService(false);
                 services.add(record);
+            }
+        }
+    }
+
+    private LocalDate parseLocalDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return null;
+        }
+        String cleanDate = dateStr.trim();
+        if (cleanDate.length() > 10) {
+            cleanDate = cleanDate.substring(0, 10);
+        }
+        try {
+            return LocalDate.parse(cleanDate); // yyyy-MM-dd
+        } catch (Exception e1) {
+            try {
+                // Try dd-MM-yyyy
+                return LocalDate.parse(cleanDate, DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+            } catch (Exception e2) {
+                try {
+                    // Try dd/MM/yyyy
+                    return LocalDate.parse(cleanDate, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                } catch (Exception e3) {
+                    System.err.println("Failed to parse date string: '" + dateStr + "'");
+                    return null;
+                }
             }
         }
     }

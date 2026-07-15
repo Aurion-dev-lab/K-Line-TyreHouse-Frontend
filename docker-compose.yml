@@ -1,4 +1,4 @@
-services:
+# No services needed; using SQLite file at project root
   db:
     container_name: mysql_db_kline
     image: mysql

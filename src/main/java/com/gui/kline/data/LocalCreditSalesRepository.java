@@ -15,43 +15,67 @@ public class LocalCreditSalesRepository {
     private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
 
     public void saveCreditSale(CreditSaleDetail detail, CreditSalesController.CreditSaleRow row) {
-         String sql = "INSERT INTO credit_sales (id, credit_id, sale_date, customer_name, due_date, subtotal, paid_amount, status, created_at) " +
-                 "VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, NOW()) " +
-                 "ON DUPLICATE KEY UPDATE sale_date=?, customer_name=?, due_date=?, subtotal=?, paid_amount=?, status=?, updated_at=NOW()";
-         
-         try (Connection conn = DatabaseManager.getConnection();
-              PreparedStatement ps = conn.prepareStatement(sql)) {
-             
-             ps.setString(1, row.getCreditId());
-             ps.setString(2, row.getDate());
-             ps.setString(3, row.getCustomer());
-             ps.setString(4, row.getDueDate());
-             ps.setDouble(5, row.getAmount());
-             ps.setDouble(6, detail.getPaid());
-             ps.setString(7, row.getStatus());
-             
-             // For update clause
-             ps.setString(8, row.getDate());
-             ps.setString(9, row.getCustomer());
-             ps.setString(10, row.getDueDate());
-             ps.setDouble(11, row.getAmount());
-             ps.setDouble(12, detail.getPaid());
-             ps.setString(13, row.getStatus());
-             
-             ps.executeUpdate();
-             
-             List<Part> existingParts = loadParts(row.getCreditId());
-             if (!existingParts.isEmpty()) {
-                 restoreInventoryForCreditSale(existingParts);
-             }
+        // INSERT or update if credit_id already exists
+        String selectId = "SELECT id FROM credit_sales WHERE credit_id = ?";
+        String existingId = null;
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(selectId)) {
+            ps.setString(1, row.getCreditId());
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) existingId = rs.getString("id");
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to look up credit sale: " + e.getMessage());
+        }
 
-             // Save parts and update inventory
-             saveParts(row.getCreditId(), detail.getParts());
-             updateInventoryForCreditSale(detail.getParts());
-         } catch (SQLException e) {
-             throw new RuntimeException("Failed to save credit sale: " + e.getMessage());
-         }
-     }
+        if (existingId == null) {
+            // Insert new
+            String insertSql = "INSERT INTO credit_sales (id, credit_id, sale_date, customer_name, due_date, subtotal, paid_amount, status, created_at) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))";
+            try (Connection conn = DatabaseManager.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(insertSql)) {
+                ps.setString(1, java.util.UUID.randomUUID().toString());
+                ps.setString(2, row.getCreditId());
+                ps.setString(3, row.getDate());
+                ps.setString(4, row.getCustomer());
+                ps.setString(5, row.getDueDate());
+                ps.setDouble(6, row.getAmount());
+                ps.setDouble(7, detail.getPaid());
+                ps.setString(8, row.getStatus());
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to insert credit sale: " + e.getMessage());
+            }
+        } else {
+            // Update existing
+            String updateSql = "UPDATE credit_sales SET sale_date=?, customer_name=?, due_date=?, subtotal=?, " +
+                    "paid_amount=?, status=?, updated_at=datetime('now') WHERE credit_id=?";
+            try (Connection conn = DatabaseManager.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                ps.setString(1, row.getDate());
+                ps.setString(2, row.getCustomer());
+                ps.setString(3, row.getDueDate());
+                ps.setDouble(4, row.getAmount());
+                ps.setDouble(5, detail.getPaid());
+                ps.setString(6, row.getStatus());
+                ps.setString(7, row.getCreditId());
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to update credit sale: " + e.getMessage());
+            }
+        }
+
+        try {
+            List<Part> existingParts = loadParts(row.getCreditId());
+            if (!existingParts.isEmpty()) {
+                restoreInventoryForCreditSale(existingParts);
+            }
+            // Save parts and update inventory
+            saveParts(row.getCreditId(), detail.getParts());
+            updateInventoryForCreditSale(detail.getParts());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to save credit sale: " + e.getMessage());
+        }
+    }
 
      private void saveParts(String creditId, List<Part> parts) {
          // First get the credit_sales.id for the credit_id
@@ -85,19 +109,20 @@ public class LocalCreditSalesRepository {
          
          // Insert new parts
          String sql = "INSERT INTO credit_sale_parts (id, credit_sale_id, product_id, description, quantity, unit_price, total, created_at) " +
-                 "VALUES (UUID(), ?, ?, ?, ?, ?, ?, NOW())";
+                 "VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))";
          
          try (Connection conn = DatabaseManager.getConnection();
               PreparedStatement ps = conn.prepareStatement(sql)) {
              
              final String finalCreditSaleId = creditSaleId;
              for (Part part : parts) {
-                 ps.setString(1, finalCreditSaleId);
-                 ps.setString(2, part.getProductId());
-                 ps.setString(3, part.getDescription());
-                 ps.setInt(4, part.getQuantity());
-                 ps.setDouble(5, part.getUnitPrice());
-                 ps.setDouble(6, part.getTotal());
+                 ps.setString(1, java.util.UUID.randomUUID().toString());
+                 ps.setString(2, finalCreditSaleId);
+                 ps.setString(3, part.getProductId());
+                 ps.setString(4, part.getDescription());
+                 ps.setInt(5, part.getQuantity());
+                 ps.setDouble(6, part.getUnitPrice());
+                 ps.setDouble(7, part.getTotal());
                  ps.addBatch();
              }
              ps.executeBatch();

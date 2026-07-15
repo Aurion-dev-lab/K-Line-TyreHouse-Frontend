@@ -196,7 +196,7 @@ public class InvoicesController implements Initializable {
     private void onViewInvoice(InvoiceRow invoice) {
         selectedInvoice = invoice;
         isEditMode = false;  // Read-only mode
-        enableDetailPanel();
+        showDetailPanel();
         loadInvoiceDetail(invoice);
     }
     

@@ -262,20 +262,20 @@ public class CreditSalesController implements Initializable {
     private void onViewCredit(CreditSaleRow sale) {
         selectedSale = sale;
         isEditMode = false;
-        enableDetailPanel();
+        showDetailPanel();
         loadSaleDetail(sale);
     }
     
     private void onEditCredit(CreditSaleRow sale) {
         selectedSale = sale;
         isEditMode = true;
-        enableDetailPanel();
+        showDetailPanel();
         loadSaleDetail(sale);
     }
 
     private void onSettleCredit(CreditSaleRow sale) {
         selectedSale = sale;
-        enableDetailPanel();
+        showDetailPanel();
         loadSaleDetail(sale);
         settleSelectedCredit();
     }

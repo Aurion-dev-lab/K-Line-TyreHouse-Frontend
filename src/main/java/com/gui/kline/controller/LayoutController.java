@@ -181,12 +181,13 @@ public class LayoutController {
     }
 
     private void logQuickService(String service, double price) {
-        String insert = "INSERT INTO quick_services (id, service, price, service_date) VALUES (UUID(), ?, ?, ?)";
+        String insert = "INSERT INTO quick_services (id, service, price, service_date) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(insert)) {
-            ps.setString(1, service);
-            ps.setDouble(2, price);
-            ps.setDate(3, java.sql.Date.valueOf(java.time.LocalDate.now()));
+            ps.setString(1, java.util.UUID.randomUUID().toString());
+            ps.setString(2, service);
+            ps.setDouble(3, price);
+            ps.setString(4, java.time.LocalDate.now().toString());
             ps.executeUpdate();
         } catch (SQLException ex) {
             System.err.println("Failed to log quick service: " + ex.getMessage());
