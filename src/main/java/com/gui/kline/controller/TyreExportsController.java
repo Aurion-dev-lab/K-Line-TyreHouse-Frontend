@@ -252,6 +252,34 @@ public class TyreExportsController implements Initializable {
             box.getChildren().add(payBtn);
         }
 
+        // Edit and Delete buttons
+        HBox editDeleteBox = new HBox(6);
+        editDeleteBox.setAlignment(Pos.CENTER_RIGHT);
+
+        Button editBtn = new Button("Edit");
+        editBtn.setStyle(
+                "-fx-background-color: transparent;" +
+                        "-fx-border-color: #E5E7EB; -fx-border-width: 1;" +
+                        "-fx-border-radius: 8; -fx-background-radius: 8;" +
+                        "-fx-font-size: 12px; -fx-text-fill: #F59E0B;" +
+                        "-fx-font-weight: bold; -fx-padding: 5 10; -fx-cursor: hand;"
+        );
+        editBtn.setOnAction(e -> onEditExport(r));
+        editDeleteBox.getChildren().add(editBtn);
+
+        Button deleteBtn = new Button("Delete");
+        deleteBtn.setStyle(
+                "-fx-background-color: transparent;" +
+                        "-fx-border-color: #E5E7EB; -fx-border-width: 1;" +
+                        "-fx-border-radius: 8; -fx-background-radius: 8;" +
+                        "-fx-font-size: 12px; -fx-text-fill: #EF4444;" +
+                        "-fx-font-weight: bold; -fx-padding: 5 10; -fx-cursor: hand;"
+        );
+        deleteBtn.setOnAction(e -> onDeleteExport(r));
+        editDeleteBox.getChildren().add(deleteBtn);
+
+        box.getChildren().add(editDeleteBox);
+
         if (box.getChildren().isEmpty()) {
             Label done = new Label("✔  Done");
             done.setStyle("-fx-font-size: 13px; -fx-text-fill: #10B981;");
@@ -281,6 +309,10 @@ public class TyreExportsController implements Initializable {
         dialog.setTitle("Receive Payment");
         dialog.setHeaderText("Record payment for " + r.getCompany());
         dialog.setContentText("Payment amount (balance Rs. " + String.format("%,.0f", r.getBalanceAmount()) + "):");
+        if (cardContainer.getScene() != null && cardContainer.getScene().getWindow() != null) {
+            dialog.initOwner(cardContainer.getScene().getWindow());
+            dialog.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
 
         Optional<String> value = dialog.showAndWait();
         if (value.isEmpty()) {
@@ -393,5 +425,51 @@ public class TyreExportsController implements Initializable {
             return "-fx-background-color: #DBEAFE; -fx-text-fill: #1E40AF; -fx-background-radius: 20; -fx-padding: 3 10; -fx-font-size: 11px; -fx-font-weight: bold;";
         }
         return "-fx-background-color: #FEF3C7; -fx-text-fill: #92400E; -fx-background-radius: 20; -fx-padding: 3 10; -fx-font-size: 11px; -fx-font-weight: bold;";
+    }
+
+    private void onEditExport(ExportRecord r) {
+        Stage owner = (Stage) cardContainer.getScene().getWindow();
+        NewExportDialogController form =
+                ViewModel.INSTANCE.getViewsFactory().getForm("form/new-export-dialog", owner);
+        if (form == null) {
+            return;
+        }
+
+        form.setEditMode(r);
+        form.setOnSave(result -> {
+            r.setCompany(result.company());
+            r.setTyres(result.tyres());
+            r.setCustPrice(result.custPrice());
+            r.setCompPrice(result.compPrice());
+            r.setServiceCharge(result.serviceFee());
+            r.setPaidAmount(result.paidAmount());
+            r.setTotalAmount(result.totalAmount());
+            r.setBalanceAmount(result.balanceAmount());
+            r.setPaymentStatus(result.paymentStatus());
+            r.setDate(result.date());
+            r.setStatus(result.status());
+
+            enqueueExportUpdate(r, "update");
+            rebuildCards();
+            refreshStats();
+        });
+    }
+
+    private void onDeleteExport(ExportRecord r) {
+        javafx.scene.control.Alert confirm = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Delete Export");
+        confirm.setHeaderText("Are you sure?");
+        confirm.setContentText("This will permanently delete export #" + r.getExportId() + " for " + r.getCompany());
+        if (cardContainer.getScene() != null && cardContainer.getScene().getWindow() != null) {
+            confirm.initOwner(cardContainer.getScene().getWindow());
+            confirm.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
+
+        if (confirm.showAndWait().orElse(javafx.scene.control.ButtonType.CANCEL) == javafx.scene.control.ButtonType.OK) {
+            masterList.remove(r);
+            enqueueExportUpdate(r, "delete");
+            rebuildCards();
+            refreshStats();
+        }
     }
 }

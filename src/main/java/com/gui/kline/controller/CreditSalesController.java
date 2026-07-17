@@ -307,6 +307,7 @@ public class CreditSalesController implements Initializable {
         javafx.stage.Window owner = getOwnerWindow();
         if (owner != null) {
             dialog.initOwner(owner);
+            dialog.initModality(javafx.stage.Modality.WINDOW_MODAL);
         }
 
         Optional<String> result = dialog.showAndWait();

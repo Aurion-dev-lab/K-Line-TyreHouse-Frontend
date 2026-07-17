@@ -6,6 +6,8 @@ import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import com.gui.kline.models.ExportRecord;
+
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -39,6 +41,18 @@ public class NewExportDialogController implements Initializable {
 
     public void setOnSave(Consumer<ExportResult> onSave) {
         this.onSave = onSave;
+    }
+
+    public void setEditMode(ExportRecord record) {
+        txtCompany.setText(record.getCompany());
+        txtTyreCount.setText(String.valueOf(record.getTyres()));
+        txtServiceFee.setText(String.valueOf(record.getServiceCharge()));
+        txtCustomerPrice.setText(String.valueOf(record.getCustPrice()));
+        txtCompanyPrice.setText(String.valueOf(record.getCompPrice()));
+        txtPaidNow.setText(String.valueOf(record.getPaidAmount()));
+        dpDateSent.setValue(record.getDate());
+        cmbStatus.setValue(record.getStatus());
+        refreshSummary();
     }
 
     @Override

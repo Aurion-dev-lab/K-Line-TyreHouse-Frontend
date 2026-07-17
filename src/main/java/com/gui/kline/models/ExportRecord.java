@@ -71,10 +71,16 @@ public class ExportRecord {
     public LocalDate getDate()        { return date.get(); }
     public String  getStatus()        { return status.get(); }
     public void    setExportId(String v) { exportId.set(v == null ? "" : v); }
+    public void    setCompany(String v) { company.set(v); }
+    public void    setTyres(int v) { tyres.set(v); }
+    public void    setCustPrice(double v) { custPrice.set(v); }
+    public void    setCompPrice(double v) { compPrice.set(v); }
+    public void    setServiceCharge(double v) { serviceCharge.set(v); }
     public void    setPaidAmount(double v) { paidAmount.set(v); }
     public void    setTotalAmount(double v) { totalAmount.set(v); }
     public void    setBalanceAmount(double v) { balanceAmount.set(v); }
     public void    setPaymentStatus(String v) { paymentStatus.set(v == null ? "PAID" : v); }
+    public void    setDate(LocalDate v) { date.set(v); }
     public void    setStatus(String s){ status.set(s); }
 
     public String getPricesDisplay() {
