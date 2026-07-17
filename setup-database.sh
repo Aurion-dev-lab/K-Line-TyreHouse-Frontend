@@ -81,7 +81,11 @@ CREATE TABLE IF NOT EXISTS expenses (
     description VARCHAR(255) NOT NULL,
     category VARCHAR(100),
     amount DECIMAL(12,2) NOT NULL,
-    created_at DATETIME NOT NULL
+    created_at DATETIME NOT NULL,
+    sync_id VARCHAR(36),
+    device_id VARCHAR(64),
+    synced_at DATETIME,
+    sync_status BOOLEAN DEFAULT false
 ) ENGINE=InnoDB;
 
 -- Verify columns exist

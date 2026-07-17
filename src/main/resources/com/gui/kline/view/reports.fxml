@@ -243,8 +243,17 @@
             <Tab fx:id="servicesTab" text="Services" closable="false">
                 <ScrollPane fitToWidth="true" fitToHeight="true">
                     <VBox spacing="16" style="-fx-padding: 16; -fx-background-color: #F0F2F5;">
-                        <Label text="Detailed service reports will be available here."
-                               style="-fx-text-fill: #9CA3AF; -fx-font-size: 14px;"/>
+                        <VBox spacing="0" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white; -fx-background-radius: 14;
+                                     -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
+                            <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
+                                <Label text="🔧" style="-fx-font-size: 16px;"/>
+                                <Label text="All Services"
+                                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                            </HBox>
+                            <Separator style="-fx-opacity: 0.5;"/>
+                            <VBox fx:id="servicesTabContent" spacing="0"/>
+                        </VBox>
                     </VBox>
                 </ScrollPane>
             </Tab>
@@ -252,8 +261,17 @@
             <Tab fx:id="expensesTab" text="Expenses" closable="false">
                 <ScrollPane fitToWidth="true" fitToHeight="true">
                     <VBox spacing="16" style="-fx-padding: 16; -fx-background-color: #F0F2F5;">
-                        <Label text="Detailed expense reports will be available here."
-                               style="-fx-text-fill: #9CA3AF; -fx-font-size: 14px;"/>
+                        <VBox spacing="0" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white; -fx-background-radius: 14;
+                                     -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
+                            <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
+                                <Label text="💰" style="-fx-font-size: 16px;"/>
+                                <Label text="All Expenses"
+                                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                            </HBox>
+                            <Separator style="-fx-opacity: 0.5;"/>
+                            <VBox fx:id="expensesTabContent" spacing="0"/>
+                        </VBox>
                     </VBox>
                 </ScrollPane>
             </Tab>

@@ -732,7 +732,12 @@ public class DashboardController implements Initializable {
                  "SELECT COALESCE(SUM(amount),0) FROM salary_payments WHERE DATE(paid_at) BETWEEN ? AND ?",
                  startDate, endDate);
          
-         return invoiceProfit + creditSalesProfit + servicesProfit + quickServicesProfit + tyreExportsProfit - paidSalaries;
+         // Add expenses from the expenses table
+         double totalExpenses = sumAmount(conn,
+                 "SELECT COALESCE(SUM(amount),0) FROM expenses WHERE expense_date BETWEEN ? AND ?",
+                 startDate, endDate);
+         
+         return invoiceProfit + creditSalesProfit + servicesProfit + quickServicesProfit + tyreExportsProfit - paidSalaries - totalExpenses;
      }
 
      private double calculateTyreExportsProfit(LocalDate startDate, LocalDate endDate) {
@@ -747,18 +752,18 @@ public class DashboardController implements Initializable {
                  .sum();
      }
 
-    private int countServices(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
-        int services = countRows(conn,
-                "SELECT COUNT(*) FROM services WHERE service_date BETWEEN ? AND ?",
-                startDate, endDate);
-        int quick = countRows(conn,
-                "SELECT COUNT(*) FROM quick_services WHERE service_date BETWEEN ? AND ?",
-                startDate, endDate);
-        int exports = countRows(conn,
-                "SELECT COUNT(*) FROM tyre_exports WHERE export_date BETWEEN ? AND ?",
-                startDate, endDate);
-        return services + quick + exports;
-    }
+     private int countServices(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
+         int services = countRows(conn,
+                 "SELECT COUNT(*) FROM services WHERE service_date BETWEEN ? AND ?",
+                 startDate, endDate);
+         int quick = countRows(conn,
+                 "SELECT COUNT(*) FROM quick_services WHERE service_date BETWEEN ? AND ?",
+                 startDate, endDate);
+         int exports = countRows(conn,
+                 "SELECT COUNT(*) FROM tyre_exports WHERE export_date BETWEEN ? AND ?",
+                 startDate, endDate);
+         return services + quick + exports;
+     }
 
     private int countActiveWorkers(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
         int active = countRows(conn,

@@ -278,6 +278,28 @@ public class ReportsRepository {
         } catch (SQLException ex) {
             System.err.println("Failed to load salary payment expenses: " + ex.getMessage());
         }
+
+        // Get expenses from the expenses table
+        String expensesTableSql = "SELECT expense_date, description, amount, category " +
+                "FROM expenses WHERE expense_date BETWEEN ? AND ? ORDER BY expense_date DESC";
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(expensesTableSql)) {
+            statement.setDate(1, Date.valueOf(startDate));
+            statement.setDate(2, Date.valueOf(endDate));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    LocalDate date = rs.getDate("expense_date") != null ?
+                        rs.getDate("expense_date").toLocalDate() : LocalDate.now();
+                    String description = rs.getString("description");
+                    double amount = rs.getDouble("amount");
+                    String category = rs.getString("category");
+                    if (category == null) category = "Other";
+                    expenses.add(new ExpenseItem(date, description, amount, category));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to load expenses from expenses table: " + ex.getMessage());
+        }
         
         return expenses;
     }
@@ -387,6 +409,26 @@ public class ReportsRepository {
             }
         } catch (SQLException ex) {
             System.err.println("Failed to calculate total expenses: " + ex.getMessage());
+        }
+
+        // Get expenses from the expenses table
+        String generalExpensesSql = "SELECT COALESCE(SUM(amount), 0) as total_expenses " +
+                "FROM expenses " +
+                "WHERE expense_date BETWEEN ? AND ?";
+        
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(generalExpensesSql)) {
+            
+            statement.setDate(1, Date.valueOf(startDate));
+            statement.setDate(2, Date.valueOf(endDate));
+            
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    summary.setTotalExpenses(summary.getTotalExpenses() + rs.getDouble("total_expenses"));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to calculate general expenses: " + ex.getMessage());
         }
 
         // Product cost is incurred when a quotation is generated as a completed

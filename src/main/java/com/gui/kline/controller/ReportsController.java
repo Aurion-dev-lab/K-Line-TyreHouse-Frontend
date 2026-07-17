@@ -69,6 +69,12 @@ public class ReportsController implements Initializable {
     
     // Analytics elements
     @FXML private VBox customerSummaryContainer;
+    
+    // Services tab elements
+    @FXML private VBox servicesTabContent;
+    
+    // Expenses tab elements
+    @FXML private VBox expensesTabContent;
 
     private final ReportsRepository reportsRepository = new ReportsRepository();
     private final ObservableList<SaleItem> allSales = FXCollections.observableArrayList();
@@ -190,6 +196,8 @@ public class ReportsController implements Initializable {
         buildSalesBreakdown(sales);
         buildServiceRevenue(services);
         buildExpensesSection(expenses);
+        buildExpensesTabContent(expenses);
+        buildServicesTabContent(services);
         buildTopProductsSection(from, to);
         buildDailySalesSummary(from, to);
         buildCustomerAnalysis(from, to);
@@ -276,6 +284,99 @@ public class ReportsController implements Initializable {
             }
             
             expensesContainer.getChildren().add(categoryBox);
+        }
+    }
+
+    private void buildServicesTabContent(List<ServiceItem> services) {
+        if (servicesTabContent == null) return;
+        
+        servicesTabContent.getChildren().clear();
+        if (services.isEmpty()) {
+            servicesTabContent.getChildren().add(emptyLabel("No services in this period"));
+            return;
+        }
+        
+        // Group by date
+        Map<LocalDate, List<ServiceItem>> byDate = new LinkedHashMap<>();
+        for (ServiceItem service : services) {
+            byDate.computeIfAbsent(service.date(), k -> new ArrayList<>()).add(service);
+        }
+        
+        for (Map.Entry<LocalDate, List<ServiceItem>> entry : byDate.entrySet()) {
+            VBox dateBox = new VBox(8);
+            dateBox.setPadding(new Insets(0, 0, 16, 0));
+            
+            // Date header with total
+            double dateTotal = entry.getValue().stream().mapToDouble(ServiceItem::fee).sum();
+            Label dateHeader = new Label(entry.getKey().format(DF) + " (Rs. " + formatCurrency(dateTotal) + ")");
+            dateHeader.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+            dateBox.getChildren().add(dateHeader);
+            
+            // Service items
+            for (ServiceItem service : entry.getValue()) {
+                dateBox.getChildren().add(buildServiceRowForTab(service));
+            }
+            
+            servicesTabContent.getChildren().add(dateBox);
+        }
+    }
+
+    private HBox buildServiceRowForTab(ServiceItem item) {
+        Label name = new Label(item.name());
+        name.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+
+        String assignee = (item.assignedTo() == null || item.assignedTo().isBlank()) ? "Unassigned" : item.assignedTo();
+        Label sub = new Label("Worker: " + assignee);
+        sub.setStyle("-fx-font-size: 11px; -fx-text-fill: #9CA3AF;");
+
+        VBox left = new VBox(3, name, sub);
+        HBox.setHgrow(left, Priority.ALWAYS);
+
+        Label fee = new Label("Rs. " + formatCurrency(item.fee()));
+        fee.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #2563EB;");
+        fee.setAlignment(Pos.CENTER_RIGHT);
+
+        VBox right = new VBox(fee);
+        right.setAlignment(Pos.CENTER_RIGHT);
+
+        HBox row = new HBox(left, right);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.setPadding(new Insets(10, 0, 10, 0));
+
+        return row;
+    }
+
+    private void buildExpensesTabContent(List<ExpenseItem> expenses) {
+        if (expensesTabContent == null) return;
+        
+        expensesTabContent.getChildren().clear();
+        if (expenses.isEmpty()) {
+            expensesTabContent.getChildren().add(emptyLabel("No expenses in this period"));
+            return;
+        }
+        
+        // Group by category
+        Map<String, List<ExpenseItem>> byCategory = new HashMap<>();
+        for (ExpenseItem expense : expenses) {
+            byCategory.computeIfAbsent(expense.getCategory(), k -> new ArrayList<>()).add(expense);
+        }
+        
+        for (Map.Entry<String, List<ExpenseItem>> entry : byCategory.entrySet()) {
+            VBox categoryBox = new VBox(8);
+            categoryBox.setPadding(new Insets(0, 0, 16, 0));
+            
+            // Category header with total
+            double categoryTotal = entry.getValue().stream().mapToDouble(ExpenseItem::getAmount).sum();
+            Label categoryHeader = new Label(entry.getKey() + " Expenses (Rs. " + formatCurrency(categoryTotal) + ")");
+            categoryHeader.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+            categoryBox.getChildren().add(categoryHeader);
+            
+            // Expense items
+            for (ExpenseItem expense : entry.getValue()) {
+                categoryBox.getChildren().add(buildExpenseRow(expense));
+            }
+            
+            expensesTabContent.getChildren().add(categoryBox);
         }
     }
 
