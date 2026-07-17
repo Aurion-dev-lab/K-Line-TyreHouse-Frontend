@@ -44,6 +44,10 @@ public class ExpenseDialogController {
     @FXML
     public void initialize() {
         dpDate.setValue(LocalDate.now());
+        // Set up category combo box items
+        if (cmbCategory != null) {
+            cmbCategory.getItems().addAll("Rent", "Utilities", "Salaries", "Supplies", "Equipment", "Maintenance", "Transport", "Other");
+        }
     }
 
     @FXML
