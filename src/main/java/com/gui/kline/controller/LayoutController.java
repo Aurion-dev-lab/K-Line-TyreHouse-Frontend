@@ -39,6 +39,7 @@ public class LayoutController {
     @FXML private Button btnDashboard, btnWorkers, btnInventory, btnInvoices,
             btnServices, btnSales, btnTyreExports, btnSalary,
             btnAnalytics, btnReports, btnQuickActions;
+    @FXML private FontIcon connectionBulb;
 
     @FXML private VBox quickServiceList;
     @FXML private Label lblTotalQuickCount;
@@ -91,6 +92,9 @@ public class LayoutController {
         loadQuickStats();
         // Register this controller with ViewFactory for cross-controller communication
         ViewModel.INSTANCE.getViewsFactory().setLayoutController(this);
+
+        // Start connectivity monitoring
+        startConnectivityMonitor();
     }
 
     @FXML
@@ -617,6 +621,76 @@ public class LayoutController {
         } catch (SQLException ex) {
             System.err.println("Search services error: " + ex.getMessage());
         }
+    }
+
+    // ── Connectivity Monitor ──
+
+    private void startConnectivityMonitor() {
+        // Initial check
+        checkConnectivity();
+
+        // Schedule periodic checks on a background thread to avoid blocking the JavaFX pulse thread
+        java.util.concurrent.ScheduledExecutorService scheduler = java.util.concurrent.Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "connectivity-monitor");
+            t.setDaemon(true);
+            return t;
+        });
+        scheduler.scheduleAtFixedRate(this::checkConnectivity, 30, 30, java.util.concurrent.TimeUnit.SECONDS);
+    }
+
+    private void checkConnectivity() {
+        if (connectionBulb == null) return;
+
+        boolean isOnline = false;
+        try {
+            java.net.http.HttpClient client = java.net.http.HttpClient.newBuilder()
+                    .connectTimeout(java.time.Duration.ofSeconds(3))
+                    .followRedirects(java.net.http.HttpClient.Redirect.NORMAL)
+                    .build();
+
+            // Try the app's own sync server first
+            String syncUrl = com.gui.kline.service.SyncConfig.getSyncUrl();
+            if (syncUrl != null && !syncUrl.isBlank()) {
+                try {
+                    java.net.URI baseUri = java.net.URI.create(syncUrl);
+                    String checkUrl = baseUri.resolve("/health").toString();
+                    java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                            .uri(java.net.URI.create(checkUrl))
+                            .timeout(java.time.Duration.ofSeconds(3))
+                            .method("HEAD", java.net.http.HttpRequest.BodyPublishers.noBody())
+                            .build();
+                    java.net.http.HttpResponse<Void> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.discarding());
+                    isOnline = response.statusCode() >= 200 && response.statusCode() < 400;
+                } catch (Exception ignored) {
+                    // Fall through to fallback check
+                }
+            }
+
+            // Fallback: Google connectivity check endpoint
+            if (!isOnline) {
+                java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                        .uri(java.net.URI.create("http://clients3.google.com/generate_204"))
+                        .timeout(java.time.Duration.ofSeconds(3))
+                        .GET()
+                        .build();
+                java.net.http.HttpResponse<Void> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.discarding());
+                isOnline = response.statusCode() == 204;
+            }
+        } catch (Exception ex) {
+            isOnline = false;
+        }
+
+        // Update UI on JavaFX Application Thread
+        final boolean online = isOnline;
+        javafx.application.Platform.runLater(() -> {
+            if (online) {
+                connectionBulb.setIconColor(javafx.scene.paint.Color.web("#10b981")); // green
+                connectionBulb.setIconLiteral("fas-circle");
+            } else {
+                connectionBulb.setIconColor(javafx.scene.paint.Color.web("#ef4444")); // red
+                connectionBulb.setIconLiteral("fas-circle");
+            }
+        });
     }
 
     // ── Helper class for search results ──

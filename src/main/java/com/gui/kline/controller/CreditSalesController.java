@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
+import com.gui.kline.controller.form.ProcessCreditSaleController;
 import com.gui.kline.data.LocalCatalogRepository;
 import com.gui.kline.data.LocalCreditSalesRepository;
 import com.gui.kline.data.SyncQueueRepository;
@@ -56,6 +57,9 @@ public class CreditSalesController implements Initializable {
     @FXML private Label lblSaleDate;
     @FXML private VBox  vboxParts;
     @FXML private Label lblSubtotal;
+    @FXML private Label lblLabour;
+    @FXML private Label lblPartsCost;
+    @FXML private Label lblDiscount;
     @FXML private Label lblPaid;
     @FXML private Label lblAmountDue;
     @FXML private ChoiceBox<String> cboPartCategory;
@@ -266,10 +270,30 @@ public class CreditSalesController implements Initializable {
     }
     
     private void onEditCredit(CreditSaleRow sale) {
-        selectedSale = sale;
-        isEditMode = true;
-        enableDetailPanel();
-        loadSaleDetail(sale);
+        // Load the detail from the repository
+        CreditSaleDetail detail = creditSalesRepository.loadCreditSaleDetail(sale.getCreditId());
+        if (detail == null) {
+            showError("Could not load credit sale details for editing.");
+            return;
+        }
+
+        // Open the dialog form in edit mode
+        javafx.stage.Window owner = getOwnerWindow();
+        if (owner instanceof Stage) {
+            ProcessCreditSaleController controller = ViewModel.INSTANCE.getViewsFactory()
+                    .getForm("form/credit-sale-dialog", (Stage) owner);
+            if (controller != null) {
+                controller.setEditMode(sale.getCreditId(), detail);
+            }
+
+            // Add a listener to refresh table when dialog closes
+            Stage dialogStage = ViewModel.INSTANCE.getViewsFactory().getLastDialogStage();
+            if (dialogStage != null) {
+                dialogStage.setOnHidden(e -> {
+                    loadFromLocal();
+                });
+            }
+        }
     }
 
     private void onSettleCredit(CreditSaleRow sale) {
@@ -328,6 +352,11 @@ public class CreditSalesController implements Initializable {
         dialog.setTitle("Settle Credit");
         dialog.setHeaderText("Record payment for " + selectedSale.getCustomer());
         dialog.setContentText("Payment amount (balance Rs. " + String.format("%,.2f", amountDue) + "):");
+        // Set owner to prevent dialog from opening as separate window
+        javafx.stage.Window owner = getOwnerWindow();
+        if (owner != null) {
+            dialog.initOwner(owner);
+        }
 
         Optional<String> result = dialog.showAndWait();
         if (result.isEmpty()) {
@@ -531,19 +560,6 @@ public class CreditSalesController implements Initializable {
         updateActionState();
     }
 
-    private void clearDetailPanel() {
-        lblCreditId.setText("#—");
-        lblCreditBadge.setText("CREDIT");
-        lblCustomer.setText("—");
-        lblSaleDate.setText("—");
-        vboxParts.getChildren().clear();
-        lblSubtotal.setText("Rs. 0.00");
-        lblPaid.setText("Rs. 0.00");
-        lblAmountDue.setText("Rs. 0.00");
-        clearPartInputs();
-        updateActionState();
-    }
-
     private void enableDetailPanel() {
         rightPanel.setDisable(false);
         rightPanel.setOpacity(1.0);
@@ -558,6 +574,9 @@ public class CreditSalesController implements Initializable {
     private void updateTotals() {
         if (currentSaleDetail == null) return;
         lblSubtotal.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getSubtotal()));
+        if (lblLabour != null) lblLabour.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getLabour()));
+        if (lblPartsCost != null) lblPartsCost.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getPartsCost()));
+        if (lblDiscount != null) lblDiscount.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getDiscount()));
         lblPaid.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getPaid()));
         lblAmountDue.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getAmountDue()));
         updateActionState();
@@ -567,6 +586,22 @@ public class CreditSalesController implements Initializable {
         lblSubtotal.setText("Rs. " + String.format("%,.2f", row.getAmount()));
         lblPaid.setText("Rs. " + String.format("%,.2f", row.getPaidAmount()));
         lblAmountDue.setText("Rs. " + String.format("%,.2f", row.getBalanceAmount()));
+        updateActionState();
+    }
+
+    private void clearDetailPanel() {
+        lblCreditId.setText("#—");
+        lblCreditBadge.setText("CREDIT");
+        lblCustomer.setText("—");
+        lblSaleDate.setText("—");
+        vboxParts.getChildren().clear();
+        lblSubtotal.setText("Rs. 0.00");
+        if (lblLabour != null) lblLabour.setText("Rs. 0.00");
+        if (lblPartsCost != null) lblPartsCost.setText("Rs. 0.00");
+        if (lblDiscount != null) lblDiscount.setText("Rs. 0.00");
+        lblPaid.setText("Rs. 0.00");
+        lblAmountDue.setText("Rs. 0.00");
+        clearPartInputs();
         updateActionState();
     }
 
@@ -613,12 +648,35 @@ public class CreditSalesController implements Initializable {
 
     private void showError(String msg) {
         Alert a = new Alert(Alert.AlertType.ERROR);
-        a.setTitle("Error"); a.setHeaderText(null); a.setContentText(msg); a.showAndWait();
+        a.setTitle("Error");
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        javafx.stage.Window owner = getOwnerWindow();
+        if (owner != null) {
+            a.initOwner(owner);
+            a.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
+        a.showAndWait();
     }
 
     private void showSuccess(String msg) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setTitle("Success"); a.setHeaderText(null); a.setContentText(msg); a.showAndWait();
+        a.setTitle("Success");
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        javafx.stage.Window owner = getOwnerWindow();
+        if (owner != null) {
+            a.initOwner(owner);
+            a.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
+        a.showAndWait();
+    }
+
+    private javafx.stage.Window getOwnerWindow() {
+        if (tblCreditSales != null && tblCreditSales.getScene() != null) {
+            return tblCreditSales.getScene().getWindow();
+        }
+        return null;
     }
 
     private void enqueueCreditSale(String creditId, CreditSaleDetail detail, String status, String operation) {

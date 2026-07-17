@@ -15,9 +15,9 @@ public class LocalCreditSalesRepository {
     private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
 
     public void saveCreditSale(CreditSaleDetail detail, CreditSalesController.CreditSaleRow row) {
-         String sql = "INSERT INTO credit_sales (id, credit_id, sale_date, customer_name, due_date, subtotal, paid_amount, status, created_at) " +
-                 "VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, NOW()) " +
-                 "ON DUPLICATE KEY UPDATE sale_date=?, customer_name=?, due_date=?, subtotal=?, paid_amount=?, status=?, updated_at=NOW()";
+         String sql = "INSERT INTO credit_sales (id, credit_id, sale_date, customer_name, due_date, subtotal, paid_amount, status, labour, parts_cost, discount, created_at) " +
+                 "VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()) " +
+                 "ON DUPLICATE KEY UPDATE sale_date=?, customer_name=?, due_date=?, subtotal=?, paid_amount=?, status=?, labour=?, parts_cost=?, discount=?, updated_at=NOW()";
          
          try (Connection conn = DatabaseManager.getConnection();
               PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -29,14 +29,20 @@ public class LocalCreditSalesRepository {
              ps.setDouble(5, row.getAmount());
              ps.setDouble(6, detail.getPaid());
              ps.setString(7, row.getStatus());
+             ps.setDouble(8, detail.getLabour());
+             ps.setDouble(9, detail.getPartsCost());
+             ps.setDouble(10, detail.getDiscount());
              
              // For update clause
-             ps.setString(8, row.getDate());
-             ps.setString(9, row.getCustomer());
-             ps.setString(10, row.getDueDate());
-             ps.setDouble(11, row.getAmount());
-             ps.setDouble(12, detail.getPaid());
-             ps.setString(13, row.getStatus());
+             ps.setString(11, row.getDate());
+             ps.setString(12, row.getCustomer());
+             ps.setString(13, row.getDueDate());
+             ps.setDouble(14, row.getAmount());
+             ps.setDouble(15, detail.getPaid());
+             ps.setString(16, row.getStatus());
+             ps.setDouble(17, detail.getLabour());
+             ps.setDouble(18, detail.getPartsCost());
+             ps.setDouble(19, detail.getDiscount());
              
              ps.executeUpdate();
              
@@ -140,6 +146,10 @@ public class LocalCreditSalesRepository {
                 detail.setDate(LocalDate.parse(rs.getString("sale_date")));
                 detail.setDueDate(LocalDate.parse(rs.getString("due_date")));
                 detail.setPaid(rs.getDouble("paid_amount"));
+                // Load labour, parts cost, and discount (with defaults for legacy records)
+                try { detail.setLabour(rs.getDouble("labour")); } catch (SQLException e) { detail.setLabour(0); }
+                try { detail.setPartsCost(rs.getDouble("parts_cost")); } catch (SQLException e) { detail.setPartsCost(0); }
+                try { detail.setDiscount(rs.getDouble("discount")); } catch (SQLException e) { detail.setDiscount(0); }
                 
                 // Load parts
                 List<Part> parts = loadParts(creditId);
@@ -266,14 +276,21 @@ public class LocalCreditSalesRepository {
     }
 
     private double getTotalAmount(String creditId) {
-        String sql = "SELECT subtotal FROM credit_sales WHERE credit_id = ?";
+        String sql = "SELECT subtotal, labour, parts_cost, discount FROM credit_sales WHERE credit_id = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, creditId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return rs.getDouble("subtotal");
+                double subtotal = rs.getDouble("subtotal");
+                double labour = 0;
+                double partsCost = 0;
+                double discount = 0;
+                try { labour = rs.getDouble("labour"); } catch (SQLException e) {}
+                try { partsCost = rs.getDouble("parts_cost"); } catch (SQLException e) {}
+                try { discount = rs.getDouble("discount"); } catch (SQLException e) {}
+                return subtotal + labour + partsCost - discount;
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to get total amount: " + e.getMessage());

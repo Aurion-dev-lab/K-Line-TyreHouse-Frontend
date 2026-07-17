@@ -98,33 +98,28 @@ public class ViewFactory {
             T controller = loader.getController();
 
             Stage stage = new Stage();
-            stage.initStyle(StageStyle.TRANSPARENT);
             
             // Use provided owner or fall back to primary stage
             Stage actualOwner = ownerStage != null ? ownerStage : primaryStage;
             
             // Only set modality and owner if owner stage is available
             if (actualOwner != null) {
-                stage.initModality(Modality.APPLICATION_MODAL);
+                stage.initModality(Modality.WINDOW_MODAL);
                 stage.initOwner(actualOwner);
-
-                Scene scene = new Scene(root, actualOwner.getWidth(), actualOwner.getHeight());
-                scene.setFill(Color.TRANSPARENT);
-                stage.setScene(scene);
-
-                stage.setX(actualOwner.getX());
-                stage.setY(actualOwner.getY());
-
-                actualOwner.xProperty().addListener((obs, oldVal, newVal) -> stage.setX(newVal.doubleValue()));
-                actualOwner.yProperty().addListener((obs, oldVal, newVal) -> stage.setY(newVal.doubleValue()));
-                actualOwner.widthProperty().addListener((obs, oldVal, newVal) -> stage.setWidth(newVal.doubleValue()));
-                actualOwner.heightProperty().addListener((obs, oldVal, newVal) -> stage.setHeight(newVal.doubleValue()));
-            } else {
-                // If no owner, create a regular scene
-                Scene scene = new Scene(root);
-                scene.setFill(Color.TRANSPARENT);
-                stage.setScene(scene);
             }
+
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            
+            // Center the dialog over the owner window
+            if (actualOwner != null) {
+                stage.setX(actualOwner.getX() + (actualOwner.getWidth() - root.prefWidth(-1)) / 2);
+                stage.setY(actualOwner.getY() + (actualOwner.getHeight() - root.prefHeight(-1)) / 2);
+            }
+            
+            // Set minimum size based on content
+            stage.setMinWidth(root.prefWidth(-1));
+            stage.setMinHeight(root.prefHeight(-1));
 
             stage.show();
             

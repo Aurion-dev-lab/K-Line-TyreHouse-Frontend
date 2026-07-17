@@ -49,7 +49,7 @@
                     <TableColumn fx:id="colDueDate" prefWidth="100" text="DUE DATE" />
                     <TableColumn fx:id="colAmount" prefWidth="100" text="AMOUNT" />
                     <TableColumn fx:id="colStatus" prefWidth="90" text="STATUS" />
-                    <TableColumn fx:id="colAction" prefWidth="70" text="VIEW" />
+                    <TableColumn fx:id="colAction" prefWidth="300" text="ACTIONS" />
                 </columns>
                 <columnResizePolicy>
                     <TableView fx:constant="UNCONSTRAINED_RESIZE_POLICY" />
@@ -107,10 +107,34 @@
                 <HBox alignment="CENTER_LEFT">
                     <AnchorPane HBox.hgrow="ALWAYS">
                         <children>
-                            <Label styleClass="tot-label" text="Subtotal" />
+                            <Label styleClass="tot-label" text="Parts Subtotal" />
                         </children>
                     </AnchorPane>
                     <Label fx:id="lblSubtotal" styleClass="tot-val" text="Rs. 0.00" />
+                </HBox>
+                <HBox alignment="CENTER_LEFT">
+                    <AnchorPane HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label styleClass="tot-label" text="Labour" />
+                        </children>
+                    </AnchorPane>
+                    <Label fx:id="lblLabour" styleClass="tot-val" text="Rs. 0.00" />
+                </HBox>
+                <HBox alignment="CENTER_LEFT">
+                    <AnchorPane HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label styleClass="tot-label" text="Extra Parts" />
+                        </children>
+                    </AnchorPane>
+                    <Label fx:id="lblPartsCost" styleClass="tot-val" text="Rs. 0.00" />
+                </HBox>
+                <HBox alignment="CENTER_LEFT">
+                    <AnchorPane HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label styleClass="tot-label" text="Discount" />
+                        </children>
+                    </AnchorPane>
+                    <Label fx:id="lblDiscount" styleClass="tot-val" text="Rs. 0.00" />
                 </HBox>
                 <HBox alignment="CENTER_LEFT">
                     <AnchorPane HBox.hgrow="ALWAYS">

@@ -398,3 +398,12 @@
 .dashboard-quick-scroll > .scroll-bar:horizontal {
     -fx-pref-height: 0;
 }
+
+.connection-indicator {
+    -fx-padding: 3 4 3 4;
+    -fx-background-radius: 8;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-radius: 8;
+}

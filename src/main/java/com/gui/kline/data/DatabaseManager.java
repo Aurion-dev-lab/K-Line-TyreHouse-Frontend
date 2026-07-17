@@ -303,8 +303,14 @@ public final class DatabaseManager {
              ensureColumnExists(connection, "credit_sales", "subtotal", "DECIMAL(12,2)");
              ensureColumnExists(connection, "credit_sales", "paid_amount", "DECIMAL(12,2)");
              ensureColumnExists(connection, "credit_sales", "updated_at", "DATETIME");
-             ensureColumnExists(connection, "credit_sales", "amount", "DECIMAL(12,2)");
-             ensureColumnExists(connection, "credit_sales", "customer", "VARCHAR(255)");
+              ensureColumnExists(connection, "credit_sales", "amount", "DECIMAL(12,2)");
+              ensureColumnExists(connection, "credit_sales", "customer", "VARCHAR(255)");
+              ensureColumnExists(connection, "credit_sales", "labour", "DECIMAL(12,2) DEFAULT 0.00");
+              ensureColumnExists(connection, "credit_sales", "parts_cost", "DECIMAL(12,2) DEFAULT 0.00");
+              ensureColumnExists(connection, "credit_sales", "discount", "DECIMAL(12,2) DEFAULT 0.00");
+              ensureColumnExists(connection, "credit_sales", "labour_cost", "DECIMAL(12,2) DEFAULT 0.00");
+              ensureColumnExists(connection, "credit_sales", "extra_parts", "DECIMAL(12,2) DEFAULT 0.00");
+              ensureColumnExists(connection, "credit_sales", "discount_amount", "DECIMAL(12,2) DEFAULT 0.00");
              ensureColumnExists(connection, "credit_sale_parts", "product_id", "VARCHAR(36)");
               ensureColumnExists(connection, "products", "product_code", "VARCHAR(64)");
              ensureColumnExists(connection, "products", "minimum_stock_alert", "INT DEFAULT 5");

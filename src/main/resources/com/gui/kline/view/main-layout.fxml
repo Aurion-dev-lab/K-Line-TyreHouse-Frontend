@@ -86,9 +86,12 @@
             <Button fx:id="btnHideQuick" onAction="#onHideQuick" styleClass="hide-quick-button" text="Hide Quick">
                 <graphic><FontIcon iconColor="#f59e0b" iconLiteral="fas-bolt" iconSize="14" /></graphic>
             </Button>
-            <Button fx:id="btnUpload" onAction="#onUpload" styleClass="hide-quick-button" text="Upload">
+             <Button fx:id="btnUpload" onAction="#onUpload" styleClass="hide-quick-button" text="Upload">
                 <graphic><FontIcon iconColor="#10b981" iconLiteral="fas-cloud-upload-alt" iconSize="14" /></graphic>
             </Button>
+            <StackPane styleClass="connection-indicator">
+                <FontIcon fx:id="connectionBulb" iconColor="#9ca3af" iconLiteral="fas-circle" iconSize="8" />
+            </StackPane>
          <AnchorPane>
             <children>
                <HBox alignment="CENTER_LEFT" layoutY="16.0" prefWidth="200" spacing="6" styleClass="search-box">
