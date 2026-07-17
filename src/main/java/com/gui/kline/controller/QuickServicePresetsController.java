@@ -331,6 +331,13 @@ public class QuickServicePresetsController {
         alert.setTitle("Quick Service Presets");
         alert.setHeaderText(null);
         alert.setContentText(message);
+        
+        // Set owner window to make it modal to the main application
+        if (tblPresets.getScene() != null && tblPresets.getScene().getWindow() != null) {
+            alert.initOwner(tblPresets.getScene().getWindow());
+            alert.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
+        
         return alert.showAndWait().filter(btn -> btn == ButtonType.OK).isPresent();
     }
 
