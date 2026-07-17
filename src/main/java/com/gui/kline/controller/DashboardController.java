@@ -663,6 +663,9 @@ public class DashboardController implements Initializable {
             collectTotalsByDate(conn,
                     "SELECT service_date, SUM(price) AS total FROM quick_services WHERE service_date BETWEEN ? AND ? GROUP BY service_date",
                     startDate, endDate, totals);
+            collectTotalsByDate(conn,
+                    "SELECT export_date, SUM(total_amount) AS total FROM tyre_exports WHERE export_date BETWEEN ? AND ? GROUP BY export_date",
+                    startDate, endDate, totals);
         } catch (SQLException ex) {
             System.err.println("Error loading revenue totals: " + ex.getMessage());
         }
@@ -704,7 +707,10 @@ public class DashboardController implements Initializable {
         double quickServicesTotal = sumAmount(conn,
                 "SELECT COALESCE(SUM(price),0) FROM quick_services WHERE service_date BETWEEN ? AND ?",
                 startDate, endDate);
-        return invoices + creditSales + services + quickServicesTotal;
+        double tyreExports = sumAmount(conn,
+                "SELECT COALESCE(SUM(total_amount),0) FROM tyre_exports WHERE export_date BETWEEN ? AND ?",
+                startDate, endDate);
+        return invoices + creditSales + services + quickServicesTotal + tyreExports;
     }
 
      private double sumProfit(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
@@ -740,17 +746,17 @@ public class DashboardController implements Initializable {
          return invoiceProfit + creditSalesProfit + servicesProfit + quickServicesProfit + tyreExportsProfit - paidSalaries - totalExpenses;
      }
 
-     private double calculateTyreExportsProfit(LocalDate startDate, LocalDate endDate) {
-         SyncQueueReader reader = new SyncQueueReader();
-         List<ExportRecord> exports = reader.loadTyreExports();
-         return exports.stream()
-                 .filter(e -> {
-                     LocalDate date = e.getDate();
-                     return !date.isBefore(startDate) && !date.isAfter(endDate);
-                 })
-                 .mapToDouble(e -> (e.getCustPrice() - e.getCompPrice()) * e.getTyres() + e.getServiceCharge())
-                 .sum();
-     }
+    private double calculateTyreExportsProfit(LocalDate startDate, LocalDate endDate) {
+        TyreExportRepository repository = new TyreExportRepository();
+        List<com.gui.kline.models.TyreExport> exports = repository.getAllExports();
+        return exports.stream()
+                .filter(e -> {
+                    LocalDate date = e.getExportDate();
+                    return date != null && !date.isBefore(startDate) && !date.isAfter(endDate);
+                })
+                .mapToDouble(e -> (e.getCustPrice() - e.getCompPrice()) * e.getTyres() + e.getServiceFee())
+                .sum();
+    }
 
      private int countServices(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
          int services = countRows(conn,

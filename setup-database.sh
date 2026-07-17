@@ -88,6 +88,33 @@ CREATE TABLE IF NOT EXISTS expenses (
     sync_status BOOLEAN DEFAULT false
 ) ENGINE=InnoDB;
 
+-- Ensure tyre_exports table exists
+CREATE TABLE IF NOT EXISTS tyre_exports (
+    id VARCHAR(36) PRIMARY KEY,
+    export_id VARCHAR(64),
+    operation VARCHAR(32),
+    company VARCHAR(255),
+    tyres INT,
+    cust_price DECIMAL(12,2),
+    comp_price DECIMAL(12,2),
+    service_fee DECIMAL(12,2),
+    paid_amount DECIMAL(12,2),
+    total_amount DECIMAL(12,2),
+    balance_amount DECIMAL(12,2),
+    payment_status VARCHAR(32),
+    status VARCHAR(32),
+    export_date DATE,
+    notes TEXT,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
+    sync_id VARCHAR(36),
+    device_id VARCHAR(64),
+    synced_at DATETIME,
+    sync_status BOOLEAN DEFAULT false,
+    created_at DATETIME,
+    updated_at DATETIME
+) ENGINE=InnoDB;
+
 -- Verify columns exist
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_id VARCHAR(64) UNIQUE;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS customer VARCHAR(255);

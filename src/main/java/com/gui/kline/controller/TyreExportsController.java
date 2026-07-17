@@ -10,6 +10,7 @@ import java.util.ResourceBundle;
 import com.gui.kline.controller.form.NewExportDialogController;
 import com.gui.kline.data.SyncQueueReader;
 import com.gui.kline.data.SyncQueueRepository;
+import com.gui.kline.data.TyreExportRepository;
 import com.gui.kline.models.ExportRecord;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.utils.JsonUtil;
@@ -51,6 +52,7 @@ public class TyreExportsController implements Initializable {
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");
     private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
+    private final TyreExportRepository tyreExportRepository = new TyreExportRepository();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -63,9 +65,26 @@ public class TyreExportsController implements Initializable {
     }
 
     private void loadFromLocal() {
-        SyncQueueReader reader = new SyncQueueReader();
-        List<ExportRecord> local = reader.loadTyreExports();
-        masterList.setAll(local);
+        // Load from local database using TyreExportRepository
+        List<com.gui.kline.models.TyreExport> exports = tyreExportRepository.getAllExports();
+        masterList.clear();
+        for (com.gui.kline.models.TyreExport export : exports) {
+            ExportRecord record = new ExportRecord(
+                export.getExportId() != null ? export.getExportId() : export.getId(),
+                export.getCompany(),
+                export.getTyres(),
+                export.getCustPrice(),
+                export.getCompPrice(),
+                export.getServiceFee(),
+                export.getTotalAmount(),
+                export.getPaidAmount(),
+                export.getBalanceAmount(),
+                export.getPaymentStatus(),
+                export.getExportDate() != null ? export.getExportDate() : LocalDate.now(),
+                export.getStatus() != null ? export.getStatus() : "PENDING"
+            );
+            masterList.add(record);
+        }
     }
 
     @FXML
@@ -77,6 +96,27 @@ public class TyreExportsController implements Initializable {
             return;
         }
         form.setOnSave(result -> {
+            // Create TyreExport for local database
+            com.gui.kline.models.TyreExport tyreExport = new com.gui.kline.models.TyreExport();
+            tyreExport.setId(java.util.UUID.randomUUID().toString());
+            tyreExport.setExportId(result.exportId());
+            tyreExport.setCompany(result.company());
+            tyreExport.setTyres(result.tyres());
+            tyreExport.setCustPrice(result.custPrice());
+            tyreExport.setCompPrice(result.compPrice());
+            tyreExport.setServiceFee(result.serviceFee());
+            tyreExport.setTotalAmount(result.totalAmount());
+            tyreExport.setPaidAmount(result.paidAmount());
+            tyreExport.setBalanceAmount(result.balanceAmount());
+            tyreExport.setPaymentStatus(result.paymentStatus());
+            tyreExport.setExportDate(result.date());
+            tyreExport.setStatus(result.status());
+            tyreExport.setOperation("create");
+            
+            // Save to local database
+            tyreExportRepository.saveTyreExport(tyreExport);
+            
+            // Create ExportRecord for UI
             ExportRecord record = new ExportRecord(
                 result.exportId(),
                     result.company(),
@@ -473,6 +513,23 @@ public class TyreExportsController implements Initializable {
             r.setDate(result.date());
             r.setStatus(result.status());
 
+            // Update in local database
+            com.gui.kline.models.TyreExport tyreExport = tyreExportRepository.getTyreExportByExportId(r.getExportId());
+            if (tyreExport != null) {
+                tyreExport.setCompany(result.company());
+                tyreExport.setTyres(result.tyres());
+                tyreExport.setCustPrice(result.custPrice());
+                tyreExport.setCompPrice(result.compPrice());
+                tyreExport.setServiceFee(result.serviceFee());
+                tyreExport.setTotalAmount(result.totalAmount());
+                tyreExport.setPaidAmount(result.paidAmount());
+                tyreExport.setBalanceAmount(result.balanceAmount());
+                tyreExport.setPaymentStatus(result.paymentStatus());
+                tyreExport.setExportDate(result.date());
+                tyreExport.setStatus(result.status());
+                tyreExportRepository.saveTyreExport(tyreExport);
+            }
+
             enqueueExportUpdate(r, "update");
             rebuildCards();
             refreshStats();
@@ -490,7 +547,15 @@ public class TyreExportsController implements Initializable {
         }
 
         if (confirm.showAndWait().orElse(javafx.scene.control.ButtonType.CANCEL) == javafx.scene.control.ButtonType.OK) {
+            // Delete from local database by export_id
+            if (!r.getExportId().isBlank()) {
+                tyreExportRepository.deleteTyreExportByExportId(r.getExportId());
+            }
+            
+            // Remove from UI list
             masterList.remove(r);
+            
+            // Enqueue for sync
             enqueueExportUpdate(r, "delete");
             rebuildCards();
             refreshStats();

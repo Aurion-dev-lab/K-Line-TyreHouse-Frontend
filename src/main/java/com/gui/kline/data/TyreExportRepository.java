@@ -157,7 +157,7 @@ public class TyreExportRepository {
     }
     
     /**
-     * Delete a tyre export
+     * Delete a tyre export by id
      */
     public void deleteTyreExport(String id) {
         String sql = "DELETE FROM tyre_exports WHERE id = ?";
@@ -172,6 +172,47 @@ public class TyreExportRepository {
             System.err.println("Failed to delete tyre export: " + ex.getMessage());
             ex.printStackTrace();
         }
+    }
+    
+    /**
+     * Delete a tyre export by export_id
+     */
+    public void deleteTyreExportByExportId(String exportId) {
+        String sql = "DELETE FROM tyre_exports WHERE export_id = ?";
+        
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            
+            statement.setString(1, exportId);
+            statement.executeUpdate();
+            
+        } catch (SQLException ex) {
+            System.err.println("Failed to delete tyre export: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+    
+    /**
+     * Get tyre export by export_id
+     */
+    public TyreExport getTyreExportByExportId(String exportId) {
+        String sql = "SELECT * FROM tyre_exports WHERE export_id = ?";
+        
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            
+            statement.setString(1, exportId);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return mapTyreExport(rs);
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to load tyre export: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        
+        return null;
     }
     
     /**
