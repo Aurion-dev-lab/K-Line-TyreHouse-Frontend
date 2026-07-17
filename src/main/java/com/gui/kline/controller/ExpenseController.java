@@ -1,5 +1,6 @@
 package com.gui.kline.controller;
 
+import com.gui.kline.controller.form.ExpenseDialogController;
 import com.gui.kline.data.DatabaseManager;
 import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.Expense;
@@ -117,9 +118,9 @@ public class ExpenseController implements Initializable {
     @FXML
     void handleAddExpense(ActionEvent event) {
         Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        Stage formStage = ViewModel.INSTANCE.getViewsFactory().getForm("form/expense-dialog", ownerStage);
-        if (formStage != null) {
-            formStage.setOnHidden(e -> {
+        ExpenseDialogController form = ViewModel.INSTANCE.getViewsFactory().getForm("form/expense-dialog", ownerStage);
+        if (form != null) {
+            form.setOnSaved(() -> {
                 loadExpenses();
                 applyFilters();
                 refreshTotals();
