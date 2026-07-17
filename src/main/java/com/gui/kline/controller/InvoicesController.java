@@ -268,10 +268,6 @@ public class InvoicesController implements Initializable {
             showError("Add at least one line item before generating.");
             return;
         }
-        if ("completed".equalsIgnoreCase(currentInvoiceDetail.getStatus())) {
-            showError("This invoice has already been generated.");
-            return;
-        }
         String type      = currentInvoiceDetail.getLineItems().get(0).getType();
         currentInvoiceDetail.setStatus("completed");
 
