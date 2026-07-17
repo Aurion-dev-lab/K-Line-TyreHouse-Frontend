@@ -46,10 +46,13 @@
                     <Button fx:id="btnSales" maxWidth="Infinity" onAction="#onSales" styleClass="nav-button" text="   Credit Sales">
                         <graphic><FontIcon iconLiteral="fas-shopping-cart" /></graphic>
                     </Button>
-                    <Button fx:id="btnTyreExports" maxWidth="Infinity" onAction="#onTyreExports" styleClass="nav-button" text="  Tyre Exports">
-                        <graphic><FontIcon iconLiteral="fas-truck" /></graphic>
-                    </Button>
-                    <Button fx:id="btnSalary" maxWidth="Infinity" onAction="#onSalary" styleClass="nav-button" text="     Salary Management">
+                     <Button fx:id="btnTyreExports" maxWidth="Infinity" onAction="#onTyreExports" styleClass="nav-button" text="  Tyre Exports">
+                         <graphic><FontIcon iconLiteral="fas-truck" /></graphic>
+                     </Button>
+                     <Button fx:id="btnExpenses" maxWidth="Infinity" onAction="#onExpenses" styleClass="nav-button" text="   Expenses">
+                         <graphic><FontIcon iconLiteral="fas-receipt" /></graphic>
+                     </Button>
+                     <Button fx:id="btnSalary" maxWidth="Infinity" onAction="#onSalary" styleClass="nav-button" text="     Salary Management">
                         <graphic><FontIcon iconLiteral="fas-dollar-sign" text="" /></graphic>
                     </Button>
                     <Button fx:id="btnAnalytics" maxWidth="Infinity" onAction="#onAnalytics" styleClass="nav-button" text="   Analytics Charts">

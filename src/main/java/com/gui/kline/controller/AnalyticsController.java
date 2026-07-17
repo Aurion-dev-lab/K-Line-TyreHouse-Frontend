@@ -43,12 +43,14 @@ public class AnalyticsController {
         
         try (Connection conn = DatabaseManager.getConnection()) {
             Map<LocalDate, Double> revenueByDate = new LinkedHashMap<>();
+            Map<LocalDate, Double> expensesByDate = new HashMap<>();
             Map<LocalDate, Double> paidSalaryByDate = new HashMap<>();
             
             // Initialize all dates with 0
             LocalDate current = startDate;
             while (!current.isAfter(endDate)) {
                 revenueByDate.put(current, 0.0);
+                expensesByDate.put(current, 0.0);
                 current = current.plusDays(1);
             }
             
@@ -120,6 +122,23 @@ public class AnalyticsController {
                 }
             }
             
+            // Load expenses
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT expense_date, SUM(amount) as total FROM expenses " +
+                    "WHERE expense_date BETWEEN ? AND ? GROUP BY expense_date")) {
+                ps.setDate(1, Date.valueOf(startDate));
+                ps.setDate(2, Date.valueOf(endDate));
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Date d = rs.getDate(1);
+                        if (d != null) {
+                            LocalDate date = d.toLocalDate();
+                            expensesByDate.merge(date, rs.getDouble(2), Double::sum);
+                        }
+                    }
+                }
+            }
+            
             // Salary Management records payments individually, including partial payments.
             // Deduct each payment on its actual payment date for a meaningful profit trend.
             try (PreparedStatement ps = conn.prepareStatement(
@@ -142,7 +161,10 @@ public class AnalyticsController {
             revenueByDate.forEach((date, total) -> {
                 String label = date.format(formatter);
                 revenue.getData().add(new XYChart.Data<>(label, total));
-                profit.getData().add(new XYChart.Data<>(label, total - paidSalaryByDate.getOrDefault(date, 0.0)));
+                // Profit = Revenue - Expenses - Salaries
+                double totalExpenses = expensesByDate.getOrDefault(date, 0.0);
+                double totalSalaries = paidSalaryByDate.getOrDefault(date, 0.0);
+                profit.getData().add(new XYChart.Data<>(label, total - totalExpenses - totalSalaries));
             });
             
         } catch (SQLException ex) {

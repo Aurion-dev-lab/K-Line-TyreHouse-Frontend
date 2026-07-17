@@ -37,7 +37,7 @@ public class LayoutController {
 
     @FXML private Button btnHideQuick, btnCollapse, btnUpload;
     @FXML private Button btnDashboard, btnWorkers, btnInventory, btnInvoices,
-            btnServices, btnSales, btnTyreExports, btnSalary,
+            btnServices, btnSales, btnTyreExports, btnExpenses, btnSalary,
             btnAnalytics, btnReports, btnQuickActions;
     @FXML private FontIcon connectionBulb;
 
@@ -169,6 +169,7 @@ public class LayoutController {
     @FXML private void onServices()    { setActive(btnServices, "Services", "services"); }
     @FXML private void onSales()       { setActive(btnSales, "Credit Sales", "credit-sales"); }
     @FXML private void onTyreExports() { setActive(btnTyreExports, "Tyre Exports", "tyre-exports"); }
+    @FXML private void onExpenses()    { setActive(btnExpenses, "Expenses", "expenses"); }
     @FXML private void onSalary()      { setActive(btnSalary, "Salary Management", "salary"); }
     @FXML private void onAnalytics()   { setActive(btnAnalytics, "Analytics Charts", "analytics"); }
     @FXML private void onReports()     { setActive(btnReports, "Reports", "reports"); }
