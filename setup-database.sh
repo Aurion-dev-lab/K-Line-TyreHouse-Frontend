@@ -74,6 +74,16 @@ CREATE TABLE IF NOT EXISTS invoice_line_items (
     FOREIGN KEY (invoice_ref) REFERENCES invoices(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- Ensure expenses table exists
+CREATE TABLE IF NOT EXISTS expenses (
+    id VARCHAR(36) PRIMARY KEY,
+    expense_date DATE NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    category VARCHAR(100),
+    amount DECIMAL(12,2) NOT NULL,
+    created_at DATETIME NOT NULL
+) ENGINE=InnoDB;
+
 -- Verify columns exist
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_id VARCHAR(64) UNIQUE;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS customer VARCHAR(255);

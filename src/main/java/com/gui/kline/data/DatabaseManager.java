@@ -255,14 +255,26 @@ public final class DatabaseManager {
                     "synced_at DATETIME," +
                     "sync_status BOOLEAN DEFAULT false" +
                     ")");
-            statement.execute("CREATE TABLE IF NOT EXISTS quick_service_presets (" +
-                    "id VARCHAR(36) PRIMARY KEY," +
-                    "service VARCHAR(255) NOT NULL," +
-                    "price DECIMAL(12,2) NOT NULL DEFAULT 0," +
-                    "active TINYINT(1) NOT NULL DEFAULT 1," +
-                    "icon VARCHAR(50) DEFAULT 'fas-bolt'," +
-                    "created_at DATETIME NOT NULL" +
-                    ")");
+             statement.execute("CREATE TABLE IF NOT EXISTS quick_service_presets (" +
+                     "id VARCHAR(36) PRIMARY KEY," +
+                     "service VARCHAR(255) NOT NULL," +
+                     "price DECIMAL(12,2) NOT NULL DEFAULT 0," +
+                     "active TINYINT(1) NOT NULL DEFAULT 1," +
+                     "icon VARCHAR(50) DEFAULT 'fas-bolt'," +
+                     "created_at DATETIME NOT NULL" +
+                     ")");
+             statement.execute("CREATE TABLE IF NOT EXISTS expenses (" +
+                     "id VARCHAR(36) PRIMARY KEY," +
+                     "expense_date DATE NOT NULL," +
+                     "description VARCHAR(255) NOT NULL," +
+                     "category VARCHAR(100)," +
+                     "amount DECIMAL(12,2) NOT NULL," +
+                     "created_at DATETIME NOT NULL," +
+                     "sync_id VARCHAR(36)," +
+                     "device_id VARCHAR(64)," +
+                     "synced_at DATETIME," +
+                     "sync_status BOOLEAN DEFAULT false" +
+                     ")");
             statement.execute("INSERT IGNORE INTO app_sync_state (id, device_id, last_sync_at) " +
                     "VALUES (1, UUID(), NULL)");
             // Ensure new invoice columns exist on older databases
@@ -337,6 +349,7 @@ public final class DatabaseManager {
              addSyncColumns(connection, "salary_payments");
              addSyncColumns(connection, "worker_credits");
              addSyncColumns(connection, "quick_services");
+             addSyncColumns(connection, "expenses");
              backfillProductCodes(connection);
              ensureUniqueIndex(connection, "products", "uk_products_product_code", "product_code");
              ensureUniqueIndex(connection, "tyre_exports", "uk_tyre_exports_export_id", "export_id");
@@ -430,12 +443,12 @@ public final class DatabaseManager {
     }
 
      private static void validateSchema(Connection connection) throws SQLException {
-          List<String> required = List.of(
+             List<String> required = List.of(
                   "app_sync_state", "sync_queue", "products", "customers",
                   "invoices", "invoice_line_items", "credit_sales", "credit_sale_parts", "services", "tyre_exports",
                   "workers", "worker_attendance", "salary_advances", "salary_payments", "worker_credits", "quick_services",
-                  "quick_service_presets"
-          );
+                  "quick_service_presets", "expenses"
+             );
         String sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()";
         List<String> existing = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(sql);
