@@ -53,10 +53,10 @@
                 <columns>
                     <TableColumn fx:id="colDate"     prefWidth="100" text="DATE" />
                     <TableColumn fx:id="colCustomer" prefWidth="150" text="CUSTOMER" />
-                    <TableColumn fx:id="colDueDate"  prefWidth="100" text="DUE DATE" />
-                    <TableColumn fx:id="colAmount"   prefWidth="100" text="AMOUNT" />
-                    <TableColumn fx:id="colStatus"   prefWidth="90"  text="STATUS" />
-                    <TableColumn fx:id="colAction"   prefWidth="70"  text="VIEW" />
+                    <TableColumn fx:id="colDueDate" prefWidth="100" text="DUE DATE" />
+                    <TableColumn fx:id="colAmount" prefWidth="100" text="AMOUNT" />
+                    <TableColumn fx:id="colStatus" prefWidth="90" text="STATUS" />
+                    <TableColumn fx:id="colAction" prefWidth="300" text="ACTIONS" />
                 </columns>
                 <columnResizePolicy>
                     <TableView fx:constant="UNCONSTRAINED_RESIZE_POLICY" />
@@ -119,10 +119,34 @@
                 <HBox alignment="CENTER_LEFT">
                     <AnchorPane HBox.hgrow="ALWAYS">
                         <children>
-                            <Label styleClass="tot-label" text="Subtotal" />
+                            <Label styleClass="tot-label" text="Parts Subtotal" />
                         </children>
                     </AnchorPane>
                     <Label fx:id="lblSubtotal" styleClass="tot-val" text="Rs. 0.00" />
+                </HBox>
+                <HBox alignment="CENTER_LEFT">
+                    <AnchorPane HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label styleClass="tot-label" text="Labour" />
+                        </children>
+                    </AnchorPane>
+                    <Label fx:id="lblLabour" styleClass="tot-val" text="Rs. 0.00" />
+                </HBox>
+                <HBox alignment="CENTER_LEFT">
+                    <AnchorPane HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label styleClass="tot-label" text="Extra Parts" />
+                        </children>
+                    </AnchorPane>
+                    <Label fx:id="lblPartsCost" styleClass="tot-val" text="Rs. 0.00" />
+                </HBox>
+                <HBox alignment="CENTER_LEFT">
+                    <AnchorPane HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label styleClass="tot-label" text="Discount" />
+                        </children>
+                    </AnchorPane>
+                    <Label fx:id="lblDiscount" styleClass="tot-val" text="Rs. 0.00" />
                 </HBox>
                 <HBox alignment="CENTER_LEFT">
                     <AnchorPane HBox.hgrow="ALWAYS">
@@ -144,24 +168,12 @@
 
             <Separator styleClass="pnl-sep" />
 
-            <VBox spacing="8" styleClass="add-inv-box">
+            <VBox spacing="8" styleClass="gen-box">
                 <padding>
-                    <Insets bottom="12" left="18" right="18" top="12" />
+                    <Insets bottom="12" left="18" right="18" top="10" />
                 </padding>
-                <Label styleClass="section-mini-label" text="ADD PART TO THIS SALE" />
-
-                <ChoiceBox fx:id="cboPartCategory" maxWidth="1.7976931348623157E308"
-                           prefHeight="32" styleClass="field-choice" />
-
-                <ComboBox fx:id="cboProduct" maxWidth="1.7976931348623157E308" prefHeight="32" promptText="Select Product..." styleClass="field-input" />
-
-                <HBox spacing="6">
-                    <TextField fx:id="txtPartQty" prefHeight="32" prefWidth="64" promptText="Qty" styleClass="field-input field-narrow" />
-                </HBox>
-
-                <Button fx:id="btnAddPart" maxWidth="1.7976931348623157E308"
-                        onAction="#onAddPart"
-                        styleClass="btn-add-inv" text="＋  Add Part" />
+                <Button fx:id="btnGenerateInvoice" maxWidth="1.7976931348623157E308" onAction="#onGenerateInvoice" styleClass="btn-generate" text="Generate Invoice" />
+                <Button fx:id="btnDownloadInvoice" maxWidth="1.7976931348623157E308" onAction="#onDownloadInvoice" styleClass="btn-download" text="⬇ Download PDF" />
             </VBox>
 
             <VBox spacing="8" styleClass="gen-box">

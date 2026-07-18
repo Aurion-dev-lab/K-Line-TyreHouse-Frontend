@@ -11,6 +11,8 @@ import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.Product;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.utils.AlertUtil;
+import com.gui.kline.utils.BackgroundTask;
+import com.gui.kline.utils.ImagePathUtil;
 import com.gui.kline.utils.JsonUtil;
 
 import javafx.collections.FXCollections;
@@ -36,7 +38,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 public class InventoryController implements Initializable {
 
@@ -53,10 +57,14 @@ public class InventoryController implements Initializable {
     private final FilteredList<Product>   filteredList = new FilteredList<>(masterList, p -> true);
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        loadFromLocal();
+        // Load products on background thread to prevent UI freeze
+        BackgroundTask.run(catalogRepository::loadProducts, products -> {
+            masterList.setAll(products);
+            rebuildCards();
+            refreshStats();
+        });
+
         filteredList.addListener((ListChangeListener<Product>) c -> rebuildCards());
-        rebuildCards();
-        refreshStats();
     }
 
     private void loadFromLocal() {
@@ -93,10 +101,18 @@ public class InventoryController implements Initializable {
     }
 
     public void deleteProduct(Product p) {
+        // Get owner window from the card container's scene to prevent
+        // the alert from opening as a separate window in full-screen mode
+        Window owner = cardContainer.getScene() != null ? cardContainer.getScene().getWindow() : null;
+
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Delete Product");
         confirm.setHeaderText(null);
         confirm.setContentText("Are you sure you want to delete '" + p.getName() + "'?\nThis action cannot be undone.");
+        if (owner != null) {
+            confirm.initOwner(owner);
+            confirm.initModality(Modality.WINDOW_MODAL);
+        }
 
         confirm.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
@@ -105,9 +121,17 @@ public class InventoryController implements Initializable {
                     catalogRepository.deleteProduct(p);
                     enqueueProduct("delete", p);
                     refreshStats();
-                    AlertUtil.showSuccess("Success", "Product Deleted Successfully");
+                    if (owner != null) {
+                        AlertUtil.showSuccess(owner, "Success", "Product Deleted Successfully");
+                    } else {
+                        AlertUtil.showSuccess("Success", "Product Deleted Successfully");
+                    }
                 } catch (Exception ex) {
-                    AlertUtil.showError("Error", "Failed to delete product: " + ex.getMessage());
+                    if (owner != null) {
+                        AlertUtil.showError(owner, "Error", "Failed to delete product: " + ex.getMessage());
+                    } else {
+                        AlertUtil.showError("Error", "Failed to delete product: " + ex.getMessage());
+                    }
                 }
             }
         });
@@ -138,10 +162,10 @@ public class InventoryController implements Initializable {
         
         String imagePath = p.getImagePath();
         if (imagePath != null && !imagePath.isEmpty()) {
-            File imageFile = new File(imagePath);
-            if (imageFile.exists()) {
+            File imageFile = ImagePathUtil.resolve(imagePath);
+            if (imageFile != null && imageFile.exists()) {
                 try {
-                    Image image = new Image(imageFile.toURI().toString());
+                    Image image = new Image(imageFile.toURI().toString(), 60, 60, true, true, true);
                     productImage.setImage(image);
                 } catch (Exception ex) {
                     // Use placeholder on error
@@ -366,10 +390,10 @@ public class InventoryController implements Initializable {
             HBox imagesBox = new HBox(10);
             imagesBox.setPadding(new javafx.geometry.Insets(5, 0, 0, 0));
             for (String imagePath : product.getImagePaths()) {
-                File imageFile = new File(imagePath);
-                if (imageFile.exists()) {
+                File imageFile = ImagePathUtil.resolve(imagePath);
+                if (imageFile != null && imageFile.exists()) {
                     try {
-                        Image image = new Image(imageFile.toURI().toString());
+                        Image image = new Image(imageFile.toURI().toString(), 120, 120, true, true, true);
                         ImageView imageView = new ImageView(image);
                         imageView.setFitWidth(120);
                         imageView.setFitHeight(120);

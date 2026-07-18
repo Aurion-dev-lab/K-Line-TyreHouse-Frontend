@@ -6,6 +6,7 @@ import com.gui.kline.models.Product;
 import com.gui.kline.models.ExportRecord;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.service.NavigationService;
+import com.gui.kline.utils.BackgroundTask;
 import com.gui.kline.utils.JsonUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -79,12 +80,120 @@ public class DashboardController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         setupDatePickers();
         setupChartRangeCombo();
-        loadKpiData();
-        loadQuickServiceStats();
+        applyChartStyles();
+
+        // Load data-heavy sections on background threads to prevent UI freeze
+        BackgroundTask.run(this::loadKpiDataSync, this::applyKpiData);
+        BackgroundTask.run(this::loadQuickServiceStatsSync, this::applyQuickServiceStats);
+        BackgroundTask.run(this::loadQuickServicesSync, services -> {
+            quickServices = services;
+            populateQuickActionsGrid();
+        });
+
         loadChartData("Last 7 Days");
         loadStockAlerts();
-        loadQuickServices();
-        applyChartStyles();
+
+        // Register with ViewFactory for cross-controller refresh
+        ViewModel.INSTANCE.getViewsFactory().setDashboardController(this);
+    }
+
+    // Holder for background-loaded KPI data
+    private static class KPIMetricsData {
+        KPIMetrics current;
+        KPIMetrics previous;
+    }
+
+    private KPIMetricsData loadKpiDataSync() {
+        LocalDate startDate = startDatePicker.getValue() != null ? startDatePicker.getValue() : LocalDate.now().minusDays(30);
+        LocalDate endDate = endDatePicker.getValue() != null ? endDatePicker.getValue() : LocalDate.now();
+
+        KPIMetricsData data = new KPIMetricsData();
+        data.current = calculateMetrics(startDate, endDate);
+
+        long daysDiff = ChronoUnit.DAYS.between(startDate, endDate);
+        LocalDate prevStart = startDate.minusDays(daysDiff + 1);
+        LocalDate prevEnd = startDate.minusDays(1);
+        data.previous = calculateMetrics(prevStart, prevEnd);
+        return data;
+    }
+
+    private void applyKpiData(KPIMetricsData data) {
+        // Called on FX thread - takes the pre-computed metrics and updates labels
+        try {
+            KPIMetrics current = data.current;
+            KPIMetrics previous = data.previous;
+
+            periodSalesLabel.setText("Rs. " + formatAmount(current.sales));
+            periodProfitLabel.setText("Rs. " + formatAmount(current.profit));
+            periodServicesLabel.setText(String.valueOf(current.services));
+            activeWorkersLabel.setText(String.valueOf(current.workers));
+
+            double salesTrend = calculateTrendPercent(previous.sales, current.sales);
+            double profitTrend = calculateTrendPercent(previous.profit, current.profit);
+            double servicesTrend = calculateTrendPercent(previous.services, current.services);
+            double workersTrend = calculateTrendPercent(previous.workers, current.workers);
+
+            setSalesTrend(salesTrend);
+            setProfitTrend(profitTrend);
+            setServicesTrend(servicesTrend);
+            setWorkersTrend(workersTrend);
+        } catch (Exception ex) {
+            System.err.println("Error loading KPI data: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    private QuickServiceStats loadQuickServiceStatsSync() {
+        if (quickServiceCountLabel == null || quickServiceRevenueLabel == null) {
+            return new QuickServiceStats(0, 0);
+        }
+        LocalDate startDate = startDatePicker.getValue() != null ? startDatePicker.getValue() : LocalDate.now().minusDays(30);
+        LocalDate endDate = endDatePicker.getValue() != null ? endDatePicker.getValue() : LocalDate.now();
+        try (Connection conn = DatabaseManager.getConnection()) {
+            int count = countRows(conn,
+                    "SELECT COUNT(*) FROM quick_services WHERE service_date BETWEEN ? AND ?",
+                    startDate, endDate);
+            double revenue = sumAmount(conn,
+                    "SELECT COALESCE(SUM(price),0) FROM quick_services WHERE service_date BETWEEN ? AND ?",
+                    startDate, endDate);
+            return new QuickServiceStats(count, revenue);
+        } catch (SQLException ex) {
+            System.err.println("Error loading quick service stats: " + ex.getMessage());
+            return new QuickServiceStats(0, 0);
+        }
+    }
+
+    private void applyQuickServiceStats(QuickServiceStats stats) {
+        if (quickServiceCountLabel != null && quickServiceRevenueLabel != null) {
+            quickServiceCountLabel.setText(String.valueOf(stats.count));
+            quickServiceRevenueLabel.setText("Rs. " + formatAmount(stats.revenue));
+        }
+    }
+
+    private static class QuickServiceStats {
+        final int count;
+        final double revenue;
+        QuickServiceStats(int count, double revenue) { this.count = count; this.revenue = revenue; }
+    }
+
+    private List<QuickService> loadQuickServicesSync() {
+        List<QuickService> services = new ArrayList<>();
+        String sql = "SELECT id, service, price, icon FROM quick_service_presets WHERE active = 1 ORDER BY service";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                services.add(new QuickService(
+                        rs.getString("id"),
+                        rs.getString("service"),
+                        rs.getDouble("price"),
+                        rs.getString("icon")
+                ));
+            }
+        } catch (SQLException ex) {
+            System.err.println("Error loading quick services: " + ex.getMessage());
+        }
+        return services;
     }
 
     private void setupDatePickers() {
@@ -318,7 +427,11 @@ public class DashboardController implements Initializable {
         return String.format("%.2f", amount);
     }
 
-    private void refreshData() {
+    public void refreshQuickActions() {
+        loadQuickServicesSync();
+    }
+
+    public void refreshData() {
         LocalDate start = startDatePicker.getValue();
         LocalDate end   = endDatePicker.getValue();
         if (start != null && end != null && !start.isAfter(end)) {
@@ -432,6 +545,31 @@ public class DashboardController implements Initializable {
         }
     }
     
+    private String faIconToEmoji(String iconLiteral) {
+        if (iconLiteral == null) return "⚡";
+        switch (iconLiteral) {
+            case "fas-bolt": return "⚡";
+            case "fas-wrench": return "🔧";
+            case "fas-tools": return "🛠";
+            case "fas-cog": case "fas-cogs": return "⚙";
+            case "fas-oil-can": return "🛢";
+            case "fas-tint": return "💧";
+            case "fas-water": return "🌊";
+            case "fas-wind": return "💨";
+            case "fas-car": return "🚗";
+            case "fas-truck": return "🚛";
+            case "fas-fire": return "🔥";
+            case "fas-fan": return "🌀";
+            case "fas-broom": return "🧹";
+            case "fas-shield-alt": return "🛡";
+            case "fas-battery-full": return "🔋";
+            case "fas-temperature-high": return "🌡";
+            case "fas-charging-station": return "⚡";
+            case "fas-filter": return "🔽";
+            default: return "⚡";
+        }
+    }
+
     private Button createQuickActionButton(QuickService service) {
         Button btn = new Button();
         btn.setMaxWidth(Double.MAX_VALUE);
@@ -444,9 +582,8 @@ public class DashboardController implements Initializable {
         content.setAlignment(Pos.CENTER);
         content.setSpacing(6.0);
         
-        FontIcon icon = new FontIcon(service.icon != null ? service.icon : "fas-bolt");
-        icon.setIconSize(24);
-        icon.setIconColor(javafx.scene.paint.Color.web("#f59e0b"));
+        Label iconLabel = new Label(faIconToEmoji(service.icon));
+        iconLabel.setStyle("-fx-font-size: 24px; -fx-text-fill: #f59e0b;");
         
         Label name = new Label(service.name);
         name.setStyle("-fx-text-fill: white; -fx-font-size: 12px;");
@@ -454,7 +591,7 @@ public class DashboardController implements Initializable {
         Label price = new Label("Rs. " + String.format("%.0f", service.price));
         price.setStyle("-fx-text-fill: #22c55e; -fx-font-size: 11px; -fx-font-weight: bold;");
         
-        content.getChildren().addAll(icon, name, price);
+        content.getChildren().addAll(iconLabel, name, price);
         btn.setGraphic(content);
         
         btn.setOnAction(e -> handleQuickServiceAction(service));
@@ -545,7 +682,7 @@ public class DashboardController implements Initializable {
         try (Connection conn = DatabaseManager.getConnection()) {
             collectTotalsByDate(conn,
                     "SELECT COALESCE(invoice_date, DATE(created_at)) AS d, SUM(grand_total) AS total " +
-                            "FROM invoices WHERE COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d",
+                            "FROM invoices WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d",
                     startDate, endDate, totals);
             collectTotalsByDate(conn,
                     "SELECT COALESCE(sale_date, DATE(created_at)) AS d, SUM(COALESCE(subtotal, amount)) AS total " +
@@ -556,6 +693,9 @@ public class DashboardController implements Initializable {
                     startDate, endDate, totals);
             collectTotalsByDate(conn,
                     "SELECT service_date, SUM(price) AS total FROM quick_services WHERE service_date BETWEEN ? AND ? GROUP BY service_date",
+                    startDate, endDate, totals);
+            collectTotalsByDate(conn,
+                    "SELECT export_date, SUM(total_amount) AS total FROM tyre_exports WHERE export_date BETWEEN ? AND ? GROUP BY export_date",
                     startDate, endDate, totals);
         } catch (SQLException ex) {
             System.err.println("Error loading revenue totals: " + ex.getMessage());
@@ -586,7 +726,7 @@ public class DashboardController implements Initializable {
     private double sumRevenue(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
         double invoices = sumAmount(conn,
                 "SELECT COALESCE(SUM(grand_total),0) FROM invoices " +
-                        "WHERE COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?",
+                        "WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?",
                 startDate, endDate);
         double creditSales = sumAmount(conn,
                 "SELECT COALESCE(SUM(COALESCE(subtotal, amount)),0) FROM credit_sales " +
@@ -598,7 +738,10 @@ public class DashboardController implements Initializable {
         double quickServicesTotal = sumAmount(conn,
                 "SELECT COALESCE(SUM(price),0) FROM quick_services WHERE service_date BETWEEN ? AND ?",
                 startDate, endDate);
-        return invoices + creditSales + services + quickServicesTotal;
+        double tyreExports = sumAmount(conn,
+                "SELECT COALESCE(SUM(total_amount),0) FROM tyre_exports WHERE export_date BETWEEN ? AND ?",
+                startDate, endDate);
+        return invoices + creditSales + services + quickServicesTotal + tyreExports;
     }
 
      private double sumProfit(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
@@ -607,7 +750,7 @@ public class DashboardController implements Initializable {
                          "FROM invoice_line_items il " +
                          "LEFT JOIN products p ON p.id = il.product_id " +
                          "JOIN invoices i ON i.id = il.invoice_ref " +
-                         "WHERE COALESCE(i.invoice_date, DATE(i.created_at)) BETWEEN ? AND ?",
+                         "WHERE i.status = 'completed' AND COALESCE(i.invoice_date, DATE(i.created_at)) BETWEEN ? AND ?",
                  startDate, endDate);
          double creditSalesProfit = sumAmount(conn,
                  "SELECT COALESCE(SUM(COALESCE(subtotal, amount)),0) FROM credit_sales " +
@@ -626,33 +769,38 @@ public class DashboardController implements Initializable {
                  "SELECT COALESCE(SUM(amount),0) FROM salary_payments WHERE DATE(paid_at) BETWEEN ? AND ?",
                  startDate, endDate);
          
-         return invoiceProfit + creditSalesProfit + servicesProfit + quickServicesProfit + tyreExportsProfit - paidSalaries;
+         // Add expenses from the expenses table
+         double totalExpenses = sumAmount(conn,
+                 "SELECT COALESCE(SUM(amount),0) FROM expenses WHERE expense_date BETWEEN ? AND ?",
+                 startDate, endDate);
+         
+         return invoiceProfit + creditSalesProfit + servicesProfit + quickServicesProfit + tyreExportsProfit - paidSalaries - totalExpenses;
      }
 
-     private double calculateTyreExportsProfit(LocalDate startDate, LocalDate endDate) {
-         SyncQueueReader reader = new SyncQueueReader();
-         List<ExportRecord> exports = reader.loadTyreExports();
-         return exports.stream()
-                 .filter(e -> {
-                     LocalDate date = e.getDate();
-                     return !date.isBefore(startDate) && !date.isAfter(endDate);
-                 })
-                 .mapToDouble(e -> (e.getCustPrice() - e.getCompPrice()) * e.getTyres() + e.getServiceCharge())
-                 .sum();
-     }
-
-    private int countServices(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
-        int services = countRows(conn,
-                "SELECT COUNT(*) FROM services WHERE service_date BETWEEN ? AND ?",
-                startDate, endDate);
-        int quick = countRows(conn,
-                "SELECT COUNT(*) FROM quick_services WHERE service_date BETWEEN ? AND ?",
-                startDate, endDate);
-        int exports = countRows(conn,
-                "SELECT COUNT(*) FROM tyre_exports WHERE export_date BETWEEN ? AND ?",
-                startDate, endDate);
-        return services + quick + exports;
+    private double calculateTyreExportsProfit(LocalDate startDate, LocalDate endDate) {
+        TyreExportRepository repository = new TyreExportRepository();
+        List<com.gui.kline.models.TyreExport> exports = repository.getAllExports();
+        return exports.stream()
+                .filter(e -> {
+                    LocalDate date = e.getExportDate();
+                    return date != null && !date.isBefore(startDate) && !date.isAfter(endDate);
+                })
+                .mapToDouble(e -> (e.getCustPrice() - e.getCompPrice()) * e.getTyres() + e.getServiceFee())
+                .sum();
     }
+
+     private int countServices(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
+         int services = countRows(conn,
+                 "SELECT COUNT(*) FROM services WHERE service_date BETWEEN ? AND ?",
+                 startDate, endDate);
+         int quick = countRows(conn,
+                 "SELECT COUNT(*) FROM quick_services WHERE service_date BETWEEN ? AND ?",
+                 startDate, endDate);
+         int exports = countRows(conn,
+                 "SELECT COUNT(*) FROM tyre_exports WHERE export_date BETWEEN ? AND ?",
+                 startDate, endDate);
+         return services + quick + exports;
+     }
 
     private int countActiveWorkers(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
         int active = countRows(conn,

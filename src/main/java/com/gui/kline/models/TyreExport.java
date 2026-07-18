@@ -10,6 +10,7 @@ public class TyreExport {
     private String id;
     private String exportId;
     private String operation;
+    private String serialNumber;
     private String company;
     private int tyres;
     private double custPrice;
@@ -42,6 +43,9 @@ public class TyreExport {
 
     public String getOperation() { return operation; }
     public void setOperation(String operation) { this.operation = operation; }
+
+    public String getSerialNumber() { return serialNumber; }
+    public void setSerialNumber(String serialNumber) { this.serialNumber = serialNumber; }
 
     public String getCompany() { return company; }
     public void setCompany(String company) { this.company = company; }

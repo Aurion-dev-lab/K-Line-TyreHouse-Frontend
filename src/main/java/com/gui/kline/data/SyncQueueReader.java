@@ -166,13 +166,16 @@ public class SyncQueueReader {
                                      LocalDate date,
                                      String status) {
         record.setExportId(record.getExportId().isBlank() ? resolveExportKeyFromFields(company, date, tyres, cust, comp, service) : record.getExportId());
-        record.companyProperty().set(company);
-        record.tyresProperty().set(tyres);
-        record.serviceChargeProperty().set(service);
+        record.setCompany(company);
+        record.setTyres(tyres);
+        record.setCustPrice(cust);
+        record.setCompPrice(comp);
+        record.setServiceCharge(service);
         record.setPaidAmount(paid);
         record.setTotalAmount(total);
         record.setBalanceAmount(balance);
         record.setPaymentStatus(paymentStatus);
+        record.setDate(date);
         record.setStatus(status);
         return record;
     }

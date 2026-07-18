@@ -26,8 +26,7 @@
             <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"
                    text="Create and manage sales &amp; service invoices" />
         </VBox>
-        <Button fx:id="btnNewInvoice" onAction="#onNewInvoice"
-                styleClass="btn-primary" text="＋  New Quotation" />
+        <Button fx:id="btnNewInvoice" onAction="#onNewInvoice" styleClass="btn-primary" text="＋  New Quotation" />
     </HBox>
 
     <HBox spacing="14" VBox.vgrow="ALWAYS">
@@ -55,6 +54,7 @@
                         <TableColumn fx:id="colDate" prefWidth="100" text="DATE" />
                         <TableColumn fx:id="colCustomer" prefWidth="150" text="CUSTOMER" />
                         <TableColumn fx:id="colType" prefWidth="90" text="TYPE" />
+                        <TableColumn fx:id="colStatus" prefWidth="105" text="STATUS" />
                         <TableColumn fx:id="colItems" prefWidth="60" text="ITEMS" />
                         <TableColumn fx:id="colTotal" prefWidth="110" text="TOTAL" />
                         <TableColumn fx:id="colAction" minWidth="250" prefWidth="250" text="ACTIONS" />
@@ -154,12 +154,9 @@
                 <padding>
                     <Insets bottom="18" left="18" right="18" top="10" />
                 </padding>
-                <Button fx:id="btnGenerate" maxWidth="1.7976931348623157E308"
-                        onAction="#onGenerateInvoice"
-                        styleClass="btn-generate" text="Generate Invoice" />
-                <Button fx:id="btnDeselect" maxWidth="1.7976931348623157E308"
-                        onAction="#onDeselect"
-                        styleClass="btn-deselect" text="Close" />
+                <Button fx:id="btnGenerate" maxWidth="1.7976931348623157E308" onAction="#onGenerateInvoice" styleClass="btn-generate" text="Generate Invoice" />
+                <Button fx:id="btnDownloadPdf" maxWidth="1.7976931348623157E308" onAction="#onDownloadPdf" styleClass="btn-download" text="⬇ Download PDF" />
+                <Button fx:id="btnDeselect" maxWidth="1.7976931348623157E308" onAction="#onDeselect" styleClass="btn-deselect" text="Close" />
             </VBox>
 
         </VBox>

@@ -49,17 +49,14 @@
                     <Button fx:id="btnSales" maxWidth="Infinity" onAction="#onSales" styleClass="nav-button" text="   Credit Sales">
                         <graphic><FontIcon iconLiteral="fas-shopping-cart" /></graphic>
                     </Button>
-
-                    <Button fx:id="btnServices" maxWidth="Infinity" onAction="#onServices" styleClass="nav-button" text="   Services">
-                        <graphic><FontIcon iconLiteral="fas-tools" /></graphic>
-                    </Button>
-
-                    <Button fx:id="btnTyreExports" maxWidth="Infinity" onAction="#onTyreExports" styleClass="nav-button" text="  Tyre Exports">
-                        <graphic><FontIcon iconLiteral="fas-truck" /></graphic>
-                    </Button>
-
-                    <Button fx:id="btnSalary" maxWidth="Infinity" onAction="#onSalary" styleClass="nav-button" text="     Salary Management">
-                        <graphic><FontIcon iconLiteral="fas-dollar-sign" /></graphic>
+                     <Button fx:id="btnTyreExports" maxWidth="Infinity" onAction="#onTyreExports" styleClass="nav-button" text="  Tyre Exports">
+                         <graphic><FontIcon iconLiteral="fas-truck" /></graphic>
+                     </Button>
+                     <Button fx:id="btnExpenses" maxWidth="Infinity" onAction="#onExpenses" styleClass="nav-button" text="   Expenses">
+                         <graphic><FontIcon iconLiteral="fas-receipt" /></graphic>
+                     </Button>
+                     <Button fx:id="btnSalary" maxWidth="Infinity" onAction="#onSalary" styleClass="nav-button" text="     Salary Management">
+                        <graphic><FontIcon iconLiteral="fas-dollar-sign" text="" /></graphic>
                     </Button>
 
                     <Button fx:id="btnAnalytics" maxWidth="Infinity" onAction="#onAnalytics" styleClass="nav-button" text="   Analytics Charts">
@@ -103,15 +100,18 @@
                     <FontIcon iconColor="#f59e0b" iconLiteral="fas-bolt" iconSize="14" />
                 </graphic>
             </Button>
-            <Button fx:id="btnUpload" onAction="#onUpload" styleClass="hide-quick-button" text="Upload">
+             <Button fx:id="btnUpload" onAction="#onUpload" styleClass="hide-quick-button" text="Upload">
                 <graphic><FontIcon iconColor="#10b981" iconLiteral="fas-cloud-upload-alt" iconSize="14" /></graphic>
             </Button>
+            <StackPane styleClass="connection-indicator">
+                <FontIcon fx:id="connectionBulb" iconColor="#9ca3af" iconLiteral="fas-circle" iconSize="8" />
+            </StackPane>
          <AnchorPane>
             <children>
-                  <HBox alignment="CENTER_LEFT" layoutY="16.0" prefWidth="200" spacing="6" styleClass="search-box">
-                      <FontIcon iconColor="#9ca3af" iconLiteral="fas-search" iconSize="13" />
-                      <TextField fx:id="txtSearch" promptText="Search..." styleClass="search-field" HBox.hgrow="ALWAYS" />
-                  </HBox>
+               <HBox alignment="CENTER_LEFT" layoutY="16.0" prefWidth="200" spacing="6" styleClass="search-box">
+                   <FontIcon iconColor="#9ca3af" iconLiteral="fas-search" iconSize="13" />
+                   <TextField fx:id="txtSearch" promptText="Search..." styleClass="search-field" HBox.hgrow="ALWAYS" />
+               </HBox>
             </children>
          </AnchorPane>
             <StackPane styleClass="user-avatar">

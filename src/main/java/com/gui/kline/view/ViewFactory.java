@@ -1,6 +1,9 @@
 package com.gui.kline.view;
 
+import com.gui.kline.controller.DashboardController;
 import com.gui.kline.controller.LayoutController;
+import com.gui.kline.controller.ReportsController;
+import com.gui.kline.controller.ServicesController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -18,6 +21,15 @@ public class ViewFactory {
     private Stage primaryStage;
     private Stage lastDialogStage;
     private LayoutController layoutController;
+    private DashboardController dashboardController;
+    private ServicesController servicesController;
+    private ReportsController reportsController;
+    
+    public void refreshDashboard() {
+        if (dashboardController != null) {
+            dashboardController.refreshData();
+        }
+    }
     
     public void setPrimaryStage(Stage primaryStage) {
         this.primaryStage = primaryStage;
@@ -34,6 +46,36 @@ public class ViewFactory {
     public LayoutController getLayoutController() {
         return layoutController;
     }
+
+    public void setDashboardController(DashboardController controller) {
+        this.dashboardController = controller;
+    }
+
+    public void refreshDashboardQuickActions() {
+        if (dashboardController != null) {
+            dashboardController.refreshQuickActions();
+        }
+    }
+
+    public void setServicesController(ServicesController controller) {
+        this.servicesController = controller;
+    }
+
+    public void refreshServices() {
+        if (servicesController != null) {
+            servicesController.refreshData();
+        }
+    }
+
+    public void setReportsController(ReportsController controller) {
+        this.reportsController = controller;
+    }
+
+    public void refreshReports() {
+        if (reportsController != null) {
+            reportsController.refresh();
+        }
+    }
     
     public void updateQuickStats() {
         if (layoutController != null) {
@@ -49,25 +91,30 @@ public class ViewFactory {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gui/kline/view/" + view + ".fxml"));
             Parent root = loader.load();
-            Stage stage = new Stage();
-            stage.setTitle("K-Line - " + view);
-            
+
+            Stage stage;
+            if (view.equals("main-layout") && primaryStage != null) {
+                // Reuse the real primary stage so window ownership stays consistent
+                // and the application only exits when this window is closed.
+                stage = primaryStage;
+            } else {
+                stage = new Stage();
+                stage.setTitle("K-Line - " + view);
+            }
+
             // Use provided owner or fall back to primary stage
             Stage actualOwner = ownerStage != null ? ownerStage : primaryStage;
-            
+
             // If owner stage is available, make this window a child of it
-            if (actualOwner != null) {
+            if (actualOwner != null && !view.equals("main-layout")) {
                 stage.initOwner(actualOwner);
-                // Don't make main layout modal - only dialogs should be modal
-                if (!view.equals("main-layout")) {
-                    stage.initModality(Modality.WINDOW_MODAL);
-                }
+                stage.initModality(Modality.WINDOW_MODAL);
             }
-            
+
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.show();
-            
+
             // Store reference
             lastDialogStage = stage;
         } catch (Exception e) {
@@ -93,33 +140,28 @@ public class ViewFactory {
             T controller = loader.getController();
 
             Stage stage = new Stage();
-            stage.initStyle(StageStyle.TRANSPARENT);
             
             // Use provided owner or fall back to primary stage
             Stage actualOwner = ownerStage != null ? ownerStage : primaryStage;
             
             // Only set modality and owner if owner stage is available
             if (actualOwner != null) {
-                stage.initModality(Modality.APPLICATION_MODAL);
+                stage.initModality(Modality.WINDOW_MODAL);
                 stage.initOwner(actualOwner);
-
-                Scene scene = new Scene(root, actualOwner.getWidth(), actualOwner.getHeight());
-                scene.setFill(Color.TRANSPARENT);
-                stage.setScene(scene);
-
-                stage.setX(actualOwner.getX());
-                stage.setY(actualOwner.getY());
-
-                actualOwner.xProperty().addListener((obs, oldVal, newVal) -> stage.setX(newVal.doubleValue()));
-                actualOwner.yProperty().addListener((obs, oldVal, newVal) -> stage.setY(newVal.doubleValue()));
-                actualOwner.widthProperty().addListener((obs, oldVal, newVal) -> stage.setWidth(newVal.doubleValue()));
-                actualOwner.heightProperty().addListener((obs, oldVal, newVal) -> stage.setHeight(newVal.doubleValue()));
-            } else {
-                // If no owner, create a regular scene
-                Scene scene = new Scene(root);
-                scene.setFill(Color.TRANSPARENT);
-                stage.setScene(scene);
             }
+
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            
+            // Center the dialog over the owner window
+            if (actualOwner != null) {
+                stage.setX(actualOwner.getX() + (actualOwner.getWidth() - root.prefWidth(-1)) / 2);
+                stage.setY(actualOwner.getY() + (actualOwner.getHeight() - root.prefHeight(-1)) / 2);
+            }
+            
+            // Set minimum size based on content
+            stage.setMinWidth(root.prefWidth(-1));
+            stage.setMinHeight(root.prefHeight(-1));
 
             stage.show();
             

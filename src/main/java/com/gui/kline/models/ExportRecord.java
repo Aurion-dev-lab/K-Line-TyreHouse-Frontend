@@ -10,6 +10,7 @@ import javafx.beans.property.SimpleStringProperty;
 
 public class ExportRecord {
     private final SimpleStringProperty exportId;
+    private final SimpleStringProperty serialNumber;
     private final SimpleStringProperty company;
     private final SimpleIntegerProperty tyres;
     private final SimpleDoubleProperty custPrice;
@@ -25,7 +26,7 @@ public class ExportRecord {
     public ExportRecord(String company, int tyres, double custPrice,
                         double compPrice, double serviceCharge,
                         LocalDate date, String status) {
-        this("", company, tyres, custPrice, compPrice, serviceCharge,
+        this("", "", company, tyres, custPrice, compPrice, serviceCharge,
                 custPrice * tyres + serviceCharge, 0.0,
                 custPrice * tyres + serviceCharge, "PAID", date, status);
     }
@@ -34,7 +35,16 @@ public class ExportRecord {
                         double compPrice, double serviceCharge, double totalAmount,
                         double paidAmount, double balanceAmount, String paymentStatus,
                         LocalDate date, String status) {
+        this(exportId, "", company, tyres, custPrice, compPrice, serviceCharge,
+                totalAmount, paidAmount, balanceAmount, paymentStatus, date, status);
+    }
+
+    public ExportRecord(String exportId, String serialNumber, String company, int tyres, double custPrice,
+                        double compPrice, double serviceCharge, double totalAmount,
+                        double paidAmount, double balanceAmount, String paymentStatus,
+                        LocalDate date, String status) {
         this.exportId      = new SimpleStringProperty(exportId == null ? "" : exportId);
+        this.serialNumber  = new SimpleStringProperty(serialNumber == null ? "" : serialNumber);
         this.company       = new SimpleStringProperty(company);
         this.tyres         = new SimpleIntegerProperty(tyres);
         this.custPrice     = new SimpleDoubleProperty(custPrice);
@@ -49,6 +59,7 @@ public class ExportRecord {
     }
 
     public SimpleStringProperty exportIdProperty()       { return exportId; }
+    public SimpleStringProperty serialNumberProperty()   { return serialNumber; }
     public SimpleStringProperty companyProperty()       { return company; }
     public SimpleIntegerProperty tyresProperty()        { return tyres; }
     public SimpleDoubleProperty serviceChargeProperty() { return serviceCharge; }
@@ -59,6 +70,7 @@ public class ExportRecord {
     public SimpleStringProperty statusProperty()        { return status; }
 
     public String getExportId()      { return exportId.get(); }
+    public String getSerialNumber()  { return serialNumber.get(); }
     public String  getCompany()       { return company.get(); }
     public int     getTyres()         { return tyres.get(); }
     public double  getCustPrice()     { return custPrice.get(); }
@@ -71,10 +83,17 @@ public class ExportRecord {
     public LocalDate getDate()        { return date.get(); }
     public String  getStatus()        { return status.get(); }
     public void    setExportId(String v) { exportId.set(v == null ? "" : v); }
+    public void    setSerialNumber(String v) { serialNumber.set(v == null ? "" : v); }
+    public void    setCompany(String v) { company.set(v); }
+    public void    setTyres(int v) { tyres.set(v); }
+    public void    setCustPrice(double v) { custPrice.set(v); }
+    public void    setCompPrice(double v) { compPrice.set(v); }
+    public void    setServiceCharge(double v) { serviceCharge.set(v); }
     public void    setPaidAmount(double v) { paidAmount.set(v); }
     public void    setTotalAmount(double v) { totalAmount.set(v); }
     public void    setBalanceAmount(double v) { balanceAmount.set(v); }
     public void    setPaymentStatus(String v) { paymentStatus.set(v == null ? "PAID" : v); }
+    public void    setDate(LocalDate v) { date.set(v); }
     public void    setStatus(String s){ status.set(s); }
 
     public String getPricesDisplay() {

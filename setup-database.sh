@@ -74,6 +74,51 @@ CREATE TABLE IF NOT EXISTS invoice_line_items (
     FOREIGN KEY (invoice_ref) REFERENCES invoices(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- Ensure expenses table exists
+CREATE TABLE IF NOT EXISTS expenses (
+    id VARCHAR(36) PRIMARY KEY,
+    expense_date DATE NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    category VARCHAR(100),
+    amount DECIMAL(12,2) NOT NULL,
+    created_at DATETIME NOT NULL,
+    sync_id VARCHAR(36),
+    device_id VARCHAR(64),
+    synced_at DATETIME,
+    sync_status BOOLEAN DEFAULT false
+) ENGINE=InnoDB;
+
+-- Ensure tyre_exports table exists
+CREATE TABLE IF NOT EXISTS tyre_exports (
+    id VARCHAR(36) PRIMARY KEY,
+    export_id VARCHAR(64),
+    operation VARCHAR(32),
+    serial_number VARCHAR(255),
+    company VARCHAR(255),
+    tyres INT,
+    cust_price DECIMAL(12,2),
+    comp_price DECIMAL(12,2),
+    service_fee DECIMAL(12,2),
+    paid_amount DECIMAL(12,2),
+    total_amount DECIMAL(12,2),
+    balance_amount DECIMAL(12,2),
+    payment_status VARCHAR(32),
+    status VARCHAR(32),
+    export_date DATE,
+    notes TEXT,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
+    sync_id VARCHAR(36),
+    device_id VARCHAR(64),
+    synced_at DATETIME,
+    sync_status BOOLEAN DEFAULT false,
+    created_at DATETIME,
+    updated_at DATETIME
+) ENGINE=InnoDB;
+
+-- Add serial_number column to existing tyre_exports table if it doesn't exist
+ALTER TABLE tyre_exports ADD COLUMN IF NOT EXISTS serial_number VARCHAR(255) AFTER operation;
+
 -- Verify columns exist
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_id VARCHAR(64) UNIQUE;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS customer VARCHAR(255);

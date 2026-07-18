@@ -16,7 +16,7 @@ public class LocalInvoiceRepository {
         String internalId = null;
         String sql = "INSERT INTO invoices (id, invoice_id, customer, invoice_date, type, status, subtotal, tax, grand_total, created_at) " +
                 "VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, NOW()) " +
-                "ON DUPLICATE KEY UPDATE customer = VALUES(customer), subtotal = VALUES(subtotal), tax = VALUES(tax), grand_total = VALUES(grand_total), updated_at = NOW()";
+                "ON DUPLICATE KEY UPDATE customer = VALUES(customer), type = VALUES(type), status = VALUES(status), subtotal = VALUES(subtotal), tax = VALUES(tax), grand_total = VALUES(grand_total), updated_at = NOW()";
 
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -24,7 +24,7 @@ public class LocalInvoiceRepository {
             statement.setString(2, detail.getCustomer());
             statement.setString(3, row.getDate());
             statement.setString(4, row.getType());
-            statement.setString(5, "completed");
+            statement.setString(5, detail.getStatus());
             statement.setDouble(6, detail.getSubtotal());
             statement.setDouble(7, detail.getTax());
             statement.setDouble(8, detail.getGrandTotal());
@@ -97,7 +97,7 @@ public class LocalInvoiceRepository {
      * Load all invoices with summary information
      */
     public List<InvoiceRow> loadInvoices() {
-        String sql = "SELECT id, invoice_id, customer, invoice_date, type, status, COUNT(DISTINCT ili.id) as item_count, grand_total " +
+        String sql = "SELECT i.id, i.invoice_id, i.customer, i.invoice_date, i.type, i.status, COUNT(DISTINCT ili.id) as item_count, i.grand_total " +
                 "FROM invoices i LEFT JOIN invoice_line_items ili ON i.id = ili.invoice_ref " +
                 "GROUP BY i.id ORDER BY i.invoice_date DESC";
         List<InvoiceRow> invoices = new ArrayList<>();
@@ -112,7 +112,8 @@ public class LocalInvoiceRepository {
                         rs.getString("customer"),
                         rs.getString("type"),
                         rs.getInt("item_count"),
-                        rs.getDouble("grand_total")
+                        rs.getDouble("grand_total"),
+                        rs.getString("status")
                 );
                 invoices.add(row);
             }
@@ -139,7 +140,9 @@ public class LocalInvoiceRepository {
                     detail.setCustomer(rs.getString("customer"));
                     detail.setDate(rs.getString("invoice_date"));
                     detail.setType(rs.getString("type"));
+                    detail.setStatus(rs.getString("status"));
                     detail.setTaxRate(rs.getDouble("tax") > 0 ? rs.getDouble("tax") / rs.getDouble("subtotal") : 0.0);
+                    detail.setDiscountAmount(Math.max(0, rs.getDouble("subtotal") + rs.getDouble("tax") - rs.getDouble("grand_total")));
 
                     // Load line items
                     String lineItemsSql = "SELECT description, type, qty, unit_price, product_id FROM invoice_line_items WHERE invoice_id = ?";
@@ -249,4 +252,3 @@ public class LocalInvoiceRepository {
         return 0.0;
     }
 }
-

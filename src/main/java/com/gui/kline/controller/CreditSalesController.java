@@ -7,13 +7,19 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
+import com.gui.kline.controller.form.ProcessCreditSaleController;
 import com.gui.kline.data.LocalCatalogRepository;
 import com.gui.kline.data.LocalCreditSalesRepository;
+import com.gui.kline.data.LocalInvoiceRepository;
 import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.CreditSaleDetail;
+import com.gui.kline.models.InvoiceDetail;
+import com.gui.kline.models.InvoiceRow;
+import com.gui.kline.models.LineItem;
 import com.gui.kline.models.Part;
 import com.gui.kline.models.Product;
 import com.gui.kline.models.ViewModel;
+import com.gui.kline.service.InvoicePdfService;
 import com.gui.kline.utils.JsonUtil;
 
 import javafx.collections.FXCollections;
@@ -37,6 +43,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 public class CreditSalesController implements Initializable {
@@ -57,15 +64,16 @@ public class CreditSalesController implements Initializable {
     @FXML private Label lblSaleDate;
     @FXML private VBox  vboxParts;
     @FXML private Label lblSubtotal;
+    @FXML private Label lblLabour;
+    @FXML private Label lblPartsCost;
+    @FXML private Label lblDiscount;
     @FXML private Label lblPaid;
     @FXML private Label lblAmountDue;
-    @FXML private ChoiceBox<String> cboPartCategory;
-    @FXML private ComboBox<Product> cboProduct;
-    @FXML private TextField         txtPartQty;
-    @FXML private Button            btnAddPart;
     @FXML private Button            btnSettleCredit;
     @FXML private Button            btnGenerateSale;
     @FXML private Button            btnDeselect;
+    @FXML private Button            btnGenerateInvoice;
+    @FXML private Button            btnDownloadInvoice;
 
     private final ObservableList<CreditSaleRow> creditSaleList =
             FXCollections.observableArrayList();
@@ -83,7 +91,6 @@ public class CreditSalesController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setupTableColumns();
-        setupChoiceBoxes();
         setupEventHandlers();
         loadFromLocal();
         tblCreditSales.setItems(creditSaleList);
@@ -174,60 +181,7 @@ public class CreditSalesController implements Initializable {
         });
     }
 
-    private void setupChoiceBoxes() {
-        cboPartCategory.setItems(FXCollections.observableArrayList(
-                "Engine Parts", "Suspension", "Electrical",
-                "Body Parts", "Accessories", "Consumables"));
-        cboPartCategory.getSelectionModel().selectFirst();
-        
-        // Load products for the selected category
-        loadProductsForCategory(cboPartCategory.getValue());
-        
-        cboPartCategory.getSelectionModel().selectedItemProperty().addListener((obs, old, nw) -> {
-            if (nw != null) {
-                loadProductsForCategory(nw);
-            }
-        });
-    }
-
-    private void loadProductsForCategory(String category) {
-        try {
-            List<Product> products = catalogRepository.getProductsByCategory(category);
-            ObservableList<Product> productList = FXCollections.observableArrayList(products);
-            cboProduct.setItems(productList);
-            
-            // Custom cell factory to display product name and stock
-            cboProduct.setCellFactory(param -> new ListCell<>() {
-                @Override
-                protected void updateItem(Product item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty || item == null) {
-                        setText(null);
-                    } else {
-                        setText(formatProductLabel(item) + " (Stock: " + item.getStock() + ")");
-                    }
-                }
-            });
-            
-            cboProduct.setButtonCell(new ListCell<>() {
-                @Override
-                protected void updateItem(Product item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty || item == null) {
-                        setText("Select Product");
-                    } else {
-                        setText(formatProductLabel(item) + " (Stock: " + item.getStock() + ")");
-                    }
-                }
-            });
-            
-            if (!productList.isEmpty()) {
-                cboProduct.getSelectionModel().selectFirst();
-            }
-        } catch (Exception ex) {
-            showError("Failed to load products: " + ex.getMessage());
-        }
-    }
+    // Part-adding UI removed from credit-sales.fxml; kept only for backward-compat if needed later.
 
     private void setupEventHandlers() {
         tblCreditSales.getSelectionModel().selectedItemProperty()
@@ -267,10 +221,30 @@ public class CreditSalesController implements Initializable {
     }
     
     private void onEditCredit(CreditSaleRow sale) {
-        selectedSale = sale;
-        isEditMode = true;
-        enableDetailPanel();
-        loadSaleDetail(sale);
+        // Load the detail from the repository
+        CreditSaleDetail detail = creditSalesRepository.loadCreditSaleDetail(sale.getCreditId());
+        if (detail == null) {
+            showError("Could not load credit sale details for editing.");
+            return;
+        }
+
+        // Open the dialog form in edit mode
+        javafx.stage.Window owner = getOwnerWindow();
+        if (owner instanceof Stage) {
+            ProcessCreditSaleController controller = ViewModel.INSTANCE.getViewsFactory()
+                    .getForm("form/credit-sale-dialog", (Stage) owner);
+            if (controller != null) {
+                controller.setEditMode(sale.getCreditId(), detail);
+            }
+
+            // Add a listener to refresh table when dialog closes
+            Stage dialogStage = ViewModel.INSTANCE.getViewsFactory().getLastDialogStage();
+            if (dialogStage != null) {
+                dialogStage.setOnHidden(e -> {
+                    loadFromLocal();
+                });
+            }
+        }
     }
 
     private void onSettleCredit(CreditSaleRow sale) {
@@ -281,10 +255,20 @@ public class CreditSalesController implements Initializable {
     }
     
     private void onDeleteCredit(CreditSaleRow sale) {
+        // Get owner window to prevent alert from opening as separate window in full-screen mode
+        javafx.stage.Window owner = null;
+        if (tblCreditSales != null && tblCreditSales.getScene() != null) {
+            owner = tblCreditSales.getScene().getWindow();
+        }
+
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Confirm Delete");
         confirm.setHeaderText("Delete Credit Sale?");
         confirm.setContentText("Are you sure you want to delete credit sale #" + sale.getCreditId() + "?");
+        if (owner != null) {
+            confirm.initOwner(owner);
+            confirm.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
         
         if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             try {
@@ -319,6 +303,12 @@ public class CreditSalesController implements Initializable {
         dialog.setTitle("Settle Credit");
         dialog.setHeaderText("Record payment for " + selectedSale.getCustomer());
         dialog.setContentText("Payment amount (balance Rs. " + String.format("%,.2f", amountDue) + "):");
+        // Set owner to prevent dialog from opening as separate window
+        javafx.stage.Window owner = getOwnerWindow();
+        if (owner != null) {
+            dialog.initOwner(owner);
+            dialog.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
 
         Optional<String> result = dialog.showAndWait();
         if (result.isEmpty()) {
@@ -357,56 +347,6 @@ public class CreditSalesController implements Initializable {
         }
     }
 
-    @FXML
-    private void onAddPart(ActionEvent event) {
-        if (currentSaleDetail == null) {
-            showError("No active credit sale. Click '+ New Credit Sale' first.");
-            return;
-        }
-
-        Product selectedProduct = cboProduct.getValue();
-        
-        if (selectedProduct == null) {
-            showError("Please select a product.");
-            return;
-        }
-
-        String qtyStr = txtPartQty.getText().trim();
-
-        if (qtyStr.isBlank()) {
-            showError("Please enter quantity.");
-            return;
-        }
-
-        try {
-            int qty = Integer.parseInt(qtyStr);
-            if (qty <= 0) {
-                showError("Quantity must be greater than 0.");
-                return;
-            }
-            
-            if (qty > selectedProduct.getStock()) {
-                showError("Insufficient stock. Available: " + selectedProduct.getStock());
-                return;
-            }
-
-            Part part = new Part(
-                    selectedProduct.getName(),
-                    selectedProduct.getCategory(),
-                    qty,
-                    selectedProduct.getSellPrice(),
-                    selectedProduct.getId()
-            );
-            currentSaleDetail.addPart(part);
-            addPartToPanel(part);
-            clearPartInputs();
-            updateTotals();
-
-        } catch (NumberFormatException e) {
-            showError("Invalid quantity.");
-        }
-    }
-
     private void addPartToPanel(Part part) {
         HBox row = new HBox(10);
         row.getStyleClass().add("line-item-row");
@@ -437,20 +377,6 @@ public class CreditSalesController implements Initializable {
 
         row.getChildren().addAll(textBlock, amount, del);
         vboxParts.getChildren().add(row);
-    }
-
-    private void clearPartInputs() {
-        txtPartQty.clear();
-        cboPartCategory.getSelectionModel().selectFirst();
-        loadProductsForCategory(cboPartCategory.getValue());
-    }
-
-    private String formatProductLabel(Product product) {
-        String code = product.getCode();
-        if (code == null || code.isBlank()) {
-            return product.getName();
-        }
-        return code + " - " + product.getName();
     }
 
     @FXML
@@ -487,6 +413,157 @@ public class CreditSalesController implements Initializable {
     }
 
     @FXML
+    private void onGenerateInvoice(ActionEvent event) {
+        if (selectedSale == null || currentSaleDetail == null) {
+            showError("Select a credit sale first.");
+            return;
+        }
+        if (currentSaleDetail.getParts().isEmpty()) {
+            showError("This credit sale has no parts to invoice.");
+            return;
+        }
+
+        try {
+            // Create invoice from credit sale
+            String invoiceId = "INV" + System.currentTimeMillis();
+            String type = "Credit Sale";
+            String dateStr = LocalDate.now().toString();
+
+            // Convert parts to line items
+            List<LineItem> lineItems = currentSaleDetail.getParts().stream()
+                    .map(part -> new LineItem(
+                            part.getDescription(),
+                            "Sale",
+                            part.getQuantity(),
+                            part.getUnitPrice(),
+                            part.getProductId()
+                    ))
+                    .toList();
+
+            // Add line items to invoice detail
+            InvoiceDetail invoiceDetail = new InvoiceDetail();
+            invoiceDetail.setInvoiceId(invoiceId);
+            invoiceDetail.setCustomer(currentSaleDetail.getCustomer());
+            invoiceDetail.setDate(dateStr);
+            invoiceDetail.setType(type);
+            invoiceDetail.setStatus("completed");
+            for (LineItem item : lineItems) {
+                invoiceDetail.addLineItem(item);
+            }
+
+            // Create invoice row (use computed grand total from invoiceDetail)
+            InvoiceRow invoiceRow = new InvoiceRow(
+                    invoiceId,
+                    dateStr,
+                    currentSaleDetail.getCustomer(),
+                    type,
+                    lineItems.size(),
+                    invoiceDetail.getGrandTotal(),
+                    "completed"
+            );
+
+            // Save invoice
+            LocalInvoiceRepository invoiceRepository = new LocalInvoiceRepository();
+            invoiceRepository.saveInvoice(invoiceDetail, invoiceRow);
+
+            // Enqueue for sync
+            enqueueInvoice(invoiceRow, invoiceDetail);
+
+            showSuccess("Invoice generated successfully! You can now download it as PDF.");
+        } catch (Exception ex) {
+            showError("Failed to generate invoice: " + ex.getMessage());
+        }
+    }
+
+    @FXML
+    private void onDownloadInvoice(ActionEvent event) {
+        if (selectedSale == null || currentSaleDetail == null) {
+            showError("Select a credit sale first.");
+            return;
+        }
+        if (currentSaleDetail.getParts().isEmpty()) {
+            showError("This credit sale has no parts to download.");
+            return;
+        }
+
+        try {
+            // Create a temporary invoice for PDF generation
+            String invoiceId = selectedSale.getCreditId();
+            String type = "Credit Sale";
+            String dateStr = LocalDate.now().toString();
+
+            // Convert parts to line items
+            List<LineItem> lineItems = currentSaleDetail.getParts().stream()
+                    .map(part -> new LineItem(
+                            part.getDescription(),
+                            "Sale",
+                            part.getQuantity(),
+                            part.getUnitPrice(),
+                            part.getProductId()
+                    ))
+                    .toList();
+
+            // Create invoice detail for PDF
+            InvoiceDetail invoiceDetail = new InvoiceDetail();
+            invoiceDetail.setInvoiceId(invoiceId);
+            invoiceDetail.setCustomer(currentSaleDetail.getCustomer());
+            invoiceDetail.setDate(dateStr);
+            invoiceDetail.setType(type);
+            invoiceDetail.setStatus("completed");
+            for (LineItem item : lineItems) {
+                invoiceDetail.addLineItem(item);
+            }
+
+            // Open file chooser
+            Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Save Invoice PDF");
+            fileChooser.setInitialFileName("Invoice_" + invoiceId + ".pdf");
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("PDF files (*.pdf)", "*.pdf"));
+
+            java.io.File file = fileChooser.showSaveDialog(ownerStage);
+            if (file == null) {
+                return; // user cancelled
+            }
+
+            // Generate PDF
+            new InvoicePdfService().export(invoiceDetail, file);
+            showSuccess("Invoice PDF saved to:\n" + file.getAbsolutePath());
+        } catch (Exception ex) {
+            showError("Failed to generate PDF: " + ex.getMessage());
+        }
+    }
+
+    private void enqueueInvoice(InvoiceRow row, InvoiceDetail detail) {
+        if (detail == null) {
+            return;
+        }
+        String[] items = detail.getLineItems().stream()
+                .map(item -> JsonUtil.obj(
+                        JsonUtil.field("description", item.getDescription()),
+                        JsonUtil.field("type", item.getType()),
+                        JsonUtil.field("qty", item.getQty()),
+                        JsonUtil.field("unitPrice", item.getUnitPrice()),
+                        JsonUtil.field("total", item.getTotal())
+                ))
+                .toArray(String[]::new);
+
+        String payload = JsonUtil.obj(
+                JsonUtil.field("operation", "create"),
+                JsonUtil.field("invoiceId", row.getInvoiceId()),
+                JsonUtil.field("date", row.getDate()),
+                JsonUtil.field("customer", row.getCustomer()),
+                JsonUtil.field("type", row.getType()),
+                JsonUtil.field("status", row.getStatus()),
+                JsonUtil.field("total", row.getTotal()),
+                JsonUtil.fieldRaw("items", JsonUtil.array(items))
+        );
+
+        syncQueueRepository.enqueue("invoice", payload);
+    }
+
+    @FXML
     private void onDeselect() {
         hideDetailPanel();
         selectedSale      = null;
@@ -518,20 +595,6 @@ public class CreditSalesController implements Initializable {
             addPartToPanel(part);
         }
         updateTotals();
-        clearPartInputs();
-        updateActionState();
-    }
-
-    private void clearDetailPanel() {
-        lblCreditId.setText("#—");
-        lblCreditBadge.setText("CREDIT");
-        lblCustomer.setText("—");
-        lblSaleDate.setText("—");
-        vboxParts.getChildren().clear();
-        lblSubtotal.setText("Rs. 0.00");
-        lblPaid.setText("Rs. 0.00");
-        lblAmountDue.setText("Rs. 0.00");
-        clearPartInputs();
         updateActionState();
     }
 
@@ -555,6 +618,9 @@ public class CreditSalesController implements Initializable {
     private void updateTotals() {
         if (currentSaleDetail == null) return;
         lblSubtotal.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getSubtotal()));
+        if (lblLabour != null) lblLabour.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getLabour()));
+        if (lblPartsCost != null) lblPartsCost.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getPartsCost()));
+        if (lblDiscount != null) lblDiscount.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getDiscount()));
         lblPaid.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getPaid()));
         lblAmountDue.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getAmountDue()));
         updateActionState();
@@ -564,6 +630,21 @@ public class CreditSalesController implements Initializable {
         lblSubtotal.setText("Rs. " + String.format("%,.2f", row.getAmount()));
         lblPaid.setText("Rs. " + String.format("%,.2f", row.getPaidAmount()));
         lblAmountDue.setText("Rs. " + String.format("%,.2f", row.getBalanceAmount()));
+        updateActionState();
+    }
+
+    private void clearDetailPanel() {
+        lblCreditId.setText("#—");
+        lblCreditBadge.setText("CREDIT");
+        lblCustomer.setText("—");
+        lblSaleDate.setText("—");
+        vboxParts.getChildren().clear();
+        lblSubtotal.setText("Rs. 0.00");
+        if (lblLabour != null) lblLabour.setText("Rs. 0.00");
+        if (lblPartsCost != null) lblPartsCost.setText("Rs. 0.00");
+        if (lblDiscount != null) lblDiscount.setText("Rs. 0.00");
+        lblPaid.setText("Rs. 0.00");
+        lblAmountDue.setText("Rs. 0.00");
         updateActionState();
     }
 
@@ -610,12 +691,35 @@ public class CreditSalesController implements Initializable {
 
     private void showError(String msg) {
         Alert a = new Alert(Alert.AlertType.ERROR);
-        a.setTitle("Error"); a.setHeaderText(null); a.setContentText(msg); a.showAndWait();
+        a.setTitle("Error");
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        javafx.stage.Window owner = getOwnerWindow();
+        if (owner != null) {
+            a.initOwner(owner);
+            a.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
+        a.showAndWait();
     }
 
     private void showSuccess(String msg) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setTitle("Success"); a.setHeaderText(null); a.setContentText(msg); a.showAndWait();
+        a.setTitle("Success");
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        javafx.stage.Window owner = getOwnerWindow();
+        if (owner != null) {
+            a.initOwner(owner);
+            a.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
+        a.showAndWait();
+    }
+
+    private javafx.stage.Window getOwnerWindow() {
+        if (tblCreditSales != null && tblCreditSales.getScene() != null) {
+            return tblCreditSales.getScene().getWindow();
+        }
+        return null;
     }
 
     private void enqueueCreditSale(String creditId, CreditSaleDetail detail, String status, String operation) {

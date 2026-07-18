@@ -33,6 +33,11 @@ public class QuickServicePresetsController {
     @FXML private Label lblMessage;
 
     private final ObservableList<QuickServicePreset> presets = FXCollections.observableArrayList();
+    private Runnable onSaved;
+
+    public void setOnSaved(Runnable onSaved) {
+        this.onSaved = onSaved;
+    }
 
     // Curated list of service-relevant FontAwesome icons
     private final String[] ICON_CHOICES = {
@@ -192,6 +197,7 @@ public class QuickServicePresetsController {
         txtService.clear();
         txtPrice.clear();
         loadPresets();
+        if (onSaved != null) onSaved.run();
         showMessage("✓ Service added successfully", false);
     }
 
@@ -215,6 +221,7 @@ public class QuickServicePresetsController {
         }
 
         loadPresets();
+        if (onSaved != null) onSaved.run();
     }
 
     @FXML
@@ -288,6 +295,7 @@ public class QuickServicePresetsController {
         btnSave.setVisible(false);
         btnSave.setManaged(false);
         loadPresets();
+        if (onSaved != null) onSaved.run();
 
         showMessage("✓ Successfully updated", false);
     }
@@ -314,6 +322,7 @@ public class QuickServicePresetsController {
         }
 
         loadPresets();
+        if (onSaved != null) onSaved.run();
         showMessage("✓ Service deleted successfully", false);
     }
 
@@ -331,6 +340,13 @@ public class QuickServicePresetsController {
         alert.setTitle("Quick Service Presets");
         alert.setHeaderText(null);
         alert.setContentText(message);
+        
+        // Set owner window to make it modal to the main application
+        if (tblPresets.getScene() != null && tblPresets.getScene().getWindow() != null) {
+            alert.initOwner(tblPresets.getScene().getWindow());
+            alert.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
+        
         return alert.showAndWait().filter(btn -> btn == ButtonType.OK).isPresent();
     }
 

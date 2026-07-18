@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
@@ -27,12 +28,17 @@
 
             <Region minWidth="12.0" />
 
-            <Button fx:id="addWorkerBtn" onAction="#handleAddWorker" style="-fx-background-color: #10B981; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 8; -fx-padding: 10 20 10 20; -fx-cursor: hand;" text="  Add New Worker">
-               <graphic>
-                  <Label style="-fx-font-size: 13px; -fx-text-fill: white;" text="👤+" />
-               </graphic>
-            </Button>
-         </HBox>
+             <Button fx:id="addWorkerBtn" onAction="#handleAddWorker" style="-fx-background-color: #10B981; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 8; -fx-padding: 10 20 10 20; -fx-cursor: hand;" text="  Add New Worker">
+                <graphic>
+                   <Label style="-fx-font-size: 13px; -fx-text-fill: white;" text="👤+" />
+                </graphic>
+             </Button>
+             <Button onAction="#handleClearAttendance" style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 8; -fx-padding: 10 20 10 20; -fx-cursor: hand;" text="Clear Attendance">
+                <graphic>
+                   <Label style="-fx-font-size: 13px; -fx-text-fill: white;" text="🗑" />
+                </graphic>
+             </Button>
+          </HBox>
 
          <HBox spacing="24.0" VBox.vgrow="ALWAYS">
 
@@ -96,8 +102,12 @@
                </VBox>
             </VBox>
 
-            <VBox minWidth="320.0" spacing="0.0" style="-fx-background-color: #1a1a2e; -fx-background-radius: 14; -fx-padding: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 4);">
-               <Label style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;" text="Monthly Summary" />
+               <VBox minWidth="320.0" spacing="0.0" style="-fx-background-color: #1a1a2e; -fx-background-radius: 14; -fx-padding: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 4);">
+               <HBox alignment="CENTER_LEFT">
+                   <Label style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;" text="Monthly Summary" />
+                   <Region HBox.hgrow="ALWAYS" />
+                   <ComboBox fx:id="cmbMonthlySummaryMonth" prefWidth="150.0" style="-fx-font-size: 12px;" />
+               </HBox>
                <Label fx:id="monthlySummaryMonthLabel" style="-fx-font-size: 11px; -fx-text-fill: #888888; -fx-padding: 4 0 20 0;" text="CURRENT MONTH: 2026-04" />
                <ScrollPane fitToWidth="true" maxHeight="400.0" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
                   <VBox fx:id="monthlySummaryContainer" spacing="16.0" />

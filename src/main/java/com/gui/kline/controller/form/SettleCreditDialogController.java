@@ -72,12 +72,12 @@ public class SettleCreditDialogController {
         Worker worker = cmbWorker.getValue();
         LocalDate date = datePicker.getValue();
         if (worker == null || date == null) {
-            AlertUtil.showError("Missing data", "Please select a worker and date.");
+            AlertUtil.showError(getOwnerWindow(), "Missing data", "Please select a worker and date.");
             return;
         }
         double amount = parseAmount(txtAmount.getText());
         if (amount <= 0) {
-            AlertUtil.showError("Invalid amount", "Please enter a valid amount.");
+            AlertUtil.showError(getOwnerWindow(), "Invalid amount", "Please enter a valid amount.");
             return;
         }
         String note = txtNote.getText().trim();
@@ -145,6 +145,13 @@ public class SettleCreditDialogController {
 
     private void closeDialog() {
         btnCancel.getScene().getWindow().hide();
+    }
+
+    private javafx.stage.Window getOwnerWindow() {
+        if (btnCancel != null && btnCancel.getScene() != null) {
+            return btnCancel.getScene().getWindow();
+        }
+        return null;
     }
 
 }

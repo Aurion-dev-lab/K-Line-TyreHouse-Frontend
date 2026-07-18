@@ -7,14 +7,14 @@
 }
 
 .btn-primary {
-    -fx-background-color: #06b6d4;
+    -fx-background-color: #10B981;
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-padding: 10 20;
     -fx-background-radius: 10;
     -fx-cursor: hand;
 }
-.btn-primary:hover {  -fx-background-color: #0891b2;  }
+.btn-primary:hover {  -fx-background-color: #19c78d;  }
 
 .left-card {
     -fx-background-color: #ffffff;
@@ -317,15 +317,32 @@
 
 .btn-deselect {
     -fx-background-color: transparent;
-    -fx-text-fill: #64748b;
+    -fx-text-fill: #4b6080;
     -fx-font-size: 11px;
     -fx-background-radius: 7;
-    -fx-border-color: #334155;
+    -fx-border-color: #1e2d45;
     -fx-border-radius: 7;
     -fx-padding: 7 0 7 0;
     -fx-cursor: hand;
 }
 .btn-deselect:hover {
-    -fx-border-color: #475569;
-    -fx-text-fill: #cbd5e1;
+    -fx-border-color: #334155;
+    -fx-text-fill: #94a3b8;
+}
+
+.btn-download {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-padding: 10 0 10 0;
+    -fx-cursor: hand;
+}
+.btn-download:hover { -fx-background-color: #2563eb; }
+.btn-download:disabled {
+    -fx-background-color: #334155;
+    -fx-text-fill: #64748b;
+    -fx-cursor: default;
 }

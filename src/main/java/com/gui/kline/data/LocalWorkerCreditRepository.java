@@ -120,13 +120,12 @@ public class LocalWorkerCreditRepository {
 
     public Map<String, Double> balanceByWorkerId(LocalDate from, LocalDate to) {
         String sql = "SELECT worker_id, credit_type, SUM(amount) AS total FROM worker_credits " +
-                "WHERE credit_date BETWEEN ? AND ? AND worker_id IS NOT NULL " +
+                "WHERE credit_date <= ? AND worker_id IS NOT NULL " +
                 "GROUP BY worker_id, credit_type";
         Map<String, Double> totals = new HashMap<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(from));
-            statement.setDate(2, Date.valueOf(to));
+            statement.setDate(1, Date.valueOf(to));
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     String workerId = rs.getString("worker_id");
@@ -144,13 +143,12 @@ public class LocalWorkerCreditRepository {
 
     public Map<String, Double> balanceByWorkerName(LocalDate from, LocalDate to) {
         String sql = "SELECT worker, credit_type, SUM(amount) AS total FROM worker_credits " +
-                "WHERE credit_date BETWEEN ? AND ? AND worker IS NOT NULL " +
+                "WHERE credit_date <= ? AND worker IS NOT NULL " +
                 "GROUP BY worker, credit_type";
         Map<String, Double> totals = new HashMap<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(from));
-            statement.setDate(2, Date.valueOf(to));
+            statement.setDate(1, Date.valueOf(to));
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     String worker = rs.getString("worker");
@@ -166,4 +164,3 @@ public class LocalWorkerCreditRepository {
         return totals;
     }
 }
-

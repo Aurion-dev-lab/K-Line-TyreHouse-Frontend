@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
@@ -19,63 +20,62 @@
             <content>
                 <VBox spacing="24.0" style="-fx-padding: 30;">
 
-                    <HBox alignment="CENTER_LEFT" spacing="16.0">
-                        <children>
-                            <VBox spacing="4.0">
-                                <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;" text="Salary Management" />
-                                <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;" text="Calculate monthly payouts based on attendance" />
-                            </VBox>
-                            <Region HBox.hgrow="ALWAYS" />
-                     <AnchorPane>
-                        <children>
-                                  <HBox alignment="CENTER_LEFT" prefHeight="50.0" prefWidth="246.0" spacing="10.0" style="-fx-background-color: white; -fx-background-radius: 10px; -fx-border-color: #e5e7eb; -fx-border-width: 1; -fx-border-radius: 10px; -fx-padding: 10 16 10 16;">
-                                      <FontIcon iconColor="#6b7280" iconLiteral="fas-calendar-alt" iconSize="14" />
-                                      <DatePicker fx:id="dpFrom" onAction="#handleDateFilter" prefWidth="140.0" style="-fx-background-color: transparent; -fx-border-color: transparent;" />
-                                      <DatePicker fx:id="dpTo" onAction="#handleDateFilter" prefWidth="140.0" style="-fx-background-color: transparent; -fx-border-color: transparent;" />
-                                  </HBox>
-                        </children>
-                     </AnchorPane>
-                     <AnchorPane>
-                        <children>
-                                  <Button fx:id="btnRecordAdvance" layoutY="6.0" onAction="#handleRecordAdvance" prefHeight="43.0" prefWidth="120.0" style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 10px; -fx-padding: 12 20 12 20; -fx-cursor: hand;" text="Record">
-                                      <graphic>
-                                          <FontIcon iconColor="white" iconLiteral="fas-plus-circle" />
-                                      </graphic>
-                                  </Button>
-                        </children>
-                     </AnchorPane>
-                     <AnchorPane>
-                        <children>
-                                  <Button fx:id="btnGiveCredit" layoutY="6.0" onAction="#handleGiveCredit" style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 10px; -fx-padding: 12 20 12 20; -fx-cursor: hand;" text="Credit">
-                                      <graphic>
-                                          <FontIcon iconColor="white" iconLiteral="fas-hand-holding-usd" />
-                                      </graphic>
-                                  </Button>
-                        </children>
-                     </AnchorPane>
-                     <AnchorPane>
-                        <children>
-                                  <Button fx:id="btnSettleCredit" layoutY="6.0" onAction="#handleSettleCredit" style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 10px; -fx-padding: 12 20 12 20; -fx-cursor: hand;" text="Settle Credit">
-                                      <graphic>
-                                          <FontIcon iconColor="white" iconLiteral="fas-check-double" />
-                                      </graphic>
-                                  </Button>
-                        </children>
-                     </AnchorPane>
-                            <Button fx:id="btnExportPayroll" onAction="#handleExportPayroll" style="-fx-background-color: #111827; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 10px; -fx-padding: 12 20 12 20; -fx-cursor: hand;">
-                                <graphic>
-                                    <FontIcon iconColor="white" iconLiteral="fas-file-export" />
-                                </graphic>
-                            </Button>
-                        </children>
-                    </HBox>
+                     <HBox alignment="CENTER_LEFT" spacing="16.0">
+                         <children>
+                             <VBox spacing="4.0">
+                                 <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;" text="Salary Management" />
+                                 <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;" text="Calculate monthly payouts based on attendance" />
+                             </VBox>
+                             <Region HBox.hgrow="ALWAYS" />
+                       <AnchorPane>
+                          <children>
+                                     <HBox alignment="CENTER_LEFT" prefHeight="50.0" prefWidth="246.0" spacing="10.0" style="-fx-background-color: white; -fx-background-radius: 10px; -fx-border-color: #e5e7eb; -fx-border-width: 1; -fx-border-radius: 10px; -fx-padding: 10 16 10 16;">
+                                       <Label style="-fx-text-fill: #6b7280; -fx-font-size: 14px;" text="📅" />
+                                       <ComboBox fx:id="cmbSalaryMonth" prefWidth="140.0" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 13px;" />
+                                    </HBox>
+                          </children>
+                       </AnchorPane>
+                       <AnchorPane>
+                          <children>
+                                     <Button fx:id="btnRecordAdvance" layoutY="6.0" onAction="#handleRecordAdvance" prefHeight="43.0" prefWidth="120.0" style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 10px; -fx-padding: 12 20 12 20; -fx-cursor: hand;" text="Record">
+                                         <graphic>
+                                             <Label style="-fx-text-fill: white; -fx-font-size: 13px;" text="➕" />
+                                         </graphic>
+                                    </Button>
+                          </children>
+                       </AnchorPane>
+                       <AnchorPane>
+                          <children>
+                                     <Button fx:id="btnGiveCredit" layoutY="6.0" onAction="#handleGiveCredit" style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 10px; -fx-padding: 12 20 12 20; -fx-cursor: hand;" text="Credit">
+                                         <graphic>
+                                             <Label style="-fx-text-fill: white; -fx-font-size: 13px;" text="💰" />
+                                         </graphic>
+                                    </Button>
+                          </children>
+                       </AnchorPane>
+                       <AnchorPane>
+                          <children>
+                                     <Button fx:id="btnSettleCredit" layoutY="6.0" onAction="#handleSettleCredit" style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 10px; -fx-padding: 12 20 12 20; -fx-cursor: hand;" text="Settle Credit">
+                                         <graphic>
+                                             <Label style="-fx-text-fill: white; -fx-font-size: 13px;" text="✅" />
+                                         </graphic>
+                                    </Button>
+                          </children>
+                       </AnchorPane>
+                               <Button fx:id="btnExportPayroll" onAction="#handleExportPayroll" style="-fx-background-color: #111827; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 10px; -fx-padding: 12 20 12 20; -fx-cursor: hand;">
+                                   <graphic>
+                                       <Label style="-fx-text-fill: white; -fx-font-size: 13px;" text="📤" />
+                                   </graphic>
+                              </Button>
+                         </children>
+                     </HBox>
 
                     <HBox spacing="16.0">
                         <VBox spacing="12.0" style="-fx-background-color: #ecfdf5; -fx-background-radius: 14px; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),10,0,0,2); -fx-padding: 20;" HBox.hgrow="ALWAYS">
                             <HBox alignment="CENTER_LEFT" spacing="12.0">
-                                <StackPane style="-fx-background-color: #d1fae5; -fx-background-radius: 8px; -fx-padding: 8;">
-                                    <FontIcon iconColor="#059669" iconLiteral="fas-check-circle" iconSize="18" />
-                                </StackPane>
+                                 <StackPane style="-fx-background-color: #d1fae5; -fx-background-radius: 8px; -fx-padding: 8;">
+                                     <Label style="-fx-text-fill: #059669; -fx-font-size: 18px;" text="✓" />
+                                 </StackPane>
                                 <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6b7280;" text="PAID SALARY" />
                             </HBox>
                             <Label fx:id="lblPaidSalary" style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #059669;" text="Rs. 0" />
@@ -84,9 +84,9 @@
 
                         <VBox spacing="12.0" style="-fx-background-color: white; -fx-background-radius: 14px; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),10,0,0,2); -fx-padding: 20;" HBox.hgrow="ALWAYS">
                             <HBox alignment="CENTER_LEFT" spacing="12.0">
-                                <StackPane style="-fx-background-color: #d1fae5; -fx-background-radius: 8px; -fx-padding: 8;">
-                                    <FontIcon iconColor="#059669" iconLiteral="fas-wallet" iconSize="18" />
-                                </StackPane>
+                                 <StackPane style="-fx-background-color: #d1fae5; -fx-background-radius: 8px; -fx-padding: 8;">
+                                     <Label style="-fx-text-fill: #059669; -fx-font-size: 18px;" text="👛" />
+                                 </StackPane>
                                 <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6b7280;" text="NET PAYOUT" />
                             </HBox>
                             <Label fx:id="lblNetPayout" style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #111827;" text="Rs. 0" />
@@ -95,9 +95,9 @@
 
                         <VBox spacing="12.0" style="-fx-background-color: white; -fx-background-radius: 14px; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),10,0,0,2); -fx-padding: 20;" HBox.hgrow="ALWAYS">
                             <HBox alignment="CENTER_LEFT" spacing="12.0">
-                                <StackPane style="-fx-background-color: #fef3c7; -fx-background-radius: 8px; -fx-padding: 8;">
-                                    <FontIcon iconColor="#f59e0b" iconLiteral="fas-stopwatch" iconSize="18" />
-                                </StackPane>
+                                 <StackPane style="-fx-background-color: #fef3c7; -fx-background-radius: 8px; -fx-padding: 8;">
+                                     <Label style="-fx-text-fill: #f59e0b; -fx-font-size: 18px;" text="⏱" />
+                                 </StackPane>
                                 <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6b7280;" text="TOTAL ADVANCES" />
                             </HBox>
                             <Label fx:id="lblTotalAdvances" style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #f59e0b;" text="Rs. 0" />
@@ -106,9 +106,9 @@
 
                         <VBox spacing="12.0" style="-fx-background-color: #fff1f2; -fx-background-radius: 14px; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),10,0,0,2); -fx-padding: 20;" HBox.hgrow="ALWAYS">
                             <HBox alignment="CENTER_LEFT" spacing="12.0">
-                                <StackPane style="-fx-background-color: #fecdd3; -fx-background-radius: 8px; -fx-padding: 8;">
-                                    <FontIcon iconColor="#e11d48" iconLiteral="fas-credit-card" iconSize="18" />
-                                </StackPane>
+                                 <StackPane style="-fx-background-color: #fecdd3; -fx-background-radius: 8px; -fx-padding: 8;">
+                                     <Label style="-fx-text-fill: #e11d48; -fx-font-size: 18px;" text="💳" />
+                                 </StackPane>
                                 <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6b7280;" text="CREDIT BALANCE" />
                             </HBox>
                             <Label fx:id="lblCreditBalance" style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #e11d48;" text="Rs. 0" />
@@ -117,9 +117,9 @@
 
                         <VBox spacing="12.0" style="-fx-background-color: white; -fx-background-radius: 14px; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),10,0,0,2); -fx-padding: 20;" HBox.hgrow="ALWAYS">
                             <HBox alignment="CENTER_LEFT" spacing="12.0">
-                                <StackPane style="-fx-background-color: #dbeafe; -fx-background-radius: 8px; -fx-padding: 8;">
-                                    <FontIcon iconColor="#2563eb" iconLiteral="fas-users" iconSize="18" />
-                                </StackPane>
+                                 <StackPane style="-fx-background-color: #dbeafe; -fx-background-radius: 8px; -fx-padding: 8;">
+                                     <Label style="-fx-text-fill: #2563eb; -fx-font-size: 18px;" text="👥" />
+                                 </StackPane>
                                 <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6b7280;" text="ACTIVE WORKERS" />
                             </HBox>
                             <Label fx:id="lblActiveWorkers" style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #111827;" text="0" />
@@ -147,9 +147,9 @@
 
                     <VBox spacing="0" style="-fx-background-color: white; -fx-background-radius: 14px; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),10,0,0,2);">
                         <HBox alignment="CENTER_LEFT" style="-fx-padding: 20 24 16 24;">
-                            <HBox alignment="CENTER_LEFT" spacing="10.0">
-                                <FontIcon iconColor="#e11d48" iconLiteral="fas-book" iconSize="16" />
-                                <Label style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #111827;" text="Credit Ledger" />
+                             <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                 <Label style="-fx-text-fill: #e11d48; -fx-font-size: 16px;" text="📖" />
+                                 <Label style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #111827;" text="Credit Ledger" />
                             </HBox>
                             <Region HBox.hgrow="ALWAYS" />
                             <Label style="-fx-font-size: 12px; -fx-text-fill: #9ca3af;" text="Workers who took items/money on credit — settled through work" />
@@ -170,9 +170,9 @@
                         </TableView>
 
                         <VBox spacing="12.0" style="-fx-padding: 20 24 24 24;">
-                            <HBox alignment="CENTER_LEFT" spacing="10">
-                                <FontIcon iconColor="#9ca3af" iconLiteral="fas-info-circle" iconSize="11" />
-                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #9ca3af;" text="CREDIT SUMMARY BY WORKER" />
+                             <HBox alignment="CENTER_LEFT" spacing="10">
+                                 <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 11px;" text="ℹ" />
+                                 <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #9ca3af;" text="CREDIT SUMMARY BY WORKER" />
                             </HBox>
                             <ScrollPane fitToHeight="true" hbarPolicy="AS_NEEDED" prefHeight="150.0" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" vbarPolicy="NEVER">
                                 <content>

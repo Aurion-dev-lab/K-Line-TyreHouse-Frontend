@@ -57,10 +57,13 @@ public class LocalSalaryRepository {
                     if (creditBalance == 0.0) {
                         creditBalance = creditsByName.getOrDefault(name, 0.0);
                     }
+                    // A settlement can never create extra salary; treat an over-settled
+                    // credit ledger as a zero outstanding balance for payroll purposes.
+                    creditBalance = Math.max(0, creditBalance);
 
                     double gross = (present + (halfDay * 0.5)) * rate;
                     double paidAmount = paidAmountsByWorkerId.getOrDefault(workerId, 0.0);
-                    double netPayable = gross - advances;
+                    double netPayable = Math.max(0, gross - advances - creditBalance);
                     String status = paymentStatus(netPayable, paidAmount);
 
                     salaries.add(new WorkerSalary(
@@ -152,7 +155,7 @@ public class LocalSalaryRepository {
     }
 
     private String paymentStatus(double totalPayable, double paidAmount) {
-        if (totalPayable <= 0) return "NO DATA";
+        if (totalPayable <= 0) return "NO PAYABLE";
         if (paidAmount >= totalPayable - 0.0001) return "PAID";
         if (paidAmount > 0) return "PARTIALLY PAID";
         return "READY";
@@ -176,5 +179,67 @@ public class LocalSalaryRepository {
         }
         int idx = Math.abs(name.hashCode()) % palette.length;
         return palette[idx];
+    }
+
+    /**
+     * Delete a specific salary payment by its ID.
+     */
+    public void deleteSalaryPayment(String paymentId) {
+        String sql = "DELETE FROM salary_payments WHERE id = ?";
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, paymentId);
+            statement.executeUpdate();
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to delete salary payment", ex);
+        }
+    }
+
+    /**
+     * Get individual salary payments for a worker in a period.
+     */
+    public List<SalaryPayment> loadSalaryPayments(String workerId, LocalDate from, LocalDate to) {
+        String sql = "SELECT id, worker, amount, paid_at FROM salary_payments WHERE worker_id = ? AND period_from = ? AND period_to = ? ORDER BY paid_at DESC";
+        List<SalaryPayment> payments = new ArrayList<>();
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, workerId);
+            statement.setDate(2, Date.valueOf(from));
+            statement.setDate(3, Date.valueOf(to));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    payments.add(new SalaryPayment(
+                            rs.getString("id"),
+                            rs.getString("worker"),
+                            rs.getDouble("amount"),
+                            rs.getTimestamp("paid_at").toLocalDateTime()
+                    ));
+                }
+            }
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to load salary payments", ex);
+        }
+        return payments;
+    }
+
+    /**
+     * Inner class to represent individual salary payments.
+     */
+    public static class SalaryPayment {
+        private final String id, worker;
+        private final double amount;
+        private final java.time.LocalDateTime paidAt;
+
+        public SalaryPayment(String id, String worker, double amount, java.time.LocalDateTime paidAt) {
+            this.id = id;
+            this.worker = worker;
+            this.amount = amount;
+            this.paidAt = paidAt;
+        }
+
+        public String getId() { return id; }
+        public String getWorker() { return worker; }
+        public double getAmount() { return amount; }
+        public java.time.LocalDateTime getPaidAt() { return paidAt; }
     }
 }

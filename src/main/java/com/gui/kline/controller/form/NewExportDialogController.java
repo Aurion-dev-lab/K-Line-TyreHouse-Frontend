@@ -1,10 +1,15 @@
 package com.gui.kline.controller.form;
 
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.function.Consumer;
+
+import com.gui.kline.models.ExportRecord;
 
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -19,6 +24,7 @@ import javafx.stage.Stage;
 
 public class NewExportDialogController implements Initializable {
 
+    @FXML private TextField        txtSerialNumber;
     @FXML private TextField        txtCompany;
     @FXML private TextField        txtTyreCount;
     @FXML private TextField        txtServiceFee;
@@ -41,6 +47,19 @@ public class NewExportDialogController implements Initializable {
         this.onSave = onSave;
     }
 
+    public void setEditMode(ExportRecord record) {
+        txtSerialNumber.setText(record.getSerialNumber() != null ? record.getSerialNumber() : "");
+        txtCompany.setText(record.getCompany());
+        txtTyreCount.setText(String.valueOf(record.getTyres()));
+        txtServiceFee.setText(String.valueOf(record.getServiceCharge()));
+        txtCustomerPrice.setText(String.valueOf(record.getCustPrice()));
+        txtCompanyPrice.setText(String.valueOf(record.getCompPrice()));
+        txtPaidNow.setText(String.valueOf(record.getPaidAmount()));
+        dpDateSent.setValue(record.getDate());
+        cmbStatus.setValue(record.getStatus());
+        refreshSummary();
+    }
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         cmbStatus.setItems(FXCollections.observableArrayList(
@@ -48,6 +67,9 @@ public class NewExportDialogController implements Initializable {
         ));
         cmbStatus.getSelectionModel().selectFirst();
         dpDateSent.setValue(LocalDate.now());
+
+        // Auto-generate next serial number
+        txtSerialNumber.setText(generateNextSerialNumber());
 
         enforceNumeric(txtTyreCount);
         enforceNumeric(txtServiceFee);
@@ -73,6 +95,7 @@ public class NewExportDialogController implements Initializable {
 
         ExportResult result = new ExportResult(
             exportId,
+                txtSerialNumber.getText().trim(),
                 txtCompany.getText().trim(),
                 parseTyres(),
                 parseDouble(txtServiceFee),
@@ -135,6 +158,7 @@ public class NewExportDialogController implements Initializable {
 
     public record ExportResult(
             String    exportId,
+            String    serialNumber,
             String    company,
             int       tyres,
             double    serviceFee,
@@ -147,4 +171,19 @@ public class NewExportDialogController implements Initializable {
             LocalDate date,
             String    status
     ) {}
+
+    private String generateNextSerialNumber() {
+        try (Connection conn = com.gui.kline.data.DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT MAX(CAST(serial_number AS UNSIGNED)) AS max_num FROM tyre_exports WHERE serial_number REGEXP '^[0-9]+$'");
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                int max = rs.getInt("max_num");
+                return String.format("%03d", max + 1);
+            }
+        } catch (Exception ex) {
+            System.err.println("Failed to generate serial number: " + ex.getMessage());
+        }
+        return "001";
+    }
 }

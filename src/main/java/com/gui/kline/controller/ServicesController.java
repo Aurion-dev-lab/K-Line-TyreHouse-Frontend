@@ -125,6 +125,9 @@ public class ServicesController implements Initializable {
         applyFilters();
         refreshTotals();
         populateCommonServices();
+
+        // Register with ViewFactory for cross-controller refresh
+        ViewModel.INSTANCE.getViewsFactory().setServicesController(this);
     }
 
     @FXML
@@ -137,6 +140,16 @@ public class ServicesController implements Initializable {
     void handleFilter(KeyEvent event) {
         applyFilters();
         refreshTotals();
+    }
+
+    public void refreshData() {
+        loadServices();
+        applyFilters();
+        refreshTotals();
+        populateCommonServices();
+
+        // Register with ViewFactory for cross-controller refresh
+        ViewModel.INSTANCE.getViewsFactory().setServicesController(this);
     }
 
     @FXML
@@ -299,12 +312,22 @@ public class ServicesController implements Initializable {
         String sourceTable = record.getSourceTable();
         boolean isQuickService = record.getIsQuickService();
 
+        // Get owner window to prevent alert from opening as separate window in full-screen mode
+        javafx.stage.Window owner = null;
+        if (lblTotalServices != null && lblTotalServices.getScene() != null) {
+            owner = lblTotalServices.getScene().getWindow();
+        }
+
         // Confirm deletion
         javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
                 javafx.scene.control.Alert.AlertType.CONFIRMATION);
         alert.setTitle("Delete Service");
         alert.setHeaderText(null);
         alert.setContentText("Are you sure you want to delete this service?");
+        if (owner != null) {
+            alert.initOwner(owner);
+            alert.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
 
         if (alert.showAndWait().orElse(javafx.scene.control.ButtonType.CANCEL) 
                 != javafx.scene.control.ButtonType.OK) {
@@ -349,3 +372,4 @@ public class ServicesController implements Initializable {
         }
     }
 }
+

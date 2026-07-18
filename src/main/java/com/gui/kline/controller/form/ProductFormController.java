@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 
 import com.gui.kline.models.Product;
 import com.gui.kline.utils.AlertUtil;
+import com.gui.kline.utils.ImagePathUtil;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -28,7 +29,9 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 public class ProductFormController implements Initializable {
 
@@ -56,7 +59,6 @@ public class ProductFormController implements Initializable {
     private Product           editingProduct = null;
     private Consumer<Product> onSave;
     private java.util.List<String> selectedImagePaths = new java.util.ArrayList<>();
-    private static final String IMAGE_DIR = "product_images";
 
     public void setProduct(Product product) {
         this.editingProduct = product;
@@ -78,8 +80,8 @@ public class ProductFormController implements Initializable {
         enforceNumeric(txtQuantity);
         enforceNumeric(txtMinStockAlert);
         
-        // Create product_images directory if it doesn't exist
-        createImageDirectory();
+        // Ensure product_images directory exists
+        ImagePathUtil.getImageDirectory();
     }
 
     private void applyEditMode() {
@@ -145,7 +147,7 @@ public class ProductFormController implements Initializable {
                 newProduct.addImagePath(imagePath);
             }
             if (onSave != null) onSave.accept(newProduct);
-            AlertUtil.showSuccess("Success", "Product Added Successfully");
+            AlertUtil.showSuccess(currentWindow(), "Success", "Product Added Successfully");
 
         } else {
             editingProduct.setName(txtProductName.getText().trim());
@@ -166,7 +168,7 @@ public class ProductFormController implements Initializable {
                 editingProduct.addImagePath(imagePath);
             }
             if (onSave != null) onSave.accept(editingProduct);
-            AlertUtil.showSuccess("Success", "Product Updated Successfully");
+            AlertUtil.showSuccess(currentWindow(), "Success", "Product Updated Successfully");
         }
 
         closeStage();
@@ -219,6 +221,8 @@ public class ProductFormController implements Initializable {
     
     @FXML
     private void handleClearImage() {
+        // Delete all selected image files from disk before clearing
+        ImagePathUtil.deleteImageFiles(selectedImagePaths);
         selectedImagePaths.clear();
         imgPreview.setImage(null);
         imgPreview.setVisible(false);
@@ -233,10 +237,7 @@ public class ProductFormController implements Initializable {
         selectedImagePaths.remove(imagePath);
         
         // Delete file from filesystem
-        File imageFile = new File(imagePath);
-        if (imageFile.exists()) {
-            imageFile.delete();
-        }
+        ImagePathUtil.deleteImageFile(imagePath);
         
         // Update preview
         if (selectedImagePaths.isEmpty()) {
@@ -258,8 +259,8 @@ public class ProductFormController implements Initializable {
         imagesContainer.getChildren().clear();
         
         for (String imagePath : selectedImagePaths) {
-            File imageFile = new File(imagePath);
-            if (imageFile.exists()) {
+            File imageFile = ImagePathUtil.resolve(imagePath);
+            if (imageFile != null && imageFile.exists()) {
                 try {
                     Image image = new Image(imageFile.toURI().toString());
                     ImageView thumbView = new ImageView(image);
@@ -335,27 +336,16 @@ public class ProductFormController implements Initializable {
         catch (NumberFormatException e) { return 0; }
     }
 
-    private void createImageDirectory() {
-        try {
-            Path imageDir = Paths.get(IMAGE_DIR);
-            if (!Files.exists(imageDir)) {
-                Files.createDirectories(imageDir);
-            }
-        } catch (IOException ex) {
-            System.err.println("Failed to create image directory: " + ex.getMessage());
-        }
-    }
-    
     private String copyImageToDirectory(File sourceFile) throws IOException {
         // Create unique filename: productId_timestamp.extension
         String extension = getFileExtension(sourceFile.getName());
         String filename = System.currentTimeMillis() + "_" + (editingProduct != null ? editingProduct.getId() : java.util.UUID.randomUUID().toString()) + extension;
         
-        Path targetPath = Paths.get(IMAGE_DIR, filename);
+        Path targetPath = Paths.get(ImagePathUtil.getImageDirectory(), filename);
         Files.copy(sourceFile.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
         
-        // Return relative path
-        return IMAGE_DIR + File.separator + filename;
+        // Return absolute on-disk path so it can be resolved regardless of CWD
+        return ImagePathUtil.storePath(filename);
     }
     
     private String getFileExtension(String filename) {
@@ -368,9 +358,9 @@ public class ProductFormController implements Initializable {
     
     private void displayImagePreview(String imagePath) {
         try {
-            File imageFile = new File(imagePath);
-            if (imageFile.exists()) {
-                Image image = new Image(imageFile.toURI().toString());
+            File imageFile = ImagePathUtil.resolve(imagePath);
+            if (imageFile != null && imageFile.exists()) {
+                Image image = new Image(imageFile.toURI().toString(), 200, 200, true, true, true);
                 imgPreview.setImage(image);
                 imgPreview.setVisible(true);
                 imgPreview.setManaged(true);
@@ -384,11 +374,21 @@ public class ProductFormController implements Initializable {
         ((Stage) btnCancel.getScene().getWindow()).close();
     }
 
+    private Window currentWindow() {
+        return btnCancel != null && btnCancel.getScene() != null
+                ? btnCancel.getScene().getWindow()
+                : null;
+    }
+
     private void showError(String title, String msg) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(msg);
+        if (currentWindow() != null) {
+            alert.initOwner(currentWindow());
+            alert.initModality(Modality.WINDOW_MODAL);
+        }
         alert.showAndWait();
     }
 }

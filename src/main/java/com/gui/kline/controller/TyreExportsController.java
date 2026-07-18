@@ -10,6 +10,7 @@ import java.util.ResourceBundle;
 import com.gui.kline.controller.form.NewExportDialogController;
 import com.gui.kline.data.SyncQueueReader;
 import com.gui.kline.data.SyncQueueRepository;
+import com.gui.kline.data.TyreExportRepository;
 import com.gui.kline.models.ExportRecord;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.utils.JsonUtil;
@@ -51,6 +52,7 @@ public class TyreExportsController implements Initializable {
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");
     private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
+    private final TyreExportRepository tyreExportRepository = new TyreExportRepository();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -63,9 +65,27 @@ public class TyreExportsController implements Initializable {
     }
 
     private void loadFromLocal() {
-        SyncQueueReader reader = new SyncQueueReader();
-        List<ExportRecord> local = reader.loadTyreExports();
-        masterList.setAll(local);
+        // Load from local database using TyreExportRepository
+        List<com.gui.kline.models.TyreExport> exports = tyreExportRepository.getAllExports();
+        masterList.clear();
+        for (com.gui.kline.models.TyreExport export : exports) {
+            ExportRecord record = new ExportRecord(
+                export.getExportId() != null ? export.getExportId() : export.getId(),
+                export.getSerialNumber() != null ? export.getSerialNumber() : "",
+                export.getCompany(),
+                export.getTyres(),
+                export.getCustPrice(),
+                export.getCompPrice(),
+                export.getServiceFee(),
+                export.getTotalAmount(),
+                export.getPaidAmount(),
+                export.getBalanceAmount(),
+                export.getPaymentStatus(),
+                export.getExportDate() != null ? export.getExportDate() : LocalDate.now(),
+                export.getStatus() != null ? export.getStatus() : "PENDING"
+            );
+            masterList.add(record);
+        }
     }
 
     @FXML
@@ -77,8 +97,35 @@ public class TyreExportsController implements Initializable {
             return;
         }
         form.setOnSave(result -> {
+            // Create TyreExport for local database
+            com.gui.kline.models.TyreExport tyreExport = new com.gui.kline.models.TyreExport();
+            tyreExport.setId(java.util.UUID.randomUUID().toString());
+            tyreExport.setExportId(result.exportId());
+            tyreExport.setSerialNumber(result.serialNumber());
+            tyreExport.setCompany(result.company());
+            tyreExport.setTyres(result.tyres());
+            tyreExport.setCustPrice(result.custPrice());
+            tyreExport.setCompPrice(result.compPrice());
+            tyreExport.setServiceFee(result.serviceFee());
+            tyreExport.setTotalAmount(result.totalAmount());
+            tyreExport.setPaidAmount(result.paidAmount());
+            tyreExport.setBalanceAmount(result.balanceAmount());
+            tyreExport.setPaymentStatus(result.paymentStatus());
+            tyreExport.setExportDate(result.date());
+            tyreExport.setStatus(result.status());
+            tyreExport.setOperation("create");
+            
+            // Save to local database
+            tyreExportRepository.saveTyreExport(tyreExport);
+            
+            // Refresh analytics and dashboard
+            ViewModel.INSTANCE.getViewsFactory().refreshReports();
+            ViewModel.INSTANCE.getViewsFactory().refreshDashboard();
+            
+            // Create ExportRecord for UI
             ExportRecord record = new ExportRecord(
                 result.exportId(),
+                    result.serialNumber(),
                     result.company(),
                     result.tyres(),
                     result.custPrice(),
@@ -155,6 +202,9 @@ public class TyreExportsController implements Initializable {
 
         Label exportId = chip(r.getExportId().isBlank() ? "draft export" : r.getExportId());
 
+        Label serialLbl = chip(r.getSerialNumber().isBlank() ? "" : "S/N: " + r.getSerialNumber());
+        serialLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #4F46E5; -fx-font-weight: bold;");
+
         Label tyresLbl   = chip(r.getTyres() + " tyres");
         Label custLbl    = chip("Cust  Rs. " + String.format("%,.0f", r.getCustPrice()));
         Label compLbl    = chip("Comp  Rs. " + String.format("%,.0f", r.getCompPrice()));
@@ -170,7 +220,7 @@ public class TyreExportsController implements Initializable {
         HBox sep1 = separator();
         HBox sep2 = separator();
 
-        HBox meta = new HBox(8, exportId, tyresLbl, sep1, custLbl, compLbl, sep2, serviceLbl, dateLbl);
+        HBox meta = new HBox(8, exportId, serialLbl, tyresLbl, sep1, custLbl, compLbl, sep2, serviceLbl, dateLbl);
         meta.setAlignment(Pos.CENTER_LEFT);
 
         VBox info = new VBox(5, name, meta);
@@ -252,6 +302,58 @@ public class TyreExportsController implements Initializable {
             box.getChildren().add(payBtn);
         }
 
+        // Invoice buttons
+        HBox invoiceBox = new HBox(6);
+        invoiceBox.setAlignment(Pos.CENTER_RIGHT);
+
+        Button generateInvoiceBtn = new Button("Generate Invoice");
+        generateInvoiceBtn.setStyle(
+                "-fx-background-color: #10B981; -fx-text-fill: white;" +
+                        "-fx-border-radius: 8; -fx-background-radius: 8;" +
+                        "-fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 5 10; -fx-cursor: hand;"
+        );
+        generateInvoiceBtn.setOnAction(e -> onGenerateInvoiceForRecord(r));
+        invoiceBox.getChildren().add(generateInvoiceBtn);
+
+        Button downloadPdfBtn = new Button("Download PDF");
+        downloadPdfBtn.setStyle(
+                "-fx-background-color: #3B82F6; -fx-text-fill: white;" +
+                        "-fx-border-radius: 8; -fx-background-radius: 8;" +
+                        "-fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 5 10; -fx-cursor: hand;"
+        );
+        downloadPdfBtn.setOnAction(e -> onDownloadInvoiceForRecord(r));
+        invoiceBox.getChildren().add(downloadPdfBtn);
+
+        box.getChildren().add(invoiceBox);
+
+        // Edit and Delete buttons
+        HBox editDeleteBox = new HBox(6);
+        editDeleteBox.setAlignment(Pos.CENTER_RIGHT);
+
+        Button editBtn = new Button("Edit");
+        editBtn.setStyle(
+                "-fx-background-color: transparent;" +
+                        "-fx-border-color: #E5E7EB; -fx-border-width: 1;" +
+                        "-fx-border-radius: 8; -fx-background-radius: 8;" +
+                        "-fx-font-size: 12px; -fx-text-fill: #F59E0B;" +
+                        "-fx-font-weight: bold; -fx-padding: 5 10; -fx-cursor: hand;"
+        );
+        editBtn.setOnAction(e -> onEditExport(r));
+        editDeleteBox.getChildren().add(editBtn);
+
+        Button deleteBtn = new Button("Delete");
+        deleteBtn.setStyle(
+                "-fx-background-color: transparent;" +
+                        "-fx-border-color: #E5E7EB; -fx-border-width: 1;" +
+                        "-fx-border-radius: 8; -fx-background-radius: 8;" +
+                        "-fx-font-size: 12px; -fx-text-fill: #EF4444;" +
+                        "-fx-font-weight: bold; -fx-padding: 5 10; -fx-cursor: hand;"
+        );
+        deleteBtn.setOnAction(e -> onDeleteExport(r));
+        editDeleteBox.getChildren().add(deleteBtn);
+
+        box.getChildren().add(editDeleteBox);
+
         if (box.getChildren().isEmpty()) {
             Label done = new Label("✔  Done");
             done.setStyle("-fx-font-size: 13px; -fx-text-fill: #10B981;");
@@ -260,27 +362,47 @@ public class TyreExportsController implements Initializable {
         return box;
     }
 
-     private void advanceStatus(ExportRecord r) {
-         if ("DELIVERED".equals(r.getStatus()) && r.getBalanceAmount() > 0) {
-             return;
-         }
-         String next = switch (r.getStatus()) {
-             case "PENDING"      -> "IN TRANSPORT";
-             case "IN TRANSPORT" -> "DELIVERED";
-             case "DELIVERED"    -> "PAID";
-             default             -> r.getStatus();
-         };
-         r.setStatus(next);
-         enqueueExportUpdate(r, "update_status");
-         rebuildCards();
-         refreshStats();
-     }
+    private void advanceStatus(ExportRecord r) {
+        if ("DELIVERED".equals(r.getStatus()) && r.getBalanceAmount() > 0) {
+            return;
+        }
+        String next = switch (r.getStatus()) {
+            case "PENDING"      -> "IN TRANSPORT";
+            case "IN TRANSPORT" -> "DELIVERED";
+            case "DELIVERED"    -> "PAID";
+            default             -> r.getStatus();
+        };
+        r.setStatus(next);
+        
+        // Save to database
+        com.gui.kline.models.TyreExport tyreExport = tyreExportRepository.getTyreExportByExportId(r.getExportId());
+        if (tyreExport != null) {
+            tyreExport.setStatus(next);
+            tyreExportRepository.saveTyreExport(tyreExport);
+        }
+        
+        enqueueExportUpdate(r, "update_status");
+        
+        // Reload data from database to ensure UI is in sync
+        loadFromLocal();
+        
+        // Refresh analytics and dashboard
+        ViewModel.INSTANCE.getViewsFactory().refreshReports();
+        ViewModel.INSTANCE.getViewsFactory().refreshDashboard();
+        
+        rebuildCards();
+        refreshStats();
+    }
 
     private void collectPayment(ExportRecord r) {
         TextInputDialog dialog = new TextInputDialog(String.format("%,.0f", r.getBalanceAmount()));
         dialog.setTitle("Receive Payment");
         dialog.setHeaderText("Record payment for " + r.getCompany());
         dialog.setContentText("Payment amount (balance Rs. " + String.format("%,.0f", r.getBalanceAmount()) + "):");
+        if (cardContainer.getScene() != null && cardContainer.getScene().getWindow() != null) {
+            dialog.initOwner(cardContainer.getScene().getWindow());
+            dialog.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
 
         Optional<String> value = dialog.showAndWait();
         if (value.isEmpty()) {
@@ -309,7 +431,24 @@ public class TyreExportsController implements Initializable {
         r.setBalanceAmount(newBalance);
         r.setPaymentStatus(paymentStatus);
 
+        // Save to database
+        com.gui.kline.models.TyreExport tyreExport = tyreExportRepository.getTyreExportByExportId(r.getExportId());
+        if (tyreExport != null) {
+            tyreExport.setPaidAmount(newPaid);
+            tyreExport.setBalanceAmount(newBalance);
+            tyreExport.setPaymentStatus(paymentStatus);
+            tyreExportRepository.saveTyreExport(tyreExport);
+        }
+
         enqueueExportUpdate(r, "record_payment");
+        
+        // Reload data from database to ensure UI is in sync
+        loadFromLocal();
+        
+        // Refresh analytics and dashboard
+        ViewModel.INSTANCE.getViewsFactory().refreshReports();
+        ViewModel.INSTANCE.getViewsFactory().refreshDashboard();
+        
         rebuildCards();
         refreshStats();
     }
@@ -393,5 +532,390 @@ public class TyreExportsController implements Initializable {
             return "-fx-background-color: #DBEAFE; -fx-text-fill: #1E40AF; -fx-background-radius: 20; -fx-padding: 3 10; -fx-font-size: 11px; -fx-font-weight: bold;";
         }
         return "-fx-background-color: #FEF3C7; -fx-text-fill: #92400E; -fx-background-radius: 20; -fx-padding: 3 10; -fx-font-size: 11px; -fx-font-weight: bold;";
+    }
+
+    private void onEditExport(ExportRecord r) {
+        Stage owner = (Stage) cardContainer.getScene().getWindow();
+        NewExportDialogController form =
+                ViewModel.INSTANCE.getViewsFactory().getForm("form/new-export-dialog", owner);
+        if (form == null) {
+            return;
+        }
+
+        form.setEditMode(r);
+        form.setOnSave(result -> {
+            r.setSerialNumber(result.serialNumber());
+            r.setCompany(result.company());
+            r.setTyres(result.tyres());
+            r.setCustPrice(result.custPrice());
+            r.setCompPrice(result.compPrice());
+            r.setServiceCharge(result.serviceFee());
+            r.setPaidAmount(result.paidAmount());
+            r.setTotalAmount(result.totalAmount());
+            r.setBalanceAmount(result.balanceAmount());
+            r.setPaymentStatus(result.paymentStatus());
+            r.setDate(result.date());
+            r.setStatus(result.status());
+
+            // Update in local database
+            com.gui.kline.models.TyreExport tyreExport = tyreExportRepository.getTyreExportByExportId(r.getExportId());
+            if (tyreExport != null) {
+                tyreExport.setSerialNumber(result.serialNumber());
+                tyreExport.setCompany(result.company());
+                tyreExport.setTyres(result.tyres());
+                tyreExport.setCustPrice(result.custPrice());
+                tyreExport.setCompPrice(result.compPrice());
+                tyreExport.setServiceFee(result.serviceFee());
+                tyreExport.setTotalAmount(result.totalAmount());
+                tyreExport.setPaidAmount(result.paidAmount());
+                tyreExport.setBalanceAmount(result.balanceAmount());
+                tyreExport.setPaymentStatus(result.paymentStatus());
+                tyreExport.setExportDate(result.date());
+                tyreExport.setStatus(result.status());
+                tyreExportRepository.saveTyreExport(tyreExport);
+            }
+
+            enqueueExportUpdate(r, "update");
+            rebuildCards();
+            refreshStats();
+        });
+    }
+
+    private void onDeleteExport(ExportRecord r) {
+        javafx.scene.control.Alert confirm = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Delete Export");
+        confirm.setHeaderText("Are you sure?");
+        confirm.setContentText("This will permanently delete export #" + r.getExportId() + " for " + r.getCompany());
+        if (cardContainer.getScene() != null && cardContainer.getScene().getWindow() != null) {
+            confirm.initOwner(cardContainer.getScene().getWindow());
+            confirm.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
+
+        if (confirm.showAndWait().orElse(javafx.scene.control.ButtonType.CANCEL) == javafx.scene.control.ButtonType.OK) {
+            // Delete from local database by export_id
+            if (!r.getExportId().isBlank()) {
+                tyreExportRepository.deleteTyreExportByExportId(r.getExportId());
+            }
+            
+            // Refresh analytics and dashboard
+            ViewModel.INSTANCE.getViewsFactory().refreshReports();
+            ViewModel.INSTANCE.getViewsFactory().refreshDashboard();
+            
+            // Remove from UI list
+            masterList.remove(r);
+            
+            // Enqueue for sync
+            enqueueExportUpdate(r, "delete");
+            rebuildCards();
+            refreshStats();
+        }
+    }
+
+    @FXML
+    private void onGenerateInvoice(ActionEvent event) {
+        ExportRecord selected = getSelectedRecord();
+        if (selected == null) {
+            showError("Select an export to generate invoice.");
+            return;
+        }
+
+        try {
+            // Create invoice from tyre export
+            String invoiceId = "INV" + System.currentTimeMillis();
+            String type = "Tyre Export";
+            String dateStr = LocalDate.now().toString();
+
+            // Create invoice detail
+            com.gui.kline.models.InvoiceDetail invoiceDetail = new com.gui.kline.models.InvoiceDetail();
+            invoiceDetail.setInvoiceId(invoiceId);
+            invoiceDetail.setCustomer(selected.getCompany());
+            invoiceDetail.setDate(dateStr);
+            invoiceDetail.setType(type);
+            invoiceDetail.setStatus("completed");
+
+            // Add line item for tyres
+            com.gui.kline.models.LineItem tyreItem = new com.gui.kline.models.LineItem(
+                    selected.getTyres() + " tyres",
+                    "Export",
+                    selected.getTyres(),
+                    selected.getCustPrice(),
+                    null
+            );
+            invoiceDetail.addLineItem(tyreItem);
+
+            // Add line item for service fee if applicable
+            if (selected.getServiceCharge() > 0) {
+                com.gui.kline.models.LineItem serviceItem = new com.gui.kline.models.LineItem(
+                        "Service Charge",
+                        "Service",
+                        1,
+                        selected.getServiceCharge(),
+                        null
+                );
+                invoiceDetail.addLineItem(serviceItem);
+            }
+
+            // Create invoice row
+            com.gui.kline.models.InvoiceRow invoiceRow = new com.gui.kline.models.InvoiceRow(
+                    invoiceId,
+                    dateStr,
+                    selected.getCompany(),
+                    type,
+                    invoiceDetail.getLineItems().size(),
+                    invoiceDetail.getGrandTotal(),
+                    "completed"
+            );
+
+            // Save invoice
+            com.gui.kline.data.LocalInvoiceRepository invoiceRepository = new com.gui.kline.data.LocalInvoiceRepository();
+            invoiceRepository.saveInvoice(invoiceDetail, invoiceRow);
+
+            // Enqueue for sync
+            enqueueInvoice(invoiceRow, invoiceDetail);
+
+            showSuccess("Invoice generated successfully! You can now download it as PDF.");
+        } catch (Exception ex) {
+            showError("Failed to generate invoice: " + ex.getMessage());
+        }
+    }
+
+    @FXML
+    private void onDownloadInvoice(ActionEvent event) {
+        ExportRecord selected = getSelectedRecord();
+        if (selected == null) {
+            showError("Select an export to download invoice.");
+            return;
+        }
+
+        try {
+            // Create a temporary invoice for PDF generation
+            String invoiceId = selected.getExportId().isBlank() ? "Export_" + System.currentTimeMillis() : selected.getExportId();
+            String type = "Tyre Export";
+            String dateStr = LocalDate.now().toString();
+
+            // Create invoice detail
+            com.gui.kline.models.InvoiceDetail invoiceDetail = new com.gui.kline.models.InvoiceDetail();
+            invoiceDetail.setInvoiceId(invoiceId);
+            invoiceDetail.setCustomer(selected.getCompany());
+            invoiceDetail.setDate(dateStr);
+            invoiceDetail.setType(type);
+            invoiceDetail.setStatus("completed");
+
+            // Add line item for tyres
+            com.gui.kline.models.LineItem tyreItem = new com.gui.kline.models.LineItem(
+                    selected.getTyres() + " tyres",
+                    "Export",
+                    selected.getTyres(),
+                    selected.getCustPrice(),
+                    null
+            );
+            invoiceDetail.addLineItem(tyreItem);
+
+            // Add line item for service fee if applicable
+            if (selected.getServiceCharge() > 0) {
+                com.gui.kline.models.LineItem serviceItem = new com.gui.kline.models.LineItem(
+                        "Service Charge",
+                        "Service",
+                        1,
+                        selected.getServiceCharge(),
+                        null
+                );
+                invoiceDetail.addLineItem(serviceItem);
+            }
+
+            // Open file chooser
+            Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+            fileChooser.setTitle("Save Invoice PDF");
+            fileChooser.setInitialFileName("Invoice_" + invoiceId + ".pdf");
+            fileChooser.getExtensionFilters().add(
+                    new javafx.stage.FileChooser.ExtensionFilter("PDF files (*.pdf)", "*.pdf"));
+
+            java.io.File file = fileChooser.showSaveDialog(ownerStage);
+            if (file == null) {
+                return; // user cancelled
+            }
+
+            // Generate PDF
+            new com.gui.kline.service.InvoicePdfService().export(invoiceDetail, file);
+            showSuccess("Invoice PDF saved to:\n" + file.getAbsolutePath());
+        } catch (Exception ex) {
+            showError("Failed to generate PDF: " + ex.getMessage());
+        }
+    }
+
+    private void enqueueInvoice(com.gui.kline.models.InvoiceRow row, com.gui.kline.models.InvoiceDetail detail) {
+        if (detail == null) {
+            return;
+        }
+        String[] items = detail.getLineItems().stream()
+                .map(item -> JsonUtil.obj(
+                        JsonUtil.field("description", item.getDescription()),
+                        JsonUtil.field("type", item.getType()),
+                        JsonUtil.field("qty", item.getQty()),
+                        JsonUtil.field("unitPrice", item.getUnitPrice()),
+                        JsonUtil.field("total", item.getTotal())
+                ))
+                .toArray(String[]::new);
+
+        String payload = JsonUtil.obj(
+                JsonUtil.field("operation", "create"),
+                JsonUtil.field("invoiceId", row.getInvoiceId()),
+                JsonUtil.field("date", row.getDate()),
+                JsonUtil.field("customer", row.getCustomer()),
+                JsonUtil.field("type", row.getType()),
+                JsonUtil.field("status", row.getStatus()),
+                JsonUtil.field("total", row.getTotal()),
+                JsonUtil.fieldRaw("items", JsonUtil.array(items))
+        );
+
+        syncQueueRepository.enqueue("invoice", payload);
+    }
+
+    private void onGenerateInvoiceForRecord(ExportRecord r) {
+        try {
+            // Create invoice from tyre export
+            String invoiceId = "INV" + System.currentTimeMillis();
+            String type = "Tyre Export";
+            String dateStr = LocalDate.now().toString();
+
+            // Create invoice detail
+            com.gui.kline.models.InvoiceDetail invoiceDetail = new com.gui.kline.models.InvoiceDetail();
+            invoiceDetail.setInvoiceId(invoiceId);
+            invoiceDetail.setCustomer(r.getCompany());
+            invoiceDetail.setDate(dateStr);
+            invoiceDetail.setType(type);
+            invoiceDetail.setStatus("completed");
+
+            // Add line item for tyres
+            com.gui.kline.models.LineItem tyreItem = new com.gui.kline.models.LineItem(
+                    r.getTyres() + " tyres",
+                    "Export",
+                    r.getTyres(),
+                    r.getCustPrice(),
+                    null
+            );
+            invoiceDetail.addLineItem(tyreItem);
+
+            // Add line item for service fee if applicable
+            if (r.getServiceCharge() > 0) {
+                com.gui.kline.models.LineItem serviceItem = new com.gui.kline.models.LineItem(
+                        "Service Charge",
+                        "Service",
+                        1,
+                        r.getServiceCharge(),
+                        null
+                );
+                invoiceDetail.addLineItem(serviceItem);
+            }
+
+            // Create invoice row
+            com.gui.kline.models.InvoiceRow invoiceRow = new com.gui.kline.models.InvoiceRow(
+                    invoiceId,
+                    dateStr,
+                    r.getCompany(),
+                    type,
+                    invoiceDetail.getLineItems().size(),
+                    invoiceDetail.getGrandTotal(),
+                    "completed"
+            );
+
+            // Save invoice
+            com.gui.kline.data.LocalInvoiceRepository invoiceRepository = new com.gui.kline.data.LocalInvoiceRepository();
+            invoiceRepository.saveInvoice(invoiceDetail, invoiceRow);
+
+            // Enqueue for sync
+            enqueueInvoice(invoiceRow, invoiceDetail);
+
+            showSuccess("Invoice generated successfully! You can now download it as PDF.");
+        } catch (Exception ex) {
+            showError("Failed to generate invoice: " + ex.getMessage());
+        }
+    }
+
+    private void onDownloadInvoiceForRecord(ExportRecord r) {
+        try {
+            // Create a temporary invoice for PDF generation
+            String invoiceId = r.getExportId().isBlank() ? "Export_" + System.currentTimeMillis() : r.getExportId();
+            String type = "Tyre Export";
+            String dateStr = LocalDate.now().toString();
+
+            // Create invoice detail
+            com.gui.kline.models.InvoiceDetail invoiceDetail = new com.gui.kline.models.InvoiceDetail();
+            invoiceDetail.setInvoiceId(invoiceId);
+            invoiceDetail.setCustomer(r.getCompany());
+            invoiceDetail.setDate(dateStr);
+            invoiceDetail.setType(type);
+            invoiceDetail.setStatus("completed");
+
+            // Add line item for tyres
+            com.gui.kline.models.LineItem tyreItem = new com.gui.kline.models.LineItem(
+                    r.getTyres() + " tyres",
+                    "Export",
+                    r.getTyres(),
+                    r.getCustPrice(),
+                    null
+            );
+            invoiceDetail.addLineItem(tyreItem);
+
+            // Add line item for service fee if applicable
+            if (r.getServiceCharge() > 0) {
+                com.gui.kline.models.LineItem serviceItem = new com.gui.kline.models.LineItem(
+                        "Service Charge",
+                        "Service",
+                        1,
+                        r.getServiceCharge(),
+                        null
+                );
+                invoiceDetail.addLineItem(serviceItem);
+            }
+
+            // Open file chooser
+            Stage ownerStage = (Stage) cardContainer.getScene().getWindow();
+            javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+            fileChooser.setTitle("Save Invoice PDF");
+            fileChooser.setInitialFileName("Invoice_" + invoiceId + ".pdf");
+            fileChooser.getExtensionFilters().add(
+                    new javafx.stage.FileChooser.ExtensionFilter("PDF files (*.pdf)", "*.pdf"));
+
+            java.io.File file = fileChooser.showSaveDialog(ownerStage);
+            if (file == null) {
+                return; // user cancelled
+            }
+
+            // Generate PDF
+            new com.gui.kline.service.InvoicePdfService().export(invoiceDetail, file);
+            showSuccess("Invoice PDF saved to:\n" + file.getAbsolutePath());
+        } catch (Exception ex) {
+            showError("Failed to generate PDF: " + ex.getMessage());
+        }
+    }
+
+    private ExportRecord getSelectedRecord() {
+        return null; // No selection mechanism in current implementation
+    }
+
+    private void showError(String msg) {
+        javafx.scene.control.Alert a = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+        a.setTitle("Error");
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        if (cardContainer.getScene() != null && cardContainer.getScene().getWindow() != null) {
+            a.initOwner(cardContainer.getScene().getWindow());
+            a.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
+        a.showAndWait();
+    }
+
+    private void showSuccess(String msg) {
+        javafx.scene.control.Alert a = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+        a.setTitle("Success");
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        if (cardContainer.getScene() != null && cardContainer.getScene().getWindow() != null) {
+            a.initOwner(cardContainer.getScene().getWindow());
+            a.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
+        a.showAndWait();
     }
 }

@@ -130,5 +130,35 @@ public class LocalWorkerAttendanceRepository {
             return 0;
         }
     }
+
+    /**
+     * Delete a single attendance record for a worker on a specific date
+     */
+    public void deleteAttendance(String workerId, LocalDate date) {
+        String sql = "DELETE FROM worker_attendance WHERE worker_id = ? AND attendance_date = ?";
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, workerId);
+            statement.setDate(2, Date.valueOf(date));
+            statement.executeUpdate();
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to delete attendance", ex);
+        }
+    }
+
+    /**
+     * Delete all attendance records within a date range
+     */
+    public void deleteAttendanceForPeriod(LocalDate from, LocalDate to) {
+        String sql = "DELETE FROM worker_attendance WHERE attendance_date BETWEEN ? AND ?";
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setDate(1, Date.valueOf(from));
+            statement.setDate(2, Date.valueOf(to));
+            statement.executeUpdate();
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to delete attendance for period", ex);
+        }
+    }
 }
 

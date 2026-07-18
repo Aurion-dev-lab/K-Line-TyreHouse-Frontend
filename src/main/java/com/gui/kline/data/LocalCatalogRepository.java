@@ -1,6 +1,7 @@
 package com.gui.kline.data;
 
 import com.gui.kline.models.Product;
+import com.gui.kline.utils.ImagePathUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -53,6 +54,26 @@ public class LocalCatalogRepository {
             statement.executeUpdate();
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to save customer", ex);
+        }
+    }
+
+    public String getCustomerPhone(String name) {
+        if (name == null || name.isBlank()) {
+            return "";
+        }
+        String sql = "SELECT phone FROM customers WHERE name = ? LIMIT 1";
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, name.trim());
+            try (ResultSet rs = statement.executeQuery()) {
+                if (!rs.next()) {
+                    return "";
+                }
+                String phone = rs.getString("phone");
+                return phone == null ? "" : phone;
+            }
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to read customer phone", ex);
         }
     }
 
@@ -345,6 +366,8 @@ public class LocalCatalogRepository {
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to delete product", ex);
         }
+        // Remove the physical image files from disk so they don't remain orphaned
+        ImagePathUtil.deleteImageFiles(product.getImagePaths());
     }
 
     private String formatProductLabel(String code, String name) {

@@ -27,15 +27,15 @@ public class ReportsRepository {
         // Get data from invoices and line items
         String sql = "SELECT " +
                 "    i.invoice_date as sale_date, " +
-                "    p.name as product_name, " +
+                "    COALESCE(p.name, il.description) as product_name, " +
                 "    il.qty as quantity, " +
                 "    il.total as revenue, " +
-                "    (il.unit_price - p.buy_price) * il.qty as profit " +
+                "    (il.unit_price - COALESCE(p.buy_price, 0)) * il.qty as profit " +
                 "FROM invoice_line_items il " +
                 "LEFT JOIN invoices i ON il.invoice_id = i.invoice_id " +
                 "LEFT JOIN products p ON il.product_id = p.id " +
-                "WHERE i.invoice_date BETWEEN ? AND ? " +
-                "ORDER BY i.invoice_date DESC, p.name";
+                "WHERE i.status = 'completed' AND i.invoice_date BETWEEN ? AND ? " +
+                "ORDER BY i.invoice_date DESC, product_name";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -197,15 +197,14 @@ public class ReportsRepository {
     public List<ExpenseItem> getExpenses(LocalDate startDate, LocalDate endDate) {
         List<ExpenseItem> expenses = new ArrayList<>();
         
-        // Get tyre export costs (these are expenses)
+        // Get tyre export costs (these are expenses - the cost to purchase tyres)
         String tyreExportsSql = "SELECT " +
                 "    te.export_date, " +
                 "    te.company as description, " +
-                "    te.comp_price as amount, " +
+                "    (te.comp_price * te.tyres) as amount, " +
                 "    'Tyre Purchase' as category " +
                 "FROM tyre_exports te " +
                 "WHERE te.export_date BETWEEN ? AND ? " +
-                "AND te.operation = 'purchase' " +
                 "ORDER BY te.export_date DESC";
         
         try (Connection connection = DatabaseManager.getConnection();
@@ -229,37 +228,11 @@ public class ReportsRepository {
             System.err.println("Failed to load tyre export expenses: " + ex.getMessage());
         }
         
-        // Get service costs from tyre exports
-        String serviceCostsSql = "SELECT " +
-                "    te.export_date, " +
-                "    CONCAT(te.company, ' - Service Fee') as description, " +
-                "    te.service_fee as amount, " +
-                "    'Service Fee' as category " +
-                "FROM tyre_exports te " +
-                "WHERE te.export_date BETWEEN ? AND ? " +
-                "AND te.service_fee > 0 " +
-                "ORDER BY te.export_date DESC";
-        
-        try (Connection connection = DatabaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(serviceCostsSql)) {
-            
-            statement.setDate(1, Date.valueOf(startDate));
-            statement.setDate(2, Date.valueOf(endDate));
-            
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    LocalDate date = rs.getDate("export_date") != null ? 
-                        rs.getDate("export_date").toLocalDate() : LocalDate.now();
-                    String description = rs.getString("description");
-                    double amount = rs.getDouble("amount");
-                    String category = rs.getString("category");
-                    
-                    expenses.add(new ExpenseItem(date, description, amount, category));
-                }
-            }
-        } catch (SQLException ex) {
-            System.err.println("Failed to load service fee expenses: " + ex.getMessage());
-        }
+        // Note: Service fees from tyre exports are NOT added as expenses here
+        // because they are already included in the total_amount (revenue).
+        // The profit from tyre exports is calculated as:
+        // total_amount - (comp_price * tyres)
+        // This avoids double-counting the service fee.
 
         String salaryPaymentsSql = "SELECT DATE(paid_at) AS payment_date, worker, amount " +
                 "FROM salary_payments WHERE DATE(paid_at) BETWEEN ? AND ? ORDER BY paid_at DESC";
@@ -278,6 +251,28 @@ public class ReportsRepository {
         } catch (SQLException ex) {
             System.err.println("Failed to load salary payment expenses: " + ex.getMessage());
         }
+
+        // Get expenses from the expenses table
+        String expensesTableSql = "SELECT expense_date, description, amount, category " +
+                "FROM expenses WHERE expense_date BETWEEN ? AND ? ORDER BY expense_date DESC";
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(expensesTableSql)) {
+            statement.setDate(1, Date.valueOf(startDate));
+            statement.setDate(2, Date.valueOf(endDate));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    LocalDate date = rs.getDate("expense_date") != null ?
+                        rs.getDate("expense_date").toLocalDate() : LocalDate.now();
+                    String description = rs.getString("description");
+                    double amount = rs.getDouble("amount");
+                    String category = rs.getString("category");
+                    if (category == null) category = "Other";
+                    expenses.add(new ExpenseItem(date, description, amount, category));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to load expenses from expenses table: " + ex.getMessage());
+        }
         
         return expenses;
     }
@@ -292,7 +287,7 @@ public class ReportsRepository {
         String salesSql = "SELECT COALESCE(SUM(il.total), 0) as total_sales " +
                 "FROM invoice_line_items il " +
                 "LEFT JOIN invoices i ON il.invoice_id = i.invoice_id " +
-                "WHERE i.invoice_date BETWEEN ? AND ?";
+                "WHERE i.status = 'completed' AND i.invoice_date BETWEEN ? AND ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(salesSql)) {
@@ -369,35 +364,108 @@ public class ReportsRepository {
             System.err.println("Failed to calculate quick service revenue: " + ex.getMessage());
         }
         
-        // Total expenses (tyre exports cost)
-        String expensesSql = "SELECT COALESCE(SUM(comp_price), 0) as total_expenses " +
+        // Tyre exports revenue (total_amount from tyre exports)
+        String tyreExportRevenueSql = "SELECT COALESCE(SUM(total_amount), 0) as total_revenue " +
                 "FROM tyre_exports " +
                 "WHERE export_date BETWEEN ? AND ?";
         
         try (Connection connection = DatabaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(expensesSql)) {
+             PreparedStatement statement = connection.prepareStatement(tyreExportRevenueSql)) {
             
             statement.setDate(1, Date.valueOf(startDate));
             statement.setDate(2, Date.valueOf(endDate));
             
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
-                    summary.setTotalExpenses(rs.getDouble("total_expenses"));
+                    summary.setTyreExportRevenue(rs.getDouble("total_revenue"));
                 }
             }
         } catch (SQLException ex) {
-            System.err.println("Failed to calculate total expenses: " + ex.getMessage());
+            System.err.println("Failed to calculate tyre export revenue: " + ex.getMessage());
         }
+
+        // Get expenses from the expenses table
+        String generalExpensesSql = "SELECT COALESCE(SUM(amount), 0) as total_expenses " +
+                "FROM expenses " +
+                "WHERE expense_date BETWEEN ? AND ?";
+        
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(generalExpensesSql)) {
+            
+            statement.setDate(1, Date.valueOf(startDate));
+            statement.setDate(2, Date.valueOf(endDate));
+            
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    summary.setTotalExpenses(summary.getTotalExpenses() + rs.getDouble("total_expenses"));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to calculate general expenses: " + ex.getMessage());
+        }
+
+        // Product cost is incurred when a quotation is generated as a completed
+        // invoice. Service and labour lines have no inventory cost, so they add
+        // their full amount to profit.
+        summary.setTotalExpenses(summary.getTotalExpenses()
+                + getCompletedInvoiceProductCost(startDate, endDate));
         
         summary.setWorkerCosts(getWorkerCosts(startDate, endDate));
         
         // Calculate net profit
+        // Total revenue from all sources (sales + credit sales + services + quick services + tyre exports)
         double totalRevenue = summary.getTotalSales() + summary.getCreditSales() + 
-                             summary.getServiceRevenue() + summary.getQuickServiceRevenue();
-        double totalCosts = summary.getTotalExpenses() + summary.getWorkerCosts();
+                             summary.getServiceRevenue() + summary.getQuickServiceRevenue() +
+                             summary.getTyreExportRevenue();
+        
+        // Tyre export costs (comp_price * tyres) - cost of purchasing tyres
+        double tyreExportCosts = getTyreExportCosts(startDate, endDate);
+        
+        // Total costs: general expenses + tyre export costs + worker costs
+        double totalCosts = summary.getTotalExpenses() + tyreExportCosts + summary.getWorkerCosts();
+        
+        // Net profit = total revenue - total costs
         summary.setNetProfit(totalRevenue - totalCosts);
         
         return summary;
+    }
+
+    private double getCompletedInvoiceProductCost(LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT COALESCE(SUM(il.qty * COALESCE(p.buy_price, 0)), 0) " +
+                "FROM invoice_line_items il " +
+                "JOIN invoices i ON i.id = il.invoice_ref " +
+                "LEFT JOIN products p ON p.id = il.product_id " +
+                "WHERE i.status = 'completed' AND i.invoice_date BETWEEN ? AND ?";
+
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setDate(1, Date.valueOf(startDate));
+            statement.setDate(2, Date.valueOf(endDate));
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? rs.getDouble(1) : 0.0;
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to calculate completed invoice product cost: " + ex.getMessage());
+            return 0.0;
+        }
+    }
+
+    private double getTyreExportCosts(LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT COALESCE(SUM(comp_price * tyres), 0) " +
+                "FROM tyre_exports " +
+                "WHERE export_date BETWEEN ? AND ?";
+
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setDate(1, Date.valueOf(startDate));
+            statement.setDate(2, Date.valueOf(endDate));
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? rs.getDouble(1) : 0.0;
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to calculate tyre export costs: " + ex.getMessage());
+            return 0.0;
+        }
     }
 
     /**
@@ -413,7 +481,7 @@ public class ReportsRepository {
                 "FROM invoice_line_items il " +
                 "LEFT JOIN invoices i ON il.invoice_id = i.invoice_id " +
                 "LEFT JOIN products p ON il.product_id = p.id " +
-                "WHERE i.invoice_date BETWEEN ? AND ? " +
+                "WHERE i.status = 'completed' AND i.invoice_date BETWEEN ? AND ? " +
                 "GROUP BY p.id, p.name " +
                 "ORDER BY total_revenue DESC " +
                 "LIMIT ?";
@@ -454,7 +522,7 @@ public class ReportsRepository {
                 "    SUM(il.total) as total_revenue " +
                 "FROM invoice_line_items il " +
                 "LEFT JOIN invoices i ON il.invoice_id = i.invoice_id " +
-                "WHERE i.invoice_date BETWEEN ? AND ? " +
+                "WHERE i.status = 'completed' AND i.invoice_date BETWEEN ? AND ? " +
                 "GROUP BY i.invoice_date " +
                 "ORDER BY i.invoice_date";
         
@@ -548,6 +616,7 @@ public class ReportsRepository {
         private double creditSales;
         private double serviceRevenue;
         private double quickServiceRevenue;
+        private double tyreExportRevenue;
         private double totalExpenses;
         private double workerCosts;
         private double netProfit;
@@ -565,6 +634,9 @@ public class ReportsRepository {
         public double getQuickServiceRevenue() { return quickServiceRevenue; }
         public void setQuickServiceRevenue(double quickServiceRevenue) { this.quickServiceRevenue = quickServiceRevenue; }
         
+        public double getTyreExportRevenue() { return tyreExportRevenue; }
+        public void setTyreExportRevenue(double tyreExportRevenue) { this.tyreExportRevenue = tyreExportRevenue; }
+        
         public double getTotalExpenses() { return totalExpenses; }
         public void setTotalExpenses(double totalExpenses) { this.totalExpenses = totalExpenses; }
         
@@ -575,7 +647,7 @@ public class ReportsRepository {
         public void setNetProfit(double netProfit) { this.netProfit = netProfit; }
         
         public double getTotalRevenue() {
-            return totalSales + creditSales + serviceRevenue + quickServiceRevenue;
+            return totalSales + creditSales + serviceRevenue + quickServiceRevenue + tyreExportRevenue;
         }
         
         public double getTotalCosts() {

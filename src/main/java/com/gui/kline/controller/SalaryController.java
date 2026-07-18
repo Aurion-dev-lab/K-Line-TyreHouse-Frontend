@@ -27,11 +27,13 @@ import javafx.stage.FileChooser;
 
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.*;
 
 public class SalaryController implements Initializable {
 
-    @FXML private DatePicker dpFrom, dpTo;
+    @FXML private ComboBox<YearMonth> cmbSalaryMonth;
+    private LocalDate rangeFrom, rangeTo;
     @FXML private Button btnRecordAdvance, btnGiveCredit, btnSettleCredit, btnExportPayroll;
 
     @FXML private Label lblNetPayout, lblGross;
@@ -67,22 +69,41 @@ public class SalaryController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        dpFrom.setValue(LocalDate.now().minusMonths(1));
-        dpTo.setValue(LocalDate.now());
+        YearMonth currentMonth = YearMonth.now();
+        setupMonthComboBox(currentMonth);
+        
+        // Set initial date range based on current month
+        rangeFrom = currentMonth.atDay(1);
+        rangeTo = currentMonth.atEndOfMonth();
 
         setupSalaryTable();
         setupLedgerTable();
         reloadData();
     }
 
+    private void setupMonthComboBox(YearMonth currentMonth) {
+        if (cmbSalaryMonth != null) {
+            // Populate with last 12 months
+            for (int i = 0; i < 12; i++) {
+                cmbSalaryMonth.getItems().add(currentMonth.minusMonths(i));
+            }
+            cmbSalaryMonth.setValue(currentMonth);
+            cmbSalaryMonth.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    rangeFrom = newVal.atDay(1);
+                    rangeTo = newVal.atEndOfMonth();
+                    reloadData();
+                }
+            });
+        }
+    }
+
     private void reloadData() {
-        LocalDate from = dpFrom.getValue();
-        LocalDate to = dpTo.getValue();
-        if (from == null || to == null) {
+        if (rangeFrom == null || rangeTo == null) {
             return;
         }
-        salaryList.setAll(salaryRepository.loadWorkerSalaries(from, to));
-        ledgerList.setAll(creditRepository.loadLedger(from, to));
+        salaryList.setAll(salaryRepository.loadWorkerSalaries(rangeFrom, rangeTo));
+        ledgerList.setAll(creditRepository.loadLedger(rangeFrom, rangeTo));
         refreshSummary();
         refreshCreditSummary();
     }
@@ -185,7 +206,7 @@ public class SalaryController implements Initializable {
                 if (empty || v == null) { setGraphic(null); return; }
                 boolean paid = "PAID".equalsIgnoreCase(v);
                 boolean partiallyPaid = "PARTIALLY PAID".equalsIgnoreCase(v);
-                boolean noData = "NO DATA".equalsIgnoreCase(v);
+                boolean noData = "NO DATA".equalsIgnoreCase(v) || "NO PAYABLE".equalsIgnoreCase(v);
                 Label badge = new Label(v);
                 badge.setStyle(
                         "-fx-background-color: " + (paid ? "#d1fae5" : partiallyPaid ? "#dbeafe" : noData ? "#f3f4f6" : "#fef3c7") + ";" +
@@ -207,15 +228,32 @@ public class SalaryController implements Initializable {
                 super.updateItem(worker, empty);
                 if (empty || worker == null) { setGraphic(null); return; }
 
-                boolean canPay = worker.getRemainingPayable() > 0 && !"NO DATA".equalsIgnoreCase(worker.getStatus());
-                Button pay = new Button(canPay && worker.getPaidAmount() > 0 ? "Pay Balance" : "Pay");
+                boolean canPay = worker.getRemainingPayable() > 0 &&
+                        !"NO DATA".equalsIgnoreCase(worker.getStatus()) &&
+                        !"NO PAYABLE".equalsIgnoreCase(worker.getStatus());
+                boolean hasPayments = worker.getPaidAmount() > 0;
+
+                HBox wrap = new HBox(8);
+                wrap.setAlignment(Pos.CENTER);
+
+                if (hasPayments) {
+                    // Show delete button if there are payments
+                    Button del = new Button("🗑");
+                    del.setStyle("-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-font-size: 15px; -fx-cursor: hand;");
+                    del.setOnMouseEntered(ev -> del.setStyle("-fx-background-color: transparent; -fx-text-fill: #dc2626; -fx-font-size: 15px; -fx-cursor: hand;"));
+                    del.setOnMouseExited(ev -> del.setStyle("-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-font-size: 15px; -fx-cursor: hand;"));
+                    del.setOnAction(ev -> showPaymentHistory(worker));
+                    wrap.getChildren().add(del);
+                }
+
+                Button pay = new Button(canPay && hasPayments ? "Pay Balance" : "Pay");
                 pay.setDisable(!canPay);
                 pay.setStyle("-fx-background-color: " + (canPay ? "#059669" : "#d1d5db") + ";" +
                         "-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 11px;" +
                         "-fx-background-radius: 8px; -fx-padding: 6 14 6 14; -fx-cursor: hand;");
                 pay.setOnAction(event -> showPaymentEditor(worker));
-                HBox wrap = new HBox(pay);
-                wrap.setAlignment(Pos.CENTER);
+                wrap.getChildren().add(pay);
+
                 setGraphic(wrap); setText(null);
                 setStyle("-fx-background-color: transparent;");
                 setAlignment(Pos.CENTER);
@@ -250,6 +288,91 @@ public class SalaryController implements Initializable {
                 cancel.setOnAction(event -> updateItem(worker, false));
                 amount.requestFocus();
                 amount.selectAll();
+            }
+
+            private void showPaymentHistory(WorkerSalary worker) {
+                if (rangeFrom == null || rangeTo == null) return;
+                LocalDate from = rangeFrom;
+                LocalDate to = rangeTo;
+
+                List<LocalSalaryRepository.SalaryPayment> payments = salaryRepository.loadSalaryPayments(worker.getWorkerId(), from, to);
+                if (payments.isEmpty()) {
+                    AlertUtil.showInfo("No Payments", "No payments found for " + worker.getName() + " in this period.");
+                    return;
+                }
+
+                // Create dialog to show payment history
+                Dialog<Void> dialog = new Dialog<>();
+                dialog.setTitle("Payment History - " + worker.getName());
+                dialog.setHeaderText(null);
+
+                // Set owner window
+                javafx.stage.Window owner = null;
+                if (tblSalary.getScene() != null) {
+                    owner = tblSalary.getScene().getWindow();
+                }
+                if (owner != null) {
+                    dialog.initOwner(owner);
+                    dialog.initModality(javafx.stage.Modality.WINDOW_MODAL);
+                }
+
+                VBox content = new VBox(8);
+                content.setStyle("-fx-padding: 16;");
+
+                for (LocalSalaryRepository.SalaryPayment p : payments) {
+                    HBox row = new HBox(10);
+                    row.setAlignment(Pos.CENTER_LEFT);
+
+                    Label dateLbl = new Label(p.getPaidAt().toLocalDate().toString());
+                    dateLbl.setPrefWidth(100);
+                    Label amountLbl = new Label(String.format("Rs. %,.0f", p.getAmount()));
+                    amountLbl.setPrefWidth(100);
+                    HBox.setHgrow(amountLbl, Priority.ALWAYS);
+
+                    Button del = new Button("🗑");
+                    del.setStyle("-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-font-size: 14px; -fx-cursor: hand;");
+                    del.setOnAction(ev -> {
+                        if (confirmDeletePayment(p)) {
+                            deletePayment(p.getId());
+                            dialog.close();
+                        }
+                    });
+
+                    row.getChildren().addAll(dateLbl, amountLbl, del);
+                    content.getChildren().add(row);
+                }
+
+                dialog.getDialogPane().setContent(content);
+                dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+                dialog.showAndWait();
+            }
+
+            private boolean confirmDeletePayment(LocalSalaryRepository.SalaryPayment payment) {
+                Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+                confirm.setTitle("Delete Payment");
+                confirm.setHeaderText(null);
+                confirm.setContentText("Delete payment of Rs. " + String.format("%,.0f", payment.getAmount()) + " made on " + payment.getPaidAt().toLocalDate() + "?");
+
+                javafx.stage.Window owner = null;
+                if (tblSalary.getScene() != null) {
+                    owner = tblSalary.getScene().getWindow();
+                }
+                if (owner != null) {
+                    confirm.initOwner(owner);
+                    confirm.initModality(javafx.stage.Modality.WINDOW_MODAL);
+                }
+
+                return confirm.showAndWait().filter(btn -> btn == ButtonType.OK).isPresent();
+            }
+
+            private void deletePayment(String paymentId) {
+                salaryRepository.deleteSalaryPayment(paymentId);
+                String payload = JsonUtil.obj(
+                        JsonUtil.field("id", paymentId),
+                        JsonUtil.field("op", "delete")
+                );
+                syncQueueRepository.enqueue("salary_payment", payload);
+                reloadData();
             }
         });
 
@@ -456,11 +579,11 @@ public class SalaryController implements Initializable {
      * otherwise the message is displayed in the table rather than in a new window.
      */
     private String paySalary(WorkerSalary worker, String enteredAmount) {
-        LocalDate from = dpFrom.getValue();
-        LocalDate to = dpTo.getValue();
-        if (from == null || to == null || from.isAfter(to)) {
+        if (rangeFrom == null || rangeTo == null || rangeFrom.isAfter(rangeTo)) {
             return "Select a valid date range.";
         }
+        LocalDate from = rangeFrom;
+        LocalDate to = rangeTo;
 
         double paymentAmount;
         try {
