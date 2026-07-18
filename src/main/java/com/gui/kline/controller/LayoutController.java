@@ -183,6 +183,7 @@ public class LayoutController {
                 loadQuickActionsPanel();
                 loadQuickStats();
                 ViewModel.INSTANCE.getViewsFactory().refreshDashboardQuickActions();
+                ViewModel.INSTANCE.getViewsFactory().refreshServices();
             });
         }
     }

@@ -2,6 +2,7 @@ package com.gui.kline.view;
 
 import com.gui.kline.controller.DashboardController;
 import com.gui.kline.controller.LayoutController;
+import com.gui.kline.controller.ServicesController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -20,6 +21,7 @@ public class ViewFactory {
     private Stage lastDialogStage;
     private LayoutController layoutController;
     private DashboardController dashboardController;
+    private ServicesController servicesController;
     
     public void setPrimaryStage(Stage primaryStage) {
         this.primaryStage = primaryStage;
@@ -44,6 +46,16 @@ public class ViewFactory {
     public void refreshDashboardQuickActions() {
         if (dashboardController != null) {
             dashboardController.refreshQuickActions();
+        }
+    }
+
+    public void setServicesController(ServicesController controller) {
+        this.servicesController = controller;
+    }
+
+    public void refreshServices() {
+        if (servicesController != null) {
+            servicesController.refreshData();
         }
     }
     

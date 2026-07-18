@@ -93,6 +93,7 @@ CREATE TABLE IF NOT EXISTS tyre_exports (
     id VARCHAR(36) PRIMARY KEY,
     export_id VARCHAR(64),
     operation VARCHAR(32),
+    serial_number VARCHAR(255),
     company VARCHAR(255),
     tyres INT,
     cust_price DECIMAL(12,2),
@@ -114,6 +115,9 @@ CREATE TABLE IF NOT EXISTS tyre_exports (
     created_at DATETIME,
     updated_at DATETIME
 ) ENGINE=InnoDB;
+
+-- Add serial_number column to existing tyre_exports table if it doesn't exist
+ALTER TABLE tyre_exports ADD COLUMN IF NOT EXISTS serial_number VARCHAR(255) AFTER operation;
 
 -- Verify columns exist
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_id VARCHAR(64) UNIQUE;

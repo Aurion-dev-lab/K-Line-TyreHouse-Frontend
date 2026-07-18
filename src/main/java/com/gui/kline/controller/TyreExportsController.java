@@ -71,6 +71,7 @@ public class TyreExportsController implements Initializable {
         for (com.gui.kline.models.TyreExport export : exports) {
             ExportRecord record = new ExportRecord(
                 export.getExportId() != null ? export.getExportId() : export.getId(),
+                export.getSerialNumber() != null ? export.getSerialNumber() : "",
                 export.getCompany(),
                 export.getTyres(),
                 export.getCustPrice(),
@@ -100,6 +101,7 @@ public class TyreExportsController implements Initializable {
             com.gui.kline.models.TyreExport tyreExport = new com.gui.kline.models.TyreExport();
             tyreExport.setId(java.util.UUID.randomUUID().toString());
             tyreExport.setExportId(result.exportId());
+            tyreExport.setSerialNumber(result.serialNumber());
             tyreExport.setCompany(result.company());
             tyreExport.setTyres(result.tyres());
             tyreExport.setCustPrice(result.custPrice());
@@ -119,6 +121,7 @@ public class TyreExportsController implements Initializable {
             // Create ExportRecord for UI
             ExportRecord record = new ExportRecord(
                 result.exportId(),
+                    result.serialNumber(),
                     result.company(),
                     result.tyres(),
                     result.custPrice(),
@@ -195,6 +198,9 @@ public class TyreExportsController implements Initializable {
 
         Label exportId = chip(r.getExportId().isBlank() ? "draft export" : r.getExportId());
 
+        Label serialLbl = chip(r.getSerialNumber().isBlank() ? "" : "S/N: " + r.getSerialNumber());
+        serialLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #4F46E5; -fx-font-weight: bold;");
+
         Label tyresLbl   = chip(r.getTyres() + " tyres");
         Label custLbl    = chip("Cust  Rs. " + String.format("%,.0f", r.getCustPrice()));
         Label compLbl    = chip("Comp  Rs. " + String.format("%,.0f", r.getCompPrice()));
@@ -210,7 +216,7 @@ public class TyreExportsController implements Initializable {
         HBox sep1 = separator();
         HBox sep2 = separator();
 
-        HBox meta = new HBox(8, exportId, tyresLbl, sep1, custLbl, compLbl, sep2, serviceLbl, dateLbl);
+        HBox meta = new HBox(8, exportId, serialLbl, tyresLbl, sep1, custLbl, compLbl, sep2, serviceLbl, dateLbl);
         meta.setAlignment(Pos.CENTER_LEFT);
 
         VBox info = new VBox(5, name, meta);
@@ -501,6 +507,7 @@ public class TyreExportsController implements Initializable {
 
         form.setEditMode(r);
         form.setOnSave(result -> {
+            r.setSerialNumber(result.serialNumber());
             r.setCompany(result.company());
             r.setTyres(result.tyres());
             r.setCustPrice(result.custPrice());
@@ -516,6 +523,7 @@ public class TyreExportsController implements Initializable {
             // Update in local database
             com.gui.kline.models.TyreExport tyreExport = tyreExportRepository.getTyreExportByExportId(r.getExportId());
             if (tyreExport != null) {
+                tyreExport.setSerialNumber(result.serialNumber());
                 tyreExport.setCompany(result.company());
                 tyreExport.setTyres(result.tyres());
                 tyreExport.setCustPrice(result.custPrice());

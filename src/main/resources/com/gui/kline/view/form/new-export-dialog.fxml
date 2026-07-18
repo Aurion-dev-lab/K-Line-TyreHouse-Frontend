@@ -38,6 +38,13 @@
                 <padding><Insets top="24" left="28" right="28" bottom="8" /></padding>
 
                 <VBox spacing="6">
+                    <Label text="SERIAL NUMBER" styleClass="form-label" />
+                    <TextField fx:id="txtSerialNumber"
+                               promptText="e.g. EXP-001"
+                               styleClass="form-input" />
+                </VBox>
+
+                <VBox spacing="6">
                     <Label text="COMPANY NAME" styleClass="form-label" />
                     <TextField fx:id="txtCompany"
                                promptText="e.g. ABC Motors"

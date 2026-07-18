@@ -125,6 +125,9 @@ public class ServicesController implements Initializable {
         applyFilters();
         refreshTotals();
         populateCommonServices();
+
+        // Register with ViewFactory for cross-controller refresh
+        ViewModel.INSTANCE.getViewsFactory().setServicesController(this);
     }
 
     @FXML
@@ -137,6 +140,16 @@ public class ServicesController implements Initializable {
     void handleFilter(KeyEvent event) {
         applyFilters();
         refreshTotals();
+    }
+
+    public void refreshData() {
+        loadServices();
+        applyFilters();
+        refreshTotals();
+        populateCommonServices();
+
+        // Register with ViewFactory for cross-controller refresh
+        ViewModel.INSTANCE.getViewsFactory().setServicesController(this);
     }
 
     @FXML
@@ -359,3 +372,4 @@ public class ServicesController implements Initializable {
         }
     }
 }
+

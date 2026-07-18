@@ -86,14 +86,14 @@ public class TyreExportRepository {
     public String saveTyreExport(TyreExport tyreExport) {
         String id = tyreExport.getId() != null ? tyreExport.getId() : java.util.UUID.randomUUID().toString();
         
-        String sql = "INSERT INTO tyre_exports (id, export_id, operation, company, tyres, cust_price, " +
+        String sql = "INSERT INTO tyre_exports (id, export_id, operation, serial_number, company, tyres, cust_price, " +
                 "comp_price, service_fee, paid_amount, total_amount, balance_amount, payment_status, " +
                 "status, export_date, notes, created_by, updated_by, " +
                 "sync_id, device_id, synced_at, sync_status, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) " +
                 "ON DUPLICATE KEY UPDATE export_id = VALUES(export_id), operation = VALUES(operation), " +
-                "company = VALUES(company), tyres = VALUES(tyres), cust_price = VALUES(cust_price), " +
-                "comp_price = VALUES(comp_price), service_fee = VALUES(service_fee), " +
+                "serial_number = VALUES(serial_number), company = VALUES(company), tyres = VALUES(tyres), " +
+                "cust_price = VALUES(cust_price), comp_price = VALUES(comp_price), service_fee = VALUES(service_fee), " +
                 "paid_amount = VALUES(paid_amount), total_amount = VALUES(total_amount), " +
                 "balance_amount = VALUES(balance_amount), payment_status = VALUES(payment_status), " +
                 "status = VALUES(status), export_date = VALUES(export_date), notes = VALUES(notes), " +
@@ -108,24 +108,25 @@ public class TyreExportRepository {
             statement.setString(1, id);
             statement.setString(2, tyreExport.getExportId());
             statement.setString(3, tyreExport.getOperation());
-            statement.setString(4, tyreExport.getCompany());
-            statement.setInt(5, tyreExport.getTyres());
-            statement.setDouble(6, tyreExport.getCustPrice());
-            statement.setDouble(7, tyreExport.getCompPrice());
-            statement.setDouble(8, tyreExport.getServiceFee());
-            statement.setDouble(9, tyreExport.getPaidAmount());
-            statement.setDouble(10, tyreExport.getTotalAmount());
-            statement.setDouble(11, tyreExport.getBalanceAmount());
-            statement.setString(12, tyreExport.getPaymentStatus());
-            statement.setString(13, tyreExport.getStatus());
-            statement.setDate(14, tyreExport.getExportDate() != null ? Date.valueOf(tyreExport.getExportDate()) : null);
-            statement.setString(15, tyreExport.getNotes());
-            statement.setString(16, tyreExport.getCreatedBy());
-            statement.setString(17, tyreExport.getUpdatedBy());
-            statement.setString(18, tyreExport.getSyncId());
-            statement.setString(19, tyreExport.getDeviceId());
-            statement.setTimestamp(20, tyreExport.getSyncedAt() != null ? Timestamp.valueOf(tyreExport.getSyncedAt()) : null);
-            statement.setBoolean(21, tyreExport.isSyncStatus());
+            statement.setString(4, tyreExport.getSerialNumber());
+            statement.setString(5, tyreExport.getCompany());
+            statement.setInt(6, tyreExport.getTyres());
+            statement.setDouble(7, tyreExport.getCustPrice());
+            statement.setDouble(8, tyreExport.getCompPrice());
+            statement.setDouble(9, tyreExport.getServiceFee());
+            statement.setDouble(10, tyreExport.getPaidAmount());
+            statement.setDouble(11, tyreExport.getTotalAmount());
+            statement.setDouble(12, tyreExport.getBalanceAmount());
+            statement.setString(13, tyreExport.getPaymentStatus());
+            statement.setString(14, tyreExport.getStatus());
+            statement.setDate(15, tyreExport.getExportDate() != null ? Date.valueOf(tyreExport.getExportDate()) : null);
+            statement.setString(16, tyreExport.getNotes());
+            statement.setString(17, tyreExport.getCreatedBy());
+            statement.setString(18, tyreExport.getUpdatedBy());
+            statement.setString(19, tyreExport.getSyncId());
+            statement.setString(20, tyreExport.getDeviceId());
+            statement.setTimestamp(21, tyreExport.getSyncedAt() != null ? Timestamp.valueOf(tyreExport.getSyncedAt()) : null);
+            statement.setBoolean(22, tyreExport.isSyncStatus());
             
             statement.executeUpdate();
             
@@ -223,6 +224,7 @@ public class TyreExportRepository {
         tyreExport.setId(rs.getString("id"));
         tyreExport.setExportId(rs.getString("export_id"));
         tyreExport.setOperation(rs.getString("operation"));
+        tyreExport.setSerialNumber(rs.getString("serial_number"));
         tyreExport.setCompany(rs.getString("company"));
         tyreExport.setTyres(rs.getInt("tyres"));
         tyreExport.setCustPrice(rs.getDouble("cust_price"));
