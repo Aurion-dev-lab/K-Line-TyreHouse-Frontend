@@ -11,7 +11,6 @@ import com.gui.kline.controller.form.ProcessCreditSaleController;
 import com.gui.kline.data.LocalCatalogRepository;
 import com.gui.kline.data.LocalCreditSalesRepository;
 import com.gui.kline.data.LocalInvoiceRepository;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.CreditSaleDetail;
 import com.gui.kline.models.InvoiceDetail;
 import com.gui.kline.models.InvoiceRow;
@@ -75,9 +74,7 @@ public class CreditSalesController implements Initializable {
     @FXML private Button            btnDownloadInvoice;
 
     private final ObservableList<CreditSaleRow> creditSaleList =
-            FXCollections.observableArrayList();
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-    private final LocalCreditSalesRepository creditSalesRepository = new LocalCreditSalesRepository();
+            FXCollections.observableArrayList();    private final LocalCreditSalesRepository creditSalesRepository = new LocalCreditSalesRepository();
     private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
 
     private CreditSaleRow         selectedSale       = null;
@@ -558,10 +555,7 @@ public class CreditSalesController implements Initializable {
                 JsonUtil.field("status", row.getStatus()),
                 JsonUtil.field("total", row.getTotal()),
                 JsonUtil.fieldRaw("items", JsonUtil.array(items))
-        );
-
-        syncQueueRepository.enqueue("invoice", payload);
-    }
+        );    }
 
     @FXML
     private void onDeselect() {
@@ -742,10 +736,7 @@ public class CreditSalesController implements Initializable {
         JsonUtil.field("balanceAmount", detail.getAmountDue()),
         JsonUtil.field("status", status),
                 JsonUtil.fieldRaw("parts", JsonUtil.array(parts))
-        );
-
-        syncQueueRepository.enqueue("credit_sale", payload);
-    }
+        );    }
 
     public static class CreditSaleRow {
         private final String creditId, date, customer, dueDate, status;

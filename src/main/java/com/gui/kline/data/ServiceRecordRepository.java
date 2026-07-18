@@ -87,12 +87,12 @@ public class ServiceRecordRepository {
         String id = serviceRecord.getId() != null ? serviceRecord.getId() : java.util.UUID.randomUUID().toString();
         
         String sql = "INSERT INTO services (id, name, price, service_date, remark, " +
-                "sync_id, device_id, synced_at, sync_status, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) " +
+                "sync_status, created_at, updated_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW()) " +
                 "ON DUPLICATE KEY UPDATE name = VALUES(name), price = VALUES(price), " +
                 "service_date = VALUES(service_date), remark = VALUES(remark), " +
-                "sync_id = VALUES(sync_id), device_id = VALUES(device_id), " +
-                "synced_at = VALUES(synced_at), sync_status = VALUES(sync_status), " +
+                "" +
+                "sync_status = VALUES(sync_status), " +
                 "updated_at = NOW()";
         
         try (Connection connection = DatabaseManager.getConnection();
@@ -103,10 +103,7 @@ public class ServiceRecordRepository {
             statement.setDouble(3, serviceRecord.getPrice());
             statement.setDate(4, serviceRecord.getDate() != null ? Date.valueOf(serviceRecord.getDate()) : null);
             statement.setString(5, serviceRecord.getRemark());
-            statement.setString(6, serviceRecord.getSyncId());
-            statement.setString(7, serviceRecord.getDeviceId());
-            statement.setTimestamp(8, serviceRecord.getSyncedAt() != null ? Timestamp.valueOf(serviceRecord.getSyncedAt()) : null);
-            statement.setBoolean(9, serviceRecord.isSyncStatus());
+            statement.setBoolean(6, serviceRecord.isSyncStatus());
             
             statement.executeUpdate();
             
@@ -123,7 +120,7 @@ public class ServiceRecordRepository {
      * Mark a service record as synced
      */
     public void markAsSynced(String serviceRecordId) {
-        String sql = "UPDATE services SET sync_status = true, synced_at = NOW() WHERE id = ?";
+        String sql = "UPDATE services SET sync_status = true WHERE id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -172,10 +169,6 @@ public class ServiceRecordRepository {
         serviceRecord.setId(rs.getString("id"));
         
         // Sync fields
-        serviceRecord.setSyncId(rs.getString("sync_id"));
-        serviceRecord.setDeviceId(rs.getString("device_id"));
-        serviceRecord.setSyncedAt(rs.getTimestamp("synced_at") != null ? 
-            rs.getTimestamp("synced_at").toLocalDateTime() : null);
         serviceRecord.setSyncStatus(rs.getBoolean("sync_status"));
         serviceRecord.setCreatedAt(rs.getTimestamp("created_at") != null ? 
             rs.getTimestamp("created_at").toLocalDateTime() : null);

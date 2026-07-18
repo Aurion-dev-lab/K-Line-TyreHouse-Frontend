@@ -28,19 +28,6 @@ public final class DatabaseManager {
             
             Connection connection = getConnection();
             Statement statement = connection.createStatement();
-            statement.execute("CREATE TABLE IF NOT EXISTS app_sync_state (" +
-                    "id TINYINT PRIMARY KEY," +
-                    "device_id VARCHAR(64) NOT NULL," +
-                    "last_sync_at DATETIME NULL" +
-                    ")");
-            statement.execute("CREATE TABLE IF NOT EXISTS sync_queue (" +
-                    "id VARCHAR(36) PRIMARY KEY," +
-                    "entity_type VARCHAR(64) NOT NULL," +
-                    "payload JSON NOT NULL," +
-                    "status VARCHAR(16) NOT NULL," +
-                    "created_at DATETIME NOT NULL," +
-                    "last_error TEXT" +
-                    ")");
             statement.execute("CREATE TABLE IF NOT EXISTS products (" +
                     "id VARCHAR(36) PRIMARY KEY," +
                        "product_code VARCHAR(64)," +
@@ -57,20 +44,14 @@ public final class DatabaseManager {
                     "supplier_name VARCHAR(255)," +
                     "created_at DATETIME NOT NULL," +
                     "updated_at DATETIME NOT NULL," +
-                    "sync_id VARCHAR(36)," +
-                    "device_id VARCHAR(64)," +
-                    "synced_at DATETIME," +
-                    "sync_status BOOLEAN DEFAULT false" +
+                    "sync_status BOOLEAN NOT NULL DEFAULT false" +
                     ")");
             statement.execute("CREATE TABLE IF NOT EXISTS product_images (" +
                     "id VARCHAR(36) PRIMARY KEY," +
                     "product_id VARCHAR(36) NOT NULL," +
                     "image_path VARCHAR(255) NOT NULL," +
                     "created_at DATETIME NOT NULL," +
-                    "sync_id VARCHAR(36)," +
-                    "device_id VARCHAR(64)," +
-                    "synced_at DATETIME," +
-                    "sync_status BOOLEAN DEFAULT false," +
+                    "sync_status BOOLEAN NOT NULL DEFAULT false," +
                     "INDEX idx_product_id (product_id)" +
                     ")");
             statement.execute("CREATE TABLE IF NOT EXISTS customers (" +
@@ -78,10 +59,7 @@ public final class DatabaseManager {
                     "name VARCHAR(255) NOT NULL," +
                     "phone VARCHAR(32)," +
                     "created_at DATETIME NOT NULL," +
-                    "sync_id VARCHAR(36)," +
-                    "device_id VARCHAR(64)," +
-                    "synced_at DATETIME," +
-                    "sync_status BOOLEAN DEFAULT false," +
+                    "sync_status BOOLEAN NOT NULL DEFAULT false," +
                     "UNIQUE KEY uk_customer_name_phone (name, phone)" +
                     ")");
              statement.execute("CREATE TABLE IF NOT EXISTS invoices (" +
@@ -96,10 +74,7 @@ public final class DatabaseManager {
                      "grand_total DECIMAL(12,2) NOT NULL DEFAULT 0," +
                      "created_at DATETIME NOT NULL," +
                      "updated_at DATETIME," +
-                     "sync_id VARCHAR(36)," +
-                     "device_id VARCHAR(64)," +
-                     "synced_at DATETIME," +
-                     "sync_status BOOLEAN DEFAULT false" +
+                    "sync_status BOOLEAN NOT NULL DEFAULT false" +
                      ") ENGINE=InnoDB");
              statement.execute("CREATE TABLE IF NOT EXISTS invoice_line_items (" +
                      "id VARCHAR(36) PRIMARY KEY," +
@@ -112,10 +87,7 @@ public final class DatabaseManager {
                      "unit_price DECIMAL(12,2)," +
                      "total DECIMAL(12,2)," +
                      "created_at DATETIME NOT NULL," +
-                     "sync_id VARCHAR(36)," +
-                     "device_id VARCHAR(64)," +
-                     "synced_at DATETIME," +
-                     "sync_status BOOLEAN DEFAULT false," +
+                    "sync_status BOOLEAN NOT NULL DEFAULT false," +
                      "FOREIGN KEY (invoice_ref) REFERENCES invoices(id) ON DELETE CASCADE" +
                      ") ENGINE=InnoDB");
              statement.execute("CREATE TABLE IF NOT EXISTS credit_sales (" +
@@ -131,10 +103,7 @@ public final class DatabaseManager {
                      "status VARCHAR(32)," +
                      "created_at DATETIME NOT NULL," +
                      "updated_at DATETIME," +
-                     "sync_id VARCHAR(36)," +
-                     "device_id VARCHAR(64)," +
-                     "synced_at DATETIME," +
-                     "sync_status BOOLEAN DEFAULT false" +
+                    "sync_status BOOLEAN NOT NULL DEFAULT false" +
                      ")");
              statement.execute("CREATE TABLE IF NOT EXISTS credit_sale_parts (" +
                       "id VARCHAR(36) PRIMARY KEY," +
@@ -145,10 +114,7 @@ public final class DatabaseManager {
                       "unit_price DECIMAL(12,2)," +
                       "total DECIMAL(12,2)," +
                       "created_at DATETIME NOT NULL," +
-                      "sync_id VARCHAR(36)," +
-                      "device_id VARCHAR(64)," +
-                      "synced_at DATETIME," +
-                      "sync_status BOOLEAN DEFAULT false," +
+                    "sync_status BOOLEAN NOT NULL DEFAULT false," +
                       "FOREIGN KEY (credit_sale_id) REFERENCES credit_sales(id) ON DELETE CASCADE," +
                       "FOREIGN KEY (product_id) REFERENCES products(id)," +
                       "INDEX idx_credit_sale_id (credit_sale_id)" +
@@ -159,10 +125,7 @@ public final class DatabaseManager {
                     "price DECIMAL(12,2) NOT NULL DEFAULT 0," +
                     "service_date DATE," +
                     "remark VARCHAR(255)," +
-                    "sync_id VARCHAR(36)," +
-                    "device_id VARCHAR(64)," +
-                    "synced_at DATETIME," +
-                    "sync_status BOOLEAN DEFAULT false" +
+                    "sync_status BOOLEAN NOT NULL DEFAULT false" +
                     ")");
             statement.execute("CREATE TABLE IF NOT EXISTS tyre_exports (" +
                     "id VARCHAR(36) PRIMARY KEY," +
@@ -180,10 +143,7 @@ public final class DatabaseManager {
                     "status VARCHAR(32)," +
                     "export_date DATE," +
                     "updated_at DATETIME," +
-                    "sync_id VARCHAR(36)," +
-                    "device_id VARCHAR(64)," +
-                    "synced_at DATETIME," +
-                    "sync_status BOOLEAN DEFAULT false" +
+                    "sync_status BOOLEAN NOT NULL DEFAULT false" +
                     ")");
             statement.execute("CREATE TABLE IF NOT EXISTS workers (" +
                     "id VARCHAR(36) PRIMARY KEY," +
@@ -192,10 +152,7 @@ public final class DatabaseManager {
                     "role VARCHAR(128)," +
                     "rate VARCHAR(64)," +
                     "created_at DATETIME NOT NULL," +
-                    "sync_id VARCHAR(36)," +
-                    "device_id VARCHAR(64)," +
-                    "synced_at DATETIME," +
-                    "sync_status BOOLEAN DEFAULT false" +
+                    "sync_status BOOLEAN NOT NULL DEFAULT false" +
                     ")");
             statement.execute("CREATE TABLE IF NOT EXISTS worker_attendance (" +
                     "id VARCHAR(36) PRIMARY KEY," +
@@ -204,10 +161,7 @@ public final class DatabaseManager {
                     "status VARCHAR(16) NOT NULL," +
                     "created_at DATETIME NOT NULL," +
                     "updated_at DATETIME NOT NULL," +
-                    "sync_id VARCHAR(36)," +
-                    "device_id VARCHAR(64)," +
-                    "synced_at DATETIME," +
-                    "sync_status BOOLEAN DEFAULT false," +
+                    "sync_status BOOLEAN NOT NULL DEFAULT false," +
                     "UNIQUE KEY uk_worker_date (worker_id, attendance_date)" +
                     ")");
             statement.execute("CREATE TABLE IF NOT EXISTS salary_advances (" +
@@ -215,10 +169,7 @@ public final class DatabaseManager {
                     "worker VARCHAR(255)," +
                     "amount DECIMAL(12,2) NOT NULL DEFAULT 0," +
                     "advance_date DATE," +
-                    "sync_id VARCHAR(36)," +
-                    "device_id VARCHAR(64)," +
-                    "synced_at DATETIME," +
-                    "sync_status BOOLEAN DEFAULT false" +
+                    "sync_status BOOLEAN NOT NULL DEFAULT false" +
                     ")");
             statement.execute("CREATE TABLE IF NOT EXISTS salary_payments (" +
                     "id VARCHAR(36) PRIMARY KEY," +
@@ -228,10 +179,7 @@ public final class DatabaseManager {
                     "period_to DATE NOT NULL," +
                     "amount DECIMAL(12,2) NOT NULL DEFAULT 0," +
                     "paid_at DATETIME NOT NULL," +
-                    "sync_id VARCHAR(36)," +
-                    "device_id VARCHAR(64)," +
-                    "synced_at DATETIME," +
-                    "sync_status BOOLEAN DEFAULT false," +
+                    "sync_status BOOLEAN NOT NULL DEFAULT false," +
                     "INDEX idx_salary_payment_period (worker_id, period_from, period_to)" +
                     ")");
             statement.execute("CREATE TABLE IF NOT EXISTS worker_credits (" +
@@ -240,20 +188,14 @@ public final class DatabaseManager {
                     "amount DECIMAL(12,2) NOT NULL DEFAULT 0," +
                     "credit_type VARCHAR(16)," +
                     "credit_date DATE," +
-                    "sync_id VARCHAR(36)," +
-                    "device_id VARCHAR(64)," +
-                    "synced_at DATETIME," +
-                    "sync_status BOOLEAN DEFAULT false" +
+                    "sync_status BOOLEAN NOT NULL DEFAULT false" +
                     ")");
             statement.execute("CREATE TABLE IF NOT EXISTS quick_services (" +
                     "id VARCHAR(36) PRIMARY KEY," +
                     "service VARCHAR(255)," +
                     "price DECIMAL(12,2) NOT NULL DEFAULT 0," +
                     "service_date DATE," +
-                    "sync_id VARCHAR(36)," +
-                    "device_id VARCHAR(64)," +
-                    "synced_at DATETIME," +
-                    "sync_status BOOLEAN DEFAULT false" +
+                    "sync_status BOOLEAN NOT NULL DEFAULT false" +
                     ")");
              statement.execute("CREATE TABLE IF NOT EXISTS quick_service_presets (" +
                      "id VARCHAR(36) PRIMARY KEY," +
@@ -270,13 +212,8 @@ public final class DatabaseManager {
                      "category VARCHAR(100)," +
                      "amount DECIMAL(12,2) NOT NULL," +
                      "created_at DATETIME NOT NULL," +
-                     "sync_id VARCHAR(36)," +
-                     "device_id VARCHAR(64)," +
-                     "synced_at DATETIME," +
-                     "sync_status BOOLEAN DEFAULT false" +
+                    "sync_status BOOLEAN NOT NULL DEFAULT false" +
                      ")");
-            statement.execute("INSERT IGNORE INTO app_sync_state (id, device_id, last_sync_at) " +
-                    "VALUES (1, UUID(), NULL)");
             // Ensure new invoice columns exist on older databases
             ensureColumnExists(connection, "invoices", "invoice_id", "VARCHAR(64)");
             ensureColumnExists(connection, "invoices", "customer", "VARCHAR(255)");
@@ -334,22 +271,19 @@ public final class DatabaseManager {
              ensureColumnExists(connection, "products", "supplier_name", "VARCHAR(255)");
              ensureColumnExists(connection, "products", "created_at", "DATETIME");
              
-             // Add sync columns to all tables
-             addSyncColumns(connection, "products");
-             addSyncColumns(connection, "customers");
-             addSyncColumns(connection, "invoices");
-             addSyncColumns(connection, "invoice_line_items");
-             addSyncColumns(connection, "credit_sales");
-             addSyncColumns(connection, "credit_sale_parts");
-             addSyncColumns(connection, "services");
-             addSyncColumns(connection, "tyre_exports");
-             addSyncColumns(connection, "workers");
-             addSyncColumns(connection, "worker_attendance");
-             addSyncColumns(connection, "salary_advances");
-             addSyncColumns(connection, "salary_payments");
-             addSyncColumns(connection, "worker_credits");
-             addSyncColumns(connection, "quick_services");
-             addSyncColumns(connection, "expenses");
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
              backfillProductCodes(connection);
              ensureUniqueIndex(connection, "products", "uk_products_product_code", "product_code");
              ensureUniqueIndex(connection, "tyre_exports", "uk_tyre_exports_export_id", "export_id");
@@ -401,18 +335,6 @@ public final class DatabaseManager {
         return getEnvOrProp("KLINE_DB_PASSWORD", "kline.dbPassword", DEFAULT_PASSWORD);
     }
 
-    public static String getDeviceId() {
-        init();
-        String sql = "SELECT device_id FROM app_sync_state WHERE id = 1";
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet rs = statement.executeQuery()) {
-            return rs.next() ? rs.getString("device_id") : "";
-        } catch (SQLException ex) {
-            throw new IllegalStateException("Failed to read device id", ex);
-        }
-    }
-
     private static String getEnvOrProp(String envKey, String propKey, String fallback) {
         String env = System.getenv(envKey);
         if (env != null && !env.isBlank()) {
@@ -444,7 +366,7 @@ public final class DatabaseManager {
 
      private static void validateSchema(Connection connection) throws SQLException {
              List<String> required = List.of(
-                  "app_sync_state", "sync_queue", "products", "customers",
+                  "products", "customers",
                   "invoices", "invoice_line_items", "credit_sales", "credit_sale_parts", "services", "tyre_exports",
                   "workers", "worker_attendance", "salary_advances", "salary_payments", "worker_credits", "quick_services",
                   "quick_service_presets", "expenses"
@@ -515,6 +437,6 @@ public final class DatabaseManager {
         // Add synced_at column if not exists
         ensureColumnExists(connection, table, "synced_at", "DATETIME");
         // Add sync_status column if not exists
-        ensureColumnExists(connection, table, "sync_status", "BOOLEAN DEFAULT false");
+        ensureColumnExists(connection, table, "sync_status", "BOOLEAN NOT NULL DEFAULT false");
     }
 }

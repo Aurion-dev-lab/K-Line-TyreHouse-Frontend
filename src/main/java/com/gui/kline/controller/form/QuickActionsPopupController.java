@@ -1,7 +1,6 @@
 package com.gui.kline.controller.form;
 
 import com.gui.kline.data.DatabaseManager;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.utils.JsonUtil;
 import javafx.fxml.FXML;
@@ -24,8 +23,6 @@ public class QuickActionsPopupController {
 
     private List<QuickService> services;
     private Runnable onActionLogged;
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-
     public void setServices(List<QuickService> services) {
         this.services = services;
         populateGrid();
@@ -119,9 +116,7 @@ public class QuickActionsPopupController {
                 JsonUtil.field("service", service.name),
                 JsonUtil.field("price", service.price),
                 JsonUtil.field("date", java.time.LocalDate.now().toString())
-        );
-        syncQueueRepository.enqueue("quick_service", payload);
-    }
+        );    }
 
     @FXML
     private void handleClose() {

@@ -1,7 +1,6 @@
 package com.gui.kline.controller.form;
 
 import com.gui.kline.data.LocalWorkerRepository;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.utils.JsonUtil;
 import com.gui.kline.models.Worker;
 import javafx.collections.FXCollections;
@@ -36,10 +35,7 @@ public class AddWorkerController {
     private TextField txtRole;
 
     @FXML
-    private Label lblTitle;
-
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-    private final LocalWorkerRepository workerRepository = new LocalWorkerRepository();
+    private Label lblTitle;    private final LocalWorkerRepository workerRepository = new LocalWorkerRepository();
     private Runnable onSaved;
 
     private String workerId;
@@ -75,9 +71,7 @@ public class AddWorkerController {
             workerRepository.updateWorker(workerId, name, phone, role, rate, salaryType);
         } else {
             workerRepository.saveWorker(name, phone, role, rate, salaryType);
-        }
-        syncQueueRepository.enqueue("worker", payload);
-        if (onSaved != null) {
+        }        if (onSaved != null) {
             onSaved.run();
         }
         closeDialog();

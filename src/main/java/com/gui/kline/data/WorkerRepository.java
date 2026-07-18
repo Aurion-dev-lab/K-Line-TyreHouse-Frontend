@@ -86,12 +86,12 @@ public class WorkerRepository {
         String id = worker.getId() != null ? worker.getId() : java.util.UUID.randomUUID().toString();
         
         String sql = "INSERT INTO workers (id, name, phone, role, rate, created_at, salary_type, " +
-                "sync_id, device_id, synced_at, sync_status, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, NOW()) " +
+                "sync_status, updated_at) " +
+                "VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, NOW()) " +
                 "ON DUPLICATE KEY UPDATE name = VALUES(name), phone = VALUES(phone), " +
                 "role = VALUES(role), rate = VALUES(rate), salary_type = VALUES(salary_type), " +
-                "sync_id = VALUES(sync_id), device_id = VALUES(device_id), " +
-                "synced_at = VALUES(synced_at), sync_status = VALUES(sync_status), " +
+                "" +
+                "sync_status = VALUES(sync_status), " +
                 "updated_at = NOW()";
         
         try (Connection connection = DatabaseManager.getConnection();
@@ -103,10 +103,7 @@ public class WorkerRepository {
             statement.setString(4, worker.getRole());
             statement.setString(5, worker.getRate());
             statement.setString(6, worker.getSalaryType());
-            statement.setString(7, worker.getSyncId());
-            statement.setString(8, worker.getDeviceId());
-            statement.setTimestamp(9, worker.getSyncedAt() != null ? Timestamp.valueOf(worker.getSyncedAt()) : null);
-            statement.setBoolean(10, worker.isSyncStatus());
+            statement.setBoolean(7, worker.isSyncStatus());
             
             statement.executeUpdate();
             
@@ -123,7 +120,7 @@ public class WorkerRepository {
      * Mark a worker as synced
      */
     public void markAsSynced(String workerId) {
-        String sql = "UPDATE workers SET sync_status = true, synced_at = NOW() WHERE id = ?";
+        String sql = "UPDATE workers SET sync_status = true WHERE id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -168,10 +165,6 @@ public class WorkerRepository {
         worker.setSalaryType(rs.getString("salary_type"));
         
         // Sync fields
-        worker.setSyncId(rs.getString("sync_id"));
-        worker.setDeviceId(rs.getString("device_id"));
-        worker.setSyncedAt(rs.getTimestamp("synced_at") != null ? 
-            rs.getTimestamp("synced_at").toLocalDateTime() : null);
         worker.setSyncStatus(rs.getBoolean("sync_status"));
         worker.setCreatedAt(rs.getTimestamp("created_at") != null ? 
             rs.getTimestamp("created_at").toLocalDateTime() : null);

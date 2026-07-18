@@ -10,7 +10,6 @@ import com.gui.kline.utils.JsonUtil;
 import com.gui.kline.controller.form.GiveCreditDialogController;
 import com.gui.kline.controller.form.SalaryAdvanceController;
 import com.gui.kline.controller.form.SettleCreditDialogController;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.utils.AlertUtil;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -65,8 +64,6 @@ public class SalaryController implements Initializable {
     private final ObservableList<LedgerEntry>  ledgerList = FXCollections.observableArrayList();
     private final LocalSalaryRepository salaryRepository = new LocalSalaryRepository();
     private final LocalWorkerCreditRepository creditRepository = new LocalWorkerCreditRepository();
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         YearMonth currentMonth = YearMonth.now();
@@ -370,9 +367,7 @@ public class SalaryController implements Initializable {
                 String payload = JsonUtil.obj(
                         JsonUtil.field("id", paymentId),
                         JsonUtil.field("op", "delete")
-                );
-                syncQueueRepository.enqueue("salary_payment", payload);
-                reloadData();
+                );                reloadData();
             }
         });
 
@@ -483,9 +478,7 @@ public class SalaryController implements Initializable {
                     String payload = JsonUtil.obj(
                             JsonUtil.field("id", e.getId()),
                             JsonUtil.field("op", "delete")
-                    );
-                    syncQueueRepository.enqueue("worker_credit", payload);
-                    reloadData();
+                    );                    reloadData();
                 });
                 HBox actionsBox = new HBox(8, edit, del);
                 actionsBox.setAlignment(Pos.CENTER);
@@ -598,16 +591,6 @@ public class SalaryController implements Initializable {
         try {
             String paymentId = salaryRepository.paySalary(worker.getWorkerId(), worker.getName(), from, to,
                     paymentAmount, worker.getNetPayable());
-            syncQueueRepository.enqueue("salary_payment", JsonUtil.obj(
-                    JsonUtil.field("id", paymentId),
-                    JsonUtil.field("workerId", worker.getWorkerId()),
-                    JsonUtil.field("worker", worker.getName()),
-                    JsonUtil.field("periodFrom", from.toString()),
-                    JsonUtil.field("periodTo", to.toString()),
-                    JsonUtil.field("amount", paymentAmount),
-                    JsonUtil.field("status", paymentAmount >= worker.getRemainingPayable() - 0.0001 ? "PAID" : "PARTIALLY PAID"),
-                    JsonUtil.field("op", "create")
-            ));
             reloadData();
             return null;
         } catch (IllegalArgumentException | IllegalStateException ex) {

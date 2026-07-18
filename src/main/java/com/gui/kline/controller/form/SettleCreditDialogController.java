@@ -3,7 +3,6 @@ package com.gui.kline.controller.form;
 import com.gui.kline.data.LocalWorkerCreditRepository;
 import com.gui.kline.models.LedgerEntry;
 import com.gui.kline.data.LocalWorkerRepository;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.Worker;
 import com.gui.kline.utils.AlertUtil;
 import com.gui.kline.utils.JsonUtil;
@@ -36,10 +35,7 @@ public class SettleCreditDialogController {
     private TextField txtAmount;
 
     @FXML
-    private TextField txtNote;
-
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-    private final LocalWorkerRepository workerRepository = new LocalWorkerRepository();
+    private TextField txtNote;    private final LocalWorkerRepository workerRepository = new LocalWorkerRepository();
     private final LocalWorkerCreditRepository creditRepository = new LocalWorkerCreditRepository();
     private Runnable onSaved;
     private boolean editMode = false;
@@ -95,9 +91,7 @@ public class SettleCreditDialogController {
                     JsonUtil.field("note", note),
                     JsonUtil.field("type", "SETTLEMENT"),
                     JsonUtil.field("op", "update")
-            );
-            syncQueueRepository.enqueue("worker_credit", payload);
-        } else {
+            );        } else {
             id = creditRepository.saveCredit(worker.getId(), worker.getName(), date, amount, note, "SETTLEMENT");
             payload = JsonUtil.obj(
                     JsonUtil.field("id", id),
@@ -108,9 +102,7 @@ public class SettleCreditDialogController {
                     JsonUtil.field("note", note),
                     JsonUtil.field("type", "SETTLEMENT"),
                     JsonUtil.field("op", "create")
-            );
-            syncQueueRepository.enqueue("worker_credit_settle", payload);
-        }
+            );        }
         if (onSaved != null) {
             onSaved.run();
         }

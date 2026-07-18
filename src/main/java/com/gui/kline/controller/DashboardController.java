@@ -71,9 +71,7 @@ public class DashboardController implements Initializable {
     @FXML private Button newExportBtn;
     @FXML private GridPane quickActionsGrid;
 
-    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-    
+    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();    
     private List<QuickService> quickServices = new ArrayList<>();
 
     @Override
@@ -854,9 +852,7 @@ public class DashboardController implements Initializable {
                 JsonUtil.field("service", service.name),
                 JsonUtil.field("price", service.price),
                 JsonUtil.field("date", LocalDate.now().toString())
-        );
-        syncQueueRepository.enqueue("quick_service", payload);
-    }
+        );    }
 
     private int getMaxRowIndex(GridPane grid) {
         int max = -1;

@@ -82,9 +82,6 @@ CREATE TABLE IF NOT EXISTS expenses (
     category VARCHAR(100),
     amount DECIMAL(12,2) NOT NULL,
     created_at DATETIME NOT NULL,
-    sync_id VARCHAR(36),
-    device_id VARCHAR(64),
-    synced_at DATETIME,
     sync_status BOOLEAN DEFAULT false
 ) ENGINE=InnoDB;
 
@@ -108,9 +105,6 @@ CREATE TABLE IF NOT EXISTS tyre_exports (
     notes TEXT,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
-    sync_id VARCHAR(36),
-    device_id VARCHAR(64),
-    synced_at DATETIME,
     sync_status BOOLEAN DEFAULT false,
     created_at DATETIME,
     updated_at DATETIME

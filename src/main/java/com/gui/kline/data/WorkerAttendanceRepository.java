@@ -87,11 +87,11 @@ public class WorkerAttendanceRepository {
         String id = attendance.getId() != null ? attendance.getId() : java.util.UUID.randomUUID().toString();
         
         String sql = "INSERT INTO worker_attendance (id, worker_id, attendance_date, status, created_at, updated_at, " +
-                "sync_id, device_id, synced_at, sync_status) " +
-                "VALUES (?, ?, ?, ?, NOW(), NOW(), ?, ?, ?, ?) " +
+                "sync_status) " +
+                "VALUES (?, ?, ?, ?, NOW(), NOW(), ?) " +
                 "ON DUPLICATE KEY UPDATE worker_id = VALUES(worker_id), attendance_date = VALUES(attendance_date), " +
-                "status = VALUES(status), sync_id = VALUES(sync_id), device_id = VALUES(device_id), " +
-                "synced_at = VALUES(synced_at), sync_status = VALUES(sync_status), " +
+                "status = VALUES(status), " +
+                "sync_status = VALUES(sync_status), " +
                 "updated_at = NOW()";
         
         try (Connection connection = DatabaseManager.getConnection();
@@ -101,10 +101,7 @@ public class WorkerAttendanceRepository {
             statement.setString(2, attendance.getWorkerId());
             statement.setDate(3, attendance.getDate() != null ? Date.valueOf(attendance.getDate()) : null);
             statement.setString(4, attendance.getStatus());
-            statement.setString(5, attendance.getSyncId());
-            statement.setString(6, attendance.getDeviceId());
-            statement.setTimestamp(7, attendance.getSyncedAt() != null ? Timestamp.valueOf(attendance.getSyncedAt()) : null);
-            statement.setBoolean(8, attendance.isSyncStatus());
+            statement.setBoolean(5, attendance.isSyncStatus());
             
             statement.executeUpdate();
             
@@ -121,7 +118,7 @@ public class WorkerAttendanceRepository {
      * Mark a worker attendance as synced
      */
     public void markAsSynced(String attendanceId) {
-        String sql = "UPDATE worker_attendance SET sync_status = true, synced_at = NOW() WHERE id = ?";
+        String sql = "UPDATE worker_attendance SET sync_status = true WHERE id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -169,10 +166,6 @@ public class WorkerAttendanceRepository {
         attendance.setStatus(rs.getString("status"));
         
         // Sync fields
-        attendance.setSyncId(rs.getString("sync_id"));
-        attendance.setDeviceId(rs.getString("device_id"));
-        attendance.setSyncedAt(rs.getTimestamp("synced_at") != null ? 
-            rs.getTimestamp("synced_at").toLocalDateTime() : null);
         attendance.setSyncStatus(rs.getBoolean("sync_status"));
         attendance.setCreatedAt(rs.getTimestamp("created_at") != null ? 
             rs.getTimestamp("created_at").toLocalDateTime() : null);

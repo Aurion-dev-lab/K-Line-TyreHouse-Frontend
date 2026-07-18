@@ -90,8 +90,8 @@ public class InvoiceRepository {
                 "subtotal, tax, grand_total, created_at, updated_at, customer_name, customer_phone, " +
                 "payment_method, payment_reference, amount_paid, balance_due, notes, terms_and_conditions, " +
                 "created_by, updated_by, cancelled_at, cancellation_reason, discount, shipping, " +
-                "sync_id, device_id, synced_at, sync_status) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                "sync_status) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE invoice_id = VALUES(invoice_id), customer = VALUES(customer), " +
                 "invoice_date = VALUES(invoice_date), type = VALUES(type), status = VALUES(status), " +
                 "subtotal = VALUES(subtotal), tax = VALUES(tax), grand_total = VALUES(grand_total), " +
@@ -102,8 +102,8 @@ public class InvoiceRepository {
                 "created_by = VALUES(created_by), updated_by = VALUES(updated_by), " +
                 "cancelled_at = VALUES(cancelled_at), cancellation_reason = VALUES(cancellation_reason), " +
                 "discount = VALUES(discount), shipping = VALUES(shipping), " +
-                "sync_id = VALUES(sync_id), device_id = VALUES(device_id), " +
-                "synced_at = VALUES(synced_at), sync_status = VALUES(sync_status), " +
+                "" +
+                "sync_status = VALUES(sync_status), " +
                 "updated_at = NOW()";
         
         try (Connection connection = DatabaseManager.getConnection();
@@ -132,10 +132,7 @@ public class InvoiceRepository {
             statement.setString(21, invoice.getCancellationReason());
             statement.setDouble(22, invoice.getDiscount());
             statement.setDouble(23, invoice.getShipping());
-            statement.setString(24, invoice.getSyncId());
-            statement.setString(25, invoice.getDeviceId());
-            statement.setTimestamp(26, invoice.getSyncedAt() != null ? Timestamp.valueOf(invoice.getSyncedAt()) : null);
-            statement.setBoolean(27, invoice.isSyncStatus());
+            statement.setBoolean(24, invoice.isSyncStatus());
             
             statement.executeUpdate();
             
@@ -152,7 +149,7 @@ public class InvoiceRepository {
      * Mark an invoice as synced
      */
     public void markAsSynced(String invoiceId) {
-        String sql = "UPDATE invoices SET sync_status = true, synced_at = NOW() WHERE id = ?";
+        String sql = "UPDATE invoices SET sync_status = true WHERE id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -224,10 +221,6 @@ public class InvoiceRepository {
         invoice.setCancellationReason(rs.getString("cancellation_reason"));
         
         // Sync fields
-        invoice.setSyncId(rs.getString("sync_id"));
-        invoice.setDeviceId(rs.getString("device_id"));
-        invoice.setSyncedAt(rs.getTimestamp("synced_at") != null ? 
-            rs.getTimestamp("synced_at").toLocalDateTime() : null);
         invoice.setSyncStatus(rs.getBoolean("sync_status"));
         invoice.setCreatedAt(rs.getTimestamp("created_at") != null ? 
             rs.getTimestamp("created_at").toLocalDateTime() : null);

@@ -8,7 +8,6 @@ import java.util.Map;
 
 import com.gui.kline.data.LocalCatalogRepository;
 import com.gui.kline.data.LocalInvoiceRepository;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.InvoiceDetail;
 import com.gui.kline.models.InvoiceRow;
 import com.gui.kline.models.LineItem;
@@ -55,10 +54,7 @@ public class AddInvoiceController {
     @FXML private VBox               vboxLineItems;
     @FXML private Button             btnAddItem;
     @FXML private Button             btnCancel;
-    @FXML private Button             btnSave;
-
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
+    @FXML private Button             btnSave;    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
     private final LocalInvoiceRepository invoiceRepository = new LocalInvoiceRepository();
     private final List<LineItem> lineItems = new ArrayList<>();
     private final ObservableList<Product> allProducts = FXCollections.observableArrayList();
@@ -422,9 +418,7 @@ public class AddInvoiceController {
                             JsonUtil.field("buyPrice", product.getBuyPrice()),
                             JsonUtil.field("sellPrice", product.getSellPrice()),
                             JsonUtil.field("stock", product.getStock())
-                    );
-                    syncQueueRepository.enqueue("product", payload);
-                }
+                    );                }
             }
         }
     }
@@ -464,9 +458,7 @@ public class AddInvoiceController {
                 JsonUtil.field("tax", detail.getTax()),
                 JsonUtil.field("grandTotal", detail.getGrandTotal()),
                 JsonUtil.fieldRaw("items", JsonUtil.array(items))
-        );
-        syncQueueRepository.enqueue("invoice", payload);
-    }
+        );    }
 
     private boolean validate() {
         if (getCustomerName().isBlank()) {

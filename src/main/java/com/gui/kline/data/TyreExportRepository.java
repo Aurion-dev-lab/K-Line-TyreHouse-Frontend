@@ -89,8 +89,8 @@ public class TyreExportRepository {
         String sql = "INSERT INTO tyre_exports (id, export_id, operation, serial_number, company, tyres, cust_price, " +
                 "comp_price, service_fee, paid_amount, total_amount, balance_amount, payment_status, " +
                 "status, export_date, notes, created_by, updated_by, " +
-                "sync_id, device_id, synced_at, sync_status, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) " +
+                "sync_status, created_at, updated_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) " +
                 "ON DUPLICATE KEY UPDATE export_id = VALUES(export_id), operation = VALUES(operation), " +
                 "serial_number = VALUES(serial_number), company = VALUES(company), tyres = VALUES(tyres), " +
                 "cust_price = VALUES(cust_price), comp_price = VALUES(comp_price), service_fee = VALUES(service_fee), " +
@@ -98,8 +98,8 @@ public class TyreExportRepository {
                 "balance_amount = VALUES(balance_amount), payment_status = VALUES(payment_status), " +
                 "status = VALUES(status), export_date = VALUES(export_date), notes = VALUES(notes), " +
                 "created_by = VALUES(created_by), updated_by = VALUES(updated_by), " +
-                "sync_id = VALUES(sync_id), device_id = VALUES(device_id), " +
-                "synced_at = VALUES(synced_at), sync_status = VALUES(sync_status), " +
+                "" +
+                "sync_status = VALUES(sync_status), " +
                 "updated_at = NOW()";
         
         try (Connection connection = DatabaseManager.getConnection();
@@ -123,10 +123,7 @@ public class TyreExportRepository {
             statement.setString(16, tyreExport.getNotes());
             statement.setString(17, tyreExport.getCreatedBy());
             statement.setString(18, tyreExport.getUpdatedBy());
-            statement.setString(19, tyreExport.getSyncId());
-            statement.setString(20, tyreExport.getDeviceId());
-            statement.setTimestamp(21, tyreExport.getSyncedAt() != null ? Timestamp.valueOf(tyreExport.getSyncedAt()) : null);
-            statement.setBoolean(22, tyreExport.isSyncStatus());
+            statement.setBoolean(19, tyreExport.isSyncStatus());
             
             statement.executeUpdate();
             
@@ -143,7 +140,7 @@ public class TyreExportRepository {
      * Mark a tyre export as synced
      */
     public void markAsSynced(String tyreExportId) {
-        String sql = "UPDATE tyre_exports SET sync_status = true, synced_at = NOW() WHERE id = ?";
+        String sql = "UPDATE tyre_exports SET sync_status = true WHERE id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -246,10 +243,6 @@ public class TyreExportRepository {
         tyreExport.setUpdatedBy(rs.getString("updated_by"));
         
         // Sync fields
-        tyreExport.setSyncId(rs.getString("sync_id"));
-        tyreExport.setDeviceId(rs.getString("device_id"));
-        tyreExport.setSyncedAt(rs.getTimestamp("synced_at") != null ? 
-            rs.getTimestamp("synced_at").toLocalDateTime() : null);
         tyreExport.setSyncStatus(rs.getBoolean("sync_status"));
         tyreExport.setCreatedAt(rs.getTimestamp("created_at") != null ? 
             rs.getTimestamp("created_at").toLocalDateTime() : null);

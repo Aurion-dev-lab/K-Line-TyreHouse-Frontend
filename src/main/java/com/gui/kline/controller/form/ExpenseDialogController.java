@@ -1,7 +1,6 @@
 package com.gui.kline.controller.form;
 
 import com.gui.kline.data.DatabaseManager;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.utils.JsonUtil;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -36,10 +35,7 @@ public class ExpenseDialogController {
     private TextField txtAmount;
 
     @FXML
-    private TextField txtDescription;
-
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-    private Runnable onSaved;
+    private TextField txtDescription;    private Runnable onSaved;
 
     @FXML
     public void initialize() {
@@ -127,10 +123,7 @@ public class ExpenseDialogController {
                 JsonUtil.field("description", description),
                 JsonUtil.field("category", category),
                 JsonUtil.field("amount", amount)
-        );
-
-        syncQueueRepository.enqueue("expense", payload);
-    }
+        );    }
 
     public void setOnSaved(Runnable onSaved) {
         this.onSaved = onSaved;

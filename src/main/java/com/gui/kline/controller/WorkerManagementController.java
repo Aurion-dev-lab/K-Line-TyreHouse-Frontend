@@ -19,7 +19,6 @@ import java.util.Optional;
 import com.gui.kline.controller.form.AddWorkerController;
 import com.gui.kline.data.LocalWorkerAttendanceRepository;
 import com.gui.kline.data.LocalWorkerRepository;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.Worker;
 import com.gui.kline.models.WorkerAttendance;
 import com.gui.kline.models.WorkerAttendanceHistory;
@@ -46,9 +45,7 @@ public class WorkerManagementController {
     @FXML private ComboBox<YearMonth> cmbMonthlySummaryMonth;
 
     private final LocalWorkerRepository workerRepository = new LocalWorkerRepository();
-    private final LocalWorkerAttendanceRepository attendanceRepository = new LocalWorkerAttendanceRepository();
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-    private Map<String, Worker> workerIndex = new HashMap<>();
+    private final LocalWorkerAttendanceRepository attendanceRepository = new LocalWorkerAttendanceRepository();    private Map<String, Worker> workerIndex = new HashMap<>();
 
     @FXML
     public void initialize() {
@@ -255,9 +252,7 @@ public class WorkerManagementController {
                 JsonUtil.field("date", date.toString()),
                 JsonUtil.field("status", status),
                 JsonUtil.field("op", "upsert")
-        );
-        syncQueueRepository.enqueue("worker_attendance", payload);
-        mark(selected, other1, other2, color);
+        );        mark(selected, other1, other2, color);
         loadHistory();
         loadMonthlySummary(YearMonth.from(date));
     }
@@ -306,9 +301,7 @@ public class WorkerManagementController {
         String payload = JsonUtil.obj(
                 JsonUtil.field("id", worker.getId()),
                 JsonUtil.field("op", "delete")
-        );
-        syncQueueRepository.enqueue("worker", payload);
-        loadAttendance(attendanceDatePicker.getValue());
+        );        loadAttendance(attendanceDatePicker.getValue());
         loadHistory();
         loadMonthlySummary(YearMonth.now());
     }

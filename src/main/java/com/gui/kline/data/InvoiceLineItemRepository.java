@@ -86,13 +86,13 @@ public class InvoiceLineItemRepository {
         String id = lineItem.getId() != null ? lineItem.getId() : java.util.UUID.randomUUID().toString();
         
         String sql = "INSERT INTO invoice_line_items (id, invoice_id, invoice_ref, product_id, description, type, " +
-                "qty, unit_price, total, created_at, sync_id, device_id, synced_at, sync_status) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?) " +
+                "qty, unit_price, total, created_at, sync_status) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?) " +
                 "ON DUPLICATE KEY UPDATE invoice_id = VALUES(invoice_id), invoice_ref = VALUES(invoice_ref), " +
                 "product_id = VALUES(product_id), description = VALUES(description), type = VALUES(type), " +
                 "qty = VALUES(qty), unit_price = VALUES(unit_price), total = VALUES(total), " +
-                "sync_id = VALUES(sync_id), device_id = VALUES(device_id), " +
-                "synced_at = VALUES(synced_at), sync_status = VALUES(sync_status)";
+                "" +
+                "sync_status = VALUES(sync_status)";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -106,10 +106,7 @@ public class InvoiceLineItemRepository {
             statement.setInt(7, lineItem.getQty());
             statement.setDouble(8, lineItem.getUnitPrice());
             statement.setDouble(9, lineItem.getTotal());
-            statement.setString(10, lineItem.getSyncId());
-            statement.setString(11, lineItem.getDeviceId());
-            statement.setTimestamp(12, lineItem.getSyncedAt() != null ? Timestamp.valueOf(lineItem.getSyncedAt()) : null);
-            statement.setBoolean(13, lineItem.isSyncStatus());
+            statement.setBoolean(10, lineItem.isSyncStatus());
             
             statement.executeUpdate();
             
@@ -126,7 +123,7 @@ public class InvoiceLineItemRepository {
      * Mark a line item as synced
      */
     public void markAsSynced(String lineItemId) {
-        String sql = "UPDATE invoice_line_items SET sync_status = true, synced_at = NOW() WHERE id = ?";
+        String sql = "UPDATE invoice_line_items SET sync_status = true WHERE id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -174,10 +171,6 @@ public class InvoiceLineItemRepository {
         lineItem.setTotal(rs.getDouble("total"));
         
         // Sync fields
-        lineItem.setSyncId(rs.getString("sync_id"));
-        lineItem.setDeviceId(rs.getString("device_id"));
-        lineItem.setSyncedAt(rs.getTimestamp("synced_at") != null ? 
-            rs.getTimestamp("synced_at").toLocalDateTime() : null);
         lineItem.setSyncStatus(rs.getBoolean("sync_status"));
         lineItem.setCreatedAt(rs.getTimestamp("created_at") != null ? 
             rs.getTimestamp("created_at").toLocalDateTime() : null);

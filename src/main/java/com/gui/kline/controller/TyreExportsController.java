@@ -9,7 +9,6 @@ import java.util.ResourceBundle;
 
 import com.gui.kline.controller.form.NewExportDialogController;
 import com.gui.kline.data.SyncQueueReader;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.data.TyreExportRepository;
 import com.gui.kline.models.ExportRecord;
 import com.gui.kline.models.ViewModel;
@@ -50,9 +49,7 @@ public class TyreExportsController implements Initializable {
     private final ObservableList<ExportRecord> masterList   = FXCollections.observableArrayList();
     private       FilteredList<ExportRecord>   filteredList;
 
-    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-    private final TyreExportRepository tyreExportRepository = new TyreExportRepository();
+    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");    private final TyreExportRepository tyreExportRepository = new TyreExportRepository();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -468,9 +465,7 @@ public class TyreExportsController implements Initializable {
                  JsonUtil.field("paymentStatus", r.getPaymentStatus()),
                  JsonUtil.field("date", r.getDate().toString()),
                  JsonUtil.field("status", r.getStatus())
-         );
-         syncQueueRepository.enqueue("tyre_export", payload);
-     }
+         );     }
 
     private void enqueueExport(ExportRecord r) {
         String payload = JsonUtil.obj(
@@ -487,9 +482,7 @@ public class TyreExportsController implements Initializable {
                 JsonUtil.field("paymentStatus", r.getPaymentStatus()),
                 JsonUtil.field("date", r.getDate().toString()),
                 JsonUtil.field("status", r.getStatus())
-        );
-        syncQueueRepository.enqueue("tyre_export", payload);
-    }
+        );    }
 
     private String initials(String name) {
         String[] words = name.trim().split("\\s+");
@@ -767,10 +760,7 @@ public class TyreExportsController implements Initializable {
                 JsonUtil.field("status", row.getStatus()),
                 JsonUtil.field("total", row.getTotal()),
                 JsonUtil.fieldRaw("items", JsonUtil.array(items))
-        );
-
-        syncQueueRepository.enqueue("invoice", payload);
-    }
+        );    }
 
     private void onGenerateInvoiceForRecord(ExportRecord r) {
         try {

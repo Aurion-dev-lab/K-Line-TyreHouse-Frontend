@@ -87,13 +87,13 @@ public class QuickServiceRepository {
         String id = quickService.getId() != null ? quickService.getId() : java.util.UUID.randomUUID().toString();
         
         String sql = "INSERT INTO quick_services (id, service, price, service_date, notes, created_by, updated_by, " +
-                "sync_id, device_id, synced_at, sync_status, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) " +
+                "sync_status, created_at, updated_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) " +
                 "ON DUPLICATE KEY UPDATE service = VALUES(service), price = VALUES(price), " +
                 "service_date = VALUES(service_date), notes = VALUES(notes), " +
                 "created_by = VALUES(created_by), updated_by = VALUES(updated_by), " +
-                "sync_id = VALUES(sync_id), device_id = VALUES(device_id), " +
-                "synced_at = VALUES(synced_at), sync_status = VALUES(sync_status), " +
+                "" +
+                "sync_status = VALUES(sync_status), " +
                 "updated_at = NOW()";
         
         try (Connection connection = DatabaseManager.getConnection();
@@ -106,10 +106,7 @@ public class QuickServiceRepository {
             statement.setString(5, quickService.getNotes());
             statement.setString(6, quickService.getCreatedBy());
             statement.setString(7, quickService.getUpdatedBy());
-            statement.setString(8, quickService.getSyncId());
-            statement.setString(9, quickService.getDeviceId());
-            statement.setTimestamp(10, quickService.getSyncedAt() != null ? Timestamp.valueOf(quickService.getSyncedAt()) : null);
-            statement.setBoolean(11, quickService.isSyncStatus());
+            statement.setBoolean(8, quickService.isSyncStatus());
             
             statement.executeUpdate();
             
@@ -126,7 +123,7 @@ public class QuickServiceRepository {
      * Mark a quick service as synced
      */
     public void markAsSynced(String quickServiceId) {
-        String sql = "UPDATE quick_services SET sync_status = true, synced_at = NOW() WHERE id = ?";
+        String sql = "UPDATE quick_services SET sync_status = true WHERE id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -177,10 +174,6 @@ public class QuickServiceRepository {
         quickService.setUpdatedBy(rs.getString("updated_by"));
         
         // Sync fields
-        quickService.setSyncId(rs.getString("sync_id"));
-        quickService.setDeviceId(rs.getString("device_id"));
-        quickService.setSyncedAt(rs.getTimestamp("synced_at") != null ? 
-            rs.getTimestamp("synced_at").toLocalDateTime() : null);
         quickService.setSyncStatus(rs.getBoolean("sync_status"));
         quickService.setCreatedAt(rs.getTimestamp("created_at") != null ? 
             rs.getTimestamp("created_at").toLocalDateTime() : null);

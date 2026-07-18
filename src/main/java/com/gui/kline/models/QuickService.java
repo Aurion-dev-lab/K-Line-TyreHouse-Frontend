@@ -19,9 +19,6 @@ public class QuickService {
     private String vehicleNumber;
     
     // Sync fields
-    private String syncId;
-    private String deviceId;
-    private LocalDateTime syncedAt;
     private boolean syncStatus = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -60,14 +57,6 @@ public class QuickService {
     public void setVehicleNumber(String vehicleNumber) { this.vehicleNumber = vehicleNumber; }
 
     // Sync field getters and setters
-    public String getSyncId() { return syncId; }
-    public void setSyncId(String syncId) { this.syncId = syncId; }
-
-    public String getDeviceId() { return deviceId; }
-    public void setDeviceId(String deviceId) { this.deviceId = deviceId; }
-
-    public LocalDateTime getSyncedAt() { return syncedAt; }
-    public void setSyncedAt(LocalDateTime syncedAt) { this.syncedAt = syncedAt; }
 
     public boolean isSyncStatus() { return syncStatus; }
     public void setSyncStatus(boolean syncStatus) { this.syncStatus = syncStatus; }

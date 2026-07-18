@@ -9,7 +9,6 @@ import java.util.ResourceBundle;
 
 import com.gui.kline.data.LocalCatalogRepository;
 import com.gui.kline.data.LocalInvoiceRepository;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.controller.form.AddInvoiceController;
 import com.gui.kline.models.InvoiceDetail;
 import com.gui.kline.models.InvoiceRow;
@@ -63,9 +62,7 @@ public class InvoicesController implements Initializable {
     // (These FXML elements were removed from the UI)
     // ...existing code...
     private final ObservableList<InvoiceRow> invoiceList =
-            FXCollections.observableArrayList();
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
+            FXCollections.observableArrayList();    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
     private final LocalInvoiceRepository invoiceRepository = new LocalInvoiceRepository();
     private Map<String, Product> productMap = new HashMap<>();
 
@@ -351,9 +348,7 @@ public class InvoicesController implements Initializable {
                             JsonUtil.field("buyPrice", product.getBuyPrice()),
                             JsonUtil.field("sellPrice", product.getSellPrice()),
                             JsonUtil.field("stock", product.getStock())
-                    );
-                    syncQueueRepository.enqueue("product", payload);
-                }
+                    );                }
             }
         }
     }
@@ -424,9 +419,7 @@ public class InvoicesController implements Initializable {
                             JsonUtil.field("buyPrice", product.getBuyPrice()),
                             JsonUtil.field("sellPrice", product.getSellPrice()),
                             JsonUtil.field("stock", product.getStock())
-                    );
-                    syncQueueRepository.enqueue("product", payload);
-                }
+                    );                }
             }
         }
         loadProductMap();  // Reload product map
@@ -507,10 +500,7 @@ public class InvoicesController implements Initializable {
                 JsonUtil.field("tax", detail.getTax()),
                 JsonUtil.field("grandTotal", detail.getGrandTotal()),
                 JsonUtil.fieldRaw("items", JsonUtil.array(items))
-        );
-
-        syncQueueRepository.enqueue("invoice", payload);
-    }
+        );    }
 
     private void loadFromLocal() {
         List<InvoiceRow> local = invoiceRepository.loadInvoices();

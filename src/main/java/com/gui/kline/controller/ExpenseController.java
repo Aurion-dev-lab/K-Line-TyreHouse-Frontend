@@ -2,7 +2,6 @@ package com.gui.kline.controller;
 
 import com.gui.kline.controller.form.ExpenseDialogController;
 import com.gui.kline.data.DatabaseManager;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.Expense;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.utils.JsonUtil;
@@ -68,8 +67,6 @@ public class ExpenseController implements Initializable {
 
     private final ObservableList<Expense> expenses = FXCollections.observableArrayList();
     private FilteredList<Expense> filteredExpenses;
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         colDate.setCellValueFactory(data -> data.getValue().dateLabelProperty());

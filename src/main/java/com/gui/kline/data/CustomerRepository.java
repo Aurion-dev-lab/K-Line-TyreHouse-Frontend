@@ -88,8 +88,8 @@ public class CustomerRepository {
         String sql = "INSERT INTO customers (id, name, phone, company_name, alternate_phone, email, address, " +
                 "city, state, country, postal_code, tax_id, category, credit_limit, current_credit, " +
                 "active, date_of_birth, notes, loyalty_program_id, loyalty_points, member_since, " +
-                "sync_id, device_id, synced_at, sync_status, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) " +
+                "sync_status, created_at, updated_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) " +
                 "ON DUPLICATE KEY UPDATE name = VALUES(name), phone = VALUES(phone), " +
                 "company_name = VALUES(company_name), alternate_phone = VALUES(alternate_phone), " +
                 "email = VALUES(email), address = VALUES(address), city = VALUES(city), " +
@@ -99,7 +99,7 @@ public class CustomerRepository {
                 "date_of_birth = VALUES(date_of_birth), notes = VALUES(notes), " +
                 "loyalty_program_id = VALUES(loyalty_program_id), loyalty_points = VALUES(loyalty_points), " +
                 "member_since = VALUES(member_since), sync_id = VALUES(sync_id), " +
-                "device_id = VALUES(device_id), synced_at = VALUES(synced_at), " +
+                "device_id = VALUES(device_id), " +
                 "sync_status = VALUES(sync_status), updated_at = NOW()";
         
         try (Connection connection = DatabaseManager.getConnection();
@@ -128,11 +128,7 @@ public class CustomerRepository {
             statement.setDouble(20, customer.getLoyaltyPoints());
             statement.setTimestamp(21, customer.getMemberSince() != null ? 
                 Timestamp.valueOf(customer.getMemberSince()) : null);
-            statement.setString(22, customer.getSyncId());
-            statement.setString(23, customer.getDeviceId());
-            statement.setTimestamp(24, customer.getSyncedAt() != null ? 
-                Timestamp.valueOf(customer.getSyncedAt()) : null);
-            statement.setBoolean(25, customer.isSyncStatus());
+            statement.setBoolean(22, customer.isSyncStatus());
             
             statement.executeUpdate();
             
@@ -149,7 +145,7 @@ public class CustomerRepository {
      * Mark a customer as synced
      */
     public void markAsSynced(String customerId) {
-        String sql = "UPDATE customers SET sync_status = true, synced_at = NOW() WHERE id = ?";
+        String sql = "UPDATE customers SET sync_status = true WHERE id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -217,10 +213,6 @@ public class CustomerRepository {
         }
         
         // Sync fields
-        customer.setSyncId(rs.getString("sync_id"));
-        customer.setDeviceId(rs.getString("device_id"));
-        customer.setSyncedAt(rs.getTimestamp("synced_at") != null ? 
-            rs.getTimestamp("synced_at").toLocalDateTime() : null);
         customer.setSyncStatus(rs.getBoolean("sync_status"));
         customer.setCreatedAt(rs.getTimestamp("created_at") != null ? 
             rs.getTimestamp("created_at").toLocalDateTime() : null);

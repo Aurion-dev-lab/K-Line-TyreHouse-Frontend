@@ -121,7 +121,7 @@ public class ProductRepository {
      * Mark a product as synced
      */
     public void markAsSynced(String productId) {
-        String sql = "UPDATE products SET sync_status = true, synced_at = NOW() WHERE id = ?";
+        String sql = "UPDATE products SET sync_status = true WHERE id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {

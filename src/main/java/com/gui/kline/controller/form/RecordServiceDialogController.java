@@ -1,7 +1,6 @@
 package com.gui.kline.controller.form;
 
 import com.gui.kline.data.DatabaseManager;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.utils.JsonUtil;
 
 import javafx.fxml.FXML;
@@ -20,9 +19,6 @@ public class RecordServiceDialogController {
     @FXML private TextField   txtServiceName;
     @FXML private TextField   txtPrice;
     @FXML private DatePicker  datePicker;
-
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-
     @FXML
     public void initialize() {
         datePicker.setValue(LocalDate.now());
@@ -72,8 +68,6 @@ public class RecordServiceDialogController {
                 JsonUtil.field("price", price),
                 JsonUtil.field("date", serviceDate.toString())
         );
-        syncQueueRepository.enqueue("service", payload);
-
         closeDialog();
     }
 

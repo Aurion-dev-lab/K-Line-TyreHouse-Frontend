@@ -1,7 +1,6 @@
 package com.gui.kline.controller;
 
 import com.gui.kline.data.DatabaseManager;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.ServiceRecord;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.utils.JsonUtil;
@@ -84,8 +83,6 @@ public class ServicesController implements Initializable {
 
     private final ObservableList<ServiceRecord> services = FXCollections.observableArrayList();
     private FilteredList<ServiceRecord> filteredServices;
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         colDate.setCellValueFactory(data -> data.getValue().dateLabelProperty());

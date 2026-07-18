@@ -8,7 +8,6 @@ import java.util.List;
 import com.gui.kline.controller.CreditSalesController;
 import com.gui.kline.data.LocalCatalogRepository;
 import com.gui.kline.data.LocalCreditSalesRepository;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.CreditSaleDetail;
 import com.gui.kline.models.Part;
 import com.gui.kline.models.Product;
@@ -60,9 +59,7 @@ public class ProcessCreditSaleController {
      private List<Product> availableProducts = new ArrayList<>();
      private ObservableList<Product> allProducts = FXCollections.observableArrayList();
      private FilteredList<Product> filteredProducts;
-     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-     private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-     private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
+     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");     private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
      private final LocalCreditSalesRepository creditSalesRepository = new LocalCreditSalesRepository();
      private static final java.util.Map<String, Integer> TERMS_DAY_MAP = new java.util.HashMap<>();
      static {
@@ -478,10 +475,7 @@ public class ProcessCreditSaleController {
                   JsonUtil.field("partsCost", detail.getPartsCost()),
                   JsonUtil.field("discount", detail.getDiscount()),
                   JsonUtil.fieldRaw("items", JsonUtil.array(parts))
-          );
-
-          syncQueueRepository.enqueue("credit_sale", payload);
-      }
+          );      }
 
       @FXML
       private void onCancel() {

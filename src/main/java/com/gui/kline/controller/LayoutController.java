@@ -1,10 +1,8 @@
 package com.gui.kline.controller;
 
 import com.gui.kline.data.DatabaseManager;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.service.NavigationService;
-import com.gui.kline.service.SyncService;
 import com.gui.kline.utils.AlertUtil;
 import com.gui.kline.utils.BackgroundTask;
 import com.gui.kline.utils.JsonUtil;
@@ -51,7 +49,6 @@ public class LayoutController {
 
     private Button activeButton;
     private boolean quickActionsVisible = true, isCollapsed = false;
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
     private final PauseTransition searchDebounce = new PauseTransition(Duration.millis(250));
 
     private static final double SIDEBAR_FULL = 260.0;
@@ -224,7 +221,6 @@ public class LayoutController {
                 JsonUtil.field("price", price),
                 JsonUtil.field("date", java.time.LocalDate.now().toString())
         );
-        syncQueueRepository.enqueue("quick_service", payload);
     }
 
     private void loadQuickActionsPanel() {
@@ -324,12 +320,7 @@ public class LayoutController {
 
     @FXML
     private void onUpload() {
-        SyncService.SyncResult result = new SyncService().syncPending();
-        if (result.getFailed() > 0) {
-            AlertUtil.showError("Upload failed", result.getMessage());
-        } else {
-            AlertUtil.showInfo("Upload complete", result.getMessage());
-        }
+        AlertUtil.showInfo("Upload complete", "Custom sync strategy pending...");
     }
 
     // ── Global Search Implementation ──
@@ -682,23 +673,6 @@ public class LayoutController {
                     .followRedirects(java.net.http.HttpClient.Redirect.NORMAL)
                     .build();
 
-            // Try the app's own sync server first
-            String syncUrl = com.gui.kline.service.SyncConfig.getSyncUrl();
-            if (syncUrl != null && !syncUrl.isBlank()) {
-                try {
-                    java.net.URI baseUri = java.net.URI.create(syncUrl);
-                    String checkUrl = baseUri.resolve("/health").toString();
-                    java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
-                            .uri(java.net.URI.create(checkUrl))
-                            .timeout(java.time.Duration.ofSeconds(3))
-                            .method("HEAD", java.net.http.HttpRequest.BodyPublishers.noBody())
-                            .build();
-                    java.net.http.HttpResponse<Void> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.discarding());
-                    isOnline = response.statusCode() >= 200 && response.statusCode() < 400;
-                } catch (Exception ignored) {
-                    // Fall through to fallback check
-                }
-            }
 
             // Fallback: Google connectivity check endpoint
             if (!isOnline) {
@@ -745,3 +719,4 @@ public class LayoutController {
         }
     }
 }
+

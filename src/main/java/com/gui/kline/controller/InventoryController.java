@@ -7,7 +7,6 @@ import java.util.ResourceBundle;
 
 import com.gui.kline.controller.form.ProductFormController;
 import com.gui.kline.data.LocalCatalogRepository;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.Product;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.utils.AlertUtil;
@@ -49,9 +48,7 @@ public class InventoryController implements Initializable {
     @FXML private Label     lblTotalVal;
     @FXML private Label     lblUnitsVal;
     @FXML private Label     lblLowVal;
-    private static final int LOW_STOCK_THRESHOLD = 5;
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
+    private static final int LOW_STOCK_THRESHOLD = 5;    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
 
     private final ObservableList<Product> masterList   = FXCollections.observableArrayList();
     private final FilteredList<Product>   filteredList = new FilteredList<>(masterList, p -> true);
@@ -468,7 +465,5 @@ public class InventoryController implements Initializable {
                 JsonUtil.field("buyPrice", product.getBuyPrice()),
                 JsonUtil.field("sellPrice", product.getSellPrice()),
                 JsonUtil.field("stock", product.getStock())
-        );
-        syncQueueRepository.enqueue("product", payload);
-    }
+        );    }
 }
