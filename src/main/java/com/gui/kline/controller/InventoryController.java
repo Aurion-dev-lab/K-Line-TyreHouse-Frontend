@@ -165,7 +165,7 @@ public class InventoryController implements Initializable {
             File imageFile = ImagePathUtil.resolve(imagePath);
             if (imageFile != null && imageFile.exists()) {
                 try {
-                    Image image = new Image(imageFile.toURI().toString());
+                    Image image = new Image(imageFile.toURI().toString(), 60, 60, true, true, true);
                     productImage.setImage(image);
                 } catch (Exception ex) {
                     // Use placeholder on error
@@ -393,7 +393,7 @@ public class InventoryController implements Initializable {
                 File imageFile = ImagePathUtil.resolve(imagePath);
                 if (imageFile != null && imageFile.exists()) {
                     try {
-                        Image image = new Image(imageFile.toURI().toString());
+                        Image image = new Image(imageFile.toURI().toString(), 120, 120, true, true, true);
                         ImageView imageView = new ImageView(image);
                         imageView.setFitWidth(120);
                         imageView.setFitHeight(120);

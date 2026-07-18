@@ -360,7 +360,7 @@ public class ProductFormController implements Initializable {
         try {
             File imageFile = ImagePathUtil.resolve(imagePath);
             if (imageFile != null && imageFile.exists()) {
-                Image image = new Image(imageFile.toURI().toString());
+                Image image = new Image(imageFile.toURI().toString(), 200, 200, true, true, true);
                 imgPreview.setImage(image);
                 imgPreview.setVisible(true);
                 imgPreview.setManaged(true);
