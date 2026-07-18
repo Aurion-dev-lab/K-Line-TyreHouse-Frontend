@@ -68,13 +68,20 @@ public class SalaryAdvanceController {
     void onSave(ActionEvent event) {
         Worker worker = cmbWorker.getValue();
         LocalDate date = datePicker.getValue();
+        
+        // Get owner window for proper dialog parenting
+        javafx.stage.Window owner = null;
+        if (btnSave != null && btnSave.getScene() != null) {
+            owner = btnSave.getScene().getWindow();
+        }
+        
         if (worker == null || date == null) {
-            AlertUtil.showError("Missing data", "Please select a worker and date.");
+            AlertUtil.showError(owner, "Missing data", "Please select a worker and date.");
             return;
         }
         double amount = parseAmount(txtAmount.getText());
         if (amount <= 0) {
-            AlertUtil.showError("Invalid amount", "Please enter a valid amount.");
+            AlertUtil.showError(owner, "Invalid amount", "Please enter a valid amount.");
             return;
         }
         String note = txtNote.getText().trim();
