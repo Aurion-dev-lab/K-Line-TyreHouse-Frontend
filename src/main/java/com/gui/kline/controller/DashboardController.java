@@ -431,7 +431,7 @@ public class DashboardController implements Initializable {
         loadQuickServicesSync();
     }
 
-    private void refreshData() {
+    public void refreshData() {
         LocalDate start = startDatePicker.getValue();
         LocalDate end   = endDatePicker.getValue();
         if (start != null && end != null && !start.isAfter(end)) {

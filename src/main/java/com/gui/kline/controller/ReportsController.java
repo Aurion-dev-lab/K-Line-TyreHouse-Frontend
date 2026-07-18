@@ -6,6 +6,7 @@ import com.gui.kline.data.ReportsRepository.ExpenseItem;
 import com.gui.kline.data.ReportsRepository.FinancialSummary;
 import com.gui.kline.data.ReportsRepository.TopProduct;
 import com.gui.kline.data.ReportsRepository.CustomerSummary;
+import com.gui.kline.models.ViewModel;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -106,6 +107,8 @@ public class ReportsController implements Initializable {
         initializeDatePickers();
         setupEventHandlers();
         loadInitialData();
+        // Register with ViewFactory for cross-controller refresh
+        ViewModel.INSTANCE.getViewsFactory().setReportsController(this);
     }
 
     private void setupUI() {
@@ -156,7 +159,7 @@ public class ReportsController implements Initializable {
         refresh();
     }
 
-    private void refresh() {
+    public void refresh() {
         LocalDate from = startDatePicker.getValue();
         LocalDate to = endDatePicker.getValue();
         if (from == null || to == null) return;

@@ -118,6 +118,10 @@ public class TyreExportsController implements Initializable {
             // Save to local database
             tyreExportRepository.saveTyreExport(tyreExport);
             
+            // Refresh analytics and dashboard
+            ViewModel.INSTANCE.getViewsFactory().refreshReports();
+            ViewModel.INSTANCE.getViewsFactory().refreshDashboard();
+            
             // Create ExportRecord for UI
             ExportRecord record = new ExportRecord(
                 result.exportId(),
@@ -358,21 +362,37 @@ public class TyreExportsController implements Initializable {
         return box;
     }
 
-     private void advanceStatus(ExportRecord r) {
-         if ("DELIVERED".equals(r.getStatus()) && r.getBalanceAmount() > 0) {
-             return;
-         }
-         String next = switch (r.getStatus()) {
-             case "PENDING"      -> "IN TRANSPORT";
-             case "IN TRANSPORT" -> "DELIVERED";
-             case "DELIVERED"    -> "PAID";
-             default             -> r.getStatus();
-         };
-         r.setStatus(next);
-         enqueueExportUpdate(r, "update_status");
-         rebuildCards();
-         refreshStats();
-     }
+    private void advanceStatus(ExportRecord r) {
+        if ("DELIVERED".equals(r.getStatus()) && r.getBalanceAmount() > 0) {
+            return;
+        }
+        String next = switch (r.getStatus()) {
+            case "PENDING"      -> "IN TRANSPORT";
+            case "IN TRANSPORT" -> "DELIVERED";
+            case "DELIVERED"    -> "PAID";
+            default             -> r.getStatus();
+        };
+        r.setStatus(next);
+        
+        // Save to database
+        com.gui.kline.models.TyreExport tyreExport = tyreExportRepository.getTyreExportByExportId(r.getExportId());
+        if (tyreExport != null) {
+            tyreExport.setStatus(next);
+            tyreExportRepository.saveTyreExport(tyreExport);
+        }
+        
+        enqueueExportUpdate(r, "update_status");
+        
+        // Reload data from database to ensure UI is in sync
+        loadFromLocal();
+        
+        // Refresh analytics and dashboard
+        ViewModel.INSTANCE.getViewsFactory().refreshReports();
+        ViewModel.INSTANCE.getViewsFactory().refreshDashboard();
+        
+        rebuildCards();
+        refreshStats();
+    }
 
     private void collectPayment(ExportRecord r) {
         TextInputDialog dialog = new TextInputDialog(String.format("%,.0f", r.getBalanceAmount()));
@@ -411,7 +431,24 @@ public class TyreExportsController implements Initializable {
         r.setBalanceAmount(newBalance);
         r.setPaymentStatus(paymentStatus);
 
+        // Save to database
+        com.gui.kline.models.TyreExport tyreExport = tyreExportRepository.getTyreExportByExportId(r.getExportId());
+        if (tyreExport != null) {
+            tyreExport.setPaidAmount(newPaid);
+            tyreExport.setBalanceAmount(newBalance);
+            tyreExport.setPaymentStatus(paymentStatus);
+            tyreExportRepository.saveTyreExport(tyreExport);
+        }
+
         enqueueExportUpdate(r, "record_payment");
+        
+        // Reload data from database to ensure UI is in sync
+        loadFromLocal();
+        
+        // Refresh analytics and dashboard
+        ViewModel.INSTANCE.getViewsFactory().refreshReports();
+        ViewModel.INSTANCE.getViewsFactory().refreshDashboard();
+        
         rebuildCards();
         refreshStats();
     }
@@ -559,6 +596,10 @@ public class TyreExportsController implements Initializable {
             if (!r.getExportId().isBlank()) {
                 tyreExportRepository.deleteTyreExportByExportId(r.getExportId());
             }
+            
+            // Refresh analytics and dashboard
+            ViewModel.INSTANCE.getViewsFactory().refreshReports();
+            ViewModel.INSTANCE.getViewsFactory().refreshDashboard();
             
             // Remove from UI list
             masterList.remove(r);
