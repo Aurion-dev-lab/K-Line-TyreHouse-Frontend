@@ -43,6 +43,7 @@ public class WorkerManagementController {
     @FXML private DatePicker historyFromDate;
     @FXML private DatePicker historyToDate;
     @FXML private Label monthlySummaryMonthLabel;
+    @FXML private ComboBox<YearMonth> cmbMonthlySummaryMonth;
 
     private final LocalWorkerRepository workerRepository = new LocalWorkerRepository();
     private final LocalWorkerAttendanceRepository attendanceRepository = new LocalWorkerAttendanceRepository();
@@ -64,6 +65,9 @@ public class WorkerManagementController {
         historyFromDate.setValue(currentMonth.atDay(1));
         historyToDate.setValue(today);
 
+        // Set up month selection combo box
+        setupMonthComboBox(currentMonth);
+
         attendanceDatePicker.valueProperty().addListener((obs, oldVal, newVal) -> loadAttendance(newVal));
         historyFromDate.valueProperty().addListener((obs, oldVal, newVal) -> loadHistory());
         historyToDate.valueProperty().addListener((obs, oldVal, newVal) -> loadHistory());
@@ -72,6 +76,21 @@ public class WorkerManagementController {
         loadAttendance(today);
         loadHistory();
         loadMonthlySummary(currentMonth);
+    }
+
+    private void setupMonthComboBox(YearMonth currentMonth) {
+        if (cmbMonthlySummaryMonth != null) {
+            // Populate with last 12 months
+            for (int i = 0; i < 12; i++) {
+                cmbMonthlySummaryMonth.getItems().add(currentMonth.minusMonths(i));
+            }
+            cmbMonthlySummaryMonth.setValue(currentMonth);
+            cmbMonthlySummaryMonth.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    loadMonthlySummary(newVal);
+                }
+            });
+        }
     }
 
     private void loadAttendance(LocalDate date) {
@@ -151,10 +170,78 @@ public class WorkerManagementController {
         edit.setOnMouseClicked(e -> openEditWorker(worker));
         del.setOnMouseClicked(e -> deleteWorker(worker));
 
-        editDel.getChildren().addAll(edit, del);
+        // Add delete attendance button (only if attendance exists)
+        Label delAttendance = new Label("🗑");
+        delAttendance.setStyle("-fx-text-fill: #ef4444; -fx-cursor: hand; -fx-font-size: 14px;");
+        if (attendance.getStatus() == null || attendance.getStatus().isEmpty()) {
+            delAttendance.setDisable(true);
+            delAttendance.setStyle("-fx-text-fill: #666666; -fx-font-size: 14px;");
+        } else {
+            delAttendance.setOnMouseClicked(e -> handleDeleteAttendance(attendance));
+        }
+
+        editDel.getChildren().addAll(edit, del, delAttendance);
 
         row.getChildren().addAll(nameBox, lblRate, actions, editDel);
         attendanceRowsContainer.getChildren().add(row);
+    }
+
+    private void handleDeleteAttendance(WorkerAttendance attendance) {
+        // Get owner window to prevent alert from opening as separate window
+        javafx.stage.Window owner = null;
+        if (attendanceRowsContainer != null && attendanceRowsContainer.getScene() != null) {
+            owner = attendanceRowsContainer.getScene().getWindow();
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Delete Attendance");
+        confirm.setHeaderText(null);
+        confirm.setContentText("Delete attendance record for " + attendance.getWorkerName() + " on " + attendance.getDate() + "?");
+        if (owner != null) {
+            confirm.initOwner(owner);
+            confirm.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK) {
+            return;
+        }
+
+        attendanceRepository.deleteAttendance(attendance.getWorkerId(), attendance.getDate());
+        loadAttendance(attendanceDatePicker.getValue());
+        loadHistory();
+        loadMonthlySummary(YearMonth.from(attendance.getDate()));
+    }
+
+    @FXML
+    private void handleClearAttendance() {
+        LocalDate date = attendanceDatePicker.getValue();
+        if (date == null) {
+            return;
+        }
+
+        // Get owner window to prevent alert from opening as separate window
+        javafx.stage.Window owner = null;
+        if (attendanceRowsContainer != null && attendanceRowsContainer.getScene() != null) {
+            owner = attendanceRowsContainer.getScene().getWindow();
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Clear Attendance");
+        confirm.setHeaderText(null);
+        confirm.setContentText("Clear all attendance records for " + date + "?");
+        if (owner != null) {
+            confirm.initOwner(owner);
+            confirm.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK) {
+            return;
+        }
+
+        attendanceRepository.deleteAttendanceForPeriod(date, date);
+        loadAttendance(date);
+        loadHistory();
+        loadMonthlySummary(YearMonth.from(date));
     }
 
     private void saveAttendance(String workerId, String status, Button selected, Button other1, Button other2, String color) {

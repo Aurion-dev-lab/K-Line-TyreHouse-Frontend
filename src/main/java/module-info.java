@@ -2,7 +2,11 @@ module com.gui.kline {
     requires javafx.controls;
     requires javafx.fxml;
 
+    requires org.kordamp.ikonli.core;
     requires org.kordamp.ikonli.javafx;
+    requires org.kordamp.ikonli.fontawesome5;
+    uses org.kordamp.ikonli.IkonProvider;
+    uses org.kordamp.ikonli.IkonHandler;
     requires org.kordamp.bootstrapfx.core;
     requires java.desktop;
     requires java.sql;
