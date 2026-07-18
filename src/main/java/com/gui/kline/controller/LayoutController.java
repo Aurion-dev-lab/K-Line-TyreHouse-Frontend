@@ -176,7 +176,15 @@ public class LayoutController {
 
     @FXML private void onQuickActions() {
         Stage ownerStage = (Stage) btnQuickActions.getScene().getWindow();
-        ViewModel.INSTANCE.getViewsFactory().getForm("form/quick-service-presets-dialog", ownerStage);
+        QuickServicePresetsController controller = ViewModel.INSTANCE.getViewsFactory()
+                .getForm("form/quick-service-presets-dialog", ownerStage);
+        if (controller != null) {
+            controller.setOnSaved(() -> {
+                loadQuickActionsPanel();
+                loadQuickStats();
+                ViewModel.INSTANCE.getViewsFactory().refreshDashboardQuickActions();
+            });
+        }
     }
 
     @FXML
@@ -243,14 +251,38 @@ public class LayoutController {
         }
     }
 
+    private String faIconToEmoji(String iconLiteral) {
+        if (iconLiteral == null) return "⚡";
+        switch (iconLiteral) {
+            case "fas-bolt": return "⚡";
+            case "fas-wrench": return "🔧";
+            case "fas-tools": return "🛠";
+            case "fas-cog": case "fas-cogs": return "⚙";
+            case "fas-oil-can": return "🛢";
+            case "fas-tint": return "💧";
+            case "fas-water": return "🌊";
+            case "fas-wind": return "💨";
+            case "fas-car": return "🚗";
+            case "fas-truck": return "🚛";
+            case "fas-fire": return "🔥";
+            case "fas-fan": return "🌀";
+            case "fas-broom": return "🧹";
+            case "fas-shield-alt": return "🛡";
+            case "fas-battery-full": return "🔋";
+            case "fas-temperature-high": return "🌡";
+            case "fas-charging-station": return "⚡";
+            case "fas-filter": return "🔽";
+            default: return "⚡";
+        }
+    }
+
     private Button buildQuickServiceButton(String service, double price, String iconLiteral) {
         Button button = new Button();
         button.setMaxWidth(Double.MAX_VALUE);
         button.getStyleClass().add("quick-service-btn");
 
-        FontIcon icon = new FontIcon(iconLiteral != null ? iconLiteral : "fas-bolt");
-        icon.setIconSize(18);
-        icon.setIconColor(javafx.scene.paint.Color.web("#f59e0b"));
+        Label iconLabel = new Label(faIconToEmoji(iconLiteral));
+        iconLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #f59e0b;");
 
         VBox textBox = new VBox();
         textBox.setAlignment(Pos.CENTER_LEFT);
@@ -263,7 +295,7 @@ public class LayoutController {
 
         textBox.getChildren().addAll(title, priceLabel);
 
-        HBox content = new HBox(12, icon, textBox);
+        HBox content = new HBox(12, iconLabel, textBox);
         content.setAlignment(Pos.CENTER_LEFT);
         button.setGraphic(content);
 

@@ -33,6 +33,11 @@ public class QuickServicePresetsController {
     @FXML private Label lblMessage;
 
     private final ObservableList<QuickServicePreset> presets = FXCollections.observableArrayList();
+    private Runnable onSaved;
+
+    public void setOnSaved(Runnable onSaved) {
+        this.onSaved = onSaved;
+    }
 
     // Curated list of service-relevant FontAwesome icons
     private final String[] ICON_CHOICES = {
@@ -192,6 +197,7 @@ public class QuickServicePresetsController {
         txtService.clear();
         txtPrice.clear();
         loadPresets();
+        if (onSaved != null) onSaved.run();
         showMessage("✓ Service added successfully", false);
     }
 
@@ -215,6 +221,7 @@ public class QuickServicePresetsController {
         }
 
         loadPresets();
+        if (onSaved != null) onSaved.run();
     }
 
     @FXML
@@ -288,6 +295,7 @@ public class QuickServicePresetsController {
         btnSave.setVisible(false);
         btnSave.setManaged(false);
         loadPresets();
+        if (onSaved != null) onSaved.run();
 
         showMessage("✓ Successfully updated", false);
     }
@@ -314,6 +322,7 @@ public class QuickServicePresetsController {
         }
 
         loadPresets();
+        if (onSaved != null) onSaved.run();
         showMessage("✓ Service deleted successfully", false);
     }
 

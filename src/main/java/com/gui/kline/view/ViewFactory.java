@@ -1,5 +1,6 @@
 package com.gui.kline.view;
 
+import com.gui.kline.controller.DashboardController;
 import com.gui.kline.controller.LayoutController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -18,6 +19,7 @@ public class ViewFactory {
     private Stage primaryStage;
     private Stage lastDialogStage;
     private LayoutController layoutController;
+    private DashboardController dashboardController;
     
     public void setPrimaryStage(Stage primaryStage) {
         this.primaryStage = primaryStage;
@@ -33,6 +35,16 @@ public class ViewFactory {
     
     public LayoutController getLayoutController() {
         return layoutController;
+    }
+
+    public void setDashboardController(DashboardController controller) {
+        this.dashboardController = controller;
+    }
+
+    public void refreshDashboardQuickActions() {
+        if (dashboardController != null) {
+            dashboardController.refreshQuickActions();
+        }
     }
     
     public void updateQuickStats() {

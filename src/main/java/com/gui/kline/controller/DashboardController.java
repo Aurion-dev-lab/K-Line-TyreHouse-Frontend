@@ -92,6 +92,9 @@ public class DashboardController implements Initializable {
 
         loadChartData("Last 7 Days");
         loadStockAlerts();
+
+        // Register with ViewFactory for cross-controller refresh
+        ViewModel.INSTANCE.getViewsFactory().setDashboardController(this);
     }
 
     // Holder for background-loaded KPI data
@@ -424,6 +427,10 @@ public class DashboardController implements Initializable {
         return String.format("%.2f", amount);
     }
 
+    public void refreshQuickActions() {
+        loadQuickServicesSync();
+    }
+
     private void refreshData() {
         LocalDate start = startDatePicker.getValue();
         LocalDate end   = endDatePicker.getValue();
@@ -538,6 +545,31 @@ public class DashboardController implements Initializable {
         }
     }
     
+    private String faIconToEmoji(String iconLiteral) {
+        if (iconLiteral == null) return "⚡";
+        switch (iconLiteral) {
+            case "fas-bolt": return "⚡";
+            case "fas-wrench": return "🔧";
+            case "fas-tools": return "🛠";
+            case "fas-cog": case "fas-cogs": return "⚙";
+            case "fas-oil-can": return "🛢";
+            case "fas-tint": return "💧";
+            case "fas-water": return "🌊";
+            case "fas-wind": return "💨";
+            case "fas-car": return "🚗";
+            case "fas-truck": return "🚛";
+            case "fas-fire": return "🔥";
+            case "fas-fan": return "🌀";
+            case "fas-broom": return "🧹";
+            case "fas-shield-alt": return "🛡";
+            case "fas-battery-full": return "🔋";
+            case "fas-temperature-high": return "🌡";
+            case "fas-charging-station": return "⚡";
+            case "fas-filter": return "🔽";
+            default: return "⚡";
+        }
+    }
+
     private Button createQuickActionButton(QuickService service) {
         Button btn = new Button();
         btn.setMaxWidth(Double.MAX_VALUE);
@@ -550,9 +582,8 @@ public class DashboardController implements Initializable {
         content.setAlignment(Pos.CENTER);
         content.setSpacing(6.0);
         
-        FontIcon icon = new FontIcon(service.icon != null ? service.icon : "fas-bolt");
-        icon.setIconSize(24);
-        icon.setIconColor(javafx.scene.paint.Color.web("#f59e0b"));
+        Label iconLabel = new Label(faIconToEmoji(service.icon));
+        iconLabel.setStyle("-fx-font-size: 24px; -fx-text-fill: #f59e0b;");
         
         Label name = new Label(service.name);
         name.setStyle("-fx-text-fill: white; -fx-font-size: 12px;");
@@ -560,7 +591,7 @@ public class DashboardController implements Initializable {
         Label price = new Label("Rs. " + String.format("%.0f", service.price));
         price.setStyle("-fx-text-fill: #22c55e; -fx-font-size: 11px; -fx-font-weight: bold;");
         
-        content.getChildren().addAll(icon, name, price);
+        content.getChildren().addAll(iconLabel, name, price);
         btn.setGraphic(content);
         
         btn.setOnAction(e -> handleQuickServiceAction(service));
