@@ -473,10 +473,7 @@ public class AddInvoiceController {
             alert("Customer name required");
             return false;
         }
-        if (editInvoiceId == null && txtPhone.getText().isBlank()) {
-            alert("Phone number required");
-            return false;
-        }
+
         if (editInvoiceId == null && txtVehicleNumber.getText().isBlank()) {
             alert("Vehicle number required");
             return false;

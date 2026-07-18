@@ -342,10 +342,7 @@ public class ProcessCreditSaleController {
               alert("Customer name is required.");
               return;
           }
-          if (!isEditMode && phone.isBlank()) {
-              alert("Phone number is required.");
-              return;
-          }
+
           if (!isEditMode && vehicle.isBlank()) {
               alert("Vehicle number is required.");
               return;
