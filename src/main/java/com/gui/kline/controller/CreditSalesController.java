@@ -47,6 +47,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 public class CreditSalesController implements Initializable {
+
     @FXML private Button btnNewCredit;
     @FXML private TableView<CreditSaleRow> tblCreditSales;
     @FXML private TableColumn<CreditSaleRow, String>  colDate;
@@ -80,11 +81,12 @@ public class CreditSalesController implements Initializable {
     private final LocalCreditSalesRepository creditSalesRepository = new LocalCreditSalesRepository();
     private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
 
-    private CreditSaleRow         selectedSale       = null;
-    private CreditSaleDetail currentSaleDetail  = null;
-    private boolean               isEditMode         = false;
+    private CreditSaleRow    selectedSale      = null;
+    private CreditSaleDetail currentSaleDetail = null;
+    private boolean          isEditMode        = false;
 
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -92,7 +94,7 @@ public class CreditSalesController implements Initializable {
         setupEventHandlers();
         loadFromLocal();
         tblCreditSales.setItems(creditSaleList);
-        disableDetailPanel();
+        hideDetailPanel(); // hidden by default, not dimmed
     }
 
     private void setupTableColumns() {
@@ -109,7 +111,6 @@ public class CreditSalesController implements Initializable {
 
         colStatus.setCellFactory(col -> new TableCell<>() {
             private final Label pill = new Label();
-
             private static final String BASE_STYLE =
                     "-fx-padding: 4 9 4 9; -fx-background-radius: 6; " +
                             "-fx-font-size: 10px; -fx-font-weight: bold;";
@@ -120,14 +121,13 @@ public class CreditSalesController implements Initializable {
                 if (empty || item == null) { setGraphic(null); return; }
                 pill.setText(item);
                 switch (item) {
-                    case "PENDING" ->
-                            pill.setStyle(BASE_STYLE + "-fx-background-color: #fef3c7; -fx-text-fill: #92400e;");
-                    case "PARTIAL" ->
-                            pill.setStyle(BASE_STYLE + "-fx-background-color: #dbeafe; -fx-text-fill: #1e40af;");
-                    case "PAID" ->
-                            pill.setStyle(BASE_STYLE + "-fx-background-color: #dcfce7; -fx-text-fill: #15803d;");
-                    default ->
-                            pill.setStyle(BASE_STYLE);
+                    case "PENDING" -> pill.setStyle(BASE_STYLE +
+                            "-fx-background-color: #fef3c7; -fx-text-fill: #92400e;");
+                    case "PARTIAL" -> pill.setStyle(BASE_STYLE +
+                            "-fx-background-color: #dbeafe; -fx-text-fill: #1e40af;");
+                    case "PAID"    -> pill.setStyle(BASE_STYLE +
+                            "-fx-background-color: #dcfce7; -fx-text-fill: #15803d;");
+                    default        -> pill.setStyle(BASE_STYLE);
                 }
                 setGraphic(pill);
                 setText(null);
@@ -138,7 +138,8 @@ public class CreditSalesController implements Initializable {
             @Override
             protected void updateItem(Double item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? null : "Rs. " + String.format("%,.0f", item));
+                setText(empty || item == null ? null :
+                        "Rs. " + String.format("%,.0f", item));
             }
         });
 
@@ -205,12 +206,11 @@ public class CreditSalesController implements Initializable {
     @FXML
     private void onSearch(javafx.scene.input.KeyEvent event) {
         String q = txtSearch.getText().toLowerCase().trim();
-        tblCreditSales.setItems(q.isEmpty()
-                ? creditSaleList
-                : creditSaleList.filtered(sale ->
-                sale.getCustomer().toLowerCase().contains(q) ||
-                        sale.getDate().toLowerCase().contains(q) ||
-                        sale.getCreditId().toLowerCase().contains(q)));
+        tblCreditSales.setItems(q.isEmpty() ? creditSaleList :
+                creditSaleList.filtered(sale ->
+                        sale.getCustomer().toLowerCase().contains(q) ||
+                                sale.getDate().toLowerCase().contains(q)     ||
+                                sale.getCreditId().toLowerCase().contains(q)));
     }
 
     private void onViewCredit(CreditSaleRow sale) {
@@ -386,8 +386,8 @@ public class CreditSalesController implements Initializable {
             return;
         }
 
-        String creditId = isEditMode ? selectedSale.getCreditId() : generateCreditId();
-        LocalDate dueDate = currentSaleDetail.getDueDate();
+        String    creditId = isEditMode ? selectedSale.getCreditId() : generateCreditId();
+        LocalDate dueDate  = currentSaleDetail.getDueDate();
 
         CreditSaleRow row = new CreditSaleRow(
                 creditId,
@@ -565,8 +565,8 @@ public class CreditSalesController implements Initializable {
 
     @FXML
     private void onDeselect() {
-        disableDetailPanel();
-        selectedSale = null;
+        hideDetailPanel();
+        selectedSale      = null;
         currentSaleDetail = null;
         tblCreditSales.getSelectionModel().clearSelection();
         tblCreditSales.setItems(creditSaleList);
@@ -598,16 +598,22 @@ public class CreditSalesController implements Initializable {
         updateActionState();
     }
 
-    private void enableDetailPanel() {
+    // ── Show / hide (no dim / glass effect) ──────────────────────────────────
+
+    private void showDetailPanel() {
+        rightPanel.setVisible(true);
+        rightPanel.setManaged(true);
         rightPanel.setDisable(false);
         rightPanel.setOpacity(1.0);
     }
 
-    private void disableDetailPanel() {
-        rightPanel.setDisable(true);
-        rightPanel.setOpacity(0.45);
+    private void hideDetailPanel() {
+        rightPanel.setVisible(false);
+        rightPanel.setManaged(false);
         clearDetailPanel();
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
 
     private void updateTotals() {
         if (currentSaleDetail == null) return;
@@ -769,7 +775,7 @@ public class CreditSalesController implements Initializable {
         }
 
         public String getCreditId() { return creditId; }
-        public String getDate() { return date; }
+        public String getDate()     { return date;     }
         public String getCustomer() { return customer; }
         public String getDueDate() { return dueDate; }
         public double getAmount() { return amount; }

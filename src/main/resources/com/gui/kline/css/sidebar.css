@@ -53,13 +53,14 @@
     -fx-background-color: transparent;
     -fx-background-radius: 8;
     -fx-text-fill: #9ea3b0;
-    -fx-alignment: center-left;
     -fx-font-size: 14px;
     -fx-padding: 12 15;
     -fx-cursor: hand;
     -fx-pref-width: 10000;
     -fx-graphic-text-gap: 14;
     -fx-border-color: transparent;
+    -fx-content-display: LEFT;
+    -fx-alignment: CENTER-LEFT;
 }
 
 .nav-button:hover {

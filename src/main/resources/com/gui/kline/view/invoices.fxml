@@ -21,8 +21,10 @@
             <Insets bottom="18" left="28" right="28" top="22" />
         </padding>
         <VBox spacing="3" HBox.hgrow="ALWAYS">
-            <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;" text="Invoice Management" />
-            <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;" text="Create and manage sales &amp; service invoices" />
+            <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;"
+                   text="Invoice Management" />
+            <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"
+                   text="Create and manage sales &amp; service invoices" />
         </VBox>
         <Button fx:id="btnNewInvoice" onAction="#onNewInvoice" styleClass="btn-primary" text="＋  New Quotation" />
     </HBox>
@@ -32,6 +34,7 @@
             <Insets bottom="14" left="20" right="20" top="0" />
         </padding>
 
+        <!-- ── Invoice list (always visible, expands when panel is hidden) ── -->
         <VBox spacing="0" styleClass="left-card" HBox.hgrow="ALWAYS">
 
             <HBox alignment="CENTER_LEFT" spacing="12" styleClass="table-header-bar">
@@ -39,7 +42,9 @@
                     <Insets bottom="13" left="20" right="16" top="13" />
                 </padding>
                 <Label styleClass="card-title" text="Invoice List" HBox.hgrow="ALWAYS" />
-                <TextField fx:id="txtSearch" onKeyReleased="#onSearch" prefHeight="32" prefWidth="200" promptText="⌕  Search…" styleClass="search-field" />
+                <TextField fx:id="txtSearch" onKeyReleased="#onSearch"
+                           prefHeight="32" prefWidth="200"
+                           promptText="⌕  Search…" styleClass="search-field" />
             </HBox>
 
             <!-- Wrap table in ScrollPane for horizontal scrolling -->
@@ -62,7 +67,11 @@
 
         </VBox>
 
-        <VBox fx:id="rightPanel" minWidth="310" prefWidth="355" spacing="0" styleClass="right-panel">
+        <!-- ── Right panel: hidden until View is clicked ── -->
+        <VBox fx:id="rightPanel"
+              visible="false" managed="false"
+              minWidth="310" prefWidth="355"
+              spacing="0" styleClass="right-panel">
 
             <HBox alignment="CENTER_LEFT" spacing="8" styleClass="panel-header">
                 <padding>
@@ -98,7 +107,9 @@
                 </VBox.margin>
             </Label>
 
-            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="items-scroll" vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS">
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                        styleClass="items-scroll" vbarPolicy="AS_NEEDED"
+                        VBox.vgrow="ALWAYS">
                 <content>
                     <VBox fx:id="vboxLineItems" spacing="0" styleClass="line-items-box" />
                 </content>
@@ -111,28 +122,27 @@
                     <Insets bottom="10" left="18" right="18" top="12" />
                 </padding>
                 <HBox alignment="CENTER_LEFT">
-               <AnchorPane HBox.hgrow="ALWAYS">
-                  <children>
-                          <Label styleClass="tot-label" text="Subtotal" />
-                  </children>
-               </AnchorPane>
+                    <AnchorPane HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label styleClass="tot-label" text="Subtotal" />
+                        </children>
+                    </AnchorPane>
                     <Label fx:id="lblSubtotal" styleClass="tot-val" text="Rs. 0.00" />
                 </HBox>
                 <HBox alignment="CENTER_LEFT">
-               <AnchorPane HBox.hgrow="ALWAYS">
-                  <children>
-                          <Label styleClass="tot-label" text="Tax (0%)" />
-                  </children>
-               </AnchorPane>
+                    <AnchorPane HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label styleClass="tot-label" text="Tax (0%)" />
+                        </children>
+                    </AnchorPane>
                     <Label fx:id="lblTax" styleClass="tot-val" text="Rs. 0.00" />
                 </HBox>
-
                 <HBox alignment="CENTER_LEFT">
-               <AnchorPane HBox.hgrow="ALWAYS">
-                  <children>
-                          <Label styleClass="grand-label" text="Grand Total" />
-                  </children>
-               </AnchorPane>
+                    <AnchorPane HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label styleClass="grand-label" text="Grand Total" />
+                        </children>
+                    </AnchorPane>
                     <Label fx:id="lblGrandTotal" styleClass="grand-val" text="Rs. 0.00" />
                 </HBox>
             </VBox>
