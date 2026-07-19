@@ -330,9 +330,25 @@ CREATE TABLE `quick_service_presets` (
 -- Dumping data for table `quick_service_presets`
 --
 
+--
+-- Dumping data for table `quick_service_presets`
+--
+
 LOCK TABLES `quick_service_presets` WRITE;
 /*!40000 ALTER TABLE `quick_service_presets` DISABLE KEYS */;
-INSERT INTO `quick_service_presets` VALUES ('07667f7c-9971-4d67-be58-5d6caa54d2a1','Interior Vacuum',300.00,1,'2026-07-18 17:16:55','fas-car'),('09dec9d2-20c2-4017-b9c8-018d3d0aa25a','Injector Cleaning',500.00,1,'2026-07-18 17:09:28','fas-car'),('0d604094-7a59-49bd-a470-9cef380c1182','Car Wash',1000.00,1,'2026-07-18 17:10:22','fas-water'),('1e08ac9c-b6fd-4aa2-8be1-368c27b606f6','Wheel Alignment + Balancing',1000.00,1,'2026-07-18 17:28:00','fas-wrench'),('335b3071-5f63-40ef-9bce-fec5f184f384','Brake Service',300.00,1,'2026-07-18 17:26:21','fas-wrench'),('396e6dcd-26b5-4261-8f7d-453771b862b3','Oil Change',200.00,1,'2026-07-18 17:28:14','fas-oil-can'),('59463184-c062-47d6-bb39-ef5c40a1f72c','Air Filter Car',500.00,1,'2026-07-18 16:57:58','fas-wind'),('5ba754af-bd44-42aa-84e2-18a3945ccbed','Air Filter Bike',100.00,1,'2026-07-18 16:58:06','fas-wind'),('614bb1c7-5064-4673-9374-b004236829e2','Car Inspection (General)',1500.00,1,'2026-07-18 17:00:42','fas-car'),('c81038d8-7140-485b-ba57-0144be55291b','Bike Inspection (General)',500.00,1,'2026-07-18 17:01:04','fas-car'),('d6413b5c-3eda-41d0-a722-29721e893864','Battery Check',200.00,1,'2026-07-18 17:02:50','fas-bolt'),('f9ebd97f-9e64-4415-aa80-b383536e2b02','Air Filter  Van',500.00,1,'2026-07-18 16:58:59','fas-wind');
+INSERT INTO `quick_service_presets` VALUES 
+('07667f7c-9971-4d67-be58-5d6caa54d2a1','Interior Vacuum',300.00,1,'2026-07-18 17:16:55','fas-car',0),
+('09dec9d2-20c2-4017-b9c8-018d3d0aa25a','Injector Cleaning',500.00,1,'2026-07-18 17:09:28','fas-car',0),
+('0d604094-7a59-49bd-a470-9cef380c1182','Car Wash',1000.00,1,'2026-07-18 17:10:22','fas-water',0),
+('1e08ac9c-b6fd-4aa2-8be1-368c27b606f6','Wheel Alignment + Balancing',1000.00,1,'2026-07-18 17:28:00','fas-wrench',0),
+('335b3071-5f63-40ef-9bce-fec5f184f384','Brake Service',300.00,1,'2026-07-18 17:26:21','fas-wrench',0),
+('396e6dcd-26b5-4261-8f7d-453771b862b3','Oil Change',200.00,1,'2026-07-18 17:28:14','fas-oil-can',0),
+('59463184-c062-47d6-bb39-ef5c40a1f72c','Air Filter Car',500.00,1,'2026-07-18 16:57:58','fas-wind',0),
+('5ba754af-bd44-42aa-84e2-18a3945ccbed','Air Filter Bike',100.00,1,'2026-07-18 16:58:06','fas-wind',0),
+('614bb1c7-5064-4673-9374-b004236829e2','Car Inspection (General)',1500.00,1,'2026-07-18 17:00:42','fas-car',0),
+('c81038d8-7140-485b-ba57-0144be55291b','Bike Inspection (General)',500.00,1,'2026-07-18 17:01:04','fas-car',0),
+('d6413b5c-3eda-41d0-a722-29721e893864','Battery Check',200.00,1,'2026-07-18 17:02:50','fas-bolt',0),
+('f9ebd97f-9e64-4415-aa80-b383536e2b02','Air Filter  Van',500.00,1,'2026-07-18 16:58:59','fas-wind',0);
 /*!40000 ALTER TABLE `quick_service_presets` ENABLE KEYS */;
 UNLOCK TABLES;
 
