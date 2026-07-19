@@ -203,7 +203,8 @@ public final class DatabaseManager {
                      "price DECIMAL(12,2) NOT NULL DEFAULT 0," +
                      "active TINYINT(1) NOT NULL DEFAULT 1," +
                      "icon VARCHAR(50) DEFAULT 'fas-bolt'," +
-                     "created_at DATETIME NOT NULL" +
+                     "created_at DATETIME NOT NULL," +
+                     "sync_status BOOLEAN NOT NULL DEFAULT false" +
                      ")");
              statement.execute("CREATE TABLE IF NOT EXISTS expenses (" +
                      "id VARCHAR(36) PRIMARY KEY," +
@@ -218,6 +219,7 @@ public final class DatabaseManager {
             ensureColumnExists(connection, "invoices", "invoice_id", "VARCHAR(64)");
             ensureColumnExists(connection, "invoices", "customer", "VARCHAR(255)");
             ensureColumnExists(connection, "invoices", "invoice_date", "DATE");
+            ensureColumnExists(connection, "quick_service_presets", "sync_status", "BOOLEAN NOT NULL DEFAULT false");
             ensureColumnExists(connection, "invoices", "type", "VARCHAR(32)");
             ensureColumnExists(connection, "invoices", "status", "VARCHAR(32)");
             ensureColumnExists(connection, "invoices", "subtotal", "DECIMAL(12,2)");

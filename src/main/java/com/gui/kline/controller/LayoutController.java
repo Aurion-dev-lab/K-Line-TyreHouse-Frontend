@@ -1,6 +1,7 @@
 package com.gui.kline.controller;
 
 import com.gui.kline.data.DatabaseManager;
+import com.gui.kline.data.SyncDataRepository;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.service.NavigationService;
 import com.gui.kline.utils.AlertUtil;
@@ -320,7 +321,11 @@ public class LayoutController {
 
     @FXML
     private void onUpload() {
+
         AlertUtil.showInfo("Upload complete", "Custom sync strategy pending...");
+        SyncDataRepository sync = new SyncDataRepository();
+        System.out.println(sync.getTotalUnsyncedCount());
+        System.out.println(sync.getUnsyncedRowsAsJson());
     }
 
     // ── Global Search Implementation ──
