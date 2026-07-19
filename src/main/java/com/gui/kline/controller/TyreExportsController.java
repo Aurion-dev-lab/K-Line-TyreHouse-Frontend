@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 
 import com.gui.kline.controller.form.NewExportDialogController;
-import com.gui.kline.data.SyncQueueReader;
+
 import com.gui.kline.data.TyreExportRepository;
 import com.gui.kline.models.ExportRecord;
 import com.gui.kline.models.ViewModel;
