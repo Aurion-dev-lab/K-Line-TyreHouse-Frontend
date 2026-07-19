@@ -55,7 +55,7 @@ public class LocalWorkerRepository {
         if (id == null || id.isBlank()) {
             return;
         }
-        String sql = "UPDATE workers SET name = ?, phone = ?, role = ?, rate = ?, salary_type = ? WHERE id = ?";
+        String sql = "UPDATE workers SET name = ?, phone = ?, role = ?, rate = ?, salary_type = ?, sync_status = 0 WHERE id = ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, name == null ? null : name.trim());

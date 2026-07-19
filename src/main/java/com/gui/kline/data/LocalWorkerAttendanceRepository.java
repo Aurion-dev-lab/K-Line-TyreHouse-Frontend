@@ -49,7 +49,8 @@ public class LocalWorkerAttendanceRepository {
     public void upsertAttendance(String workerId, LocalDate date, String status) {
         String sql = "INSERT INTO worker_attendance (id, worker_id, attendance_date, status, created_at, updated_at) " +
                 "VALUES (UUID(), ?, ?, ?, NOW(), NOW()) " +
-                "ON DUPLICATE KEY UPDATE status = VALUES(status), updated_at = NOW()";
+                "ON DUPLICATE KEY UPDATE status = VALUES(status), sync_status = 0, updated_at = NOW()";
+
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, workerId);

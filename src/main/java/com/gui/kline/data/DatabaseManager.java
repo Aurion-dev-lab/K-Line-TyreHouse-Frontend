@@ -401,7 +401,7 @@ public final class DatabaseManager {
 
     private static void backfillProductCodes(Connection connection) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
-                "UPDATE products SET product_code = CONCAT('PRD-', UPPER(SUBSTRING(REPLACE(id, '-', ''), 1, 8))) " +
+                "UPDATE products SET product_code = CONCAT('PRD-', UPPER(SUBSTRING(REPLACE(id, '-', ''), 1, 8))), sync_status = 0 " +
                         "WHERE product_code IS NULL OR product_code = ''")) {
             ps.executeUpdate();
         }

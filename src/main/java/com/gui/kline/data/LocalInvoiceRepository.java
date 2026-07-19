@@ -16,7 +16,7 @@ public class LocalInvoiceRepository {
         String internalId = null;
         String sql = "INSERT INTO invoices (id, invoice_id, customer, invoice_date, type, status, subtotal, tax, grand_total, created_at) " +
                 "VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, NOW()) " +
-                "ON DUPLICATE KEY UPDATE customer = VALUES(customer), type = VALUES(type), status = VALUES(status), subtotal = VALUES(subtotal), tax = VALUES(tax), grand_total = VALUES(grand_total), updated_at = NOW()";
+                "ON DUPLICATE KEY UPDATE customer = VALUES(customer), type = VALUES(type), status = VALUES(status), subtotal = VALUES(subtotal), tax = VALUES(tax), grand_total = VALUES(grand_total), sync_status = 0, updated_at = NOW()";
 
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -174,7 +174,7 @@ public class LocalInvoiceRepository {
      * Update invoice status (completed, cancelled, etc.)
      */
     public void updateInvoiceStatus(String invoiceId, String status) {
-        String sql = "UPDATE invoices SET status = ?, updated_at = NOW() WHERE invoice_id = ?";
+        String sql = "UPDATE invoices SET status = ?, sync_status = 0, updated_at = NOW() WHERE invoice_id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {

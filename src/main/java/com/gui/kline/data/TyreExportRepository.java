@@ -99,7 +99,7 @@ public class TyreExportRepository {
                 "status = VALUES(status), export_date = VALUES(export_date), notes = VALUES(notes), " +
                 "created_by = VALUES(created_by), updated_by = VALUES(updated_by), " +
                 "" +
-                "sync_status = VALUES(sync_status), " +
+                "sync_status = 0, " +
                 "updated_at = NOW()";
         
         try (Connection connection = DatabaseManager.getConnection();

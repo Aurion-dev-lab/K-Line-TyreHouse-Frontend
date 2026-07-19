@@ -52,7 +52,7 @@ public class LocalWorkerCreditRepository {
 
     public void updateCredit(String id, String workerId, String workerName, LocalDate date, double amount, String note, String type) {
         if (id == null || id.isBlank()) return;
-        String sql = "UPDATE worker_credits SET worker_id = ?, worker = ?, amount = ?, credit_type = ?, credit_date = ?, note = ?, created_at = NOW() WHERE id = ?";
+        String sql = "UPDATE worker_credits SET worker_id = ?, worker = ?, amount = ?, credit_type = ?, credit_date = ?, note = ?, sync_status = 0, created_at = NOW() WHERE id = ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, workerId);

@@ -46,7 +46,7 @@ public class LocalCatalogRepository {
             return;
         }
         String sql = "INSERT INTO customers (id, name, phone, created_at) VALUES (UUID(), ?, ?, NOW()) " +
-                "ON DUPLICATE KEY UPDATE phone = VALUES(phone)";
+                "ON DUPLICATE KEY UPDATE phone = VALUES(phone), sync_status = 0";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, name.trim());
@@ -245,7 +245,7 @@ public class LocalCatalogRepository {
       }
 
       public void updateProductStock(String productId, int quantityChange) {
-          String sql = "UPDATE products SET stock = stock + ?, updated_at = NOW() WHERE id = ?";
+          String sql = "UPDATE products SET stock = stock + ?, sync_status = 0, updated_at = NOW() WHERE id = ?";
           try (Connection connection = DatabaseManager.getConnection();
                PreparedStatement statement = connection.prepareStatement(sql)) {
               statement.setInt(1, quantityChange);
@@ -267,7 +267,7 @@ public class LocalCatalogRepository {
                 "sell_price = VALUES(sell_price), stock = VALUES(stock), minimum_stock_alert = VALUES(minimum_stock_alert), " +
                 "brand = VALUES(brand), description = VALUES(description), vehicle_type = VALUES(vehicle_type), " +
                 "material = VALUES(material), supplier_name = VALUES(supplier_name), " +
-                "created_at = COALESCE(products.created_at, NOW()), updated_at = NOW()";
+                "created_at = COALESCE(products.created_at, NOW()), sync_status = 0, updated_at = NOW()";
         Connection connection = null;
         try {
             connection = DatabaseManager.getConnection();

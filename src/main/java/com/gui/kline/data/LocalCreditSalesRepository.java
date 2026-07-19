@@ -17,7 +17,7 @@ public class LocalCreditSalesRepository {
     public void saveCreditSale(CreditSaleDetail detail, CreditSalesController.CreditSaleRow row) {
          String sql = "INSERT INTO credit_sales (id, credit_id, sale_date, customer_name, due_date, subtotal, paid_amount, status, labour, parts_cost, discount, created_at) " +
                  "VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()) " +
-                 "ON DUPLICATE KEY UPDATE sale_date=?, customer_name=?, due_date=?, subtotal=?, paid_amount=?, status=?, labour=?, parts_cost=?, discount=?, updated_at=NOW()";
+                 "ON DUPLICATE KEY UPDATE sale_date=?, customer_name=?, due_date=?, subtotal=?, paid_amount=?, status=?, labour=?, parts_cost=?, discount=?, sync_status=0, updated_at=NOW()";
          
          try (Connection conn = DatabaseManager.getConnection();
               PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -261,7 +261,7 @@ public class LocalCreditSalesRepository {
      }
 
     public void updatePayment(String creditId, double paidAmount) {
-        String sql = "UPDATE credit_sales SET paid_amount = ?, status = ? WHERE credit_id = ?";
+        String sql = "UPDATE credit_sales SET paid_amount = ?, status = ?, sync_status = 0 WHERE credit_id = ?";
         
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
