@@ -27,6 +27,13 @@ public class SyncModalController {
     private int pendingRows;
     private int pendingDeletions;
 
+    private final String SYNC_API_URL = System.getenv().getOrDefault(
+            "SYNC_API_URL", "http://localhost:8080/api/sync"
+    );
+    private final String SYNC_API_KEY = System.getenv().getOrDefault(
+            "SYNC_API_KEY", "sync_EPMyfBBrdZNn0UrV_LVgJWMdZUh81n_g2uAjJz2ZX_mN-Ic-RB1Wgn4hMX-I2ll0OttaKk5CTCGxdM2rLOlozw"
+    );
+
     @FXML
     public void initialize() {
         syncRepository = new SyncDataRepository();
@@ -76,8 +83,9 @@ public class SyncModalController {
             try {
                 HttpClient client = HttpClient.newHttpClient();
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:8080/api/sync"))
+                        .uri(URI.create(SYNC_API_URL))
                         .header("Content-Type", "application/json")
+                        .header("X-API-KEY", SYNC_API_KEY)
                         .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                         .build();
 

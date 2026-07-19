@@ -38,6 +38,7 @@ public final class DatabaseManager {
                     "id VARCHAR(36) PRIMARY KEY," +
                        "product_code VARCHAR(64)," +
                     "name VARCHAR(255) NOT NULL UNIQUE," +
+
                     "category VARCHAR(128)," +
                     "buy_price DECIMAL(12,2) NOT NULL DEFAULT 0," +
                     "sell_price DECIMAL(12,2) NOT NULL DEFAULT 0," +

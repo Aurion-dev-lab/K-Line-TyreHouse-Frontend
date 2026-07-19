@@ -1,21 +1,15 @@
 services:
   db:
-    container_name: mysql_db_kline
-    image: mysql
+    container_name: local_db_kline
+    image: mysql:8.0
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 1234
       MYSQL_DATABASE: kline_local
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
     volumes:
       - db:/var/lib/mysql
     ports:
       - "3306:3306"
-    networks:
-      - db
-
-networks:
-  db:
-    driver: bridge
 
 volumes:
   db:
