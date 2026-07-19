@@ -31,7 +31,7 @@ public class SyncModalController {
             "SYNC_API_URL", "http://localhost:8080/api/sync"
     );
     private final String SYNC_API_KEY = System.getenv().getOrDefault(
-            "SYNC_API_KEY", "sync_EPMyfBBrdZNn0UrV_LVgJWMdZUh81n_g2uAjJz2ZX_mN-Ic-RB1Wgn4hMX-I2ll0OttaKk5CTCGxdM2rLOlozw"
+            "SYNC_API_KEY", "sync_qPoGFyE00i74X__qkFuCyKEuLYZNwq0ShyXdNe5t4og60LkWZSDTgeedtrihyTFwQm1Gt7VyeXkmQ2AQ3fSlnQ"
     );
 
     @FXML
