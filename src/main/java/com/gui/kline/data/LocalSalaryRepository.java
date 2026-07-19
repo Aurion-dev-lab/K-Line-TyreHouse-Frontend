@@ -190,6 +190,7 @@ public class LocalSalaryRepository {
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, paymentId);
             statement.executeUpdate();
+            DatabaseManager.logDeletion("salary_payments", paymentId);
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to delete salary payment", ex);
         }

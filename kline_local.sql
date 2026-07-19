@@ -16,6 +16,22 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `sync_tombstones`
+--
+
+DROP TABLE IF EXISTS `sync_tombstones`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sync_tombstones` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `table_name` varchar(255) NOT NULL,
+  `record_id` varchar(36) NOT NULL,
+  `client_deleted_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `app_sync_state`
 --
 

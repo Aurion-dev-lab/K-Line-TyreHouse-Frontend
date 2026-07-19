@@ -39,6 +39,7 @@ public class LocalSalaryAdvanceRepository {
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, id);
             statement.executeUpdate();
+            DatabaseManager.logDeletion("salary_advances", id);
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to delete salary advance", ex);
         }

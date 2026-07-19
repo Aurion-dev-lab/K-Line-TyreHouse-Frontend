@@ -362,6 +362,7 @@ public class LocalCatalogRepository {
             try (PreparedStatement deleteProductStmt = connection.prepareStatement(deleteProductSql)) {
                 deleteProductStmt.setString(1, product.getId());
                 deleteProductStmt.executeUpdate();
+                DatabaseManager.logDeletion("products", product.getId());
             }
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to delete product", ex);

@@ -42,6 +42,15 @@ public class AlertUtil {
         alert.showAndWait();
     }
 
+    public static boolean showConfirmation(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        java.util.Optional<javafx.scene.control.ButtonType> result = alert.showAndWait();
+        return result.isPresent() && result.get() == javafx.scene.control.ButtonType.OK;
+    }
+
     /**
      * Owner-aware variants. When an owner window is provided the alert is
      * parented to it (WINDOW_MODAL) so it appears centered on top of the

@@ -233,6 +233,7 @@ public class ExpenseController implements Initializable {
                      "DELETE FROM expenses WHERE id = ?")) {
             ps.setString(1, expense.getId());
             ps.executeUpdate();
+            DatabaseManager.logDeletion("expenses", expense.getId());
         } catch (SQLException ex) {
             System.err.println("Error deleting expense: " + ex.getMessage());
             return;

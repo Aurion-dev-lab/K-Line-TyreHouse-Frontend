@@ -201,6 +201,7 @@ public class LocalInvoiceRepository {
             try (PreparedStatement stmt = connection.prepareStatement(delInvoice)) {
                 stmt.setString(1, invoiceId);
                 stmt.executeUpdate();
+                DatabaseManager.logDeletion("invoices", invoiceId);
             }
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to delete invoice", ex);

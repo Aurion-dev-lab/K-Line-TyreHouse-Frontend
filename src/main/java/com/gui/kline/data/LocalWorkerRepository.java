@@ -84,6 +84,7 @@ public class LocalWorkerRepository {
             try (PreparedStatement statement = connection.prepareStatement(deleteWorker)) {
                 statement.setString(1, id);
                 statement.executeUpdate();
+                DatabaseManager.logDeletion("workers", id);
             }
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to delete worker", ex);

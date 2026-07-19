@@ -165,6 +165,7 @@ public class TyreExportRepository {
             
             statement.setString(1, id);
             statement.executeUpdate();
+            DatabaseManager.logDeletion("tyre_exports", id);
             
         } catch (SQLException ex) {
             System.err.println("Failed to delete tyre export: " + ex.getMessage());

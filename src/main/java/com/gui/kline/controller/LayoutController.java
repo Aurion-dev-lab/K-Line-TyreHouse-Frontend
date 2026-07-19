@@ -24,6 +24,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class LayoutController {
 
@@ -321,11 +327,54 @@ public class LayoutController {
 
     @FXML
     private void onUpload() {
-
-        AlertUtil.showInfo("Upload complete", "Custom sync strategy pending...");
         SyncDataRepository sync = new SyncDataRepository();
-        System.out.println(sync.getTotalUnsyncedCount());
-        System.out.println(sync.getUnsyncedRowsAsJson());
+        int pendingRows = sync.getTotalUnsyncedCount();
+        int pendingDeletions = sync.getPendingDeletions().size();
+        int totalPending = pendingRows + pendingDeletions;
+        
+        if (totalPending == 0) {
+            AlertUtil.showInfo("Sync", "Everything is up to date! No records to sync.");
+            return;
+        }
+
+        boolean proceed = AlertUtil.showConfirmation("Sync Data", "Found " + totalPending + " records to sync (" + pendingRows + " updates, " + pendingDeletions + " deletions). Do you want to proceed?");
+        
+        if (proceed) {
+            String syncInitiationTimestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            String jsonPayload = sync.getSyncPayloadAsJson();
+            System.out.println(jsonPayload);
+            
+            // Show loading or disable button here if desired, using BackgroundTask
+            BackgroundTask.runVoid(() -> {
+                try {
+                    HttpClient client = HttpClient.newHttpClient();
+                    HttpRequest request = HttpRequest.newBuilder()
+                            .uri(URI.create("http://localhost:8080/api/sync")) // TODO: Update with SYNC_API_URL
+                            .header("Content-Type", "application/json")
+                            // .header("X-API-KEY", "YOUR_API_KEY") // Uncomment if needed
+                            .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                            .build();
+
+                    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                    if (response.statusCode() == 200) {
+                        sync.markAsSynced(syncInitiationTimestamp);
+                        javafx.application.Platform.runLater(() -> {
+                            AlertUtil.showInfo("Sync Complete", "Successfully synced " + totalPending + " records to the cloud.");
+                        });
+                    } else {
+                        javafx.application.Platform.runLater(() -> {
+                            AlertUtil.showError("Sync Failed", "Server responded with status: " + response.statusCode());
+                        });
+                    }
+                } catch (Exception e) {
+                    javafx.application.Platform.runLater(() -> {
+                        AlertUtil.showError("Sync Error", "Failed to connect to the server: " + e.getMessage());
+                    });
+                    e.printStackTrace();
+                }
+            }, null);
+        }
     }
 
     // ── Global Search Implementation ──

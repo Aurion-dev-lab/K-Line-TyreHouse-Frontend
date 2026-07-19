@@ -28,6 +28,12 @@ public final class DatabaseManager {
             
             Connection connection = getConnection();
             Statement statement = connection.createStatement();
+            statement.execute("CREATE TABLE IF NOT EXISTS sync_tombstones (" +
+                    "id INT AUTO_INCREMENT PRIMARY KEY," +
+                    "table_name VARCHAR(255) NOT NULL," +
+                    "record_id VARCHAR(36) NOT NULL," +
+                    "client_deleted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP" +
+                    ")");
             statement.execute("CREATE TABLE IF NOT EXISTS products (" +
                     "id VARCHAR(36) PRIMARY KEY," +
                        "product_code VARCHAR(64)," +
@@ -440,5 +446,17 @@ public final class DatabaseManager {
         ensureColumnExists(connection, table, "synced_at", "DATETIME");
         // Add sync_status column if not exists
         ensureColumnExists(connection, table, "sync_status", "BOOLEAN NOT NULL DEFAULT false");
+    }
+    
+    public static void logDeletion(String tableName, String recordId) {
+        String sql = "INSERT INTO sync_tombstones (table_name, record_id) VALUES (?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, tableName);
+            pstmt.setString(2, recordId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Failed to log deletion for table " + tableName + ": " + e.getMessage());
+        }
     }
 }

@@ -338,18 +338,21 @@ public class ServicesController implements Initializable {
                         "DELETE FROM quick_services WHERE id = ?")) {
                     ps.setString(1, id);
                     ps.executeUpdate();
+                    DatabaseManager.logDeletion("quick_services", id);
                 }
             } else if ("services".equals(sourceTable)) {
                 try (PreparedStatement ps = conn.prepareStatement(
                         "DELETE FROM services WHERE id = ?")) {
                     ps.setString(1, id);
                     ps.executeUpdate();
+                    DatabaseManager.logDeletion("services", id);
                 }
             } else if ("invoice_line_items".equals(sourceTable)) {
                 try (PreparedStatement ps = conn.prepareStatement(
                         "DELETE FROM invoice_line_items WHERE id = ?")) {
                     ps.setString(1, id);
                     ps.executeUpdate();
+                    DatabaseManager.logDeletion("invoice_line_items", id);
                 }
             }
         } catch (SQLException ex) {

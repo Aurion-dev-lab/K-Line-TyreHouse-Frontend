@@ -253,6 +253,8 @@ public class LocalCreditSalesRepository {
              
              ps.setString(1, creditId);
              ps.executeUpdate();
+             DatabaseManager.logDeletion("credit_sales", creditSaleId);
+             
          } catch (SQLException e) {
              throw new RuntimeException("Failed to delete credit sale: " + e.getMessage());
          }

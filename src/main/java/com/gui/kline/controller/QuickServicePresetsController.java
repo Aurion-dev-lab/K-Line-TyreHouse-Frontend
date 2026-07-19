@@ -316,6 +316,7 @@ public class QuickServicePresetsController {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, selected.getId());
             ps.executeUpdate();
+            DatabaseManager.logDeletion("quick_service_presets", selected.getId());
         } catch (SQLException ex) {
             showMessage("Failed to delete preset: " + ex.getMessage(), true);
             return;
