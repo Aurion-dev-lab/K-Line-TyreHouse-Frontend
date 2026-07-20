@@ -208,7 +208,8 @@ public class ReportsController implements Initializable {
 
     private void updateSummaryMetrics(FinancialSummary summary) {
         double totalRevenue = summary.getTotalRevenue();
-        double grossProfit = totalRevenue - summary.getTotalExpenses();
+        // Gross profit = Total Revenue - Cost of Goods Sold (Product Costs)
+        double grossProfit = totalRevenue - summary.getProductCosts();
         double workerCosts = summary.getWorkerCosts();
         double netIncome = summary.getNetProfit();
 

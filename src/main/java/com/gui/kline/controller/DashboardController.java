@@ -743,13 +743,18 @@ public class DashboardController implements Initializable {
     }
 
      private double sumProfit(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
-         double invoiceProfit = sumAmount(conn,
-                 "SELECT COALESCE(SUM(il.qty * (il.unit_price - COALESCE(p.buy_price,0))),0) " +
+         double invoiceRevenue = sumAmount(conn,
+                 "SELECT COALESCE(SUM(grand_total),0) FROM invoices " +
+                         "WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?",
+                 startDate, endDate);
+         double invoiceCost = sumAmount(conn,
+                 "SELECT COALESCE(SUM(il.qty * COALESCE(p.buy_price,0)),0) " +
                          "FROM invoice_line_items il " +
                          "LEFT JOIN products p ON p.id = il.product_id " +
                          "JOIN invoices i ON i.id = il.invoice_ref " +
                          "WHERE i.status = 'completed' AND COALESCE(i.invoice_date, DATE(i.created_at)) BETWEEN ? AND ?",
                  startDate, endDate);
+         double invoiceProfit = invoiceRevenue - invoiceCost;
          double creditSalesProfit = sumAmount(conn,
                  "SELECT COALESCE(SUM(COALESCE(subtotal, amount)),0) FROM credit_sales " +
                          "WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ?",
