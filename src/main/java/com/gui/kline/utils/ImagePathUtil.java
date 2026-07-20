@@ -24,22 +24,15 @@ public final class ImagePathUtil {
 
     /**
      * Returns the absolute path of the product_images directory, creating it if
-     * necessary. The directory is located by walking upward from the current
-     * working directory so it works regardless of where the app is launched.
+     * necessary. The directory is rooted under the user's home directory so it
+     * is always writable without administrator privileges, regardless of where
+     * the application is installed (e.g. C:\Program Files\...).
+     *
+     * <p>Storage location: {@code <user.home>/K-Line-Hub/product_images}
      */
     public static String getImageDirectory() {
-        Path cwd = Paths.get("").toAbsolutePath();
-        Path candidate = cwd;
-        // Walk upward looking for an existing product_images directory.
-        while (candidate != null) {
-            Path dir = candidate.resolve(IMAGE_DIR_NAME);
-            if (Files.exists(dir) && Files.isDirectory(dir)) {
-                return dir.toString();
-            }
-            candidate = candidate.getParent();
-        }
-        // Not found: create it under the current working directory.
-        Path dir = cwd.resolve(IMAGE_DIR_NAME);
+        String userHome = System.getProperty("user.home");
+        Path dir = Paths.get(userHome, "K-Line-Hub", IMAGE_DIR_NAME);
         try {
             Files.createDirectories(dir);
         } catch (Exception ex) {

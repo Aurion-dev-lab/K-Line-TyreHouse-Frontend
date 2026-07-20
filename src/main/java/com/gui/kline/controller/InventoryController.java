@@ -135,10 +135,14 @@ public class InventoryController implements Initializable {
     }
 
     public void updateProduct(Product updated) {
-        masterList.replaceAll(p -> p.getId().equals(updated.getId()) ? updated : p);
         catalogRepository.saveProduct(updated);
+        // Reload from DB so masterList has the fresh, committed image paths
+        BackgroundTask.run(catalogRepository::loadProducts, products -> {
+            masterList.setAll(products);
+            rebuildCards();
+            refreshStats();
+        });
         enqueueProduct("update", updated);
-        refreshStats();
     }
 
     private void rebuildCards() {

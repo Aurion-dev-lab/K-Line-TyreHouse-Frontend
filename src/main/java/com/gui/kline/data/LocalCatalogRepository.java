@@ -144,13 +144,13 @@ public class LocalCatalogRepository {
 
     public Product findProductByCode(String productCode) {
         String sql = "SELECT id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
-                    "brand, description, vehicle_type, material, supplier_name, created_at, image_path FROM products WHERE product_code = ?";
+                    "brand, description, vehicle_type, material, supplier_name, created_at FROM products WHERE product_code = ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, productCode);
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
-                    return new Product(
+                    Product product = new Product(
                             rs.getString("id"),
                             rs.getString("product_code"),
                             rs.getString("name"),
@@ -165,8 +165,11 @@ public class LocalCatalogRepository {
                             rs.getString("material"),
                             rs.getString("supplier_name"),
                             rs.getString("created_at"),
-                            rs.getString("image_path") != null ? java.util.Collections.singletonList(rs.getString("image_path")) : new java.util.ArrayList<>()
+                            new java.util.ArrayList<>()
                     );
+                    // Load images from product_images table (source of truth)
+                    loadProductImages(connection, java.util.Collections.singletonList(product));
+                    return product;
                 }
             }
         } catch (SQLException ex) {
@@ -177,7 +180,7 @@ public class LocalCatalogRepository {
 
       public Product findProductById(String productId) {
           String sql = "SELECT id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
-                      "brand, description, vehicle_type, material, supplier_name, created_at, image_path FROM products WHERE id = ?";
+                      "brand, description, vehicle_type, material, supplier_name, created_at FROM products WHERE id = ?";
           try (Connection connection = DatabaseManager.getConnection();
                PreparedStatement statement = connection.prepareStatement(sql)) {
               statement.setString(1, productId);
@@ -198,8 +201,10 @@ public class LocalCatalogRepository {
                               rs.getString("material"),
                               rs.getString("supplier_name"),
                               rs.getString("created_at"),
-                              rs.getString("image_path") != null ? java.util.Collections.singletonList(rs.getString("image_path")) : new java.util.ArrayList<>()
+                              new java.util.ArrayList<>()
                       );
+                      // Load images from product_images table (source of truth)
+                      loadProductImages(connection, java.util.Collections.singletonList(product));
                       return product;
                   }
               }
@@ -260,19 +265,21 @@ public class LocalCatalogRepository {
         if (product == null) {
             return;
         }
+        // Also write image_path on the products row so legacy queries still work
+        String firstImage = product.getImagePaths().isEmpty() ? null : product.getImagePaths().get(0);
         String sql = "INSERT INTO products (id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
-                "brand, description, vehicle_type, material, supplier_name, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, NOW()), NOW()) " +
+                "brand, description, vehicle_type, material, supplier_name, image_path, created_at, updated_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, NOW()), NOW()) " +
                 "ON DUPLICATE KEY UPDATE product_code = VALUES(product_code), name = VALUES(name), category = VALUES(category), buy_price = VALUES(buy_price), " +
                 "sell_price = VALUES(sell_price), stock = VALUES(stock), minimum_stock_alert = VALUES(minimum_stock_alert), " +
                 "brand = VALUES(brand), description = VALUES(description), vehicle_type = VALUES(vehicle_type), " +
-                "material = VALUES(material), supplier_name = VALUES(supplier_name), " +
+                "material = VALUES(material), supplier_name = VALUES(supplier_name), image_path = VALUES(image_path), " +
                 "created_at = COALESCE(products.created_at, NOW()), sync_status = 0, updated_at = NOW()";
         Connection connection = null;
         try {
             connection = DatabaseManager.getConnection();
             connection.setAutoCommit(false);  // Disable auto-commit for transaction control
-            
+
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setString(1, product.getId());
             statement.setString(2, product.getCode());
@@ -287,22 +294,23 @@ public class LocalCatalogRepository {
             statement.setString(11, product.getVehicleType());
             statement.setString(12, product.getMaterial());
             statement.setString(13, product.getSupplierName());
-            
+            statement.setString(14, firstImage);  // image_path — first image or null
+
             // Handle empty created_date - use null so COALESCE kicks in
             String createdDate = product.getCreatedDate();
             if (createdDate == null || createdDate.isEmpty() || createdDate.equals("null")) {
-                statement.setString(14, null);
+                statement.setString(15, null);
             } else {
-                statement.setString(14, createdDate);
+                statement.setString(15, createdDate);
             }
-            
+
             statement.executeUpdate();
-            
-            // Save product images
+
+            // Save all product images into the product_images child table
             saveProductImages(connection, product);
-            
+
             connection.commit();  // Explicitly commit transaction
-            
+
         } catch (SQLException ex) {
             // Rollback on error
             if (connection != null) {
