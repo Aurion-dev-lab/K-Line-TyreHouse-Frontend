@@ -4,6 +4,10 @@
 -- ------------------------------------------------------
 -- Server version	10.4.28-MariaDB
 
+DROP DATABASE IF EXISTS `kline_local`;
+CREATE DATABASE `kline_local` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `kline_local`;
+
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;

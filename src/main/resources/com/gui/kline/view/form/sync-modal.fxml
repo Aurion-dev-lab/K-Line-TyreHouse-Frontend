@@ -14,7 +14,7 @@
 <?import javafx.scene.shape.Line?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<AnchorPane prefHeight="650.0" prefWidth="550.0" 
+<AnchorPane prefHeight="670.0" prefWidth="560.0" 
             style="-fx-background-color: #F8FAFC;" 
             xmlns="http://javafx.com/javafx/17" 
             xmlns:fx="http://javafx.com/fxml/1" 
@@ -25,57 +25,59 @@
           AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
 
         <!-- Modern Header -->
-        <HBox alignment="CENTER_LEFT" style="-fx-padding: 24 30 16 30; -fx-background-color: white;">
+        <HBox alignment="CENTER_LEFT" style="-fx-padding: 22 30 18 30; -fx-background-color: white; -fx-border-color: #E2E8F0; -fx-border-width: 0 0 1 0;">
             <VBox HBox.hgrow="ALWAYS" spacing="4">
-                <Label text="Database Synchronization" 
-                       style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
-                <Label text="Securely sync local offline records to the cloud server" 
-                       style="-fx-font-size: 13px; -fx-text-fill: #64748B;"/>
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="Data Synchronization" 
+                           style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+                    <Label text="CLOUD SYNC" 
+                           style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-background-color: #EFF6FF; -fx-text-fill: #2563EB; -fx-padding: 3 8; -fx-background-radius: 12;"/>
+                </HBox>
+                <Label text="Synchronize local offline records or restore full cloud snapshot" 
+                       style="-fx-font-size: 12px; -fx-text-fill: #64748B;"/>
             </VBox>
-            <!-- A subtle cloud icon in the header -->
-            <FontIcon iconLiteral="fas-cloud-upload-alt" iconColor="#CBD5E1" iconSize="36"/>
+            <StackPane style="-fx-background-color: #F1F5F9; -fx-background-radius: 12; -fx-padding: 10;">
+                <FontIcon iconLiteral="fas-sync-alt" iconColor="#2563EB" iconSize="22"/>
+            </StackPane>
         </HBox>
-        
-        <!-- Divider -->
-        <Line endX="550" stroke="#E2E8F0" strokeWidth="1"/>
 
-        <!-- Collapsible Server Settings Section -->
+        <!-- Collapsible Server Settings Card -->
         <VBox spacing="0" 
-              style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.04), 12, 0, 0, 4);">
+              style="-fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #E2E8F0; -fx-border-radius: 12; -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.04), 10, 0, 0, 3);">
             <VBox.margin>
-                <Insets top="16" left="30" right="30" bottom="10"/>
+                <Insets top="16" left="26" right="26" bottom="10"/>
             </VBox.margin>
             <padding>
-                <Insets top="14" bottom="14" left="20" right="20"/>
+                <Insets top="14" bottom="14" left="18" right="18"/>
             </padding>
 
             <!-- Collapsible Header -->
-            <HBox alignment="CENTER_LEFT" spacing="8" onMouseClicked="#onToggleSettingsVisibility"
+            <HBox alignment="CENTER_LEFT" spacing="10" onMouseClicked="#onToggleSettingsVisibility"
                   style="-fx-cursor: hand;">
-                <FontIcon iconLiteral="fas-cog" iconColor="#475569" iconSize="14"/>
-                <Label text="Server Connection Settings" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #334155;"/>
+                <FontIcon iconLiteral="fas-sliders-h" iconColor="#3B82F6" iconSize="14"/>
+                <Label text="Server Connection &amp; Authentication" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1E293B;"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <FontIcon fx:id="iconSettingsChevron" iconLiteral="fas-chevron-right" iconColor="#64748B" iconSize="12"/>
+                <FontIcon fx:id="iconSettingsChevron" iconLiteral="fas-chevron-right" iconColor="#94A3B8" iconSize="12"/>
             </HBox>
 
             <!-- Expandable Content Panel -->
-            <VBox fx:id="vboxSettingsContent" spacing="10" visible="false" managed="false">
+            <VBox fx:id="vboxSettingsContent" spacing="12" visible="false" managed="false">
                 <VBox.margin>
-                    <Insets top="12"/>
+                    <Insets top="14"/>
                 </VBox.margin>
 
                 <!-- Server Base URL Field -->
                 <VBox spacing="4">
-                    <Label text="Server Base URL" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748B;"/>
+                    <Label text="SERVER BASE URL" style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #64748B; -fx-letter-spacing: 0.5px;"/>
                     <HBox alignment="CENTER_LEFT" spacing="6">
                         <StackPane HBox.hgrow="ALWAYS">
                             <TextField fx:id="txtServerUrl" promptText="http://localhost:8080"
-                                       style="-fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #CBD5E1; -fx-padding: 6 10; -fx-font-size: 12px;"/>
+                                       style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #CBD5E1; -fx-padding: 7 12; -fx-font-size: 12px; -fx-background-color: #FAFAFA;"/>
                             <PasswordField fx:id="pwdServerUrl" promptText="http://localhost:8080" visible="false" managed="false"
-                                           style="-fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #CBD5E1; -fx-padding: 6 10; -fx-font-size: 12px;"/>
+                                           style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #CBD5E1; -fx-padding: 7 12; -fx-font-size: 12px; -fx-background-color: #FAFAFA;"/>
                         </StackPane>
                         <Button fx:id="btnToggleMaskUrl" onAction="#onToggleMaskUrl"
-                                style="-fx-background-color: transparent; -fx-border-color: #CBD5E1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 6 10; -fx-cursor: hand;">
+                                style="-fx-background-color: #F8FAFC; -fx-border-color: #CBD5E1; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 7 11; -fx-cursor: hand;">
                             <graphic>
                                 <FontIcon fx:id="iconEyeUrl" iconLiteral="fas-eye" iconColor="#64748B" iconSize="12"/>
                             </graphic>
@@ -85,22 +87,22 @@
 
                 <!-- API Key Field -->
                 <VBox spacing="4">
-                    <Label text="API Key" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748B;"/>
+                    <Label text="SERVER API KEY" style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #64748B; -fx-letter-spacing: 0.5px;"/>
                     <HBox alignment="CENTER_LEFT" spacing="6">
                         <StackPane HBox.hgrow="ALWAYS">
                             <PasswordField fx:id="pwdApiKey" promptText="Enter API Key"
-                                           style="-fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #CBD5E1; -fx-padding: 6 10; -fx-font-size: 12px;"/>
+                                           style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #CBD5E1; -fx-padding: 7 12; -fx-font-size: 12px; -fx-background-color: #FAFAFA;"/>
                             <TextField fx:id="txtApiKey" promptText="Enter API Key" visible="false" managed="false"
-                                       style="-fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #CBD5E1; -fx-padding: 6 10; -fx-font-size: 12px;"/>
+                                       style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #CBD5E1; -fx-padding: 7 12; -fx-font-size: 12px; -fx-background-color: #FAFAFA;"/>
                         </StackPane>
                         <Button fx:id="btnToggleMaskKey" onAction="#onToggleMaskKey"
-                                style="-fx-background-color: transparent; -fx-border-color: #CBD5E1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 6 10; -fx-cursor: hand;">
+                                style="-fx-background-color: #F8FAFC; -fx-border-color: #CBD5E1; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 7 11; -fx-cursor: hand;">
                             <graphic>
                                 <FontIcon fx:id="iconEyeKey" iconLiteral="fas-eye-slash" iconColor="#64748B" iconSize="12"/>
                             </graphic>
                         </Button>
-                        <Button fx:id="btnGenerateApiKey" onAction="#onGenerateApiKeyClicked" text="Generate"
-                                style="-fx-background-color: #F1F5F9; -fx-border-color: #CBD5E1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 6 10; -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #334155; -fx-cursor: hand;">
+                        <Button fx:id="btnGenerateApiKey" onAction="#onGenerateApiKeyClicked" text="Generate Key"
+                                style="-fx-background-color: #F1F5F9; -fx-border-color: #CBD5E1; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 7 12; -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #334155; -fx-cursor: hand;">
                             <graphic>
                                 <FontIcon iconLiteral="fas-key" iconColor="#475569" iconSize="11"/>
                             </graphic>
@@ -112,9 +114,9 @@
                     <VBox.margin>
                         <Insets top="4"/>
                     </VBox.margin>
-                    <Label fx:id="lblSettingsStatus" text="" style="-fx-font-size: 11px; -fx-text-fill: #16A34A;"/>
-                    <Button fx:id="btnSaveSettings" text="Save Settings" onAction="#onSaveSettingsClicked"
-                            style="-fx-background-color: #0F172A; -fx-text-fill: white; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 6 16; -fx-cursor: hand;">
+                    <Label fx:id="lblSettingsStatus" text="" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #16A34A;"/>
+                    <Button fx:id="btnSaveSettings" text="Save Configuration" onAction="#onSaveSettingsClicked"
+                            style="-fx-background-color: #0F172A; -fx-text-fill: white; -fx-border-radius: 8; -fx-background-radius: 8; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 7 18; -fx-cursor: hand;">
                         <graphic>
                             <FontIcon iconLiteral="fas-save" iconColor="white" iconSize="12"/>
                         </graphic>
@@ -123,37 +125,57 @@
             </VBox>
         </VBox>
 
-        <!-- Sync Card Area -->
-        <VBox alignment="CENTER" spacing="10" 
-              style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.04), 12, 0, 0, 4);">
+        <!-- Main Action Card -->
+        <VBox alignment="CENTER" spacing="12" 
+              style="-fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #E2E8F0; -fx-border-radius: 12; -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.04), 10, 0, 0, 3);">
             <VBox.margin>
-                <Insets top="10" left="30" right="30" bottom="16"/>
+                <Insets top="8" left="26" right="26" bottom="14"/>
             </VBox.margin>
             <padding>
-                <Insets top="20" bottom="20" left="20" right="20"/>
+                <Insets top="18" bottom="18" left="20" right="20"/>
             </padding>
             
-            <Label text="PENDING SYNC COUNT" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #94A3B8; -fx-letter-spacing: 1px;"/>
-            <Label fx:id="lblCount" text="0" style="-fx-font-size: 48px; -fx-font-weight: bold; -fx-text-fill: #2563EB; -fx-padding: -10 0 -10 0;"/>
-            <Label fx:id="lblStatus" text="Local database is fully synchronized." style="-fx-font-size: 13px; -fx-text-fill: #64748B;"/>
+            <Label text="UNSYNCED LOCAL RECORDS" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94A3B8; -fx-letter-spacing: 1px;"/>
             
-            <Button fx:id="btnSync" text="Synchronize Now" onAction="#onSyncClicked"
-                    style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-border-radius: 25; -fx-background-radius: 25; -fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 32; -fx-cursor: hand;">
+            <HBox alignment="CENTER" spacing="8">
+                <Label fx:id="lblCount" text="0" style="-fx-font-size: 44px; -fx-font-weight: bold; -fx-text-fill: #2563EB;"/>
+                <Label text="items" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #64748B; -fx-padding: 18 0 0 0;"/>
+            </HBox>
+            
+            <Label fx:id="lblStatus" text="Local database is fully synchronized." style="-fx-font-size: 12px; -fx-text-fill: #64748B;"/>
+            
+            <HBox alignment="CENTER" spacing="14">
                 <VBox.margin>
                     <Insets top="6"/>
                 </VBox.margin>
-                <graphic>
-                    <FontIcon iconLiteral="fas-sync-alt" iconColor="white" iconSize="14"/>
-                </graphic>
-            </Button>
+                
+                <!-- Primary Action: Synchronize Now -->
+                <Button fx:id="btnSync" text="Synchronize Now" onAction="#onSyncClicked"
+                        style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-border-radius: 25; -fx-background-radius: 25; -fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 9 26; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(37, 99, 235, 0.25), 8, 0, 0, 3);">
+                    <graphic>
+                        <FontIcon iconLiteral="fas-cloud-upload-alt" iconColor="white" iconSize="13"/>
+                    </graphic>
+                </Button>
+
+                <!-- Destructive Action: Restore from Cloud -->
+                <Button fx:id="btnDirectSyncRestore" text="Restore from Cloud" onAction="#onDirectSyncRestoreClicked"
+                        style="-fx-background-color: #FEF2F2; -fx-text-fill: #DC2626; -fx-border-color: #FCA5A5; -fx-border-radius: 25; -fx-background-radius: 25; -fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 9 20; -fx-cursor: hand;">
+                    <graphic>
+                        <FontIcon iconLiteral="fas-cloud-download-alt" iconColor="#DC2626" iconSize="12"/>
+                    </graphic>
+                </Button>
+            </HBox>
         </VBox>
 
-        <!-- Log Area -->
-        <VBox spacing="8" VBox.vgrow="ALWAYS" style="-fx-padding: 0 30 24 30;">
-            <Label text="Activity Log" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #475569;"/>
-            <!-- A modern looking console window -->
+        <!-- Modern Console Log Area -->
+        <VBox spacing="6" VBox.vgrow="ALWAYS" style="-fx-padding: 0 26 20 26;">
+            <HBox alignment="CENTER_LEFT" spacing="6">
+                <FontIcon iconLiteral="fas-terminal" iconColor="#64748B" iconSize="12"/>
+                <Label text="Activity Log" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #475569;"/>
+            </HBox>
+            
             <TextArea fx:id="txtLog" editable="false" wrapText="true" VBox.vgrow="ALWAYS" 
-                      style="-fx-font-family: 'Consolas'; -fx-font-size: 12px; -fx-control-inner-background: #0F172A; -fx-text-fill: #38BDF8; -fx-border-color: #1E293B; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 4;"/>
+                      style="-fx-font-family: 'Consolas', 'Monospaced'; -fx-font-size: 11px; -fx-control-inner-background: #0F172A; -fx-text-fill: #38BDF8; -fx-border-color: #1E293B; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 6;"/>
         </VBox>
     </VBox>
 </AnchorPane>

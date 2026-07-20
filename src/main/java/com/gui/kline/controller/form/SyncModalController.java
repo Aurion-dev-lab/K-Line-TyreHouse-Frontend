@@ -3,11 +3,14 @@ package com.gui.kline.controller.form;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gui.kline.data.SyncDataRepository;
+import com.gui.kline.service.LocalRestoreService;
 import com.gui.kline.utils.BackgroundTask;
 import com.gui.kline.utils.SyncPreferences;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
@@ -21,6 +24,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 public class SyncModalController {
 
@@ -56,6 +60,8 @@ public class SyncModalController {
     private Label lblStatus;
     @FXML
     private Button btnSync;
+    @FXML
+    private Button btnDirectSyncRestore;
     @FXML
     private TextArea txtLog;
 
@@ -316,6 +322,109 @@ public class SyncModalController {
                 log("Exception details: " + e.getMessage());
                 Platform.runLater(() -> btnSync.setDisable(false));
                 e.printStackTrace();
+            }
+        }, null);
+    }
+    @FXML
+    private void onDirectSyncRestoreClicked() {
+        // ── Guard: require server URL ─────────────────────────────────────
+        String urlInput = txtServerUrl.getText() != null ? txtServerUrl.getText().trim() : "";
+        if (urlInput.isEmpty()) {
+            Alert err = new Alert(Alert.AlertType.ERROR);
+            err.setTitle("Missing Configuration");
+            err.setHeaderText("Server Base URL is not set.");
+            err.setContentText("Open Server Connection Settings, enter the Base URL and save before restoring.");
+            err.showAndWait();
+            return;
+        }
+
+        // ── Confirmation dialog ───────────────────────────────────────────
+        Alert confirm = new Alert(Alert.AlertType.WARNING);
+        confirm.setTitle("Restore from Cloud");
+        confirm.setHeaderText("⚠️  This will permanently overwrite your local database!");
+        confirm.setContentText(
+                "All local records will be deleted and replaced with the cloud snapshot.\n" +
+                "Any data that was never synced will be lost permanently.\n\n" +
+                "Are you absolutely sure you want to continue?"
+        );
+        confirm.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK) {
+            log("Restore cancelled by user.");
+            return;
+        }
+
+        // ── UI lock ───────────────────────────────────────────────────────
+        SyncPreferences.setSyncApiUrl(urlInput);
+        String directPullUrl = SyncPreferences.getDirectPullUrl();
+        String apiKey        = SyncPreferences.getSyncApiKey();
+
+        btnDirectSyncRestore.setDisable(true);
+        btnSync.setDisable(true);
+        btnDirectSyncRestore.setText("Fetching Cloud Snapshot...");
+        log("Starting cloud-to-local restore from " + directPullUrl + " ...");
+
+        // ── Background worker (syncTask) ──────────────────────────────────
+        BackgroundTask.runVoid(() -> {
+            try {
+                // Step 1: Fetch cloud snapshot
+                log("Fetching cloud snapshot (GET " + directPullUrl + ")...");
+                HttpClient client = HttpClient.newHttpClient();
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(directPullUrl))
+                        .header("X-API-KEY", apiKey)
+                        .GET()
+                        .build();
+
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                if (response.statusCode() != 200) {
+                    throw new RuntimeException("Server returned HTTP " + response.statusCode() +
+                            ": " + response.body());
+                }
+
+                log("Snapshot received (" + response.body().getBytes().length + " bytes). Verifying payload...");
+
+                // Step 2: Wipe local DB and restore from snapshot (atomic JDBC transaction)
+                LocalRestoreService restoreService = new LocalRestoreService(this::log);
+                restoreService.wipeAndRestore(response.body());
+
+                // Step 3: Hook back to UI thread
+                Platform.runLater(() -> {
+                    btnDirectSyncRestore.setDisable(false);
+                    btnDirectSyncRestore.setText("Restore from Cloud");
+                    btnSync.setDisable(true);
+                    lblCount.setText("0");
+                    lblStatus.setText("Local database restored from cloud snapshot.");
+
+                    Alert success = new Alert(Alert.AlertType.INFORMATION);
+                    success.setTitle("Restore Complete");
+                    success.setHeaderText("Local database successfully restored.");
+                    success.setContentText(
+                            "All local tables have been wiped and repopulated from the cloud snapshot.\n" +
+                            "Your local database is now a clean clone of the cloud."
+                    );
+                    success.showAndWait();
+                });
+
+            } catch (Exception ex) {
+                log("ERROR during restore: " + ex.getMessage());
+                ex.printStackTrace();
+                Platform.runLater(() -> {
+                    btnDirectSyncRestore.setDisable(false);
+                    btnDirectSyncRestore.setText("Restore from Cloud");
+                    btnSync.setDisable(false);
+
+                    Alert error = new Alert(Alert.AlertType.ERROR);
+                    error.setTitle("Restore Failed");
+                    error.setHeaderText("Cloud restore encountered an error.");
+                    error.setContentText(
+                            "The restore was rolled back — your local data is intact.\n\n" +
+                            "Error: " + ex.getMessage()
+                    );
+                    error.showAndWait();
+                });
             }
         }, null);
     }
