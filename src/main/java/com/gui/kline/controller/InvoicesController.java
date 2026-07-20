@@ -179,6 +179,7 @@ public class InvoicesController implements Initializable {
     private void onNewInvoice(ActionEvent event) {
         Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         ViewModel.INSTANCE.getViewsFactory().getForm("form/add-invoice-dialog", ownerStage);
+        attachRefreshOnClose();
     }
 
     @FXML
@@ -218,9 +219,24 @@ public class InvoicesController implements Initializable {
             if (controller != null) {
                 controller.setEditMode(invoice.getInvoiceId(), detail);
             }
+            attachRefreshOnClose();
         } catch (Exception ex) {
             showError("Error opening edit dialog: " + ex.getMessage());
         }
+    }
+
+    private void attachRefreshOnClose() {
+        Stage dialogStage = ViewModel.INSTANCE.getViewsFactory().getLastDialogStage();
+        if (dialogStage != null) {
+            dialogStage.setOnHidden(e -> refreshTable());
+        }
+    }
+
+    private void refreshTable() {
+        loadFromLocal();
+        loadProductMap();
+        tblInvoices.setItems(invoiceList);
+        tblInvoices.refresh();
     }
 
     // Removed: onInvTypeChange, updateProductServiceDisplay, onAddToInvoice
