@@ -263,7 +263,7 @@ public class LocalCatalogRepository {
         String sql = "INSERT INTO products (id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
                 "brand, description, vehicle_type, material, supplier_name, created_at, updated_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, NOW()), NOW()) " +
-                "ON DUPLICATE KEY UPDATE product_code = VALUES(product_code), category = VALUES(category), buy_price = VALUES(buy_price), " +
+                "ON DUPLICATE KEY UPDATE product_code = VALUES(product_code), name = VALUES(name), category = VALUES(category), buy_price = VALUES(buy_price), " +
                 "sell_price = VALUES(sell_price), stock = VALUES(stock), minimum_stock_alert = VALUES(minimum_stock_alert), " +
                 "brand = VALUES(brand), description = VALUES(description), vehicle_type = VALUES(vehicle_type), " +
                 "material = VALUES(material), supplier_name = VALUES(supplier_name), " +

@@ -2,11 +2,13 @@ package com.gui.kline.controller.form;
 
 import com.gui.kline.data.SyncDataRepository;
 import com.gui.kline.utils.BackgroundTask;
+import com.gui.kline.utils.SyncPreferences;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -16,6 +18,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class SyncModalController {
+
+    @FXML private TextField txtServerUrl;
+    @FXML private TextField txtApiKey;
+    @FXML private Label lblSettingsStatus;
+    @FXML private Button btnSaveSettings;
 
     @FXML private Label lblCount;
     @FXML private Label lblStatus;
@@ -27,18 +34,34 @@ public class SyncModalController {
     private int pendingRows;
     private int pendingDeletions;
 
-    private final String SYNC_API_URL = System.getenv().getOrDefault(
-            "SYNC_API_URL", "http://localhost:8080/api/sync"
-    );
-    private final String SYNC_API_KEY = System.getenv().getOrDefault(
-            "SYNC_API_KEY", "sync_qPoGFyE00i74X__qkFuCyKEuLYZNwq0ShyXdNe5t4og60LkWZSDTgeedtrihyTFwQm1Gt7VyeXkmQ2AQ3fSlnQ"
-    );
-
     @FXML
     public void initialize() {
         syncRepository = new SyncDataRepository();
+        loadSettings();
         txtLog.appendText("Checking for pending synchronizations...\n");
         loadSyncData();
+    }
+
+    private void loadSettings() {
+        txtServerUrl.setText(SyncPreferences.getSyncApiUrl());
+        txtApiKey.setText(SyncPreferences.getSyncApiKey());
+    }
+
+    @FXML
+    private void onSaveSettingsClicked() {
+        String url = txtServerUrl.getText() != null ? txtServerUrl.getText().trim() : "";
+        String key = txtApiKey.getText() != null ? txtApiKey.getText().trim() : "";
+
+        if (url.isEmpty()) {
+            lblSettingsStatus.setText("Server URL cannot be empty");
+            lblSettingsStatus.setStyle("-fx-font-size: 11px; -fx-text-fill: #DC2626;");
+            return;
+        }
+
+        SyncPreferences.saveSyncSettings(url, key);
+        lblSettingsStatus.setText("Settings saved successfully!");
+        lblSettingsStatus.setStyle("-fx-font-size: 11px; -fx-text-fill: #16A34A;");
+        log("Server connection settings updated and saved to preferences.");
     }
 
     private void loadSyncData() {
@@ -76,16 +99,19 @@ public class SyncModalController {
         
         String syncInitiationTimestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String jsonPayload = syncRepository.getSyncPayloadAsJson();
+
+        String apiUrl = SyncPreferences.getSyncApiUrl();
+        String apiKey = SyncPreferences.getSyncApiKey();
         
-        log("Connecting to server (http://localhost:8080/api/sync)...");
+        log("Connecting to server (" + apiUrl + ")...");
 
         BackgroundTask.runVoid(() -> {
             try {
                 HttpClient client = HttpClient.newHttpClient();
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(SYNC_API_URL))
+                        .uri(URI.create(apiUrl))
                         .header("Content-Type", "application/json")
-                        .header("X-API-KEY", SYNC_API_KEY)
+                        .header("X-API-KEY", apiKey)
                         .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                         .build();
 

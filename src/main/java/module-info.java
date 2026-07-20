@@ -11,6 +11,7 @@ module com.gui.kline {
     requires java.desktop;
     requires java.sql;
     requires java.net.http;
+    requires java.prefs;
     requires mysql.connector.j;
     requires com.google.gson;
     requires com.fasterxml.jackson.databind;

@@ -4,13 +4,14 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Line?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<AnchorPane prefHeight="580.0" prefWidth="550.0" 
+<AnchorPane prefHeight="700.0" prefWidth="550.0" 
             style="-fx-background-color: #F8FAFC;" 
             xmlns="http://javafx.com/javafx/17" 
             xmlns:fx="http://javafx.com/fxml/1" 
@@ -35,24 +36,65 @@
         <!-- Divider -->
         <Line endX="550" stroke="#E2E8F0" strokeWidth="1"/>
 
-        <!-- Sync Card Area -->
-        <VBox alignment="CENTER" spacing="12" 
+        <!-- Server Settings Section -->
+        <VBox spacing="10" 
               style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.04), 12, 0, 0, 4);">
             <VBox.margin>
-                <Insets top="24" left="30" right="30" bottom="20"/>
+                <Insets top="16" left="30" right="30" bottom="10"/>
             </VBox.margin>
             <padding>
-                <Insets top="30" bottom="30" left="20" right="20"/>
+                <Insets top="16" bottom="16" left="20" right="20"/>
+            </padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <FontIcon iconLiteral="fas-cog" iconColor="#475569" iconSize="14"/>
+                <Label text="Server Connection Settings" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #334155;"/>
+            </HBox>
+
+            <VBox spacing="4">
+                <Label text="Server URL" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748B;"/>
+                <TextField fx:id="txtServerUrl" promptText="http://localhost:8080/api/sync"
+                           style="-fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #CBD5E1; -fx-padding: 6 10; -fx-font-size: 12px;"/>
+            </VBox>
+
+            <VBox spacing="4">
+                <Label text="API Key" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748B;"/>
+                <TextField fx:id="txtApiKey" promptText="Enter API Key"
+                           style="-fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: #CBD5E1; -fx-padding: 6 10; -fx-font-size: 12px;"/>
+            </VBox>
+
+            <HBox alignment="CENTER_RIGHT" spacing="10">
+                <VBox.margin>
+                    <Insets top="4"/>
+                </VBox.margin>
+                <Label fx:id="lblSettingsStatus" text="" style="-fx-font-size: 11px; -fx-text-fill: #16A34A;"/>
+                <Button fx:id="btnSaveSettings" text="Save Settings" onAction="#onSaveSettingsClicked"
+                        style="-fx-background-color: #0F172A; -fx-text-fill: white; -fx-border-radius: 6; -fx-background-radius: 6; -fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 6 16; -fx-cursor: hand;">
+                    <graphic>
+                        <FontIcon iconLiteral="fas-save" iconColor="white" iconSize="12"/>
+                    </graphic>
+                </Button>
+            </HBox>
+        </VBox>
+
+        <!-- Sync Card Area -->
+        <VBox alignment="CENTER" spacing="10" 
+              style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.04), 12, 0, 0, 4);">
+            <VBox.margin>
+                <Insets top="10" left="30" right="30" bottom="16"/>
+            </VBox.margin>
+            <padding>
+                <Insets top="20" bottom="20" left="20" right="20"/>
             </padding>
             
             <Label text="PENDING SYNC COUNT" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #94A3B8; -fx-letter-spacing: 1px;"/>
-            <Label fx:id="lblCount" text="0" style="-fx-font-size: 64px; -fx-font-weight: bold; -fx-text-fill: #2563EB; -fx-padding: -10 0 -10 0;"/>
-            <Label fx:id="lblStatus" text="Local database is fully synchronized." style="-fx-font-size: 14px; -fx-text-fill: #64748B;"/>
+            <Label fx:id="lblCount" text="0" style="-fx-font-size: 48px; -fx-font-weight: bold; -fx-text-fill: #2563EB; -fx-padding: -10 0 -10 0;"/>
+            <Label fx:id="lblStatus" text="Local database is fully synchronized." style="-fx-font-size: 13px; -fx-text-fill: #64748B;"/>
             
             <Button fx:id="btnSync" text="Synchronize Now" onAction="#onSyncClicked"
-                    style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-border-radius: 25; -fx-background-radius: 25; -fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 12 32; -fx-cursor: hand;">
+                    style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-border-radius: 25; -fx-background-radius: 25; -fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 32; -fx-cursor: hand;">
                 <VBox.margin>
-                    <Insets top="10"/>
+                    <Insets top="6"/>
                 </VBox.margin>
                 <graphic>
                     <FontIcon iconLiteral="fas-sync-alt" iconColor="white" iconSize="14"/>
@@ -61,7 +103,7 @@
         </VBox>
 
         <!-- Log Area -->
-        <VBox spacing="10" VBox.vgrow="ALWAYS" style="-fx-padding: 0 30 30 30;">
+        <VBox spacing="8" VBox.vgrow="ALWAYS" style="-fx-padding: 0 30 24 30;">
             <Label text="Activity Log" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #475569;"/>
             <!-- A modern looking console window -->
             <TextArea fx:id="txtLog" editable="false" wrapText="true" VBox.vgrow="ALWAYS" 
