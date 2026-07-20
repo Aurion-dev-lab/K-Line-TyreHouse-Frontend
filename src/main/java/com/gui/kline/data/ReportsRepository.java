@@ -284,10 +284,9 @@ public class ReportsRepository {
         FinancialSummary summary = new FinancialSummary();
         
         // Total sales revenue
-        String salesSql = "SELECT COALESCE(SUM(il.total), 0) as total_sales " +
-                "FROM invoice_line_items il " +
-                "LEFT JOIN invoices i ON il.invoice_id = i.invoice_id " +
-                "WHERE i.status = 'completed' AND i.invoice_date BETWEEN ? AND ?";
+        String salesSql = "SELECT COALESCE(SUM(grand_total), 0) as total_sales " +
+                "FROM invoices " +
+                "WHERE status = 'completed' AND invoice_date BETWEEN ? AND ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(salesSql)) {
@@ -407,8 +406,12 @@ public class ReportsRepository {
         // Product cost is incurred when a quotation is generated as a completed
         // invoice. Service and labour lines have no inventory cost, so they add
         // their full amount to profit.
-        summary.setTotalExpenses(summary.getTotalExpenses()
-                + getCompletedInvoiceProductCost(startDate, endDate));
+        double invoiceProductCost = getCompletedInvoiceProductCost(startDate, endDate);
+        
+        // Tyre export costs (comp_price * tyres) - cost of purchasing tyres
+        double tyreExportCosts = getTyreExportCosts(startDate, endDate);
+        
+        summary.setProductCosts(invoiceProductCost + tyreExportCosts);
         
         summary.setWorkerCosts(getWorkerCosts(startDate, endDate));
         
@@ -418,11 +421,8 @@ public class ReportsRepository {
                              summary.getServiceRevenue() + summary.getQuickServiceRevenue() +
                              summary.getTyreExportRevenue();
         
-        // Tyre export costs (comp_price * tyres) - cost of purchasing tyres
-        double tyreExportCosts = getTyreExportCosts(startDate, endDate);
-        
-        // Total costs: general expenses + tyre export costs + worker costs
-        double totalCosts = summary.getTotalExpenses() + tyreExportCosts + summary.getWorkerCosts();
+        // Total costs: general expenses + product costs + worker costs
+        double totalCosts = summary.getTotalExpenses() + summary.getProductCosts() + summary.getWorkerCosts();
         
         // Net profit = total revenue - total costs
         summary.setNetProfit(totalRevenue - totalCosts);
@@ -618,6 +618,7 @@ public class ReportsRepository {
         private double quickServiceRevenue;
         private double tyreExportRevenue;
         private double totalExpenses;
+        private double productCosts;
         private double workerCosts;
         private double netProfit;
 
@@ -640,6 +641,9 @@ public class ReportsRepository {
         public double getTotalExpenses() { return totalExpenses; }
         public void setTotalExpenses(double totalExpenses) { this.totalExpenses = totalExpenses; }
         
+        public double getProductCosts() { return productCosts; }
+        public void setProductCosts(double productCosts) { this.productCosts = productCosts; }
+        
         public double getWorkerCosts() { return workerCosts; }
         public void setWorkerCosts(double workerCosts) { this.workerCosts = workerCosts; }
         
@@ -647,7 +651,7 @@ public class ReportsRepository {
         public void setNetProfit(double netProfit) { this.netProfit = netProfit; }
         
         public double getTotalRevenue() {
-            return totalSales + creditSales + serviceRevenue + quickServiceRevenue + tyreExportRevenue;
+            return totalSales + serviceRevenue + quickServiceRevenue + tyreExportRevenue;
         }
         
         public double getTotalCosts() {

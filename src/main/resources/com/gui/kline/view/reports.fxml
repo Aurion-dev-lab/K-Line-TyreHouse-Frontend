@@ -50,8 +50,12 @@
         <HBox spacing="16">
             <VBox fx:id="totalSalesCard" spacing="14" styleClass="metric-card" HBox.hgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label styleClass="card-icon, card-icon-sales" text="📈" />
-                    <Label styleClass="metric-label" text="TOTAL SALES" />
+                    <Label text="📈" style="-fx-font-size: 18px;
+                                -fx-background-color: #EFF6FF; -fx-background-radius: 8;
+                                -fx-padding: 6 8 6 8;"/>
+                    <Label text="GROSS REVENUE"
+                           style="-fx-font-size: 11px; -fx-font-weight: bold;
+                                  -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;"/>
                 </HBox>
                 <Label fx:id="totalSalesLabel" styleClass="metric-value" text="Rs. 0" />
             </VBox>
