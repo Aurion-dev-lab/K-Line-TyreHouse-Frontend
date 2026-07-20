@@ -6,6 +6,9 @@
     -fx-background-radius: 10;
     -fx-cursor: hand;
 }
+.record-service-btn:hover {
+    -fx-background-color: #059669;
+}
 
 .table-card {
     -fx-background-color: white;
@@ -26,6 +29,36 @@
     -fx-font-size: 11px;
 }
 
+.filter-field {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 6 12;
+    -fx-font-size: 13px;
+    -fx-text-fill: #111827;
+    -fx-prompt-text-fill: #9ca3af;
+}
+.filter-field:focused {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #10b981;
+}
+
+.date-range-picker {
+    -fx-alignment: CENTER_LEFT;
+}
+.date-range-picker .date-picker {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+.date-range-picker .date-picker .text-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: #111827;
+    -fx-font-size: 12px;
+}
+
 .table-view {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
@@ -39,22 +72,48 @@
 .table-view .column-header {
     -fx-background-color: transparent;
     -fx-size: 40;
+    -fx-border-color: #f3f4f6;
+    -fx-border-width: 0 0 1 0;
 }
 
 .table-view .column-header .label {
-    -fx-text-fill: #9ca3af;
+    -fx-text-fill: #6b7280;
     -fx-font-weight: bold;
     -fx-font-size: 11px;
+    -fx-alignment: CENTER_LEFT;
 }
 
 .table-row-cell {
+    -fx-background-color: #ffffff;
     -fx-border-color: #f3f4f6;
     -fx-border-width: 0 0 1 0;
-    -fx-padding: 10 0;
+    -fx-cell-size: 44px;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #f9fafb;
+}
+
+.table-row-cell:hover {
+    -fx-background-color: #f3f4f6;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #e5e7eb;
 }
 
 .table-view .table-cell {
-    -fx-text-fill: #1f2937;
+    -fx-text-fill: #111827;
     -fx-font-size: 13px;
     -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 10;
 }
+
+.table-view .table-cell .text {
+    -fx-fill: #111827;
+}
+
+.ikonli-font-icon {
+    -fx-icon-color: #ef4444;
+    -fx-icon-size: 14;
+}
