@@ -1,276 +1,209 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.gui.kline.controller.ReportsController"
-            prefHeight="700.0" prefWidth="1100.0"
-            style="-fx-background-color: #F0F2F5;">
+<AnchorPane prefHeight="700.0" prefWidth="1100.0" styleClass="reports-container" stylesheets="@../css/reports.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.gui.kline.controller.ReportsController">
 
-    <VBox spacing="16" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
-          AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+    <VBox spacing="20" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
         <padding>
-            <Insets top="20" right="20" bottom="20" left="20"/>
+            <Insets bottom="24" left="24" right="24" top="24" />
         </padding>
 
         <!-- Header Section -->
         <HBox alignment="CENTER_LEFT" spacing="16">
             <VBox spacing="4" HBox.hgrow="ALWAYS">
-                <Label text="Business Reports"
-                       style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
-                <Label text="Analyze your shop's financial performance"
-                       style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"/>
+                <Label styleClass="reports-header" text="Business Reports" />
+                <Label styleClass="reports-subheader" text="Analyze your shop's financial performance" />
             </VBox>
 
-            <HBox alignment="CENTER" spacing="8"
-                  style="-fx-background-color: white; -fx-background-radius: 8;
-                         -fx-border-color: #E5E7EB; -fx-border-radius: 8; -fx-padding: 6 14 6 14;">
-                <Label text="📅" style="-fx-font-size: 13px;"/>
-                <DatePicker fx:id="startDatePicker" promptText="From"
-                            style="-fx-background-color: transparent; -fx-border-color: transparent;
-                                   -fx-font-size: 13px; -fx-pref-width: 120;"/>
-                <Label text="to" style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"/>
-                <DatePicker fx:id="endDatePicker" promptText="To"
-                            style="-fx-background-color: transparent; -fx-border-color: transparent;
-                                   -fx-font-size: 13px; -fx-pref-width: 120;"/>
+            <HBox alignment="CENTER" spacing="8" styleClass="date-range-selector">
+                <Label style="-fx-font-size: 13px;" text="📅" />
+                <DatePicker fx:id="startDatePicker" promptText="From" styleClass="report-date-picker" />
+                <Label styleClass="reports-subheader" text="to" />
+                <DatePicker fx:id="endDatePicker" promptText="To" styleClass="report-date-picker" />
             </HBox>
 
-            <Button fx:id="exportBtn" text="⬇  Export PDF" onAction="#handleExportPDF"
-                    style="-fx-background-color: #16A34A; -fx-text-fill: white;
-                           -fx-font-size: 13px; -fx-font-weight: bold;
-                           -fx-background-radius: 8; -fx-padding: 10 20 10 20;
-                           -fx-cursor: hand;"/>
+            <Button fx:id="exportBtn" onAction="#handleExportPDF" styleClass="export-button" text="⬇  Export PDF" />
 
-            <Button fx:id="refreshBtn" text="🔄 Refresh" onAction="#handleRefresh"
-                    style="-fx-background-color: #2563EB; -fx-text-fill: white;
-                           -fx-font-size: 13px; -fx-font-weight: bold;
-                           -fx-background-radius: 8; -fx-padding: 10 20 10 20;
-                           -fx-cursor: hand;"/>
+            <Button fx:id="refreshBtn" onAction="#handleRefresh" styleClass="refresh-button" text="🔄  Refresh" />
         </HBox>
 
         <!-- Control Panel with Search and Report Type Selector -->
-        <HBox alignment="CENTER_LEFT" spacing="16" style="-fx-padding: 0 0 16 0;">
-            <ComboBox fx:id="reportTypeComboBox" prefWidth="200"
-                      style="-fx-font-size: 13px; -fx-background-radius: 8; -fx-padding: 8 12 8 12;"/>
-            <TextField fx:id="searchField" prefWidth="250"
-                       style="-fx-font-size: 13px; -fx-background-radius: 8; -fx-padding: 8 12 8 12;"/>
+        <HBox alignment="CENTER_LEFT" spacing="16">
+            <ComboBox fx:id="reportTypeComboBox" prefWidth="200" styleClass="report-combo-box" />
+            <TextField fx:id="searchField" prefWidth="260" promptText="Search reports..." styleClass="report-search-field" />
         </HBox>
 
         <!-- Summary Metrics Cards -->
         <HBox spacing="16">
-            <VBox fx:id="totalSalesCard" spacing="12" HBox.hgrow="ALWAYS"
-                  style="-fx-background-color: white; -fx-background-radius: 14;
-                         -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
+            <VBox fx:id="totalSalesCard" spacing="14" styleClass="metric-card" HBox.hgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label text="📈" style="-fx-font-size: 18px;
-                                -fx-background-color: #EFF6FF; -fx-background-radius: 8;
-                                -fx-padding: 6 8 6 8;"/>
-                    <Label text="TOTAL SALES"
-                           style="-fx-font-size: 11px; -fx-font-weight: bold;
-                                  -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;"/>
+                    <Label styleClass="card-icon, card-icon-sales" text="📈" />
+                    <Label styleClass="metric-label" text="TOTAL SALES" />
                 </HBox>
-                <Label fx:id="totalSalesLabel" text="Rs. 0"
-                       style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                <Label fx:id="totalSalesLabel" styleClass="metric-value" text="Rs. 0" />
             </VBox>
 
-            <VBox fx:id="grossProfitCard" spacing="12" HBox.hgrow="ALWAYS"
-                  style="-fx-background-color: white; -fx-background-radius: 14;
-                         -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
+            <VBox fx:id="grossProfitCard" spacing="14" styleClass="metric-card" HBox.hgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label text="💵" style="-fx-font-size: 18px;
-                                -fx-background-color: #F0FDF4; -fx-background-radius: 8;
-                                -fx-padding: 6 8 6 8;"/>
-                    <Label text="GROSS PROFIT"
-                           style="-fx-font-size: 11px; -fx-font-weight: bold;
-                                  -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;"/>
+                    <Label styleClass="card-icon, card-icon-profit" text="💵" />
+                    <Label styleClass="metric-label" text="GROSS PROFIT" />
                 </HBox>
-                <Label fx:id="grossProfitLabel" text="Rs. 0"
-                       style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                <Label fx:id="grossProfitLabel" styleClass="metric-value, positive-value" text="Rs. 0" />
             </VBox>
 
-            <VBox fx:id="workerCostsCard" spacing="12" HBox.hgrow="ALWAYS"
-                  style="-fx-background-color: white; -fx-background-radius: 14;
-                         -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
+            <VBox fx:id="workerCostsCard" spacing="14" styleClass="metric-card" HBox.hgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label text="👥" style="-fx-font-size: 18px;
-                                -fx-background-color: #FFF1F2; -fx-background-radius: 8;
-                                -fx-padding: 6 8 6 8;"/>
-                    <Label text="WORKER COSTS"
-                           style="-fx-font-size: 11px; -fx-font-weight: bold;
-                                  -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;"/>
+                    <Label styleClass="card-icon, card-icon-costs" text="👥" />
+                    <Label styleClass="metric-label" text="WORKER COSTS" />
                 </HBox>
-                <Label fx:id="workerCostsLabel" text="Rs. 0"
-                       style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #e51444;"/>
+                <Label fx:id="workerCostsLabel" styleClass="metric-value, negative-value" text="Rs. 0" />
             </VBox>
 
-            <VBox fx:id="netIncomeCard" spacing="12" HBox.hgrow="ALWAYS"
-                  style="-fx-background-color: #111827; -fx-background-radius: 14; -fx-padding: 20;">
+            <VBox fx:id="netIncomeCard" spacing="14" styleClass="metric-card-green" HBox.hgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label text="📊" style="-fx-font-size: 18px;
-                                -fx-background-color: #0aa444; -fx-background-radius: 8;
-                                -fx-padding: 6 8 6 8;"/>
-                    <Label text="NET INCOME"
-                           style="-fx-font-size: 11px; -fx-font-weight: bold;
-                                  -fx-text-fill: #9CA3AF; -fx-letter-spacing: 1.2;"/>
+                    <Label styleClass="card-icon, card-icon-income" text="📊" />
+                    <Label styleClass="metric-label-dark" text="NET INCOME" />
                 </HBox>
-                <Label fx:id="netIncomeLabel" text="Rs. 0"
-                       style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                <Label fx:id="netIncomeLabel" styleClass="metric-value-light" text="Rs. 0" />
             </VBox>
         </HBox>
 
         <!-- Main Reports Content with Tabs -->
-        <TabPane fx:id="reportsTabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
-            
-            <!-- Summary Tab -->
-            <Tab fx:id="summaryTab" text="Summary" closable="false">
-                <VBox fx:id="summaryContent" spacing="16" style="-fx-padding: 16; -fx-background-color: #F0F2F5;">
-                    <HBox spacing="16" VBox.vgrow="ALWAYS">
-                        <VBox spacing="0" HBox.hgrow="ALWAYS"
-                              style="-fx-background-color: white; -fx-background-radius: 14;
-                                     -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
-                            <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
-                                <Label text="💲" style="-fx-font-size: 16px;"/>
-                                <Label text="Sales Breakdown"
-                                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
-                            </HBox>
-                            <Separator style="-fx-opacity: 0.5;"/>
-                            <ScrollPane fitToWidth="true" fitToHeight="true">
-                                <VBox fx:id="salesBreakdownContainer" spacing="0"/>
-                            </ScrollPane>
-                        </VBox>
+        <!-- NOTE: TabPane grows directly via VBox.vgrow. Each tab already owns its own
+             internal ScrollPane for its content, so no outer ScrollPane is needed here.
+             Wrapping the whole TabPane in another ScrollPane was collapsing its height
+             and causing the double-scrollbar / clipped-content issue. -->
+        <TabPane fx:id="reportsTabPane" styleClass="reports-tab-pane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
 
-                        <VBox spacing="0" HBox.hgrow="ALWAYS"
-                              style="-fx-background-color: white; -fx-background-radius: 14;
-                                     -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
-                            <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
-                                <Label text="🔧" style="-fx-font-size: 16px;"/>
-                                <Label text="Service Revenue"
-                                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
-                            </HBox>
-                            <Separator style="-fx-opacity: 0.5;"/>
-                            <ScrollPane fitToWidth="true" fitToHeight="true">
-                                <VBox fx:id="serviceRevenueContainer" spacing="0"/>
-                            </ScrollPane>
-                        </VBox>
-                    </HBox>
-                    
-                    <VBox spacing="0" HBox.hgrow="ALWAYS"
-                          style="-fx-background-color: white; -fx-background-radius: 14;
-                                 -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
-                        <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
-                            <Label text="💰" style="-fx-font-size: 16px;"/>
-                            <Label text="Expenses"
-                                   style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+            <!-- Summary Tab -->
+            <Tab fx:id="summaryTab" closable="false" text="Summary">
+                <ScrollPane fitToHeight="true" fitToWidth="true" styleClass="report-scroll-pane">
+                    <VBox fx:id="summaryContent" spacing="16" style="-fx-padding: 16;" styleClass="reports-container">
+
+                        <HBox spacing="16" VBox.vgrow="SOMETIMES">
+                            <VBox spacing="0" styleClass="report-section" HBox.hgrow="ALWAYS">
+                                <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
+                                    <Label style="-fx-font-size: 16px;" text="💲" />
+                                    <Label styleClass="report-section-header" text="Sales Breakdown" />
+                                </HBox>
+                                <Separator styleClass="report-separator" />
+                                <VBox fx:id="salesBreakdownContainer" spacing="0" />
+                            </VBox>
+
+                            <VBox spacing="0" styleClass="report-section" HBox.hgrow="ALWAYS">
+                                <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
+                                    <Label style="-fx-font-size: 16px;" text="🔧" />
+                                    <Label styleClass="report-section-header" text="Service Revenue" />
+                                </HBox>
+                                <Separator styleClass="report-separator" />
+                                <VBox fx:id="serviceRevenueContainer" spacing="0" />
+                            </VBox>
                         </HBox>
-                        <Separator style="-fx-opacity: 0.5;"/>
-                        <ScrollPane fitToWidth="true" fitToHeight="true">
-                            <VBox fx:id="expensesContainer" spacing="0"/>
-                        </ScrollPane>
+
+                        <VBox spacing="0" styleClass="report-section" VBox.vgrow="SOMETIMES">
+                            <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
+                                <Label style="-fx-font-size: 16px;" text="💰" />
+                                <Label styleClass="report-section-header" text="Expenses" />
+                            </HBox>
+                            <Separator styleClass="report-separator" />
+                            <VBox fx:id="expensesContainer" spacing="0" />
+                        </VBox>
                     </VBox>
-                </VBox>
+                </ScrollPane>
             </Tab>
 
             <!-- Sales Tab -->
-            <Tab fx:id="salesTab" text="Sales Analysis" closable="false">
-                <ScrollPane fitToWidth="true" fitToHeight="true">
-                    <VBox spacing="16" style="-fx-padding: 16; -fx-background-color: #F0F2F5;">
-                        <VBox spacing="0" HBox.hgrow="ALWAYS"
-                              style="-fx-background-color: white; -fx-background-radius: 14;
-                                     -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
+            <Tab fx:id="salesTab" closable="false" text="Sales Analysis">
+                <ScrollPane fitToHeight="true" fitToWidth="true" styleClass="report-scroll-pane">
+                    <VBox spacing="16" style="-fx-padding: 16;" styleClass="reports-container">
+                        <VBox spacing="0" styleClass="report-section">
                             <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
-                                <Label text="🏆" style="-fx-font-size: 16px;"/>
-                                <Label text="Top Selling Products"
-                                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                                <Label style="-fx-font-size: 16px;" text="🏆" />
+                                <Label styleClass="report-section-header" text="Top Selling Products" />
                             </HBox>
-                            <Separator style="-fx-opacity: 0.5;"/>
-                            <VBox fx:id="topProductsContainer" spacing="0"/>
+                            <Separator styleClass="report-separator" />
+                            <VBox fx:id="topProductsContainer" spacing="0" />
                         </VBox>
 
-                        <VBox spacing="0" HBox.hgrow="ALWAYS"
-                              style="-fx-background-color: white; -fx-background-radius: 14;
-                                     -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
+                        <VBox spacing="0" styleClass="report-section">
                             <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
-                                <Label text="📅" style="-fx-font-size: 16px;"/>
-                                <Label text="Daily Sales Summary"
-                                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                                <Label style="-fx-font-size: 16px;" text="📅" />
+                                <Label styleClass="report-section-header" text="Daily Sales Summary" />
                             </HBox>
-                            <Separator style="-fx-opacity: 0.5;"/>
-                            <VBox fx:id="dailySalesContainer" spacing="0"/>
+                            <Separator styleClass="report-separator" />
+                            <VBox fx:id="dailySalesContainer" spacing="0" />
                         </VBox>
                     </VBox>
                 </ScrollPane>
             </Tab>
 
             <!-- Analytics Tab -->
-            <Tab fx:id="analyticsTab" text="Customer Analysis" closable="false">
-                <ScrollPane fitToWidth="true" fitToHeight="true">
-                    <VBox spacing="16" style="-fx-padding: 16; -fx-background-color: #F0F2F5;">
-                        <VBox spacing="0" HBox.hgrow="ALWAYS"
-                              style="-fx-background-color: white; -fx-background-radius: 14;
-                                     -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
+            <Tab fx:id="analyticsTab" closable="false" text="Customer Analysis">
+                <ScrollPane fitToHeight="true" fitToWidth="true" styleClass="report-scroll-pane">
+                    <VBox spacing="16" style="-fx-padding: 16;" styleClass="reports-container">
+                        <VBox spacing="0" styleClass="report-section">
                             <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
-                                <Label text="👥" style="-fx-font-size: 16px;"/>
-                                <Label text="Customer Credit Analysis"
-                                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                                <Label style="-fx-font-size: 16px;" text="👥" />
+                                <Label styleClass="report-section-header" text="Customer Credit Analysis" />
                             </HBox>
-                            <Separator style="-fx-opacity: 0.5;"/>
-                            <VBox fx:id="customerSummaryContainer" spacing="0"/>
+                            <Separator styleClass="report-separator" />
+                            <VBox fx:id="customerSummaryContainer" spacing="0" />
                         </VBox>
 
-                        <VBox spacing="0" HBox.hgrow="ALWAYS"
-                              style="-fx-background-color: white; -fx-background-radius: 14;
-                                     -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
+                        <VBox spacing="0" styleClass="report-section">
                             <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
-                                <Label text="💳" style="-fx-font-size: 16px;"/>
-                                <Label text="Outstanding Payments"
-                                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                                <Label style="-fx-font-size: 16px;" text="💳" />
+                                <Label styleClass="report-section-header" text="Outstanding Payments" />
                             </HBox>
-                            <Separator style="-fx-opacity: 0.5;"/>
+                            <Separator styleClass="report-separator" />
                             <VBox spacing="0">
-                                <Label text="Customer credit and payment tracking will be displayed here."
-                                       style="-fx-text-fill: #9CA3AF; -fx-font-size: 13px; -fx-padding: 20 0 0 0;"/>
+                                <Label styleClass="empty-state" text="Customer credit and payment tracking will be displayed here." />
                             </VBox>
                         </VBox>
                     </VBox>
                 </ScrollPane>
             </Tab>
 
-            <!-- Additional Tabs for Future Expansion -->
-            <Tab fx:id="servicesTab" text="Services" closable="false">
-                <ScrollPane fitToWidth="true" fitToHeight="true">
-                    <VBox spacing="16" style="-fx-padding: 16; -fx-background-color: #F0F2F5;">
-                        <VBox spacing="0" HBox.hgrow="ALWAYS"
-                              style="-fx-background-color: white; -fx-background-radius: 14;
-                                     -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
+            <!-- Services Tab -->
+            <Tab fx:id="servicesTab" closable="false" text="Services">
+                <ScrollPane fitToHeight="true" fitToWidth="true" styleClass="report-scroll-pane">
+                    <VBox spacing="16" style="-fx-padding: 16;" styleClass="reports-container">
+                        <VBox spacing="0" styleClass="report-section">
                             <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
-                                <Label text="🔧" style="-fx-font-size: 16px;"/>
-                                <Label text="All Services"
-                                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                                <Label style="-fx-font-size: 16px;" text="🔧" />
+                                <Label styleClass="report-section-header" text="All Services" />
                             </HBox>
-                            <Separator style="-fx-opacity: 0.5;"/>
-                            <VBox fx:id="servicesTabContent" spacing="0"/>
+                            <Separator styleClass="report-separator" />
+                            <VBox fx:id="servicesTabContent" spacing="0" />
                         </VBox>
                     </VBox>
                 </ScrollPane>
             </Tab>
 
-            <Tab fx:id="expensesTab" text="Expenses" closable="false">
-                <ScrollPane fitToWidth="true" fitToHeight="true">
-                    <VBox spacing="16" style="-fx-padding: 16; -fx-background-color: #F0F2F5;">
-                        <VBox spacing="0" HBox.hgrow="ALWAYS"
-                              style="-fx-background-color: white; -fx-background-radius: 14;
-                                     -fx-border-color: #E5E7EB; -fx-border-radius: 14; -fx-padding: 20;">
+            <!-- Expenses Tab -->
+            <Tab fx:id="expensesTab" closable="false" text="Expenses">
+                <ScrollPane fitToHeight="true" fitToWidth="true" styleClass="report-scroll-pane">
+                    <VBox spacing="16" style="-fx-padding: 16;" styleClass="reports-container">
+                        <VBox spacing="0" styleClass="report-section">
                             <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
-                                <Label text="💰" style="-fx-font-size: 16px;"/>
-                                <Label text="All Expenses"
-                                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
+                                <Label style="-fx-font-size: 16px;" text="💰" />
+                                <Label styleClass="report-section-header" text="All Expenses" />
                             </HBox>
-                            <Separator style="-fx-opacity: 0.5;"/>
-                            <VBox fx:id="expensesTabContent" spacing="0"/>
+                            <Separator styleClass="report-separator" />
+                            <VBox fx:id="expensesTabContent" spacing="0" />
                         </VBox>
                     </VBox>
                 </ScrollPane>

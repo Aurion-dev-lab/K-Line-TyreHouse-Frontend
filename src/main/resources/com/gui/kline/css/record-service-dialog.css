@@ -3,7 +3,6 @@
 }
 .modal-card {
     -fx-background-color: #ffffff;
-    -fx-background-radius: 16;
     -fx-border-radius: 16;
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.18), 32, 0, 0, 8);
 }

@@ -21,7 +21,7 @@
 
     <StackPane AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
 
-        <VBox maxHeight="650" maxWidth="650" spacing="0" style="-fx-background-color: white; -fx-background-radius: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 20, 0, 0, 10);">
+        <VBox maxHeight="650" maxWidth="650" spacing="0" style="-fx-background-color: white; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 20, 0, 0, 10);">
 
             <!-- Header -->
             <HBox alignment="CENTER_LEFT" spacing="12">
@@ -32,7 +32,7 @@
             </HBox>
 
             <!-- Scrollable Content -->
-            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" VBox.vgrow="ALWAYS">
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="NEVER" style="-fx-background-color: white">
                 <VBox spacing="20" style="-fx-padding: 16 32 32 32;">
 
                     <!-- CUSTOMER DETAILS -->

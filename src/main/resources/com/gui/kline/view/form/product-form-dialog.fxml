@@ -15,14 +15,11 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane style="-fx-background-color: rgba(0,0,0,0.5);"
-            xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.gui.kline.controller.form.ProductFormController">
+<AnchorPane style="-fx-background-color: rgba(0,0,0,0.5);" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.gui.kline.controller.form.ProductFormController">
 
     <StackPane AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
 
-        <VBox maxWidth="500" maxHeight="600" spacing="0" style="-fx-background-color: white; -fx-background-radius: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 20, 0, 0, 10);">
+        <VBox maxHeight="600" maxWidth="500" spacing="0" style="-fx-background-color: white; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 20, 0, 0, 10);">
 
             <HBox alignment="CENTER_LEFT" spacing="10">
                 <padding><Insets bottom="20" left="32" right="32" top="32" /></padding>
@@ -30,8 +27,8 @@
                 <Label fx:id="lblBadge" managed="false" style="-fx-background-color: #f97316; -fx-text-fill: white; -fx-font-size: 10px; -fx-padding: 4 8; -fx-background-radius: 10; -fx-font-weight: bold;" text="EDITING" visible="false" />
             </HBox>
 
-            <ScrollPane fitToWidth="true" maxHeight="420" style="-fx-background: transparent; -fx-border-color: transparent;">
-                <VBox spacing="16">
+            <ScrollPane fitToWidth="true" maxHeight="420" hbarPolicy="NEVER" vbarPolicy="NEVER" style="-fx-background: transparent; -fx-border-color: transparent; -fx-background-color: white;">
+                <VBox spacing="16" style="-fx-background-color: white;">
                     <padding><Insets bottom="20" left="32" right="32" top="0" /></padding>
 
                 <VBox spacing="8">
@@ -51,17 +48,14 @@
 
                 <VBox spacing="8">
                     <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="PRODUCT IMAGES (OPTIONAL)" />
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Button fx:id="btnChooseImage" text="Add Images" onAction="#handleChooseImage"
-                                style="-fx-background-color: #6366f1; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 8 16; -fx-background-radius: 8; -fx-cursor: hand;" />
-                        <Button fx:id="btnClearImage" text="Clear All" onAction="#handleClearImage" visible="false" managed="false"
-                                style="-fx-background-color: transparent; -fx-text-fill: #dc2626; -fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 8 16; -fx-background-radius: 8; -fx-cursor: hand; -fx-border-color: #fecaca; -fx-border-width: 1; -fx-border-radius: 8;" />
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Button fx:id="btnChooseImage" onAction="#handleChooseImage" style="-fx-background-color: #6366f1; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 8 16; -fx-background-radius: 8; -fx-cursor: hand;" text="Add Images" />
+                        <Button fx:id="btnClearImage" managed="false" onAction="#handleClearImage" style="-fx-background-color: transparent; -fx-text-fill: #dc2626; -fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 8 16; -fx-background-radius: 8; -fx-cursor: hand; -fx-border-color: #fecaca; -fx-border-width: 1; -fx-border-radius: 8;" text="Clear All" visible="false" />
                     </HBox>
-                    <ImageView fx:id="imgPreview" fitWidth="120" fitHeight="120" preserveRatio="true" visible="false" managed="false"
-                               style="-fx-background-color: #f3f4f6; -fx-background-radius: 12; -fx-padding: 8;" />
+                    <ImageView fx:id="imgPreview" fitHeight="120" fitWidth="120" managed="false" preserveRatio="true" style="-fx-background-color: #f3f4f6; -fx-background-radius: 12; -fx-padding: 8;" visible="false" />
                     
                     <!-- Image Gallery -->
-                    <VBox fx:id="imageGallery" spacing="8" visible="false" managed="false">
+                    <VBox fx:id="imageGallery" managed="false" spacing="8" visible="false">
                         <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="Uploaded Images:" />
                         <HBox spacing="8" />
                     </VBox>
@@ -90,6 +84,9 @@
                         <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="MATERIAL (OPTIONAL)" />
                         <TextField fx:id="txtMaterial" promptText="e.g. Rubber, Metal" style="-fx-background-color: #f8fafc; -fx-background-radius: 12; -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;" />
                     </VBox>
+                  <rowConstraints>
+                     <RowConstraints />
+                  </rowConstraints>
                 </GridPane>
 
                 <VBox spacing="8">
@@ -110,6 +107,9 @@
                         <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="SELLING PRICE (RS.)" />
                         <TextField fx:id="txtSellPrice" promptText="0.00" style="-fx-background-color: #f8fafc; -fx-background-radius: 12; -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;" />
                     </VBox>
+                  <rowConstraints>
+                     <RowConstraints />
+                  </rowConstraints>
                 </GridPane>
 
                 <GridPane hgap="16">
@@ -125,6 +125,9 @@
                         <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="MIN STOCK ALERT" />
                         <TextField fx:id="txtMinStockAlert" promptText="5" style="-fx-background-color: #f8fafc; -fx-background-radius: 12; -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;" />
                     </VBox>
+                  <rowConstraints>
+                     <RowConstraints />
+                  </rowConstraints>
                 </GridPane>
 
                 <HBox alignment="CENTER_RIGHT" spacing="16">
