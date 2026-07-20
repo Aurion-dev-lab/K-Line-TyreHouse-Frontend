@@ -2,9 +2,11 @@
     -fx-background-color: #10b981;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-padding: 10 20;
-    -fx-background-radius: 10;
+    -fx-font-size: 13px;
+    -fx-padding: 9 18;
+    -fx-background-radius: 8;
     -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(16, 185, 129, 0.2), 6, 0, 0, 3);
 }
 .record-service-btn:hover {
     -fx-background-color: #059669;
@@ -12,29 +14,40 @@
 
 .table-card {
     -fx-background-color: white;
-    -fx-background-radius: 15;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5);
+    -fx-background-radius: 12;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.04), 10, 0, 0, 4);
 }
 
 .insights-card {
     -fx-background-color: #111827;
-    -fx-background-radius: 20;
+    -fx-background-radius: 16;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.12), 12, 0, 0, 5);
 }
 
 .service-tag {
     -fx-background-color: #1f2937;
-    -fx-text-fill: #d1d5db;
-    -fx-padding: 6 12;
-    -fx-background-radius: 15;
+    -fx-text-fill: #e5e7eb;
+    -fx-padding: 5 10;
+    -fx-background-radius: 12;
     -fx-font-size: 11px;
+    -fx-font-weight: 500;
+    -fx-cursor: hand;
+}
+.service-tag:hover {
+    -fx-background-color: #374151;
+    -fx-text-fill: #ffffff;
 }
 
 .filter-field {
     -fx-background-color: #f9fafb;
-    -fx-border-color: #e5e7eb;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1;
     -fx-border-radius: 8;
     -fx-background-radius: 8;
-    -fx-padding: 6 12;
+    -fx-padding: 6 10;
     -fx-font-size: 13px;
     -fx-text-fill: #111827;
     -fx-prompt-text-fill: #9ca3af;
@@ -49,7 +62,8 @@
 }
 .date-range-picker .date-picker {
     -fx-background-color: #f9fafb;
-    -fx-border-color: #e5e7eb;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1;
     -fx-border-radius: 8;
     -fx-background-radius: 8;
 }
@@ -59,61 +73,78 @@
     -fx-font-size: 12px;
 }
 
-.table-view {
-    -fx-background-color: transparent;
-    -fx-border-color: transparent;
-}
-
-.table-view .column-header-background {
-    -fx-background-color: #f9fafb;
-    -fx-padding: 0 0 5 0;
-}
-
-.table-view .column-header {
-    -fx-background-color: transparent;
-    -fx-size: 40;
+.table-controls-bar {
     -fx-border-color: #f3f4f6;
     -fx-border-width: 0 0 1 0;
 }
 
-.table-view .column-header .label {
+.main-services-table {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.main-services-table .column-header-background {
+    -fx-background-color: #f9fafb;
+    -fx-padding: 0;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 0 0 1 0;
+}
+
+.main-services-table .column-header {
+    -fx-background-color: transparent;
+    -fx-size: 38;
+    -fx-border-color: transparent;
+}
+
+.main-services-table .column-header .label {
     -fx-text-fill: #6b7280;
     -fx-font-weight: bold;
     -fx-font-size: 11px;
     -fx-alignment: CENTER_LEFT;
 }
 
-.table-row-cell {
+.main-services-table .table-row-cell {
     -fx-background-color: #ffffff;
     -fx-border-color: #f3f4f6;
     -fx-border-width: 0 0 1 0;
-    -fx-cell-size: 44px;
+    -fx-cell-size: 42px;
 }
 
-.table-row-cell:odd {
+.main-services-table .table-row-cell:odd {
     -fx-background-color: #f9fafb;
 }
 
-.table-row-cell:hover {
+.main-services-table .table-row-cell:hover {
     -fx-background-color: #f3f4f6;
 }
 
-.table-row-cell:selected {
+.main-services-table .table-row-cell:selected {
     -fx-background-color: #e5e7eb;
 }
 
-.table-view .table-cell {
+.main-services-table .table-cell {
     -fx-text-fill: #111827;
     -fx-font-size: 13px;
     -fx-alignment: CENTER_LEFT;
     -fx-padding: 0 10;
 }
 
-.table-view .table-cell .text {
+.main-services-table .table-cell .text {
     -fx-fill: #111827;
+}
+
+/* Delete button styling with explicit red bucket icon */
+.delete-action-btn {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-padding: 5 8;
+    -fx-background-radius: 6;
+}
+.delete-action-btn:hover {
+    -fx-background-color: #fee2e2;
 }
 
 .ikonli-font-icon {
     -fx-icon-color: #ef4444;
     -fx-icon-size: 14;
-}
+}

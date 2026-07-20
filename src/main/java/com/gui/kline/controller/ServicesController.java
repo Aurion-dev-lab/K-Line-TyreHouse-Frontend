@@ -99,10 +99,12 @@ public class ServicesController implements Initializable {
                 trashIcon.setIconColor(javafx.scene.paint.Color.web("#ef4444"));
                 trashIcon.setIconSize(14);
                 deleteBtn.setGraphic(trashIcon);
-                deleteBtn.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
+                deleteBtn.getStyleClass().add("delete-action-btn");
                 deleteBtn.setOnAction(e -> {
-                    ServiceRecord record = getTableView().getItems().get(getIndex());
-                    deleteService(record);
+                    if (getIndex() >= 0 && getIndex() < getTableView().getItems().size()) {
+                        ServiceRecord record = getTableView().getItems().get(getIndex());
+                        deleteService(record);
+                    }
                 });
             }
             @Override
