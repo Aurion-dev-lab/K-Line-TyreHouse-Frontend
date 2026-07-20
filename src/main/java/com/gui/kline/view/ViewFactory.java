@@ -133,7 +133,7 @@ public class ViewFactory {
         return null;
     }
 
-    public <T> T getForm(String view, Stage ownerStage) {
+/*    public <T> T getForm(String view, Stage ownerStage) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gui/kline/view/" + view + ".fxml"));
             Parent root = loader.load();
@@ -152,7 +152,7 @@ public class ViewFactory {
 
             Scene scene = new Scene(root);
             stage.setScene(scene);
-            
+
             // Center the dialog over the owner window
             if (actualOwner != null) {
                 stage.setX(actualOwner.getX() + (actualOwner.getWidth() - root.prefWidth(-1)) / 2);
@@ -175,7 +175,45 @@ public class ViewFactory {
             return null;
         }
     }
-    
+    */
+
+    public <T> T getForm(String view, Stage ownerStage) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gui/kline/view/" + view + ".fxml"));
+            Parent root = loader.load();
+            T controller = loader.getController();
+
+            Stage stage = new Stage();
+
+            Stage actualOwner = ownerStage != null ? ownerStage : primaryStage;
+
+            if (actualOwner != null) {
+                stage.initModality(Modality.WINDOW_MODAL);
+                stage.initOwner(actualOwner);
+            }
+
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.initStyle(StageStyle.DECORATED);
+
+            stage.show();
+
+            if (actualOwner != null) {
+                stage.setX(actualOwner.getX() + (actualOwner.getWidth() - stage.getWidth()) / 2);
+                stage.setY(actualOwner.getY() + (actualOwner.getHeight() - stage.getHeight()) / 2);
+            } else {
+                stage.centerOnScreen();
+            }
+
+            lastDialogStage = stage;
+
+            return controller;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     // New method to get the last opened dialog stage
     public Stage getLastDialogStage() {
         return lastDialogStage;

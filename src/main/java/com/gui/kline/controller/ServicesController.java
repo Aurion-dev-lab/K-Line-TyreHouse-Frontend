@@ -1,5 +1,6 @@
 package com.gui.kline.controller;
 
+import com.gui.kline.controller.form.RecordServiceDialogController;
 import com.gui.kline.data.DatabaseManager;
 import com.gui.kline.models.ServiceRecord;
 import com.gui.kline.models.ViewModel;
@@ -152,7 +153,10 @@ public class ServicesController implements Initializable {
     @FXML
     void handleRecordNewService(ActionEvent event) {
         Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        Stage formStage = ViewModel.INSTANCE.getViewsFactory().getForm("form/record-service-dialog", ownerStage);
+        RecordServiceDialogController controller = ViewModel.INSTANCE.getViewsFactory()
+                .getForm("form/record-service-dialog", ownerStage);
+
+        Stage formStage = ViewModel.INSTANCE.getViewsFactory().getLastDialogStage();
         if (formStage != null) {
             formStage.setOnHidden(e -> {
                 loadServices();
