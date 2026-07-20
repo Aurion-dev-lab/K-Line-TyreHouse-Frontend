@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
@@ -9,65 +8,44 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.collections.FXCollections?>
 
-<AnchorPane
-        prefHeight="400.0" prefWidth="400.0"
-        style="-fx-background-color: #F9FAFB;"
-        xmlns="http://javafx.com/javafx/17"
-        xmlns:fx="http://javafx.com/fxml/1"
-        fx:controller="com.gui.kline.controller.form.ExpenseDialogController">
+<AnchorPane prefHeight="400.0" prefWidth="400.0" style="-fx-background-color: #F9FAFB;" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.gui.kline.controller.form.ExpenseDialogController">
 
-    <VBox spacing="0"
-          AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
-          AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+    <VBox spacing="0" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
 
         <HBox alignment="CENTER_LEFT" style="-fx-padding: 20 24 16 24;">
-            <VBox HBox.hgrow="ALWAYS" spacing="3">
-                <Label text="Add Expense"
-                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
-                <Label text="Record shop expenses"
-                       style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"/>
+            <VBox spacing="3" HBox.hgrow="ALWAYS">
+                <Label style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #111827;" text="Add Expense" />
+                <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;" text="Record shop expenses" />
             </VBox>
         </HBox>
 
         <VBox spacing="16" style="-fx-padding: 0 24 20 24;">
             <VBox spacing="4">
-                <Label text="Date" style="-fx-font-size: 12px; -fx-text-fill: #374151;"/>
-                <DatePicker fx:id="dpDate" HBox.hgrow="ALWAYS"
-                           style="-fx-font-size: 13px; -fx-padding: 8 12;"/>
+                <Label style="-fx-font-size: 12px; -fx-text-fill: #374151;" text="Date" />
+                <DatePicker fx:id="dpDate" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 13px;" HBox.hgrow="ALWAYS" />
             </VBox>
 
             <VBox spacing="4">
-                <Label text="Description" style="-fx-font-size: 12px; -fx-text-fill: #374151;"/>
-                <TextField fx:id="txtDescription" promptText="Enter expense description"
-                           HBox.hgrow="ALWAYS"
-                           style="-fx-font-size: 13px; -fx-padding: 8 12;"/>
+                <Label style="-fx-font-size: 12px; -fx-text-fill: #374151;" text="Description" />
+                <TextField fx:id="txtDescription" promptText="Enter expense description" style="-fx-font-size: 13px; -fx-padding: 8 12;" HBox.hgrow="ALWAYS" />
             </VBox>
 
             <VBox spacing="4">
-                <Label text="Category" style="-fx-font-size: 12px; -fx-text-fill: #374151;"/>
-            <ComboBox fx:id="cmbCategory" HBox.hgrow="ALWAYS"
-                         style="-fx-font-size: 13px;" />
+                <Label style="-fx-font-size: 12px; -fx-text-fill: #374151;" text="Category" />
+            <ComboBox fx:id="cmbCategory" style="-fx-font-size: 13px;" HBox.hgrow="ALWAYS" />
             </VBox>
 
             <VBox spacing="4">
-                <Label text="Amount" style="-fx-font-size: 12px; -fx-text-fill: #374151;"/>
-                <TextField fx:id="txtAmount" promptText="0.00"
-                           HBox.hgrow="ALWAYS"
-                           style="-fx-font-size: 13px; -fx-padding: 8 12;"/>
+                <Label style="-fx-font-size: 12px; -fx-text-fill: #374151;" text="Amount" />
+                <TextField fx:id="txtAmount" promptText="0.00" style="-fx-font-size: 13px; -fx-padding: 8 12;" HBox.hgrow="ALWAYS" />
             </VBox>
         </VBox>
 
         <HBox alignment="CENTER_RIGHT" style="-fx-padding: 0 24 20 24;">
-            <Button fx:id="btnCancel" text="Cancel" onAction="#handleCancel"
-                    style="-fx-background-color: transparent; -fx-border-color: #E5E7EB; -fx-border-width: 1;
-                           -fx-border-radius: 8; -fx-background-radius: 8; -fx-font-size: 13px;
-                           -fx-text-fill: #374151; -fx-padding: 8 16; -fx-cursor: hand;"/>
-            <Button fx:id="btnSave" text="Save Expense" onAction="#handleSave"
-                    style="-fx-background-color: #3B82F6; -fx-text-fill: white;
-                           -fx-border-radius: 8; -fx-background-radius: 8; -fx-font-size: 13px;
-                           -fx-font-weight: bold; -fx-padding: 8 16; -fx-cursor: hand;"/>
+            <Button fx:id="btnCancel" onAction="#handleCancel" style="-fx-background-color: transparent; -fx-border-color: #E5E7EB; -fx-border-width: 1;                            -fx-border-radius: 8; -fx-background-radius: 8; -fx-font-size: 13px;                            -fx-text-fill: #374151; -fx-padding: 8 16; -fx-cursor: hand;" text="Cancel" />
+         <Label prefHeight="18.0" prefWidth="14.0" />
+            <Button fx:id="btnSave" onAction="#handleSave" style="-fx-background-color: #10B981; -fx-text-fill: white;                            -fx-border-radius: 8; -fx-background-radius: 8; -fx-font-size: 13px;                            -fx-font-weight: bold; -fx-padding: 8 16; -fx-cursor: hand;" text="Save Expense" />
         </HBox>
 
     </VBox>

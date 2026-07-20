@@ -14,6 +14,7 @@
 <AnchorPane
         prefHeight="700.0" prefWidth="1000.0"
         style="-fx-background-color: #F9FAFB;"
+        stylesheets="@../css/expenses.css"
         xmlns="http://javafx.com/javafx/17"
         xmlns:fx="http://javafx.com/fxml/1"
         fx:controller="com.gui.kline.controller.ExpenseController">
@@ -30,7 +31,7 @@
                        style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"/>
             </VBox>
             <Button fx:id="btnAddExpense" text="+ Add expense" onAction="#handleAddExpense"
-                    style="-fx-background-color: #3B82F6; -fx-text-fill: white;
+                    style="-fx-background-color: #10B981; -fx-text-fill: white;
                            -fx-font-size: 13px; -fx-font-weight: bold;
                            -fx-padding: 9 18; -fx-background-radius: 8; -fx-cursor: hand;"/>
         </HBox>
@@ -61,14 +62,17 @@
         </HBox>
 
         <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 0 28 24 28;">
-            <TableView fx:id="tblExpenses" prefHeight="200.0">
+            <TableView fx:id="tblExpenses" prefHeight="200.0" VBox.vgrow="ALWAYS" styleClass="main-table">
                 <columns>
                     <TableColumn fx:id="colDate" text="Date" prefWidth="120"/>
                     <TableColumn fx:id="colDescription" text="Description" prefWidth="300"/>
                     <TableColumn fx:id="colCategory" text="Category" prefWidth="150"/>
                     <TableColumn fx:id="colAmount" text="Amount" prefWidth="120"/>
-                    <TableColumn fx:id="colActions" text="Actions" prefWidth="80"/>
+                    <TableColumn fx:id="colActions" text="Actions" prefWidth="100"/>
                 </columns>
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                </columnResizePolicy>
             </TableView>
         </VBox>
 
