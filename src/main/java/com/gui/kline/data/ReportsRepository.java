@@ -651,7 +651,7 @@ public class ReportsRepository {
         public void setNetProfit(double netProfit) { this.netProfit = netProfit; }
         
         public double getTotalRevenue() {
-            return totalSales + creditSales + serviceRevenue + quickServiceRevenue + tyreExportRevenue;
+            return totalSales + serviceRevenue + quickServiceRevenue + tyreExportRevenue;
         }
         
         public double getTotalCosts() {

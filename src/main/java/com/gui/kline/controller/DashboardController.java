@@ -683,10 +683,6 @@ public class DashboardController implements Initializable {
                             "FROM invoices WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d",
                     startDate, endDate, totals);
             collectTotalsByDate(conn,
-                    "SELECT COALESCE(sale_date, DATE(created_at)) AS d, SUM(COALESCE(subtotal, amount)) AS total " +
-                            "FROM credit_sales WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d",
-                    startDate, endDate, totals);
-            collectTotalsByDate(conn,
                     "SELECT service_date, SUM(price) AS total FROM services WHERE service_date BETWEEN ? AND ? GROUP BY service_date",
                     startDate, endDate, totals);
             collectTotalsByDate(conn,
@@ -726,10 +722,6 @@ public class DashboardController implements Initializable {
                 "SELECT COALESCE(SUM(grand_total),0) FROM invoices " +
                         "WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?",
                 startDate, endDate);
-        double creditSales = sumAmount(conn,
-                "SELECT COALESCE(SUM(COALESCE(subtotal, amount)),0) FROM credit_sales " +
-                        "WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ?",
-                startDate, endDate);
         double services = sumAmount(conn,
                 "SELECT COALESCE(SUM(price),0) FROM services WHERE service_date BETWEEN ? AND ?",
                 startDate, endDate);
@@ -739,7 +731,7 @@ public class DashboardController implements Initializable {
         double tyreExports = sumAmount(conn,
                 "SELECT COALESCE(SUM(total_amount),0) FROM tyre_exports WHERE export_date BETWEEN ? AND ?",
                 startDate, endDate);
-        return invoices + creditSales + services + quickServicesTotal + tyreExports;
+        return invoices + services + quickServicesTotal + tyreExports;
     }
 
      private double sumProfit(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
@@ -755,10 +747,6 @@ public class DashboardController implements Initializable {
                          "WHERE i.status = 'completed' AND COALESCE(i.invoice_date, DATE(i.created_at)) BETWEEN ? AND ?",
                  startDate, endDate);
          double invoiceProfit = invoiceRevenue - invoiceCost;
-         double creditSalesProfit = sumAmount(conn,
-                 "SELECT COALESCE(SUM(COALESCE(subtotal, amount)),0) FROM credit_sales " +
-                         "WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ?",
-                 startDate, endDate);
          double servicesProfit = sumAmount(conn,
                  "SELECT COALESCE(SUM(price),0) FROM services WHERE service_date BETWEEN ? AND ?",
                  startDate, endDate);
@@ -777,7 +765,7 @@ public class DashboardController implements Initializable {
                  "SELECT COALESCE(SUM(amount),0) FROM expenses WHERE expense_date BETWEEN ? AND ?",
                  startDate, endDate);
          
-         return invoiceProfit + creditSalesProfit + servicesProfit + quickServicesProfit + tyreExportsProfit - paidSalaries - totalExpenses;
+         return invoiceProfit + servicesProfit + quickServicesProfit + tyreExportsProfit - paidSalaries - totalExpenses;
      }
 
     private double calculateTyreExportsProfit(LocalDate startDate, LocalDate endDate) {
