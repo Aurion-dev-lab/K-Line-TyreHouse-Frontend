@@ -35,6 +35,10 @@ public class SyncPreferences {
         return getBaseUrl() + "/api/sync/keys";
     }
 
+    public static String getRevokeKeyUrl(String keyValue) {
+        return getBaseUrl() + "/api/sync/keys/revoke?key=" + keyValue;
+    }
+
     public static void setSyncApiUrl(String url) {
         if (url != null && !url.trim().isEmpty()) {
             prefs.put(KEY_SYNC_API_URL, url.trim());

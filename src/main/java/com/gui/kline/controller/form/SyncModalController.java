@@ -158,15 +158,39 @@ public class SyncModalController {
         SyncPreferences.setSyncApiUrl(urlInput);
         String generateKeyUrl = SyncPreferences.getGenerateKeyUrl();
 
-        lblSettingsStatus.setText("Generating API Key...");
+        lblSettingsStatus.setText("Revoking old key & generating new one...");
         lblSettingsStatus.setStyle("-fx-font-size: 11px; -fx-text-fill: #2563EB;");
         btnGenerateApiKey.setDisable(true);
-
-        log("Requesting new API Key from server (" + generateKeyUrl + ")...");
 
         BackgroundTask.runVoid(() -> {
             try {
                 HttpClient client = HttpClient.newHttpClient();
+
+                // Step 1: Revoke old key if one exists in preferences
+                String oldKey = SyncPreferences.getSyncApiKey();
+                if (oldKey != null && !oldKey.isBlank()) {
+                    String revokeUrl = SyncPreferences.getRevokeKeyUrl(oldKey);
+                    log("Revoking existing API Key...");
+                    try {
+                        HttpRequest revokeRequest = HttpRequest.newBuilder()
+                                .uri(URI.create(revokeUrl))
+                                .DELETE()
+                                .build();
+                        HttpResponse<String> revokeResponse = client.send(revokeRequest, HttpResponse.BodyHandlers.ofString());
+                        if (revokeResponse.statusCode() == 200) {
+                            log("Old API Key revoked successfully.");
+                        } else {
+                            log("WARNING: Revoke returned status " + revokeResponse.statusCode() + " — proceeding to generate anyway.");
+                        }
+                    } catch (Exception revokeEx) {
+                        log("WARNING: Could not revoke old key (" + revokeEx.getMessage() + ") — proceeding to generate anyway.");
+                    }
+                } else {
+                    log("No existing API Key found — skipping revoke step.");
+                }
+
+                // Step 2: Generate new API key
+                log("Requesting new API Key from server (" + generateKeyUrl + ")...");
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(URI.create(generateKeyUrl))
                         .GET()
