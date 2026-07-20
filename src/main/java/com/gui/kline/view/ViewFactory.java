@@ -87,7 +87,7 @@ public class ViewFactory {
         getView(view, primaryStage);
     }
     
-    public void getView(String view, Stage ownerStage) {
+/*    public void getView(String view, Stage ownerStage) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gui/kline/view/" + view + ".fxml"));
             Parent root = loader.load();
@@ -116,6 +116,43 @@ public class ViewFactory {
             stage.show();
 
             // Store reference
+            lastDialogStage = stage;
+        } catch (Exception e) {
+            System.out.println("Error loading view: " + view + " - " + e.getMessage());
+            e.printStackTrace();
+        }
+    }*/
+
+    public void getView(String view, Stage ownerStage) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gui/kline/view/" + view + ".fxml"));
+            Parent root = loader.load();
+
+            Stage stage;
+            if (view.equals("main-layout") && primaryStage != null) {
+                stage = primaryStage;
+            } else {
+                stage = new Stage();
+                stage.setTitle("K-Line - " + view);
+            }
+
+            Stage actualOwner = ownerStage != null ? ownerStage : primaryStage;
+
+            if (actualOwner != null && !view.equals("main-layout")) {
+                stage.initOwner(actualOwner);
+                stage.initModality(Modality.WINDOW_MODAL);
+            }
+
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+
+            // Maximize only the main application window to fill the screen
+            if (view.equals("main-layout")) {
+                stage.setMaximized(true);
+            }
+
+            stage.show();
+
             lastDialogStage = stage;
         } catch (Exception e) {
             System.out.println("Error loading view: " + view + " - " + e.getMessage());
