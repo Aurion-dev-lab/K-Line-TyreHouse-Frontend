@@ -10,14 +10,29 @@ public class SyncPreferences {
     private static final String KEY_SYNC_API_KEY = "SYNC_API_KEY";
 
     private static final String DEFAULT_URL = System.getenv().getOrDefault(
-            "SYNC_API_URL", "http://localhost:8080/api/sync"
+            "SYNC_API_URL", "http://localhost:8080"
     );
     private static final String DEFAULT_KEY = System.getenv().getOrDefault(
             "SYNC_API_KEY", "sync_qPoGFyE00i74X__qkFuCyKEuLYZNwq0ShyXdNe5t4og60LkWZSDTgeedtrihyTFwQm1Gt7VyeXkmQ2AQ3fSlnQ"
     );
 
+    public static String getBaseUrl() {
+        String url = prefs.get(KEY_SYNC_API_URL, DEFAULT_URL).trim();
+        if (url.endsWith("/")) {
+            url = url.substring(0, url.length() - 1);
+        }
+        if (url.endsWith("/api/sync")) {
+            url = url.substring(0, url.length() - "/api/sync".length());
+        }
+        return url;
+    }
+
     public static String getSyncApiUrl() {
-        return prefs.get(KEY_SYNC_API_URL, DEFAULT_URL);
+        return getBaseUrl() + "/api/sync";
+    }
+
+    public static String getGenerateKeyUrl() {
+        return getBaseUrl() + "/api/sync/keys";
     }
 
     public static void setSyncApiUrl(String url) {
