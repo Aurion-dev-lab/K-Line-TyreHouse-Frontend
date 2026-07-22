@@ -18,7 +18,7 @@ public class LocalWorkerCreditRepository {
     public String saveCredit(String workerId, String workerName, LocalDate date, double amount, String note, String type) {
         String id = UUID.randomUUID().toString();
         String sql = "INSERT INTO worker_credits (id, worker_id, worker, amount, credit_type, credit_date, note, created_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, id);
@@ -26,7 +26,7 @@ public class LocalWorkerCreditRepository {
             statement.setString(3, workerName);
             statement.setDouble(4, amount);
             statement.setString(5, type);
-            statement.setDate(6, Date.valueOf(date));
+            statement.setString(6, date.toString());
             statement.setString(7, note == null ? null : note.trim());
             statement.executeUpdate();
         } catch (SQLException ex) {
@@ -52,14 +52,14 @@ public class LocalWorkerCreditRepository {
 
     public void updateCredit(String id, String workerId, String workerName, LocalDate date, double amount, String note, String type) {
         if (id == null || id.isBlank()) return;
-        String sql = "UPDATE worker_credits SET worker_id = ?, worker = ?, amount = ?, credit_type = ?, credit_date = ?, note = ?, sync_status = 0, created_at = NOW() WHERE id = ?";
+        String sql = "UPDATE worker_credits SET worker_id = ?, worker = ?, amount = ?, credit_type = ?, credit_date = ?, note = ?, sync_status = 0, created_at = CURRENT_TIMESTAMP WHERE id = ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, workerId);
             statement.setString(2, workerName);
             statement.setDouble(3, amount);
             statement.setString(4, type);
-            statement.setDate(5, Date.valueOf(date));
+            statement.setString(5, date.toString());
             statement.setString(6, note == null ? null : note.trim());
             statement.setString(7, id);
             statement.executeUpdate();
@@ -78,7 +78,7 @@ public class LocalWorkerCreditRepository {
                     String type = rs.getString("credit_type");
                     return new LedgerEntry(
                             rs.getString("id"),
-                            rs.getDate("credit_date").toLocalDate(),
+                            com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "credit_date"),
                             rs.getString("worker"),
                             type == null ? "CREDIT" : type,
                             rs.getString("note"),
@@ -98,14 +98,14 @@ public class LocalWorkerCreditRepository {
         List<LedgerEntry> entries = new ArrayList<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(from));
-            statement.setDate(2, Date.valueOf(to));
+            statement.setString(1, from.toString());
+            statement.setString(2, to.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     String type = rs.getString("credit_type");
                     entries.add(new LedgerEntry(
                             rs.getString("id"),
-                            rs.getDate("credit_date").toLocalDate(),
+                            com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "credit_date"),
                             rs.getString("worker"),
                             type == null ? "CREDIT" : type,
                             rs.getString("note"),
@@ -126,7 +126,7 @@ public class LocalWorkerCreditRepository {
         Map<String, Double> totals = new HashMap<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(to));
+            statement.setString(1, to.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     String workerId = rs.getString("worker_id");
@@ -149,7 +149,7 @@ public class LocalWorkerCreditRepository {
         Map<String, Double> totals = new HashMap<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(to));
+            statement.setString(1, to.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     String worker = rs.getString("worker");

@@ -45,12 +45,13 @@ public class LocalCatalogRepository {
         if (name == null || name.isBlank()) {
             return;
         }
-        String sql = "INSERT INTO customers (id, name, phone, created_at) VALUES (UUID(), ?, ?, NOW()) " +
-                "ON DUPLICATE KEY UPDATE phone = VALUES(phone), sync_status = 0";
+        String sql = "INSERT INTO customers (id, name, phone, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP) " +
+                "ON CONFLICT(name, phone) DO UPDATE SET phone = excluded.phone, sync_status = 0";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, name.trim());
-            statement.setString(2, phone == null ? null : phone.trim());
+            statement.setString(1, java.util.UUID.randomUUID().toString());
+            statement.setString(2, name.trim());
+            statement.setString(3, phone == null ? null : phone.trim());
             statement.executeUpdate();
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to save customer", ex);
@@ -250,7 +251,7 @@ public class LocalCatalogRepository {
       }
 
       public void updateProductStock(String productId, int quantityChange) {
-          String sql = "UPDATE products SET stock = stock + ?, sync_status = 0, updated_at = NOW() WHERE id = ?";
+          String sql = "UPDATE products SET stock = stock + ?, sync_status = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
           try (Connection connection = DatabaseManager.getConnection();
                PreparedStatement statement = connection.prepareStatement(sql)) {
               statement.setInt(1, quantityChange);
@@ -269,12 +270,12 @@ public class LocalCatalogRepository {
         String firstImage = product.getImagePaths().isEmpty() ? null : product.getImagePaths().get(0);
         String sql = "INSERT INTO products (id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
                 "brand, description, vehicle_type, material, supplier_name, image_path, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, NOW()), NOW()) " +
-                "ON DUPLICATE KEY UPDATE product_code = VALUES(product_code), name = VALUES(name), category = VALUES(category), buy_price = VALUES(buy_price), " +
-                "sell_price = VALUES(sell_price), stock = VALUES(stock), minimum_stock_alert = VALUES(minimum_stock_alert), " +
-                "brand = VALUES(brand), description = VALUES(description), vehicle_type = VALUES(vehicle_type), " +
-                "material = VALUES(material), supplier_name = VALUES(supplier_name), image_path = VALUES(image_path), " +
-                "created_at = COALESCE(products.created_at, NOW()), sync_status = 0, updated_at = NOW()";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP) " +
+                "ON CONFLICT(id) DO UPDATE SET product_code = excluded.product_code, name = excluded.name, category = excluded.category, buy_price = excluded.buy_price, " +
+                "sell_price = excluded.sell_price, stock = excluded.stock, minimum_stock_alert = excluded.minimum_stock_alert, " +
+                "brand = excluded.brand, description = excluded.description, vehicle_type = excluded.vehicle_type, " +
+                "material = excluded.material, supplier_name = excluded.supplier_name, image_path = excluded.image_path, " +
+                "created_at = COALESCE(products.created_at, CURRENT_TIMESTAMP), sync_status = 0, updated_at = CURRENT_TIMESTAMP";
         Connection connection = null;
         try {
             connection = DatabaseManager.getConnection();
@@ -342,11 +343,12 @@ public class LocalCatalogRepository {
         }
         
         // Insert new images
-        String insertSql = "INSERT INTO product_images (id, product_id, image_path, created_at) VALUES (UUID(), ?, ?, NOW())";
+        String insertSql = "INSERT INTO product_images (id, product_id, image_path, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)";
         try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
             for (String imagePath : product.getImagePaths()) {
-                insertStmt.setString(1, product.getId());
-                insertStmt.setString(2, imagePath);
+                insertStmt.setString(1, java.util.UUID.randomUUID().toString());
+                insertStmt.setString(2, product.getId());
+                insertStmt.setString(3, imagePath);
                 insertStmt.addBatch();
             }
             insertStmt.executeBatch();

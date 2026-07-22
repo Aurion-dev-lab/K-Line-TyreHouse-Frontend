@@ -56,7 +56,7 @@ public class LocalRestoreService {
             conn.setAutoCommit(false);
             try {
                 // Step 1: Temporarily disable foreign key constraints
-                exec(conn, "SET FOREIGN_KEY_CHECKS = 0");
+                exec(conn, "PRAGMA foreign_keys = OFF;");
 
                 // Step 2: Wipe local tables in reverse dependency order
                 log("Purging local tables...");
@@ -74,7 +74,7 @@ public class LocalRestoreService {
                 }
 
                 // Step 3: Re-enable foreign key constraints
-                exec(conn, "SET FOREIGN_KEY_CHECKS = 1");
+                exec(conn, "PRAGMA foreign_keys = ON;");
 
                 // Step 4: Populate tables from snapshot in FK-safe order
                 log("Restoring data from cloud snapshot...");
@@ -103,7 +103,7 @@ public class LocalRestoreService {
 
             } catch (Exception ex) {
                 conn.rollback();
-                exec(conn, "SET FOREIGN_KEY_CHECKS = 1");
+                exec(conn, "PRAGMA foreign_keys = ON;");
                 throw ex;
             }
         }
@@ -203,7 +203,7 @@ public class LocalRestoreService {
     private void restoreProducts(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            String sql = "INSERT IGNORE INTO products " +
+            String sql = "INSERT OR IGNORE INTO products " +
                     "(id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
                     "brand, description, vehicle_type, material, supplier_name, created_at, updated_at, sync_status) " +
                     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)";
@@ -235,7 +235,7 @@ public class LocalRestoreService {
     private void restoreCustomers(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            String sql = "INSERT IGNORE INTO customers (id, name, phone, created_at, sync_status) VALUES (?,?,?,?,1)";
+            String sql = "INSERT OR IGNORE INTO customers (id, name, phone, created_at, sync_status) VALUES (?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
                     ps.setString(1, str(r, "id"));
@@ -253,7 +253,7 @@ public class LocalRestoreService {
     private void restoreWorkers(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            String sql = "INSERT IGNORE INTO workers (id, name, phone, role, rate, created_at, salary_type, sync_status) VALUES (?,?,?,?,?,?,?,1)";
+            String sql = "INSERT OR IGNORE INTO workers (id, name, phone, role, rate, created_at, salary_type, sync_status) VALUES (?,?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
                     ps.setString(1, str(r, "id"));
@@ -274,7 +274,7 @@ public class LocalRestoreService {
     private void restoreExpenses(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            String sql = "INSERT IGNORE INTO expenses (id, expense_date, description, category, amount, created_at, sync_status) VALUES (?,?,?,?,?,?,1)";
+            String sql = "INSERT OR IGNORE INTO expenses (id, expense_date, description, category, amount, created_at, sync_status) VALUES (?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
                     ps.setString(1, str(r, "id"));
@@ -294,7 +294,7 @@ public class LocalRestoreService {
     private void restoreQuickServicePresets(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            String sql = "INSERT IGNORE INTO quick_service_presets (id, service, price, active, icon, created_at, sync_status) VALUES (?,?,?,?,?,?,1)";
+            String sql = "INSERT OR IGNORE INTO quick_service_presets (id, service, price, active, icon, created_at, sync_status) VALUES (?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
                     ps.setString(1, str(r, "id"));
@@ -314,7 +314,7 @@ public class LocalRestoreService {
     private void restoreInvoices(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            String sql = "INSERT IGNORE INTO invoices " +
+            String sql = "INSERT OR IGNORE INTO invoices " +
                     "(id, invoice_id, customer, invoice_date, type, status, subtotal, tax, grand_total, created_at, updated_at, sync_status) " +
                     "VALUES (?,?,?,?,?,?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -341,7 +341,7 @@ public class LocalRestoreService {
     private void restoreCreditSales(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            String sql = "INSERT IGNORE INTO credit_sales " +
+            String sql = "INSERT OR IGNORE INTO credit_sales " +
                     "(id, credit_id, customer, customer_name, sale_date, due_date, subtotal, paid_amount, amount, status, created_at, updated_at, sync_status) " +
                     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -369,7 +369,7 @@ public class LocalRestoreService {
     private void restoreServices(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            String sql = "INSERT IGNORE INTO services (id, name, price, service_date, remark, sync_status) VALUES (?,?,?,?,?,1)";
+            String sql = "INSERT OR IGNORE INTO services (id, name, price, service_date, remark, sync_status) VALUES (?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
                     ps.setString(1, str(r, "id"));
@@ -388,7 +388,7 @@ public class LocalRestoreService {
     private void restoreTyreExports(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            String sql = "INSERT IGNORE INTO tyre_exports " +
+            String sql = "INSERT OR IGNORE INTO tyre_exports " +
                     "(id, export_id, operation, company, tyres, cust_price, comp_price, service_fee, paid_amount, total_amount, balance_amount, payment_status, status, export_date, updated_at, sync_status) " +
                     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -419,7 +419,7 @@ public class LocalRestoreService {
     private void restoreWorkerAttendance(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            String sql = "INSERT IGNORE INTO worker_attendance (id, worker_id, attendance_date, status, created_at, updated_at, sync_status) VALUES (?,?,?,?,?,?,1)";
+            String sql = "INSERT OR IGNORE INTO worker_attendance (id, worker_id, attendance_date, status, created_at, updated_at, sync_status) VALUES (?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
                     ps.setString(1, str(r, "id"));
@@ -439,7 +439,7 @@ public class LocalRestoreService {
     private void restoreSalaryAdvances(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            String sql = "INSERT IGNORE INTO salary_advances (id, worker, worker_id, amount, advance_date, note, created_at, sync_status) VALUES (?,?,?,?,?,?,?,1)";
+            String sql = "INSERT OR IGNORE INTO salary_advances (id, worker, worker_id, amount, advance_date, note, created_at, sync_status) VALUES (?,?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
                     ps.setString(1, str(r, "id"));
@@ -460,7 +460,7 @@ public class LocalRestoreService {
     private void restoreSalaryPayments(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            String sql = "INSERT IGNORE INTO salary_payments (id, worker_id, worker, period_from, period_to, amount, paid_at, sync_status) VALUES (?,?,?,?,?,?,?,1)";
+            String sql = "INSERT OR IGNORE INTO salary_payments (id, worker_id, worker, period_from, period_to, amount, paid_at, sync_status) VALUES (?,?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
                     ps.setString(1, str(r, "id"));
@@ -481,7 +481,7 @@ public class LocalRestoreService {
     private void restoreWorkerCredits(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            String sql = "INSERT IGNORE INTO worker_credits (id, worker, worker_id, amount, credit_type, credit_date, note, created_at, sync_status) VALUES (?,?,?,?,?,?,?,?,1)";
+            String sql = "INSERT OR IGNORE INTO worker_credits (id, worker, worker_id, amount, credit_type, credit_date, note, created_at, sync_status) VALUES (?,?,?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
                     ps.setString(1, str(r, "id"));
@@ -503,7 +503,7 @@ public class LocalRestoreService {
     private void restoreQuickServices(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            String sql = "INSERT IGNORE INTO quick_services (id, service, price, service_date, sync_status) VALUES (?,?,?,?,1)";
+            String sql = "INSERT OR IGNORE INTO quick_services (id, service, price, service_date, sync_status) VALUES (?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
                     ps.setString(1, str(r, "id"));
@@ -547,7 +547,7 @@ public class LocalRestoreService {
         }
 
         if (!allItems.isEmpty()) {
-            String sql = "INSERT IGNORE INTO invoice_line_items " +
+            String sql = "INSERT OR IGNORE INTO invoice_line_items " +
                     "(id, invoice_id, invoice_ref, product_id, description, type, qty, unit_price, total, created_at, sync_status) " +
                     "VALUES (?,?,?,?,?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -614,7 +614,7 @@ public class LocalRestoreService {
         }
 
         if (!allParts.isEmpty()) {
-            String sql = "INSERT IGNORE INTO credit_sale_parts " +
+            String sql = "INSERT OR IGNORE INTO credit_sale_parts " +
                     "(id, credit_sale_id, product_id, description, quantity, unit_price, total, created_at, sync_status) " +
                     "VALUES (?,?,?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {

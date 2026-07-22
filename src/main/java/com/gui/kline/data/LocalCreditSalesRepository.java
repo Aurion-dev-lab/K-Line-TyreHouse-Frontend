@@ -16,33 +16,23 @@ public class LocalCreditSalesRepository {
 
     public void saveCreditSale(CreditSaleDetail detail, CreditSalesController.CreditSaleRow row) {
          String sql = "INSERT INTO credit_sales (id, credit_id, sale_date, customer_name, due_date, subtotal, paid_amount, status, labour, parts_cost, discount, created_at) " +
-                 "VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()) " +
-                 "ON DUPLICATE KEY UPDATE sale_date=?, customer_name=?, due_date=?, subtotal=?, paid_amount=?, status=?, labour=?, parts_cost=?, discount=?, sync_status=0, updated_at=NOW()";
+                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) " +
+                 "ON CONFLICT(credit_id) DO UPDATE SET sale_date = excluded.sale_date, customer_name = excluded.customer_name, due_date = excluded.due_date, subtotal = excluded.subtotal, paid_amount = excluded.paid_amount, status = excluded.status, labour = excluded.labour, parts_cost = excluded.parts_cost, discount = excluded.discount, sync_status = 0, updated_at = CURRENT_TIMESTAMP";
          
          try (Connection conn = DatabaseManager.getConnection();
               PreparedStatement ps = conn.prepareStatement(sql)) {
              
-             ps.setString(1, row.getCreditId());
-             ps.setString(2, row.getDate());
-             ps.setString(3, row.getCustomer());
-             ps.setString(4, row.getDueDate());
-             ps.setDouble(5, row.getAmount());
-             ps.setDouble(6, detail.getPaid());
-             ps.setString(7, row.getStatus());
-             ps.setDouble(8, detail.getLabour());
-             ps.setDouble(9, detail.getPartsCost());
-             ps.setDouble(10, detail.getDiscount());
-             
-             // For update clause
-             ps.setString(11, row.getDate());
-             ps.setString(12, row.getCustomer());
-             ps.setString(13, row.getDueDate());
-             ps.setDouble(14, row.getAmount());
-             ps.setDouble(15, detail.getPaid());
-             ps.setString(16, row.getStatus());
-             ps.setDouble(17, detail.getLabour());
-             ps.setDouble(18, detail.getPartsCost());
-             ps.setDouble(19, detail.getDiscount());
+             ps.setString(1, java.util.UUID.randomUUID().toString());
+             ps.setString(2, row.getCreditId());
+             ps.setString(3, row.getDate());
+             ps.setString(4, row.getCustomer());
+             ps.setString(5, row.getDueDate());
+             ps.setDouble(6, row.getAmount());
+             ps.setDouble(7, detail.getPaid());
+             ps.setString(8, row.getStatus());
+             ps.setDouble(9, detail.getLabour());
+             ps.setDouble(10, detail.getPartsCost());
+             ps.setDouble(11, detail.getDiscount());
              
              ps.executeUpdate();
              
@@ -91,19 +81,20 @@ public class LocalCreditSalesRepository {
          
          // Insert new parts
          String sql = "INSERT INTO credit_sale_parts (id, credit_sale_id, product_id, description, quantity, unit_price, total, created_at) " +
-                 "VALUES (UUID(), ?, ?, ?, ?, ?, ?, NOW())";
+                 "VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
          
          try (Connection conn = DatabaseManager.getConnection();
               PreparedStatement ps = conn.prepareStatement(sql)) {
              
              final String finalCreditSaleId = creditSaleId;
              for (Part part : parts) {
-                 ps.setString(1, finalCreditSaleId);
-                 ps.setString(2, part.getProductId());
-                 ps.setString(3, part.getDescription());
-                 ps.setInt(4, part.getQuantity());
-                 ps.setDouble(5, part.getUnitPrice());
-                 ps.setDouble(6, part.getTotal());
+                 ps.setString(1, java.util.UUID.randomUUID().toString());
+                 ps.setString(2, finalCreditSaleId);
+                 ps.setString(3, part.getProductId());
+                 ps.setString(4, part.getDescription());
+                 ps.setInt(5, part.getQuantity());
+                 ps.setDouble(6, part.getUnitPrice());
+                 ps.setDouble(7, part.getTotal());
                  ps.addBatch();
              }
              ps.executeBatch();

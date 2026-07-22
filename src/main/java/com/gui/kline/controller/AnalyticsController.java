@@ -58,13 +58,12 @@ public class AnalyticsController {
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT COALESCE(invoice_date, DATE(created_at)) as d, SUM(grand_total) as total " +
                     "FROM invoices WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d")) {
-                ps.setDate(1, Date.valueOf(startDate));
-                ps.setDate(2, Date.valueOf(endDate));
+                ps.setString(1, startDate.toString());
+                ps.setString(2, endDate.toString());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        Date d = rs.getDate(1);
-                        if (d != null) {
-                            LocalDate date = d.toLocalDate();
+                        LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 1);
+                        if (date != null) {
                             revenueByDate.merge(date, rs.getDouble(2), Double::sum);
                         }
                     }
@@ -75,13 +74,12 @@ public class AnalyticsController {
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT COALESCE(sale_date, DATE(created_at)) as d, SUM(COALESCE(subtotal, amount)) as total " +
                     "FROM credit_sales WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d")) {
-                ps.setDate(1, Date.valueOf(startDate));
-                ps.setDate(2, Date.valueOf(endDate));
+                ps.setString(1, startDate.toString());
+                ps.setString(2, endDate.toString());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        Date d = rs.getDate(1);
-                        if (d != null) {
-                            LocalDate date = d.toLocalDate();
+                        LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 1);
+                        if (date != null) {
                             revenueByDate.merge(date, rs.getDouble(2), Double::sum);
                         }
                     }
@@ -92,13 +90,12 @@ public class AnalyticsController {
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT service_date, SUM(price) as total FROM services " +
                     "WHERE service_date BETWEEN ? AND ? GROUP BY service_date")) {
-                ps.setDate(1, Date.valueOf(startDate));
-                ps.setDate(2, Date.valueOf(endDate));
+                ps.setString(1, startDate.toString());
+                ps.setString(2, endDate.toString());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        Date d = rs.getDate(1);
-                        if (d != null) {
-                            LocalDate date = d.toLocalDate();
+                        LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 1);
+                        if (date != null) {
                             revenueByDate.merge(date, rs.getDouble(2), Double::sum);
                         }
                     }
@@ -109,13 +106,12 @@ public class AnalyticsController {
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT service_date, SUM(price) as total FROM quick_services " +
                     "WHERE service_date BETWEEN ? AND ? GROUP BY service_date")) {
-                ps.setDate(1, Date.valueOf(startDate));
-                ps.setDate(2, Date.valueOf(endDate));
+                ps.setString(1, startDate.toString());
+                ps.setString(2, endDate.toString());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        Date d = rs.getDate(1);
-                        if (d != null) {
-                            LocalDate date = d.toLocalDate();
+                        LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 1);
+                        if (date != null) {
                             revenueByDate.merge(date, rs.getDouble(2), Double::sum);
                         }
                     }
@@ -126,13 +122,12 @@ public class AnalyticsController {
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT expense_date, SUM(amount) as total FROM expenses " +
                     "WHERE expense_date BETWEEN ? AND ? GROUP BY expense_date")) {
-                ps.setDate(1, Date.valueOf(startDate));
-                ps.setDate(2, Date.valueOf(endDate));
+                ps.setString(1, startDate.toString());
+                ps.setString(2, endDate.toString());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        Date d = rs.getDate(1);
-                        if (d != null) {
-                            LocalDate date = d.toLocalDate();
+                        LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 1);
+                        if (date != null) {
                             expensesByDate.merge(date, rs.getDouble(2), Double::sum);
                         }
                     }
@@ -144,13 +139,13 @@ public class AnalyticsController {
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT DATE(paid_at) AS d, SUM(amount) AS total FROM salary_payments " +
                     "WHERE DATE(paid_at) BETWEEN ? AND ? GROUP BY DATE(paid_at)")) {
-                ps.setDate(1, Date.valueOf(startDate));
-                ps.setDate(2, Date.valueOf(endDate));
+                ps.setString(1, startDate.toString());
+                ps.setString(2, endDate.toString());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        Date d = rs.getDate("d");
-                        if (d != null) {
-                            paidSalaryByDate.merge(d.toLocalDate(), rs.getDouble("total"), Double::sum);
+                        LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "d");
+                        if (date != null) {
+                            paidSalaryByDate.merge(date, rs.getDouble("total"), Double::sum);
                         }
                     }
                 }
@@ -223,13 +218,12 @@ public class AnalyticsController {
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT COALESCE(invoice_date, DATE(created_at)) as d, SUM(grand_total) as total " +
                     "FROM invoices WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d")) {
-                ps.setDate(1, Date.valueOf(startDate));
-                ps.setDate(2, Date.valueOf(endDate));
+                ps.setString(1, startDate.toString());
+                ps.setString(2, endDate.toString());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        Date d = rs.getDate(1);
-                        if (d != null) {
-                            LocalDate date = d.toLocalDate();
+                        LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 1);
+                        if (date != null) {
                             salesByDate.merge(date, rs.getDouble(2), Double::sum);
                         }
                     }
@@ -240,13 +234,12 @@ public class AnalyticsController {
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT COALESCE(sale_date, DATE(created_at)) as d, SUM(COALESCE(subtotal, amount)) as total " +
                     "FROM credit_sales WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d")) {
-                ps.setDate(1, Date.valueOf(startDate));
-                ps.setDate(2, Date.valueOf(endDate));
+                ps.setString(1, startDate.toString());
+                ps.setString(2, endDate.toString());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        Date d = rs.getDate(1);
-                        if (d != null) {
-                            LocalDate date = d.toLocalDate();
+                        LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 1);
+                        if (date != null) {
                             salesByDate.merge(date, rs.getDouble(2), Double::sum);
                         }
                     }
@@ -257,13 +250,12 @@ public class AnalyticsController {
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT service_date, SUM(price) as total FROM services " +
                     "WHERE service_date BETWEEN ? AND ? GROUP BY service_date")) {
-                ps.setDate(1, Date.valueOf(startDate));
-                ps.setDate(2, Date.valueOf(endDate));
+                ps.setString(1, startDate.toString());
+                ps.setString(2, endDate.toString());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        Date d = rs.getDate(1);
-                        if (d != null) {
-                            LocalDate date = d.toLocalDate();
+                        LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 1);
+                        if (date != null) {
                             servicesByDate.merge(date, rs.getDouble(2), Double::sum);
                         }
                     }
@@ -274,13 +266,12 @@ public class AnalyticsController {
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT service_date, SUM(price) as total FROM quick_services " +
                     "WHERE service_date BETWEEN ? AND ? GROUP BY service_date")) {
-                ps.setDate(1, Date.valueOf(startDate));
-                ps.setDate(2, Date.valueOf(endDate));
+                ps.setString(1, startDate.toString());
+                ps.setString(2, endDate.toString());
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        Date d = rs.getDate(1);
-                        if (d != null) {
-                            LocalDate date = d.toLocalDate();
+                        LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 1);
+                        if (date != null) {
                             servicesByDate.merge(date, rs.getDouble(2), Double::sum);
                         }
                     }

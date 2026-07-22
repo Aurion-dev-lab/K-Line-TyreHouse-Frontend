@@ -90,17 +90,16 @@ public class TyreExportRepository {
                 "comp_price, service_fee, paid_amount, total_amount, balance_amount, payment_status, " +
                 "status, export_date, notes, created_by, updated_by, " +
                 "sync_status, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) " +
-                "ON DUPLICATE KEY UPDATE export_id = VALUES(export_id), operation = VALUES(operation), " +
-                "serial_number = VALUES(serial_number), company = VALUES(company), tyres = VALUES(tyres), " +
-                "cust_price = VALUES(cust_price), comp_price = VALUES(comp_price), service_fee = VALUES(service_fee), " +
-                "paid_amount = VALUES(paid_amount), total_amount = VALUES(total_amount), " +
-                "balance_amount = VALUES(balance_amount), payment_status = VALUES(payment_status), " +
-                "status = VALUES(status), export_date = VALUES(export_date), notes = VALUES(notes), " +
-                "created_by = VALUES(created_by), updated_by = VALUES(updated_by), " +
-                "" +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) " +
+                "ON CONFLICT(id) DO UPDATE SET export_id = excluded.export_id, operation = excluded.operation, " +
+                "serial_number = excluded.serial_number, company = excluded.company, tyres = excluded.tyres, " +
+                "cust_price = excluded.cust_price, comp_price = excluded.comp_price, service_fee = excluded.service_fee, " +
+                "paid_amount = excluded.paid_amount, total_amount = excluded.total_amount, " +
+                "balance_amount = excluded.balance_amount, payment_status = excluded.payment_status, " +
+                "status = excluded.status, export_date = excluded.export_date, notes = excluded.notes, " +
+                "created_by = excluded.created_by, updated_by = excluded.updated_by, " +
                 "sync_status = 0, " +
-                "updated_at = NOW()";
+                "updated_at = CURRENT_TIMESTAMP";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -119,7 +118,7 @@ public class TyreExportRepository {
             statement.setDouble(12, tyreExport.getBalanceAmount());
             statement.setString(13, tyreExport.getPaymentStatus());
             statement.setString(14, tyreExport.getStatus());
-            statement.setDate(15, tyreExport.getExportDate() != null ? Date.valueOf(tyreExport.getExportDate()) : null);
+            statement.setString(15, tyreExport.getExportDate() != null ? tyreExport.getExportDate().toString() : null);
             statement.setString(16, tyreExport.getNotes());
             statement.setString(17, tyreExport.getCreatedBy());
             statement.setString(18, tyreExport.getUpdatedBy());
@@ -234,9 +233,9 @@ public class TyreExportRepository {
         tyreExport.setPaymentStatus(rs.getString("payment_status"));
         tyreExport.setStatus(rs.getString("status"));
         
-        Date exportDate = rs.getDate("export_date");
-        if (exportDate != null) {
-            tyreExport.setExportDate(exportDate.toLocalDate());
+        String exportDateStr = rs.getString("export_date");
+        if (exportDateStr != null && !exportDateStr.isBlank()) {
+            tyreExport.setExportDate(com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "export_date"));
         }
         
         tyreExport.setNotes(rs.getString("notes"));
@@ -245,10 +244,8 @@ public class TyreExportRepository {
         
         // Sync fields
         tyreExport.setSyncStatus(rs.getBoolean("sync_status"));
-        tyreExport.setCreatedAt(rs.getTimestamp("created_at") != null ? 
-            rs.getTimestamp("created_at").toLocalDateTime() : null);
-        tyreExport.setUpdatedAt(rs.getTimestamp("updated_at") != null ? 
-            rs.getTimestamp("updated_at").toLocalDateTime() : null);
+        tyreExport.setCreatedAt(com.gui.kline.utils.SqliteUtil.getLocalDateTime(rs, "created_at"));
+        tyreExport.setUpdatedAt(com.gui.kline.utils.SqliteUtil.getLocalDateTime(rs, "updated_at"));
         
         return tyreExport;
     }

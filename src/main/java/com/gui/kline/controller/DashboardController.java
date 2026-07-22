@@ -703,14 +703,14 @@ public class DashboardController implements Initializable {
                                      LocalDate endDate,
                                      Map<LocalDate, Double> totals) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setDate(1, java.sql.Date.valueOf(startDate));
-            ps.setDate(2, java.sql.Date.valueOf(endDate));
+            ps.setString(1, startDate.toString());
+            ps.setString(2, endDate.toString());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    java.sql.Date date = rs.getDate(1);
+                    LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 1);
                     double total = rs.getDouble(2);
                     if (date != null) {
-                        totals.merge(date.toLocalDate(), total, Double::sum);
+                        totals.merge(date, total, Double::sum);
                     }
                 }
             }
@@ -806,8 +806,8 @@ public class DashboardController implements Initializable {
     private double sumAmount(Connection conn, String sql, LocalDate startDate, LocalDate endDate) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             if (startDate != null && endDate != null) {
-                ps.setDate(1, java.sql.Date.valueOf(startDate));
-                ps.setDate(2, java.sql.Date.valueOf(endDate));
+                ps.setString(1, startDate.toString());
+                ps.setString(2, endDate.toString());
             }
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getDouble(1) : 0.0;
@@ -818,8 +818,8 @@ public class DashboardController implements Initializable {
     private int countRows(Connection conn, String sql, LocalDate startDate, LocalDate endDate) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             if (startDate != null && endDate != null) {
-                ps.setDate(1, java.sql.Date.valueOf(startDate));
-                ps.setDate(2, java.sql.Date.valueOf(endDate));
+                ps.setString(1, startDate.toString());
+                ps.setString(2, endDate.toString());
             }
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getInt(1) : 0;
@@ -828,13 +828,14 @@ public class DashboardController implements Initializable {
     }
 
     private void logQuickService(QuickService service) {
-        String insert = "INSERT INTO quick_services (id, service, price, service_date) VALUES (UUID(), ?, ?, ?)";
+        String insert = "INSERT INTO quick_services (id, service, price, service_date) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(insert)) {
             LocalDate today = LocalDate.now();
-            ps.setString(1, service.name);
-            ps.setDouble(2, service.price);
-            ps.setDate(3, java.sql.Date.valueOf(today));
+            ps.setString(1, java.util.UUID.randomUUID().toString());
+            ps.setString(2, service.name);
+            ps.setDouble(3, service.price);
+            ps.setString(4, today.toString());
             ps.executeUpdate();
         } catch (SQLException ex) {
             System.err.println("Error logging quick service: " + ex.getMessage());

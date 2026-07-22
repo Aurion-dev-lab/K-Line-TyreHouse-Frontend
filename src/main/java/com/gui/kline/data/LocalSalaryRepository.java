@@ -37,8 +37,8 @@ public class LocalSalaryRepository {
         List<WorkerSalary> salaries = new ArrayList<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(from));
-            statement.setDate(2, Date.valueOf(to));
+            statement.setString(1, from.toString());
+            statement.setString(2, to.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     String workerId = rs.getString("id");
@@ -99,11 +99,11 @@ public class LocalSalaryRepository {
             connection.setAutoCommit(false);
             try {
                 double alreadyPaid = 0;
-                String selectSql = "SELECT amount FROM salary_payments WHERE worker_id = ? AND period_from = ? AND period_to = ? FOR UPDATE";
+                String selectSql = "SELECT amount FROM salary_payments WHERE worker_id = ? AND period_from = ? AND period_to = ?";
                 try (PreparedStatement select = connection.prepareStatement(selectSql)) {
                     select.setString(1, workerId);
-                    select.setDate(2, Date.valueOf(from));
-                    select.setDate(3, Date.valueOf(to));
+                    select.setString(2, from.toString());
+                    select.setString(3, to.toString());
                     try (ResultSet rs = select.executeQuery()) {
                         while (rs.next()) {
                             alreadyPaid += rs.getDouble("amount");
@@ -115,13 +115,13 @@ public class LocalSalaryRepository {
                 }
 
                 String paymentId = UUID.randomUUID().toString();
-                String insertSql = "INSERT INTO salary_payments (id, worker_id, worker, period_from, period_to, amount, paid_at) VALUES (?, ?, ?, ?, ?, ?, NOW())";
+                String insertSql = "INSERT INTO salary_payments (id, worker_id, worker, period_from, period_to, amount, paid_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
                 try (PreparedStatement insert = connection.prepareStatement(insertSql)) {
                     insert.setString(1, paymentId);
                     insert.setString(2, workerId);
                     insert.setString(3, workerName);
-                    insert.setDate(4, Date.valueOf(from));
-                    insert.setDate(5, Date.valueOf(to));
+                    insert.setString(4, from.toString());
+                    insert.setString(5, to.toString());
                     insert.setDouble(6, paymentAmount);
                     insert.executeUpdate();
                 }
@@ -141,8 +141,8 @@ public class LocalSalaryRepository {
         Map<String, Double> paidAmounts = new HashMap<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(from));
-            statement.setDate(2, Date.valueOf(to));
+            statement.setString(1, from.toString());
+            statement.setString(2, to.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     paidAmounts.put(rs.getString("worker_id"), rs.getDouble("amount"));
@@ -205,8 +205,8 @@ public class LocalSalaryRepository {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, workerId);
-            statement.setDate(2, Date.valueOf(from));
-            statement.setDate(3, Date.valueOf(to));
+            statement.setString(2, from.toString());
+            statement.setString(3, to.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     payments.add(new SalaryPayment(

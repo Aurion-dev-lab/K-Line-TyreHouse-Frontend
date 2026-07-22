@@ -100,12 +100,12 @@ public class ExpenseDialogController {
     private String saveExpense(LocalDate date, String description, String category, double amount) throws SQLException {
         String id = "EXP" + System.currentTimeMillis();
 
-        String sql = "INSERT INTO expenses (id, expense_date, description, category, amount, created_at) VALUES (?, ?, ?, ?, ?, NOW())";
+        String sql = "INSERT INTO expenses (id, expense_date, description, category, amount, created_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, id);
-            ps.setDate(2, Date.valueOf(date));
+            ps.setString(2, date.toString());
             ps.setString(3, description);
             ps.setString(4, category);
             ps.setDouble(5, amount);

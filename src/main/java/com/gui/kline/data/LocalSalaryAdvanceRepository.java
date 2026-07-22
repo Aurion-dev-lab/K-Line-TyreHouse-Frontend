@@ -14,14 +14,14 @@ public class LocalSalaryAdvanceRepository {
     public String saveAdvance(String workerId, String workerName, LocalDate date, double amount, String note) {
         String id = UUID.randomUUID().toString();
         String sql = "INSERT INTO salary_advances (id, worker_id, worker, amount, advance_date, note, created_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, NOW())";
+                "VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, id);
             statement.setString(2, workerId);
             statement.setString(3, workerName);
             statement.setDouble(4, amount);
-            statement.setDate(5, Date.valueOf(date));
+            statement.setString(5, date.toString());
             statement.setString(6, note == null ? null : note.trim());
             statement.executeUpdate();
         } catch (SQLException ex) {
@@ -52,8 +52,8 @@ public class LocalSalaryAdvanceRepository {
         Map<String, Double> totals = new HashMap<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(from));
-            statement.setDate(2, Date.valueOf(to));
+            statement.setString(1, from.toString());
+            statement.setString(2, to.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     totals.put(rs.getString("worker_id"), rs.getDouble("total"));
@@ -72,8 +72,8 @@ public class LocalSalaryAdvanceRepository {
         Map<String, Double> totals = new HashMap<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(from));
-            statement.setDate(2, Date.valueOf(to));
+            statement.setString(1, from.toString());
+            statement.setString(2, to.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     totals.put(rs.getString("worker"), rs.getDouble("total"));

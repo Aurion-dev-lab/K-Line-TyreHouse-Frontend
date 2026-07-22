@@ -37,14 +37,15 @@ public class LocalWorkerRepository {
             return;
         }
         String sql = "INSERT INTO workers (id, name, phone, role, rate, salary_type, created_at) " +
-                "VALUES (UUID(), ?, ?, ?, ?, ?, NOW())";
+                "VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, name.trim());
-            statement.setString(2, phone == null ? null : phone.trim());
-            statement.setString(3, role == null ? null : role.trim());
-            statement.setString(4, rate == null ? null : rate.trim());
-            statement.setString(5, salaryType == null ? null : salaryType.trim());
+            statement.setString(1, java.util.UUID.randomUUID().toString());
+            statement.setString(2, name.trim());
+            statement.setString(3, phone == null ? null : phone.trim());
+            statement.setString(4, role == null ? null : role.trim());
+            statement.setString(5, rate == null ? null : rate.trim());
+            statement.setString(6, salaryType == null ? null : salaryType.trim());
             statement.executeUpdate();
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to save worker", ex);

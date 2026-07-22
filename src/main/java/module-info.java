@@ -9,16 +9,16 @@ module com.gui.kline {
     uses org.kordamp.ikonli.IkonHandler;
     requires org.kordamp.bootstrapfx.core;
     requires java.desktop;
-    requires java.sql;
     requires java.net.http;
     requires java.prefs;
-    requires mysql.connector.j;
     requires com.google.gson;
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.datatype.jsr310;
     requires okhttp3;
     requires com.github.librepdf.openpdf;
+    requires org.xerial.sqlitejdbc;
+    requires java.sql;
 
     opens com.gui.kline to javafx.fxml;
     opens com.gui.kline.view to javafx.fxml;

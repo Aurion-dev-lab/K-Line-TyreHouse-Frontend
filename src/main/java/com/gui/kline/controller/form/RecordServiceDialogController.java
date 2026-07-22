@@ -49,13 +49,14 @@ public class RecordServiceDialogController {
         }
 
         LocalDate serviceDate = date != null ? date : LocalDate.now();
-        String insert = "INSERT INTO services (id, name, price, service_date, remark) VALUES (UUID(), ?, ?, ?, ?)";
+        String insert = "INSERT INTO services (id, name, price, service_date, remark) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(insert)) {
-            ps.setString(1, name);
-            ps.setDouble(2, price);
-            ps.setDate(3, java.sql.Date.valueOf(serviceDate));
-            ps.setString(4, remark);
+            ps.setString(1, java.util.UUID.randomUUID().toString());
+            ps.setString(2, name);
+            ps.setDouble(3, price);
+            ps.setString(4, serviceDate.toString());
+            ps.setString(5, remark);
             ps.executeUpdate();
         } catch (SQLException ex) {
             showError("Failed to save service: " + ex.getMessage());

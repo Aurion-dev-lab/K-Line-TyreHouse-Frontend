@@ -192,12 +192,10 @@ public class ServicesController implements Initializable {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 String id = rs.getString(1);
-                java.sql.Date date = rs.getDate(2);
+                LocalDate serviceDate = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 2);
                 String name = rs.getString(3);
                 String remark = rs.getString(4);
                 double price = rs.getDouble(5);
-
-                LocalDate serviceDate = date != null ? date.toLocalDate() : null;
                 String finalRemark = remark != null ? remark : "";
                 
                 ServiceRecord record = new ServiceRecord(serviceDate, name, finalRemark, price);
@@ -215,12 +213,10 @@ public class ServicesController implements Initializable {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 String id = rs.getString(1);
-                java.sql.Date date = rs.getDate(2);
+                LocalDate serviceDate = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 2);
                 String name = rs.getString(3);
                 String remark = rs.getString(4);
                 double price = rs.getDouble(5);
-
-                LocalDate serviceDate = date != null ? date.toLocalDate() : null;
                 String finalRemark = remark != null ? remark : "Quick service";
                 
                 ServiceRecord record = new ServiceRecord(serviceDate, name, finalRemark, price);
@@ -242,10 +238,9 @@ public class ServicesController implements Initializable {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 String id = rs.getString(1);
-                java.sql.Date date = rs.getDate(2);
+                LocalDate serviceDate = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 2);
                 String name = rs.getString(3);
                 double price = rs.getDouble(4);
-                LocalDate serviceDate = date != null ? date.toLocalDate() : null;
                 
                 ServiceRecord record = new ServiceRecord(serviceDate, name, "Invoiced service", price);
                 record.setId(id);

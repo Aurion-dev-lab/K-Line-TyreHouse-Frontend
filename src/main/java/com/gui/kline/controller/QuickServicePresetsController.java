@@ -181,7 +181,7 @@ public class QuickServicePresetsController {
             return;
         }
 
-        String sql = "INSERT INTO quick_service_presets (id, service, price, active, icon, created_at) VALUES (?, ?, ?, 1, ?, NOW())";
+        String sql = "INSERT INTO quick_service_presets (id, service, price, active, icon, created_at) VALUES (?, ?, ?, 1, ?, CURRENT_TIMESTAMP)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, UUID.randomUUID().toString());

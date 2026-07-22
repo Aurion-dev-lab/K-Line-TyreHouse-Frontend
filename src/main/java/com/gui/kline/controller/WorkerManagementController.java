@@ -115,7 +115,8 @@ public class WorkerManagementController {
         historyRowsContainer.getChildren().clear();
         for (WorkerAttendanceHistory row : attendanceRepository.loadHistory(from, to, historySearchField.getText())) {
             String[] status = statusLabel(row.getStatus());
-            addHistoryRow(row.getDate().toString(), row.getWorkerName(), status[0], status[1]);
+            String dateStr = row.getDate() != null ? row.getDate().toString() : "";
+            addHistoryRow(dateStr, row.getWorkerName(), status[0], status[1]);
         }
     }
 

@@ -145,13 +145,13 @@ public class ExpenseController implements Initializable {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String id = rs.getString("id");
-                    Date date = rs.getDate("expense_date");
+                    LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "expense_date");
                     String description = rs.getString("description");
                     String category = rs.getString("category");
                     double amount = rs.getDouble("amount");
 
                     Expense expense = new Expense(
-                            date != null ? date.toLocalDate() : LocalDate.now(),
+                            date != null ? date : LocalDate.now(),
                             description,
                             category,
                             amount
