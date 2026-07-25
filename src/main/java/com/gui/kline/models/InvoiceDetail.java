@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InvoiceDetail {
-    private String invoiceId, customer, date, type;
+    private String invoiceId, customer, date, type, phone, description;
     private final List<LineItem> lineItems = new ArrayList<>();
     private double taxRate = 0.0;
     private double discountAmount = 0.0;
     private String status = "quotation";
+
+    public String getDescription() { return description != null ? description : ""; }
+    public void setDescription(String v) { description = v; }
 
     public void addLineItem(LineItem item)    { lineItems.add(item); }
     public void removeLineItem(LineItem item) { lineItems.remove(item); }
@@ -26,6 +29,8 @@ public class InvoiceDetail {
     public void   setDate(String v)      { date = v; }
     public String getType()              { return type; }
     public void   setType(String v)      { type = v; }
+    public String getPhone()             { return phone != null ? phone : ""; }
+    public void   setPhone(String v)     { phone = v; }
     public double getTaxRate()           { return taxRate; }
     public void   setTaxRate(double v)   { taxRate = v; }
     public double getDiscountAmount()    { return discountAmount; }

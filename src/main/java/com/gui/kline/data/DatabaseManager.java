@@ -74,11 +74,12 @@ public final class DatabaseManager {
                     "id TEXT PRIMARY KEY," +
                     "invoice_id TEXT UNIQUE," +
                     "customer TEXT," +
+                    "phone TEXT," +
+                    "description TEXT," +
                     "invoice_date DATE," +
                     "type TEXT," +
                     "status TEXT," +
                     "subtotal REAL NOT NULL DEFAULT 0," +
-                    "tax REAL NOT NULL DEFAULT 0," +
                     "grand_total REAL NOT NULL DEFAULT 0," +
                     "line_items TEXT," +
                     "created_at DATETIME NOT NULL," +

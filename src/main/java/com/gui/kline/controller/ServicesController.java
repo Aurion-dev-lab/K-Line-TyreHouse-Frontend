@@ -180,7 +180,6 @@ public class ServicesController implements Initializable {
                     "SELECT id, service_date, name, remark, price FROM services",
                     "services");
             loadQuickServiceRows(conn);
-            loadInvoiceServiceRows(conn);
         } catch (SQLException ex) {
             System.err.println("Error loading services: " + ex.getMessage());
         }

@@ -32,13 +32,16 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-public class AddInvoiceController {
+public class InvoiceFormController {
 
+    @FXML private Label              lblTitle;
     @FXML private Label              lblInvoiceId;
     @FXML private ComboBox<String>   cmbCustomerName;
     @FXML private TextField          txtPhone;
     @FXML private TextField          txtVehicleNumber;
     @FXML private ComboBox<String>   cmbInvoiceType;
+    @FXML private VBox               vboxProductSection;
+    @FXML private VBox               vboxServiceSection;
     @FXML private Label              lblDynamicField;
     @FXML private ComboBox<Product>   cmbProduct;
     @FXML private TextField           txtProductSearch;
@@ -52,9 +55,12 @@ public class AddInvoiceController {
     @FXML private TextField          txtDiscount;
     @FXML private Label              lblTotal;
     @FXML private VBox               vboxLineItems;
+    @FXML private VBox               vboxBillingExtras;
     @FXML private Button             btnAddItem;
     @FXML private Button             btnCancel;
-    @FXML private Button             btnSave;    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
+    @FXML private Button             btnSave;
+
+    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
     private final LocalInvoiceRepository invoiceRepository = new LocalInvoiceRepository();
     private final List<LineItem> lineItems = new ArrayList<>();
     private final ObservableList<Product> allProducts = FXCollections.observableArrayList();
@@ -65,7 +71,7 @@ public class AddInvoiceController {
     @FXML
     public void initialize() {
         lblInvoiceId.setText("#INV-" + System.currentTimeMillis() % 100000);
-        cmbInvoiceType.getItems().addAll("Sale", "Service", "Both");
+        cmbInvoiceType.getItems().setAll("Sale", "Service");
         cmbInvoiceType.getSelectionModel().selectFirst();
         cmbCustomerName.setEditable(true);
         cmbCustomerName.getItems().setAll(catalogRepository.getCustomerNames());
@@ -187,42 +193,49 @@ public class AddInvoiceController {
     @FXML
     private void handleTypeChange() {
         String selected = cmbInvoiceType.getValue();
-        if ("Sale".equals(selected)) {
-            showSaleField();
-        } else if ("Service".equals(selected)) {
+        if ("Service".equals(selected)) {
             showServiceField();
-        } else if ("Both".equals(selected)) {
-            // Show both options
-            cmbProduct.setVisible(true);
-            cmbProduct.setManaged(true);
-            lblProductStock.setVisible(true);
-            lblProductStock.setManaged(true);
-            txtServiceDesc.setVisible(true);
-            txtServiceDesc.setManaged(true);
+        } else {
+            showSaleField();
         }
     }
 
     private void showSaleField() {
-        lblDynamicField.setText("SELECT PRODUCT");
-        cmbProduct.setVisible(true);
-        cmbProduct.setManaged(true);
-        lblProductStock.setVisible(true);
-        lblProductStock.setManaged(true);
-        txtServiceDesc.setVisible(false);
-        txtServiceDesc.setManaged(false);
+        if (vboxProductSection != null) {
+            vboxProductSection.setVisible(true);
+            vboxProductSection.setManaged(true);
+            vboxProductSection.setDisable(false);
+        }
+        if (vboxServiceSection != null) {
+            vboxServiceSection.setVisible(false);
+            vboxServiceSection.setManaged(false);
+            vboxServiceSection.setDisable(true);
+        }
+        // Hide Labour and Additional Parts for Sale invoices
+        if (vboxBillingExtras != null) {
+            vboxBillingExtras.setVisible(false);
+            vboxBillingExtras.setManaged(false);
+        }
         txtServiceDesc.clear();
     }
 
     private void showServiceField() {
-        lblDynamicField.setText("SERVICE DESCRIPTION");
-        txtServiceDesc.setVisible(true);
-        txtServiceDesc.setManaged(true);
-        cmbProduct.setVisible(false);
-        cmbProduct.setManaged(false);
-        lblProductStock.setVisible(false);
-        lblProductStock.setManaged(false);
-        cmbProduct.getSelectionModel().clearSelection();
-        txtProductSearch.clear();
+        // In Service mode, show BOTH Service Description AND Product Inventory Selection
+        if (vboxServiceSection != null) {
+            vboxServiceSection.setVisible(true);
+            vboxServiceSection.setManaged(true);
+            vboxServiceSection.setDisable(false);
+        }
+        if (vboxProductSection != null) {
+            vboxProductSection.setVisible(true);
+            vboxProductSection.setManaged(true);
+            vboxProductSection.setDisable(false);
+        }
+        // Show Labour and Additional Parts for Service invoices
+        if (vboxBillingExtras != null) {
+            vboxBillingExtras.setVisible(true);
+            vboxBillingExtras.setManaged(true);
+        }
     }
 
     @FXML
@@ -233,29 +246,48 @@ public class AddInvoiceController {
         }
         if (!validateLineItem()) return;
 
-        String type = cmbInvoiceType.getValue();
         String description;
         String productId = null;
         int qty = 1;
         double price = 0;
 
         try {
-            if ("Sale".equals(type) || "Both".equals(type)) {
-                Product selectedProduct = cmbProduct.getValue();
-                if (selectedProduct != null) {
-                    description = formatProductLabel(selectedProduct);
-                    productId = selectedProduct.getId();
+            // Product item from inventory selection
+            Product selectedProduct = cmbProduct.getValue();
+            if (selectedProduct != null) {
+                description = formatProductLabel(selectedProduct);
+                productId = selectedProduct.getId();
 
-                    qty = Integer.parseInt(txtQuantity.getText().trim());
-                    // Inventory products must always use their configured selling price.
-                    // This prevents a quotation from accidentally adding a part at Rs. 0.
-                    price = selectedProduct.getSellPrice();
-                    if (price <= 0) {
-                        alert("This product has no selling price. Update its price in Inventory before adding it.");
+                qty = Integer.parseInt(txtQuantity.getText().trim());
+                price = selectedProduct.getSellPrice();
+                if (price <= 0) {
+                    alert("This product has no selling price. Update its price in Inventory before adding it.");
+                    return;
+                }
+                txtUnitPrice.setText(String.format("%.2f", price));
+
+                // Check if product already exists in lineItems
+                LineItem existingItem = lineItems.stream()
+                        .filter(item -> selectedProduct.getId().equals(item.getProductId()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (existingItem != null) {
+                    int newQty = existingItem.getQty() + qty;
+                    int originalQty = originalDetail == null ? 0 : quantityForProduct(originalDetail.getLineItems(), selectedProduct.getId());
+                    int available = selectedProduct.getStock() + originalQty;
+                    if (newQty > available) {
+                        showStockWarning("Stock exceeded. Only " + Math.max(0, available) + " unit(s) available.");
                         return;
                     }
-                    txtUnitPrice.setText(String.format("%.2f", price));
-
+                    existingItem.setQty(newQty);
+                    
+                    // Refresh display list
+                    vboxLineItems.getChildren().clear();
+                    for (LineItem item : lineItems) {
+                        addLineItemToDisplay(item);
+                    }
+                } else {
                     int available = availableQuantityForAdditionalItem(
                             selectedProduct.getId(), selectedProduct.getStock());
                     if (qty > available) {
@@ -264,16 +296,6 @@ public class AddInvoiceController {
                     }
 
                     LineItem item = new LineItem(description, "Sale", qty, price, productId);
-                    lineItems.add(item);
-                    addLineItemToDisplay(item);
-                }
-            }
-
-            if ("Service".equals(type) || ("Both".equals(type) && !txtServiceDesc.getText().isBlank())) {
-                String serviceDesc = txtServiceDesc.getText().trim();
-                if (!serviceDesc.isBlank()) {
-                    double servicePrice = Double.parseDouble(txtUnitPrice.getText().trim());
-                    LineItem item = new LineItem(serviceDesc, "Service", 1, servicePrice, null);
                     lineItems.add(item);
                     addLineItemToDisplay(item);
                 }
@@ -319,7 +341,6 @@ public class AddInvoiceController {
 
     private void clearItemInputs() {
         cmbProduct.getSelectionModel().clearSelection();
-        txtServiceDesc.clear();
         txtQuantity.setText("1");
         txtUnitPrice.clear();
         clearStockWarning();
@@ -359,12 +380,18 @@ public class AddInvoiceController {
 
         String invoiceId = lblInvoiceId.getText().replace("#", "");
         String customerName = getCustomerName();
+        String selectedType = cmbInvoiceType.getValue();
+        if (selectedType == null || selectedType.isBlank()) {
+            selectedType = "Sale";
+        }
 
         InvoiceDetail detail = new InvoiceDetail();
         detail.setInvoiceId(invoiceId);
         detail.setCustomer(customerName);
+        detail.setPhone(txtPhone.getText() != null ? txtPhone.getText().trim() : "");
+        detail.setDescription(txtServiceDesc.getText() != null ? txtServiceDesc.getText().trim() : "");
         detail.setDate(LocalDate.now().toString());
-        detail.setType("Mixed");
+        detail.setType(selectedType);
         detail.setStatus("quotation");
         detail.setDiscountAmount(parse(txtDiscount.getText()));
 
@@ -374,14 +401,10 @@ public class AddInvoiceController {
         addBillingCharges(detail);
 
         try {
-            String displayType = lineItems.isEmpty() ? "Mixed" :
-                    lineItems.stream().map(LineItem::getType).distinct().count() == 1 ?
-                    lineItems.get(0).getType() : "Mixed";
-
             double grandTotal = detail.getGrandTotal();
 
             InvoiceRow row = new InvoiceRow(invoiceId, LocalDate.now().toString(),
-                    customerName, displayType, lineItems.size(), grandTotal, "quotation");
+                    customerName, selectedType, detail.getLineItems().size(), grandTotal, "quotation", detail.getPhone(), detail.getDescription());
 
             invoiceRepository.saveInvoice(detail, row);
             updateStockForSavedQuotation(detail);
@@ -408,17 +431,7 @@ public class AddInvoiceController {
                     }
                     product.setStock(newStock);
                     catalogRepository.saveProduct(product);
-
-                    String payload = JsonUtil.obj(
-                            JsonUtil.field("operation", "update"),
-                            JsonUtil.field("productId", product.getId()),
-                            JsonUtil.field("productCode", product.getCode()),
-                            JsonUtil.field("name", product.getName()),
-                            JsonUtil.field("category", product.getCategory()),
-                            JsonUtil.field("buyPrice", product.getBuyPrice()),
-                            JsonUtil.field("sellPrice", product.getSellPrice()),
-                            JsonUtil.field("stock", product.getStock())
-                    );                }
+                }
             }
         }
     }
@@ -463,6 +476,11 @@ public class AddInvoiceController {
     private boolean validate() {
         if (getCustomerName().isBlank()) {
             alert("Customer name required");
+            return false;
+        }
+
+        if ("Service".equals(cmbInvoiceType.getValue()) && txtServiceDesc.getText().trim().isBlank()) {
+            alert("Service description required");
             return false;
         }
 
@@ -522,15 +540,14 @@ public class AddInvoiceController {
         deductInventoryForLineItems(detail);
     }
 
-    /** Adds manual labour and extra parts charges as quote line items. */
     private void addBillingCharges(InvoiceDetail detail) {
         double labour = parse(txtLabour.getText());
         if (labour > 0) {
-            detail.addLineItem(new LineItem("Labour", "Service", 1, labour, null));
+            detail.addLineItem(new LineItem("Labour", "Service", 1, labour, "Labour"));
         }
         double extraParts = parse(txtParts.getText());
         if (extraParts > 0) {
-            detail.addLineItem(new LineItem("Additional parts", "Service", 1, extraParts, null));
+            detail.addLineItem(new LineItem("Additional parts", "Service", 1, extraParts, "Additional parts"));
         }
     }
 
@@ -538,11 +555,34 @@ public class AddInvoiceController {
         this.editInvoiceId = invoiceId;
         this.originalDetail = detail;
         lblInvoiceId.setText("#" + invoiceId);
+        if (lblTitle != null) {
+            lblTitle.setText("Update Quotation");
+        }
+        if (btnSave != null) {
+            btnSave.setText("Update Quotation");
+        }
 
         if (detail != null) {
             cmbCustomerName.setValue(detail.getCustomer());
             cmbCustomerName.getEditor().setText(detail.getCustomer());
-            txtPhone.setText(catalogRepository.getCustomerPhone(detail.getCustomer()));
+            
+            // Set phone number directly from detail, fallback to customer phone if empty
+            String phone = detail.getPhone();
+            if (phone == null || phone.isBlank()) {
+                phone = catalogRepository.getCustomerPhone(detail.getCustomer());
+            }
+            txtPhone.setText(phone);
+            
+            // Set invoice type from existing data
+            if (detail.getType() != null && !detail.getType().isBlank()) {
+                cmbInvoiceType.setValue(detail.getType());
+            }
+            
+            // Load description
+            if ("Service".equals(detail.getType())) {
+                txtServiceDesc.setText(detail.getDescription());
+            }
+
             txtDiscount.setText(String.format("%.2f", detail.getDiscountAmount()));
             lineItems.clear();
             vboxLineItems.getChildren().clear();

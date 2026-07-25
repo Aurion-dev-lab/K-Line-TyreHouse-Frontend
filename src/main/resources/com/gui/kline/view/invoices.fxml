@@ -84,9 +84,13 @@
                     <Label styleClass="meta-key" text="Date " HBox.hgrow="ALWAYS" />
                     <Label fx:id="lblInvoiceDate" styleClass="meta-val" text="—" />
                 </HBox>
-                <HBox alignment="CENTER_LEFT">
+                <HBox fx:id="hboxType" alignment="CENTER_LEFT">
                     <Label styleClass="meta-key" text="Type " HBox.hgrow="ALWAYS" />
                     <Label fx:id="lblInvoiceType" styleClass="meta-val" text="—" />
+                </HBox>
+                <HBox alignment="CENTER_LEFT">
+                    <Label styleClass="meta-key" text="Phone " HBox.hgrow="ALWAYS" />
+                    <Label fx:id="lblPhone" styleClass="meta-val" text="—" />
                 </HBox>
             </VBox>
 
@@ -118,14 +122,7 @@
                </AnchorPane>
                     <Label fx:id="lblSubtotal" styleClass="tot-val" text="Rs. 0.00" />
                 </HBox>
-                <HBox alignment="CENTER_LEFT">
-               <AnchorPane HBox.hgrow="ALWAYS">
-                  <children>
-                          <Label styleClass="tot-label" text="Tax (0%)" />
-                  </children>
-               </AnchorPane>
-                    <Label fx:id="lblTax" styleClass="tot-val" text="Rs. 0.00" />
-                </HBox>
+
 
                 <HBox fx:id="hboxDiscount" alignment="CENTER_LEFT" managed="false" visible="false">
                <AnchorPane HBox.hgrow="ALWAYS">

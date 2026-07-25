@@ -18,7 +18,7 @@
 
 <AnchorPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.gui.kline.controller.form.AddInvoiceController">
+            fx:controller="com.gui.kline.controller.form.InvoiceFormController">
 
     <StackPane AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
                AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
@@ -30,7 +30,7 @@
             <!-- Header: Invoice ID -->
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <VBox.margin><Insets bottom="4" left="32" right="32" top="32"/></VBox.margin>
-                <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1a1a2e;" text="New Quotation"/>
+                <Label fx:id="lblTitle" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1a1a2e;" text="New Quotation"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Label fx:id="lblInvoiceId"
                        style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #00c853;
@@ -87,35 +87,36 @@
                     </VBox>
 
                     <!-- ADD ITEM SECTION -->
-                    <VBox spacing="8">
+                    <VBox spacing="10">
                         <Label style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #cbd5e1;" text="ADD ITEMS"/>
 
-                        <VBox spacing="8">
+                        <!-- PRODUCT SELECTION SECTION -->
+                        <VBox fx:id="vboxProductSection" spacing="8">
                             <HBox alignment="CENTER_LEFT" spacing="12">
-                                <Label fx:id="lblDynamicField"
-                                       style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;"
-                                       text="PRODUCT / SERVICE"
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;"
+                                       text="PRODUCT SEARCH &amp; SELECTION"
                                        HBox.hgrow="ALWAYS"/>
                                 <Label fx:id="lblProductStock"
                                        style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #10b981;"
                                        text="Stock: —"/>
                             </HBox>
-                            <ComboBox fx:id="cmbProduct" maxWidth="Infinity" promptText="Choose a product…"
-                                      style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
-                                             -fx-padding: 8; -fx-border-color: transparent;"
-                                      managed="true" visible="true"/>
-
                             <TextField fx:id="txtProductSearch" promptText="Search by product code, name, category, or brand…"
                                        style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
                                               -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 13px;"/>
-
+                            <ComboBox fx:id="cmbProduct" maxWidth="Infinity" promptText="Choose a product…"
+                                      style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                             -fx-padding: 8; -fx-border-color: transparent;"/>
                             <Label fx:id="lblStockError" managed="false" textFill="#dc2626" visible="false"
                                    style="-fx-font-size: 12px; -fx-font-weight: bold;" />
+                        </VBox>
 
+                        <!-- SERVICE DESCRIPTION SECTION -->
+                        <VBox fx:id="vboxServiceSection" spacing="8" managed="false" visible="false">
+                            <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;"
+                                   text="SERVICE DESCRIPTION"/>
                             <TextField fx:id="txtServiceDesc" promptText="e.g. Full engine service + oil change"
                                        style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
-                                              -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"
-                                       managed="false" visible="false"/>
+                                              -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
                         </VBox>
 
                         <GridPane hgap="12">
@@ -163,18 +164,30 @@
                                 <ColumnConstraints hgrow="ALWAYS"/>
                                 <ColumnConstraints hgrow="ALWAYS"/>
                             </columnConstraints>
-                            <VBox spacing="8" GridPane.columnIndex="0">
-                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="LABOUR (RS.)"/>
-                                <TextField fx:id="txtLabour" promptText="0.00"
-                                           style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
-                                                  -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
+
+                            <!-- Labour and Additional Parts: only visible in Service mode -->
+                            <VBox fx:id="vboxBillingExtras" spacing="0" GridPane.columnIndex="0" GridPane.columnSpan="2">
+                                <GridPane hgap="16">
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="ALWAYS"/>
+                                        <ColumnConstraints hgrow="ALWAYS"/>
+                                    </columnConstraints>
+                                    <VBox spacing="8" GridPane.columnIndex="0">
+                                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="LABOUR (RS.)"/>
+                                        <TextField fx:id="txtLabour" promptText="0.00"
+                                                   style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                                          -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
+                                    </VBox>
+                                    <VBox spacing="8" GridPane.columnIndex="1">
+                                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="ADDITIONAL PARTS (RS.)"/>
+                                        <TextField fx:id="txtParts" promptText="0.00"
+                                                   style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                                          -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
+                                    </VBox>
+                                    <rowConstraints><RowConstraints/></rowConstraints>
+                                </GridPane>
                             </VBox>
-                            <VBox spacing="8" GridPane.columnIndex="1">
-                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="ADDITIONAL PARTS (RS.)"/>
-                                <TextField fx:id="txtParts" promptText="0.00"
-                                           style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
-                                                  -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
-                            </VBox>
+
                             <VBox spacing="8" GridPane.columnIndex="2">
                                 <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="DISCOUNT (RS.)"/>
                                 <TextField fx:id="txtDiscount" promptText="0"

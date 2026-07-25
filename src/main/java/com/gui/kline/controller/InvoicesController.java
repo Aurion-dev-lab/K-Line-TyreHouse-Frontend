@@ -1,15 +1,20 @@
 package com.gui.kline.controller;
 
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.UUID;
 
+import com.gui.kline.data.DatabaseManager;
 import com.gui.kline.data.LocalCatalogRepository;
 import com.gui.kline.data.LocalInvoiceRepository;
-import com.gui.kline.controller.form.AddInvoiceController;
+import com.gui.kline.controller.form.InvoiceFormController;
 import com.gui.kline.models.InvoiceDetail;
 import com.gui.kline.models.InvoiceRow;
 import com.gui.kline.models.LineItem;
@@ -53,9 +58,10 @@ public class InvoicesController implements Initializable {
     @FXML private Label lblCustomer;
     @FXML private Label lblInvoiceDate;
     @FXML private Label lblInvoiceType;
+    @FXML private HBox  hboxType;
     @FXML private VBox  vboxLineItems;
     @FXML private Label lblSubtotal;
-    @FXML private Label lblTax;
+    @FXML private Label lblPhone;
     @FXML private HBox  hboxDiscount;
     @FXML private Label lblDiscount;
     @FXML private Label lblGrandTotal;
@@ -180,7 +186,7 @@ public class InvoicesController implements Initializable {
     @FXML
     private void onNewInvoice(ActionEvent event) {
         Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        ViewModel.INSTANCE.getViewsFactory().getForm("form/add-invoice-dialog", ownerStage);
+        ViewModel.INSTANCE.getViewsFactory().getForm("form/invoice-form", ownerStage);
         attachRefreshOnClose();
     }
 
@@ -216,8 +222,8 @@ public class InvoicesController implements Initializable {
             }
 
             Stage ownerStage = (Stage) tblInvoices.getScene().getWindow();
-            AddInvoiceController controller = ViewModel.INSTANCE.getViewsFactory()
-                    .getForm("form/add-invoice-dialog", ownerStage);
+            InvoiceFormController controller = ViewModel.INSTANCE.getViewsFactory()
+                    .getForm("form/invoice-form", ownerStage);
             if (controller != null) {
                 controller.setEditMode(invoice.getInvoiceId(), detail);
             }
@@ -283,7 +289,10 @@ public class InvoicesController implements Initializable {
             showError("Add at least one line item before generating.");
             return;
         }
-        String type      = currentInvoiceDetail.getLineItems().get(0).getType();
+        String type = currentInvoiceDetail.getType() != null && !currentInvoiceDetail.getType().isBlank()
+                ? currentInvoiceDetail.getType()
+                : (currentInvoiceDetail.getLineItems().isEmpty() ? "Sale"
+                   : currentInvoiceDetail.getLineItems().get(0).getType());
         currentInvoiceDetail.setStatus("completed");
 
         InvoiceRow row = new InvoiceRow(
@@ -293,24 +302,58 @@ public class InvoicesController implements Initializable {
                 type,
                 currentInvoiceDetail.getLineItems().size(),
                 currentInvoiceDetail.getGrandTotal(),
-                "completed"
+                "completed",
+                currentInvoiceDetail.getPhone(),
+                currentInvoiceDetail.getDescription()
         );
 
-        int idx = invoiceList.indexOf(selectedInvoice);
-        if (idx >= 0) invoiceList.set(idx, row);
-        else invoiceList.add(0, row);
+        int idx = -1;
+        for (int i = 0; i < invoiceList.size(); i++) {
+            if (invoiceList.get(i).getInvoiceId().equalsIgnoreCase(row.getInvoiceId())) {
+                idx = i;
+                break;
+            }
+        }
+        if (idx >= 0) {
+            invoiceList.set(idx, row);
+        } else {
+            invoiceList.add(0, row);
+        }
+        selectedInvoice = row;
         
-        // Save invoice
+        // Save invoice (updates status to completed)
         invoiceRepository.saveInvoice(currentInvoiceDetail, row);
-        
-        // Stock is reserved when the quotation is created or updated. Generating
-        // the invoice only finalizes it for profit reporting.
+
+        // If this is a Service invoice, create a single service entry in the services table
+        if ("Service".equalsIgnoreCase(type)) {
+            insertServiceEntryForServiceInvoice(currentInvoiceDetail);
+        }
         
         enqueueInvoice(row, currentInvoiceDetail);
         showSuccess("Invoice " + (isEditMode ? "updated" : "created")
                 + " successfully. You can now download it as a PDF.");
         // Keep the detail panel open so the user can download the generated PDF.
         // The existing "Close" button still deselects when they are done.
+    }
+
+    /**
+     * Inserts a single service entry in the services table for a completed Service invoice.
+     * Uses the service description as the remark and "Invoiced Service" as the service name.
+     */
+    private void insertServiceEntryForServiceInvoice(InvoiceDetail detail) {
+        String sql = "INSERT INTO services (id, name, price, service_date, remark) VALUES (?, ?, ?, ?, ?)";
+        String today = LocalDate.now().toString();
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, UUID.randomUUID().toString());
+            ps.setString(2, "Invoiced Service");
+            ps.setDouble(3, detail.getGrandTotal());
+            ps.setString(4, today);
+            ps.setString(5, detail.getDescription() != null ? detail.getDescription() : "");
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            System.err.println("Failed to insert service entry for service invoice: " + ex.getMessage());
+        }
     }
 
     /**
@@ -453,7 +496,22 @@ public class InvoicesController implements Initializable {
         lblInvoiceId.setText("#" + invoice.getInvoiceId());
         lblCustomer.setText(currentInvoiceDetail.getCustomer());
         lblInvoiceDate.setText(invoice.getDate());
-        lblInvoiceType.setText(invoice.getType());
+        
+        if ("Service".equalsIgnoreCase(invoice.getType())) {
+            if (hboxType != null) {
+                hboxType.setVisible(false);
+                hboxType.setManaged(false);
+            }
+        } else {
+            if (hboxType != null) {
+                hboxType.setVisible(true);
+                hboxType.setManaged(true);
+            }
+            lblInvoiceType.setText(invoice.getType());
+        }
+        
+        String phone = currentInvoiceDetail.getPhone();
+        lblPhone.setText(phone != null && !phone.isBlank() ? phone : "—");
 
         vboxLineItems.getChildren().clear();
         currentInvoiceDetail.getLineItems().forEach(this::addLineItemToPanel);
@@ -464,10 +522,14 @@ public class InvoicesController implements Initializable {
         lblInvoiceId.setText("#—");
         lblCustomer.setText("—");
         lblInvoiceDate.setText("—");
+        if (hboxType != null) {
+            hboxType.setVisible(true);
+            hboxType.setManaged(true);
+        }
         lblInvoiceType.setText("—");
+        lblPhone.setText("—");
         vboxLineItems.getChildren().clear();
         lblSubtotal.setText("Rs. 0.00");
-        lblTax.setText("Rs. 0.00");
         if (hboxDiscount != null) {
             hboxDiscount.setVisible(false);
             hboxDiscount.setManaged(false);
@@ -491,7 +553,6 @@ public class InvoicesController implements Initializable {
     private void updateTotals() {
         if (currentInvoiceDetail == null) return;
         lblSubtotal.setText("Rs. " + String.format("%,.2f", currentInvoiceDetail.getSubtotal()));
-        lblTax.setText("Rs. "      + String.format("%,.2f", currentInvoiceDetail.getTax()));
         
         double discount = currentInvoiceDetail.getDiscountAmount();
         if (discount > 0 && hboxDiscount != null && lblDiscount != null) {
