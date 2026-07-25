@@ -61,7 +61,6 @@ public class LocalRestoreService {
                 // Step 2: Wipe local tables in reverse dependency order
                 log("Purging local tables...");
                 String[] wipeOrder = {
-                    "credit_sale_parts", "invoice_line_items",
                     "credit_sales", "invoices",
                     "worker_attendance", "salary_advances", "salary_payments",
                     "worker_credits", "tyre_exports", "quick_services", "services",
@@ -94,9 +93,6 @@ public class LocalRestoreService {
                 restoreSalaryPayments(conn,        getNode(data, "salaryPayments", "salary_payments"));
                 restoreWorkerCredits(conn,         getNode(data, "workerCredits", "worker_credits"));
                 restoreQuickServices(conn,         getNode(data, "quickServices", "quick_services"));
-
-                restoreInvoiceLineItems(conn,      getNode(data, "invoiceLineItems", "invoice_line_items"), getNode(data, "invoices", null));
-                restoreCreditSaleParts(conn,       getNode(data, "creditSaleParts", "credit_sale_parts"),  getNode(data, "creditSales", "credit_sales"));
 
                 conn.commit();
                 log("All tables restored successfully from cloud snapshot.");
@@ -516,137 +512,5 @@ public class LocalRestoreService {
             }
         }
         log("  Restored: quick_services (" + count + " rows)");
-    }
-
-    private void restoreInvoiceLineItems(Connection conn, JsonNode lineItemsArr, JsonNode invoicesArr) throws SQLException {
-        List<JsonNode> allItems = new ArrayList<>();
-        Map<String, String> itemToParentInvoiceId = new HashMap<>();
-
-        if (lineItemsArr != null && lineItemsArr.isArray()) {
-            for (JsonNode item : lineItemsArr) {
-                allItems.add(item);
-            }
-        }
-
-        if (invoicesArr != null && invoicesArr.isArray()) {
-            for (JsonNode inv : invoicesArr) {
-                String parentUuid = str(inv, "id");
-                JsonNode nestedItems = inv.path("lineItems");
-                if (!nestedItems.isMissingNode() && nestedItems.isArray()) {
-                    for (JsonNode item : nestedItems) {
-                        allItems.add(item);
-                        if (parentUuid != null) {
-                            String itemId = str(item, "id");
-                            if (itemId != null) {
-                                itemToParentInvoiceId.put(itemId, parentUuid);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if (!allItems.isEmpty()) {
-            String sql = "INSERT OR IGNORE INTO invoice_line_items " +
-                    "(id, invoice_id, invoice_ref, product_id, description, type, qty, unit_price, total, created_at, sync_status) " +
-                    "VALUES (?,?,?,?,?,?,?,?,?,?,1)";
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                for (JsonNode r : allItems) {
-                    String itemId = str(r, "id");
-                    String invoiceRefId = str(r, "invoiceRefId");
-                    if (invoiceRefId == null) {
-                        JsonNode refNode = r.path("invoiceRef");
-                        if (!refNode.isMissingNode() && !refNode.isNull()) {
-                            invoiceRefId = str(refNode, "id");
-                        }
-                    }
-                    if (invoiceRefId == null) {
-                        invoiceRefId = str(r, "invoice_ref");
-                    }
-                    if (invoiceRefId == null && itemId != null) {
-                        invoiceRefId = itemToParentInvoiceId.get(itemId);
-                    }
-
-                    ps.setString(1,  itemId);
-                    ps.setString(2,  str(r, "invoiceId"));
-                    ps.setString(3,  invoiceRefId);
-                    ps.setString(4,  str(r, "productId"));
-                    ps.setString(5,  str(r, "description"));
-                    ps.setString(6,  str(r, "type"));
-                    ps.setObject(7,  num(r, "qty"));
-                    ps.setObject(8,  dbl(r, "unitPrice"));
-                    ps.setObject(9,  dbl(r, "total"));
-                    ps.setString(10, str(r, "createdAt"));
-                    ps.addBatch();
-                }
-                ps.executeBatch();
-            }
-        }
-        log("  Restored: invoice_line_items (" + allItems.size() + " rows)");
-    }
-
-    private void restoreCreditSaleParts(Connection conn, JsonNode partsArr, JsonNode creditSalesArr) throws SQLException {
-        List<JsonNode> allParts = new ArrayList<>();
-        Map<String, String> partToParentCreditSaleId = new HashMap<>();
-
-        if (partsArr != null && partsArr.isArray()) {
-            for (JsonNode part : partsArr) {
-                allParts.add(part);
-            }
-        }
-
-        if (creditSalesArr != null && creditSalesArr.isArray()) {
-            for (JsonNode cs : creditSalesArr) {
-                String parentUuid = str(cs, "id");
-                JsonNode nestedParts = cs.path("parts");
-                if (!nestedParts.isMissingNode() && nestedParts.isArray()) {
-                    for (JsonNode part : nestedParts) {
-                        allParts.add(part);
-                        if (parentUuid != null) {
-                            String partId = str(part, "id");
-                            if (partId != null) {
-                                partToParentCreditSaleId.put(partId, parentUuid);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if (!allParts.isEmpty()) {
-            String sql = "INSERT OR IGNORE INTO credit_sale_parts " +
-                    "(id, credit_sale_id, product_id, description, quantity, unit_price, total, created_at, sync_status) " +
-                    "VALUES (?,?,?,?,?,?,?,?,1)";
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                for (JsonNode r : allParts) {
-                    String partId = str(r, "id");
-                    String creditSaleId = str(r, "creditSaleId");
-                    if (creditSaleId == null) {
-                        JsonNode csNode = r.path("creditSale");
-                        if (!csNode.isMissingNode() && !csNode.isNull()) {
-                            creditSaleId = str(csNode, "id");
-                        }
-                    }
-                    if (creditSaleId == null) {
-                        creditSaleId = str(r, "credit_sale_id");
-                    }
-                    if (creditSaleId == null && partId != null) {
-                        creditSaleId = partToParentCreditSaleId.get(partId);
-                    }
-
-                    ps.setString(1, partId);
-                    ps.setString(2, creditSaleId);
-                    ps.setString(3, str(r, "productId"));
-                    ps.setString(4, str(r, "description"));
-                    ps.setObject(5, num(r, "quantity"));
-                    ps.setObject(6, dbl(r, "unitPrice"));
-                    ps.setObject(7, dbl(r, "total"));
-                    ps.setString(8, str(r, "createdAt"));
-                    ps.addBatch();
-                }
-                ps.executeBatch();
-            }
-        }
-        log("  Restored: credit_sale_parts (" + allParts.size() + " rows)");
     }
 }

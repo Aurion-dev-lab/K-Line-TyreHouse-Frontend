@@ -31,6 +31,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -739,13 +740,7 @@ public class DashboardController implements Initializable {
                  "SELECT COALESCE(SUM(grand_total),0) FROM invoices " +
                          "WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?",
                  startDate, endDate);
-         double invoiceCost = sumAmount(conn,
-                 "SELECT COALESCE(SUM(il.qty * COALESCE(p.buy_price,0)),0) " +
-                         "FROM invoice_line_items il " +
-                         "LEFT JOIN products p ON p.id = il.product_id " +
-                         "JOIN invoices i ON i.id = il.invoice_ref " +
-                         "WHERE i.status = 'completed' AND COALESCE(i.invoice_date, DATE(i.created_at)) BETWEEN ? AND ?",
-                 startDate, endDate);
+         double invoiceCost = calculateInvoiceProductCost(conn, startDate, endDate);
          double invoiceProfit = invoiceRevenue - invoiceCost;
          double servicesProfit = sumAmount(conn,
                  "SELECT COALESCE(SUM(price),0) FROM services WHERE service_date BETWEEN ? AND ?",
@@ -801,6 +796,45 @@ public class DashboardController implements Initializable {
             return active;
         }
         return countRows(conn, "SELECT COUNT(*) FROM workers", null, null);
+    }
+
+    private double calculateInvoiceProductCost(Connection conn, LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT line_items FROM invoices WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?";
+        com.fasterxml.jackson.databind.ObjectMapper mapper = com.gui.kline.utils.JsonUtil.createObjectMapper();
+        java.util.Map<String, Double> productBuyPrices = new java.util.HashMap<>();
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT id, buy_price FROM products")) {
+            while (rs.next()) {
+                productBuyPrices.put(rs.getString("id"), rs.getDouble("buy_price"));
+            }
+        } catch (SQLException ignored) {}
+
+        double totalCost = 0.0;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, startDate.toString());
+            ps.setString(2, endDate.toString());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String lineItemsJson = rs.getString(1);
+                    if (lineItemsJson != null && !lineItemsJson.isBlank()) {
+                        try {
+                            List<com.gui.kline.models.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.LineItem>>() {});
+                            if (items != null) {
+                                for (com.gui.kline.models.LineItem item : items) {
+                                    if (item.getProductId() != null) {
+                                        double buyPrice = productBuyPrices.getOrDefault(item.getProductId(), 0.0);
+                                        totalCost += item.getQty() * buyPrice;
+                                    }
+                                }
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to calculate invoice cost: " + ex.getMessage());
+        }
+        return totalCost;
     }
 
     private double sumAmount(Connection conn, String sql, LocalDate startDate, LocalDate endDate) throws SQLException {

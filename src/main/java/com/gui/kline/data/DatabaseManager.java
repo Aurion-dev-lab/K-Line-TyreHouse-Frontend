@@ -46,6 +46,7 @@ public final class DatabaseManager {
                     "vehicle_type TEXT," +
                     "material TEXT," +
                     "supplier_name TEXT," +
+                    "image_path TEXT," +
                     "created_at DATETIME," +
                     "updated_at DATETIME NOT NULL," +
                     "sync_status INTEGER NOT NULL DEFAULT 0" +
@@ -79,24 +80,10 @@ public final class DatabaseManager {
                     "subtotal REAL NOT NULL DEFAULT 0," +
                     "tax REAL NOT NULL DEFAULT 0," +
                     "grand_total REAL NOT NULL DEFAULT 0," +
+                    "line_items TEXT," +
                     "created_at DATETIME NOT NULL," +
                     "updated_at DATETIME," +
                     "sync_status INTEGER NOT NULL DEFAULT 0" +
-                    ")");
-
-            statement.execute("CREATE TABLE IF NOT EXISTS invoice_line_items (" +
-                    "id TEXT PRIMARY KEY," +
-                    "invoice_id TEXT," +
-                    "invoice_ref TEXT NOT NULL," +
-                    "product_id TEXT," +
-                    "description TEXT," +
-                    "type TEXT," +
-                    "qty INTEGER," +
-                    "unit_price REAL," +
-                    "total REAL," +
-                    "created_at DATETIME NOT NULL," +
-                    "sync_status INTEGER NOT NULL DEFAULT 0," +
-                    "FOREIGN KEY (invoice_ref) REFERENCES invoices(id) ON DELETE CASCADE" +
                     ")");
 
             statement.execute("CREATE TABLE IF NOT EXISTS credit_sales (" +
@@ -116,25 +103,14 @@ public final class DatabaseManager {
                     "extra_parts REAL DEFAULT 0.00," +
                     "discount_amount REAL DEFAULT 0.00," +
                     "status TEXT," +
+                    "parts TEXT," +
                     "created_at DATETIME NOT NULL," +
                     "updated_at DATETIME," +
                     "sync_status INTEGER NOT NULL DEFAULT 0" +
                     ")");
 
-            statement.execute("CREATE TABLE IF NOT EXISTS credit_sale_parts (" +
-                    "id TEXT PRIMARY KEY," +
-                    "credit_sale_id TEXT NOT NULL," +
-                    "product_id TEXT," +
-                    "description TEXT," +
-                    "quantity INTEGER," +
-                    "unit_price REAL," +
-                    "total REAL," +
-                    "created_at DATETIME NOT NULL," +
-                    "sync_status INTEGER NOT NULL DEFAULT 0," +
-                    "FOREIGN KEY (credit_sale_id) REFERENCES credit_sales(id) ON DELETE CASCADE," +
-                    "FOREIGN KEY (product_id) REFERENCES products(id)" +
-                    ")");
-            statement.execute("CREATE INDEX IF NOT EXISTS idx_credit_sale_id ON credit_sale_parts (credit_sale_id)");
+            statement.execute("DROP TABLE IF EXISTS invoice_line_items");
+            statement.execute("DROP TABLE IF EXISTS credit_sale_parts");
 
             statement.execute("CREATE TABLE IF NOT EXISTS services (" +
                     "id TEXT PRIMARY KEY," +

@@ -34,6 +34,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -229,24 +230,30 @@ public class ServicesController implements Initializable {
     }
 
     private void loadInvoiceServiceRows(Connection conn) throws SQLException {
-        String sql = "SELECT i.id, COALESCE(i.invoice_date, DATE(i.created_at)) AS d, " +
-                "il.description, COALESCE(il.total, il.qty * il.unit_price) AS total " +
-                "FROM invoice_line_items il " +
-                "JOIN invoices i ON i.id = il.invoice_ref " +
-                "WHERE il.type = 'Service'";
+        String sql = "SELECT id, COALESCE(invoice_date, DATE(created_at)) AS d, line_items FROM invoices WHERE line_items IS NOT NULL AND line_items != ''";
+        com.fasterxml.jackson.databind.ObjectMapper mapper = com.gui.kline.utils.JsonUtil.createObjectMapper();
         try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 String id = rs.getString(1);
                 LocalDate serviceDate = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 2);
-                String name = rs.getString(3);
-                double price = rs.getDouble(4);
-                
-                ServiceRecord record = new ServiceRecord(serviceDate, name, "Invoiced service", price);
-                record.setId(id);
-                record.setSourceTable("invoice_line_items");
-                record.setIsQuickService(false);
-                services.add(record);
+                String lineItemsJson = rs.getString(3);
+                if (lineItemsJson != null && !lineItemsJson.isBlank()) {
+                    try {
+                        List<com.gui.kline.models.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.LineItem>>() {});
+                        if (items != null) {
+                            for (com.gui.kline.models.LineItem item : items) {
+                                if ("Service".equalsIgnoreCase(item.getType())) {
+                                    ServiceRecord record = new ServiceRecord(serviceDate, item.getDescription(), "Invoiced service", item.getTotal());
+                                    record.setId(id);
+                                    record.setSourceTable("invoices");
+                                    record.setIsQuickService(false);
+                                    services.add(record);
+                                }
+                            }
+                        }
+                    } catch (Exception ignored) { }
+                }
             }
         }
     }
@@ -351,13 +358,8 @@ public class ServicesController implements Initializable {
                     ps.executeUpdate();
                     DatabaseManager.logDeletion("services", id);
                 }
-            } else if ("invoice_line_items".equals(sourceTable)) {
-                try (PreparedStatement ps = conn.prepareStatement(
-                        "DELETE FROM invoice_line_items WHERE id = ?")) {
-                    ps.setString(1, id);
-                    ps.executeUpdate();
-                    DatabaseManager.logDeletion("invoice_line_items", id);
-                }
+            } else if ("invoices".equals(sourceTable)) {
+                // Invoiced service item deletion handled via invoice repository if needed
             }
         } catch (SQLException ex) {
             System.err.println("Error deleting service: " + ex.getMessage());

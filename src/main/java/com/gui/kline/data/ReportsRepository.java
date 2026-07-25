@@ -23,48 +23,39 @@ public class ReportsRepository {
      */
     public List<ReportsController.SaleItem> getSalesData(LocalDate startDate, LocalDate endDate) {
         List<ReportsController.SaleItem> sales = new ArrayList<>();
-        
-        // Get data from invoices and line items
-        String sql = "SELECT " +
-                "    i.invoice_date as sale_date, " +
-                "    COALESCE(p.name, il.description) as product_name, " +
-                "    il.qty as quantity, " +
-                "    il.total as revenue, " +
-                "    (il.unit_price - COALESCE(p.buy_price, 0)) * il.qty as profit " +
-                "FROM invoice_line_items il " +
-                "LEFT JOIN invoices i ON il.invoice_ref = i.id OR il.invoice_id = i.invoice_id " +
-                "LEFT JOIN products p ON il.product_id = p.id " +
-                "WHERE i.status = 'completed' AND i.invoice_date BETWEEN ? AND ? " +
-                "ORDER BY i.invoice_date DESC, product_name";
-        
+        String sql = "SELECT invoice_date, line_items FROM invoices WHERE status = 'completed' AND invoice_date BETWEEN ? AND ?";
+        com.fasterxml.jackson.databind.ObjectMapper mapper = com.gui.kline.utils.JsonUtil.createObjectMapper();
+        java.util.Map<String, Double> productBuyPrices = loadProductBuyPrices();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            
             statement.setString(1, startDate.toString());
             statement.setString(2, endDate.toString());
-            
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "sale_date");
+                    LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "invoice_date");
                     if (date == null) date = LocalDate.now();
-                    String productName = rs.getString("product_name");
-                    if (productName == null || productName.isBlank()) {
-                        productName = "Unknown Product";
+                    String lineItemsJson = rs.getString("line_items");
+                    if (lineItemsJson != null && !lineItemsJson.isBlank()) {
+                        try {
+                            List<com.gui.kline.models.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.LineItem>>() {});
+                            if (items != null) {
+                                for (com.gui.kline.models.LineItem item : items) {
+                                    String name = item.getDescription() != null ? item.getDescription() : "Unknown Product";
+                                    int qty = item.getQty();
+                                    double revenue = item.getTotal();
+                                    double buyPrice = item.getProductId() != null ? productBuyPrices.getOrDefault(item.getProductId(), 0.0) : 0.0;
+                                    double profit = (item.getUnitPrice() - buyPrice) * qty;
+                                    sales.add(new ReportsController.SaleItem(name, date, qty, revenue, profit));
+                                }
+                            }
+                        } catch (Exception ignored) {}
                     }
-                    int qty = rs.getInt("quantity");
-                    double revenue = rs.getDouble("revenue");
-                    double profit = rs.getDouble("profit");
-                    
-                    sales.add(new ReportsController.SaleItem(
-                        productName, date, qty, revenue, profit
-                    ));
                 }
             }
         } catch (SQLException ex) {
             System.err.println("Failed to load sales data for reports: " + ex.getMessage());
-            ex.printStackTrace();
         }
-        
+
         // Also include credit sales data
         String creditSql = "SELECT " +
                 "    cs.sale_date, " +
@@ -91,10 +82,6 @@ public class ReportsRepository {
                         customerName = "Credit Sale";
                     }
                     double revenue = rs.getDouble("revenue");
-                    double paidAmount = rs.getDouble("paid_amount");
-                    double balance = rs.getDouble("balance");
-                    
-                    // Estimate profit margin (assuming 30% for credit sales)
                     double profit = revenue * 0.3;
                     
                     sales.add(new ReportsController.SaleItem(
@@ -105,8 +92,21 @@ public class ReportsRepository {
         } catch (SQLException ex) {
             System.err.println("Failed to load credit sales data: " + ex.getMessage());
         }
-        
+
         return sales;
+    }
+
+    private java.util.Map<String, Double> loadProductBuyPrices() {
+        java.util.Map<String, Double> map = new java.util.HashMap<>();
+        String sql = "SELECT id, buy_price FROM products";
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                map.put(rs.getString("id"), rs.getDouble("buy_price"));
+            }
+        } catch (SQLException ignored) {}
+        return map;
     }
 
     /**
@@ -431,23 +431,36 @@ public class ReportsRepository {
     }
 
     private double getCompletedInvoiceProductCost(LocalDate startDate, LocalDate endDate) {
-        String sql = "SELECT COALESCE(SUM(il.qty * COALESCE(p.buy_price, 0)), 0) " +
-                "FROM invoice_line_items il " +
-                "JOIN invoices i ON i.id = il.invoice_ref " +
-                "LEFT JOIN products p ON p.id = il.product_id " +
-                "WHERE i.status = 'completed' AND i.invoice_date BETWEEN ? AND ?";
-
+        String sql = "SELECT line_items FROM invoices WHERE status = 'completed' AND invoice_date BETWEEN ? AND ?";
+        com.fasterxml.jackson.databind.ObjectMapper mapper = com.gui.kline.utils.JsonUtil.createObjectMapper();
+        java.util.Map<String, Double> productBuyPrices = loadProductBuyPrices();
+        double totalCost = 0.0;
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, startDate.toString());
             statement.setString(2, endDate.toString());
             try (ResultSet rs = statement.executeQuery()) {
-                return rs.next() ? rs.getDouble(1) : 0.0;
+                while (rs.next()) {
+                    String lineItemsJson = rs.getString("line_items");
+                    if (lineItemsJson != null && !lineItemsJson.isBlank()) {
+                        try {
+                            List<com.gui.kline.models.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.LineItem>>() {});
+                            if (items != null) {
+                                for (com.gui.kline.models.LineItem item : items) {
+                                    if (item.getProductId() != null) {
+                                        double buyPrice = productBuyPrices.getOrDefault(item.getProductId(), 0.0);
+                                        totalCost += item.getQty() * buyPrice;
+                                    }
+                                }
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
             }
         } catch (SQLException ex) {
             System.err.println("Failed to calculate completed invoice product cost: " + ex.getMessage());
-            return 0.0;
         }
+        return totalCost;
     }
 
     private double getTyreExportCosts(LocalDate startDate, LocalDate endDate) {
@@ -473,39 +486,38 @@ public class ReportsRepository {
      */
     public ObservableList<TopProduct> getTopSellingProducts(LocalDate startDate, LocalDate endDate, int limit) {
         ObservableList<TopProduct> topProducts = FXCollections.observableArrayList();
-        
-        String sql = "SELECT " +
-                "    p.name as product_name, " +
-                "    SUM(il.qty) as total_quantity, " +
-                "    SUM(il.total) as total_revenue " +
-                "FROM invoice_line_items il " +
-                "LEFT JOIN invoices i ON il.invoice_id = i.invoice_id " +
-                "LEFT JOIN products p ON il.product_id = p.id " +
-                "WHERE i.status = 'completed' AND i.invoice_date BETWEEN ? AND ? " +
-                "GROUP BY p.id, p.name " +
-                "ORDER BY total_revenue DESC " +
-                "LIMIT ?";
-        
+        String sql = "SELECT line_items FROM invoices WHERE status = 'completed' AND invoice_date BETWEEN ? AND ?";
+        com.fasterxml.jackson.databind.ObjectMapper mapper = com.gui.kline.utils.JsonUtil.createObjectMapper();
+        java.util.Map<String, double[]> productStats = new java.util.HashMap<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            
             statement.setString(1, startDate.toString());
             statement.setString(2, endDate.toString());
-            statement.setInt(3, limit);
-            
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    String productName = rs.getString("product_name");
-                    int quantity = rs.getInt("total_quantity");
-                    double revenue = rs.getDouble("total_revenue");
-                    
-                    topProducts.add(new TopProduct(productName, quantity, revenue));
+                    String lineItemsJson = rs.getString("line_items");
+                    if (lineItemsJson != null && !lineItemsJson.isBlank()) {
+                        try {
+                            List<com.gui.kline.models.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.LineItem>>() {});
+                            if (items != null) {
+                                for (com.gui.kline.models.LineItem item : items) {
+                                    String name = item.getDescription() != null ? item.getDescription() : "Unknown";
+                                    double[] stats = productStats.computeIfAbsent(name, k -> new double[]{0, 0});
+                                    stats[0] += item.getQty();
+                                    stats[1] += item.getTotal();
+                                }
+                            }
+                        } catch (Exception ignored) {}
+                    }
                 }
             }
         } catch (SQLException ex) {
             System.err.println("Failed to load top selling products: " + ex.getMessage());
         }
-        
+        productStats.entrySet().stream()
+                .sorted((a, b) -> Double.compare(b.getValue()[1], a.getValue()[1]))
+                .limit(limit)
+                .forEach(e -> topProducts.add(new TopProduct(e.getKey(), (int)e.getValue()[0], e.getValue()[1])));
         return topProducts;
     }
 
@@ -514,39 +526,37 @@ public class ReportsRepository {
      */
     public ObservableList<DailySummary> getDailySalesSummary(LocalDate startDate, LocalDate endDate) {
         ObservableList<DailySummary> dailySummaries = FXCollections.observableArrayList();
-        
-        String sql = "SELECT " +
-                "    i.invoice_date as sale_date, " +
-                "    COUNT(DISTINCT il.invoice_id) as invoice_count, " +
-                "    SUM(il.qty) as total_items, " +
-                "    SUM(il.total) as total_revenue " +
-                "FROM invoice_line_items il " +
-                "LEFT JOIN invoices i ON il.invoice_id = i.invoice_id " +
-                "WHERE i.status = 'completed' AND i.invoice_date BETWEEN ? AND ? " +
-                "GROUP BY i.invoice_date " +
-                "ORDER BY i.invoice_date";
-        
+        String sql = "SELECT invoice_date, line_items FROM invoices WHERE status = 'completed' AND invoice_date BETWEEN ? AND ?";
+        com.fasterxml.jackson.databind.ObjectMapper mapper = com.gui.kline.utils.JsonUtil.createObjectMapper();
+        java.util.Map<LocalDate, double[]> dailyMap = new java.util.TreeMap<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            
             statement.setString(1, startDate.toString());
             statement.setString(2, endDate.toString());
-            
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "sale_date");
+                    LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "invoice_date");
                     if (date == null) date = LocalDate.now();
-                    int invoiceCount = rs.getInt("invoice_count");
-                    int totalItems = rs.getInt("total_items");
-                    double totalRevenue = rs.getDouble("total_revenue");
-                    
-                    dailySummaries.add(new DailySummary(date, invoiceCount, totalItems, totalRevenue));
+                    double[] stats = dailyMap.computeIfAbsent(date, k -> new double[]{0, 0, 0});
+                    stats[0] += 1;
+                    String lineItemsJson = rs.getString("line_items");
+                    if (lineItemsJson != null && !lineItemsJson.isBlank()) {
+                        try {
+                            List<com.gui.kline.models.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.LineItem>>() {});
+                            if (items != null) {
+                                for (com.gui.kline.models.LineItem item : items) {
+                                    stats[1] += item.getQty();
+                                    stats[2] += item.getTotal();
+                                }
+                            }
+                        } catch (Exception ignored) {}
+                    }
                 }
             }
         } catch (SQLException ex) {
             System.err.println("Failed to load daily sales summary: " + ex.getMessage());
         }
-        
+        dailyMap.forEach((date, stats) -> dailySummaries.add(new DailySummary(date, (int)stats[0], (int)stats[1], stats[2])));
         return dailySummaries;
     }
 

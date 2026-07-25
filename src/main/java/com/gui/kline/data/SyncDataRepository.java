@@ -19,8 +19,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 public class SyncDataRepository {
 
     private static final String[] SYNC_TABLES = {
-        "credit_sale_parts", "credit_sales", "customers", "expenses",
-        "invoice_line_items", "invoices", "product_images", "products", "quick_service_presets",
+        "credit_sales", "customers", "expenses",
+        "invoices", "product_images", "products", "quick_service_presets",
         "quick_services", "salary_advances", "salary_payments", "services",
         "tyre_exports", "worker_attendance", "worker_credits", "workers"
     };

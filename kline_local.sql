@@ -40,45 +40,6 @@ CREATE TABLE `sync_tombstones` (
 --
 
 
---
--- Table structure for table `credit_sale_parts`
---
-
-DROP TABLE IF EXISTS `credit_sale_parts`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `credit_sale_parts` (
-  `id` varchar(36) NOT NULL,
-  `credit_sale_id` varchar(36) NOT NULL,
-  `product_id` varchar(36) DEFAULT NULL,
-  `description` varchar(255) DEFAULT NULL,
-  `quantity` int(11) DEFAULT NULL,
-  `unit_price` decimal(12,2) DEFAULT NULL,
-  `total` decimal(12,2) DEFAULT NULL,
-  `created_at` datetime NOT NULL,
-  `sync_status` tinyint(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `product_id` (`product_id`),
-  KEY `idx_credit_sale_id` (`credit_sale_id`),
-  CONSTRAINT `credit_sale_parts_ibfk_1` FOREIGN KEY (`credit_sale_id`) REFERENCES `credit_sales` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `credit_sale_parts_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `credit_sale_parts`
---
-
-LOCK TABLES `credit_sale_parts` WRITE;
-/*!40000 ALTER TABLE `credit_sale_parts` DISABLE KEYS */;
-INSERT INTO `credit_sale_parts` VALUES ('a0d8a7b4-82c8-11f1-a4a0-4ad00a5d2118','a0d7024c-82c8-11f1-a4a0-4ad00a5d2118','31561dbe-c583-427b-9c6f-18cc648ce9a7','PD3453 - Tyre2',20,1500.00,30000.00,'2026-07-18 22:19:22',0);
-/*!40000 ALTER TABLE `credit_sale_parts` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `credit_sales`
---
-
 DROP TABLE IF EXISTS `credit_sales`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -93,6 +54,7 @@ CREATE TABLE `credit_sales` (
   `paid_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
   `amount` decimal(12,2) NOT NULL DEFAULT 0.00,
   `status` varchar(32) DEFAULT NULL,
+  `parts` longtext DEFAULT NULL,
   `created_at` datetime NOT NULL,
   `updated_at` datetime DEFAULT NULL,
   `sync_status` tinyint(1) NOT NULL DEFAULT 0,
@@ -112,7 +74,7 @@ CREATE TABLE `credit_sales` (
 
 LOCK TABLES `credit_sales` WRITE;
 /*!40000 ALTER TABLE `credit_sales` DISABLE KEYS */;
-INSERT INTO `credit_sales` VALUES ('a0d7024c-82c8-11f1-a4a0-4ad00a5d2118','4200',NULL,'testc','2026-07-18','2026-08-17',30020.00,30020.00,0.00,'PAID','2026-07-18 22:19:22',NULL,0,1000.00,20.00,1000.00,0.00,0.00,0.00);
+INSERT INTO `credit_sales` VALUES ('a0d7024c-82c8-11f1-a4a0-4ad00a5d2118','4200',NULL,'testc','2026-07-18','2026-08-17',30020.00,30020.00,0.00,'PAID','[{\"description\":\"PD3453 - Tyre2\",\"category\":\"Sale\",\"quantity\":20,\"unitPrice\":1500.0,\"productId\":\"31561dbe-c583-427b-9c6f-18cc648ce9a7\"}]','2026-07-18 22:19:22',NULL,0,1000.00,20.00,1000.00,0.00,0.00,0.00);
 /*!40000 ALTER TABLE `credit_sales` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -172,45 +134,6 @@ LOCK TABLES `expenses` WRITE;
 /*!40000 ALTER TABLE `expenses` ENABLE KEYS */;
 UNLOCK TABLES;
 
---
--- Table structure for table `invoice_line_items`
---
-
-DROP TABLE IF EXISTS `invoice_line_items`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `invoice_line_items` (
-  `id` varchar(36) NOT NULL,
-  `invoice_id` varchar(64) DEFAULT NULL,
-  `invoice_ref` varchar(36) NOT NULL,
-  `product_id` varchar(36) DEFAULT NULL,
-  `description` varchar(255) DEFAULT NULL,
-  `type` varchar(32) DEFAULT NULL,
-  `qty` int(11) DEFAULT NULL,
-  `unit_price` decimal(12,2) DEFAULT NULL,
-  `total` decimal(12,2) DEFAULT NULL,
-  `created_at` datetime NOT NULL,
-  `sync_status` tinyint(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `invoice_ref` (`invoice_ref`),
-  CONSTRAINT `invoice_line_items_ibfk_1` FOREIGN KEY (`invoice_ref`) REFERENCES `invoices` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `invoice_line_items`
---
-
-LOCK TABLES `invoice_line_items` WRITE;
-/*!40000 ALTER TABLE `invoice_line_items` DISABLE KEYS */;
-INSERT INTO `invoice_line_items` VALUES ('58069dac-82c8-11f1-a4a0-4ad00a5d2118','INV-88623','5805d804-82c8-11f1-a4a0-4ad00a5d2118','31561dbe-c583-427b-9c6f-18cc648ce9a7','PD3453 - Tyre2','Sale',2,1500.00,3000.00,'2026-07-18 22:17:20',0),('5806ca20-82c8-11f1-a4a0-4ad00a5d2118','INV-88623','5805d804-82c8-11f1-a4a0-4ad00a5d2118',NULL,'Labour','Service',1,2000.00,2000.00,'2026-07-18 22:17:20',0),('5806f252-82c8-11f1-a4a0-4ad00a5d2118','INV-88623','5805d804-82c8-11f1-a4a0-4ad00a5d2118',NULL,'Additional parts','Service',1,299.00,299.00,'2026-07-18 22:17:20',0),('713dac3e-82c8-11f1-a4a0-4ad00a5d2118','INV-12436','1a5a4ac6-82c8-11f1-a4a0-4ad00a5d2118','31561dbe-c583-427b-9c6f-18cc648ce9a7','PD3453 - Tyre2','Sale',2,1500.00,3000.00,'2026-07-18 22:18:03',0),('713dc5f2-82c8-11f1-a4a0-4ad00a5d2118','INV-12436','1a5a4ac6-82c8-11f1-a4a0-4ad00a5d2118',NULL,'Labour','Service',1,20.00,20.00,'2026-07-18 22:18:03',0),('713df5ae-82c8-11f1-a4a0-4ad00a5d2118','INV-12436','1a5a4ac6-82c8-11f1-a4a0-4ad00a5d2118',NULL,'Additional parts','Service',1,100.00,100.00,'2026-07-18 22:18:03',0),('9a912962-82c8-11f1-a4a0-4ad00a5d2118','INV1784393352337','9a9092e0-82c8-11f1-a4a0-4ad00a5d2118','31561dbe-c583-427b-9c6f-18cc648ce9a7','PD3453 - Tyre2','Sale',20,1500.00,30000.00,'2026-07-18 22:19:12',0);
-/*!40000 ALTER TABLE `invoice_line_items` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `invoices`
---
-
 DROP TABLE IF EXISTS `invoices`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -224,6 +147,7 @@ CREATE TABLE `invoices` (
   `subtotal` decimal(12,2) NOT NULL DEFAULT 0.00,
   `tax` decimal(12,2) NOT NULL DEFAULT 0.00,
   `grand_total` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `line_items` longtext DEFAULT NULL,
   `created_at` datetime NOT NULL,
   `updated_at` datetime DEFAULT NULL,
   `sync_status` tinyint(1) NOT NULL DEFAULT 0,
@@ -238,7 +162,10 @@ CREATE TABLE `invoices` (
 
 LOCK TABLES `invoices` WRITE;
 /*!40000 ALTER TABLE `invoices` DISABLE KEYS */;
-INSERT INTO `invoices` VALUES ('1a5a4ac6-82c8-11f1-a4a0-4ad00a5d2118','INV-12436','pika','2026-07-18','Sale','completed',3120.00,0.00,2820.00,'2026-07-18 22:15:37','2026-07-18 22:18:03',0),('5805d804-82c8-11f1-a4a0-4ad00a5d2118','INV-88623','mw','2026-07-18','Sale','quotation',5299.00,0.00,5267.00,'2026-07-18 22:17:20',NULL,0),('9a9092e0-82c8-11f1-a4a0-4ad00a5d2118','INV1784393352337','testc','2026-07-18','Credit Sale','completed',30000.00,0.00,30000.00,'2026-07-18 22:19:12',NULL,0);
+INSERT INTO `invoices` VALUES 
+('1a5a4ac6-82c8-11f1-a4a0-4ad00a5d2118','INV-12436','pika','2026-07-18','Sale','completed',3120.00,0.00,2820.00,'[{\"id\":\"713dac3e-82c8-11f1-a4a0-4ad00a5d2118\",\"invoiceId\":\"INV-12436\",\"productId\":\"31561dbe-c583-427b-9c6f-18cc648ce9a7\",\"description\":\"PD3453 - Tyre2\",\"type\":\"Sale\",\"qty\":2,\"unitPrice\":1500.0,\"total\":3000.0},{\"id\":\"713dc5f2-82c8-11f1-a4a0-4ad00a5d2118\",\"invoiceId\":\"INV-12436\",\"description\":\"Labour\",\"type\":\"Service\",\"qty\":1,\"unitPrice\":20.0,\"total\":20.0},{\"id\":\"713df5ae-82c8-11f1-a4a0-4ad00a5d2118\",\"invoiceId\":\"INV-12436\",\"description\":\"Additional parts\",\"type\":\"Service\",\"qty\":1,\"unitPrice\":100.0,\"total\":100.0}]','2026-07-18 22:15:37','2026-07-18 22:18:03',0),
+('5805d804-82c8-11f1-a4a0-4ad00a5d2118','INV-88623','mw','2026-07-18','Sale','quotation',5299.00,0.00,5267.00,'[{\"id\":\"58069dac-82c8-11f1-a4a0-4ad00a5d2118\",\"invoiceId\":\"INV-88623\",\"productId\":\"31561dbe-c583-427b-9c6f-18cc648ce9a7\",\"description\":\"PD3453 - Tyre2\",\"type\":\"Sale\",\"qty\":2,\"unitPrice\":1500.0,\"total\":3000.0},{\"id\":\"5806ca20-82c8-11f1-a4a0-4ad00a5d2118\",\"invoiceId\":\"INV-88623\",\"description\":\"Labour\",\"type\":\"Service\",\"qty\":1,\"unitPrice\":2000.0,\"total\":2000.0},{\"id\":\"5806f252-82c8-11f1-a4a0-4ad00a5d2118\",\"invoiceId\":\"INV-88623\",\"description\":\"Additional parts\",\"type\":\"Service\",\"qty\":1,\"unitPrice\":299.0,\"total\":299.0}]','2026-07-18 22:17:20',NULL,0),
+('9a9092e0-82c8-11f1-a4a0-4ad00a5d2118','INV1784393352337','testc','2026-07-18','Credit Sale','completed',30000.00,0.00,30000.00,'[{\"id\":\"9a912962-82c8-11f1-a4a0-4ad00a5d2118\",\"invoiceId\":\"INV1784393352337\",\"productId\":\"31561dbe-c583-427b-9c6f-18cc648ce9a7\",\"description\":\"PD3453 - Tyre2\",\"type\":\"Sale\",\"qty\":20,\"unitPrice\":1500.0,\"total\":30000.0}]','2026-07-18 22:19:12',NULL,0);
 /*!40000 ALTER TABLE `invoices` ENABLE KEYS */;
 UNLOCK TABLES;
 

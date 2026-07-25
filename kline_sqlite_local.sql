@@ -120,6 +120,7 @@ CREATE TABLE `invoices` (
   `subtotal` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
   `tax` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
   `grand_total` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  `line_items` TEXT DEFAULT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_at` DATETIME DEFAULT NULL,
   `sync_status` TINYINT(1) NOT NULL DEFAULT 0,
@@ -131,36 +132,10 @@ CREATE TABLE `invoices` (
 -- Dumping data for table `invoices`
 --
 
-INSERT INTO `invoices` VALUES ('1a5a4ac6-82c8-11f1-a4a0-4ad00a5d2118','INV-12436','pika','2026-07-18','Sale','completed',3120.00,0.00,2820.00,'2026-07-18 22:15:37','2026-07-18 22:18:03',0),('5805d804-82c8-11f1-a4a0-4ad00a5d2118','INV-88623','mw','2026-07-18','Sale','quotation',5299.00,0.00,5267.00,'2026-07-18 22:17:20',NULL,0),('9a9092e0-82c8-11f1-a4a0-4ad00a5d2118','INV1784393352337','testc','2026-07-18','Credit Sale','completed',30000.00,0.00,30000.00,'2026-07-18 22:19:12',NULL,0);
-
---
--- Table structure for table `invoice_line_items`
---
-
-DROP TABLE IF EXISTS `invoice_line_items`;
-CREATE TABLE `invoice_line_items` (
-  `id` TEXT NOT NULL,
-  `invoice_id` TEXT DEFAULT NULL,
-  `invoice_ref` TEXT NOT NULL,
-  `product_id` TEXT DEFAULT NULL,
-  `description` TEXT DEFAULT NULL,
-  `type` TEXT DEFAULT NULL,
-  `qty` INTEGER DEFAULT NULL,
-  `unit_price` DECIMAL(12,2) DEFAULT NULL,
-  `total` DECIMAL(12,2) DEFAULT NULL,
-  `created_at` DATETIME NOT NULL,
-  `sync_status` TINYINT(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`invoice_ref`) REFERENCES `invoices` (`id`) ON DELETE CASCADE
-);
-
-CREATE INDEX IF NOT EXISTS `idx_invoice_line_items_invoice_ref` ON `invoice_line_items` (`invoice_ref`);
-
---
--- Dumping data for table `invoice_line_items`
---
-
-INSERT INTO `invoice_line_items` VALUES ('58069dac-82c8-11f1-a4a0-4ad00a5d2118','INV-88623','5805d804-82c8-11f1-a4a0-4ad00a5d2118','31561dbe-c583-427b-9c6f-18cc648ce9a7','PD3453 - Tyre2','Sale',2,1500.00,3000.00,'2026-07-18 22:17:20',0),('5806ca20-82c8-11f1-a4a0-4ad00a5d2118','INV-88623','5805d804-82c8-11f1-a4a0-4ad00a5d2118',NULL,'Labour','Service',1,2000.00,2000.00,'2026-07-18 22:17:20',0),('5806f252-82c8-11f1-a4a0-4ad00a5d2118','INV-88623','5805d804-82c8-11f1-a4a0-4ad00a5d2118',NULL,'Additional parts','Service',1,299.00,299.00,'2026-07-18 22:17:20',0),('713dac3e-82c8-11f1-a4a0-4ad00a5d2118','INV-12436','1a5a4ac6-82c8-11f1-a4a0-4ad00a5d2118','31561dbe-c583-427b-9c6f-18cc648ce9a7','PD3453 - Tyre2','Sale',2,1500.00,3000.00,'2026-07-18 22:18:03',0),('713dc5f2-82c8-11f1-a4a0-4ad00a5d2118','INV-12436','1a5a4ac6-82c8-11f1-a4a0-4ad00a5d2118',NULL,'Labour','Service',1,20.00,20.00,'2026-07-18 22:18:03',0),('713df5ae-82c8-11f1-a4a0-4ad00a5d2118','INV-12436','1a5a4ac6-82c8-11f1-a4a0-4ad00a5d2118',NULL,'Additional parts','Service',1,100.00,100.00,'2026-07-18 22:18:03',0),('9a912962-82c8-11f1-a4a0-4ad00a5d2118','INV1784393352337','9a9092e0-82c8-11f1-a4a0-4ad00a5d2118','31561dbe-c583-427b-9c6f-18cc648ce9a7','PD3453 - Tyre2','Sale',20,1500.00,30000.00,'2026-07-18 22:19:12',0);
+INSERT INTO `invoices` VALUES 
+('1a5a4ac6-82c8-11f1-a4a0-4ad00a5d2118','INV-12436','pika','2026-07-18','Sale','completed',3120.00,0.00,2820.00,'[{"id":"713dac3e-82c8-11f1-a4a0-4ad00a5d2118","invoiceId":"INV-12436","productId":"31561dbe-c583-427b-9c6f-18cc648ce9a7","description":"PD3453 - Tyre2","type":"Sale","qty":2,"unitPrice":1500.0,"total":3000.0},{"id":"713dc5f2-82c8-11f1-a4a0-4ad00a5d2118","invoiceId":"INV-12436","description":"Labour","type":"Service","qty":1,"unitPrice":20.0,"total":20.0},{"id":"713df5ae-82c8-11f1-a4a0-4ad00a5d2118","invoiceId":"INV-12436","description":"Additional parts","type":"Service","qty":1,"unitPrice":100.0,"total":100.0}]','2026-07-18 22:15:37','2026-07-18 22:18:03',0),
+('5805d804-82c8-11f1-a4a0-4ad00a5d2118','INV-88623','mw','2026-07-18','Sale','quotation',5299.00,0.00,5267.00,'[{"id":"58069dac-82c8-11f1-a4a0-4ad00a5d2118","invoiceId":"INV-88623","productId":"31561dbe-c583-427b-9c6f-18cc648ce9a7","description":"PD3453 - Tyre2","type":"Sale","qty":2,"unitPrice":1500.0,"total":3000.0},{"id":"5806ca20-82c8-11f1-a4a0-4ad00a5d2118","invoiceId":"INV-88623","description":"Labour","type":"Service","qty":1,"unitPrice":2000.0,"total":2000.0},{"id":"5806f252-82c8-11f1-a4a0-4ad00a5d2118","invoiceId":"INV-88623","description":"Additional parts","type":"Service","qty":1,"unitPrice":299.0,"total":299.0}]','2026-07-18 22:17:20',NULL,0),
+('9a9092e0-82c8-11f1-a4a0-4ad00a5d2118','INV1784393352337','testc','2026-07-18','Credit Sale','completed',30000.00,0.00,30000.00,'[{"id":"9a912962-82c8-11f1-a4a0-4ad00a5d2118","invoiceId":"INV1784393352337","productId":"31561dbe-c583-427b-9c6f-18cc648ce9a7","description":"PD3453 - Tyre2","type":"Sale","qty":20,"unitPrice":1500.0,"total":30000.0}]','2026-07-18 22:19:12',NULL,0);
 
 --
 -- Table structure for table `credit_sales`
@@ -178,6 +153,7 @@ CREATE TABLE `credit_sales` (
   `paid_amount` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
   `amount` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
   `status` TEXT DEFAULT NULL,
+  `parts` TEXT DEFAULT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_at` DATETIME DEFAULT NULL,
   `sync_status` TINYINT(1) NOT NULL DEFAULT 0,
@@ -194,36 +170,7 @@ CREATE TABLE `credit_sales` (
 -- Dumping data for table `credit_sales`
 --
 
-INSERT INTO `credit_sales` VALUES ('a0d7024c-82c8-11f1-a4a0-4ad00a5d2118','4200',NULL,'testc','2026-07-18','2026-08-17',30020.00,30020.00,0.00,'PAID','2026-07-18 22:19:22',NULL,0,1000.00,20.00,1000.00,0.00,0.00,0.00);
-
---
--- Table structure for table `credit_sale_parts`
---
-
-DROP TABLE IF EXISTS `credit_sale_parts`;
-CREATE TABLE `credit_sale_parts` (
-  `id` TEXT NOT NULL,
-  `credit_sale_id` TEXT NOT NULL,
-  `product_id` TEXT DEFAULT NULL,
-  `description` TEXT DEFAULT NULL,
-  `quantity` INTEGER DEFAULT NULL,
-  `unit_price` DECIMAL(12,2) DEFAULT NULL,
-  `total` DECIMAL(12,2) DEFAULT NULL,
-  `created_at` DATETIME NOT NULL,
-  `sync_status` TINYINT(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`credit_sale_id`) REFERENCES `credit_sales` (`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`product_id`) REFERENCES `products` (`id`)
-);
-
-CREATE INDEX IF NOT EXISTS `idx_credit_sale_parts_product_id` ON `credit_sale_parts` (`product_id`);
-CREATE INDEX IF NOT EXISTS `idx_credit_sale_id` ON `credit_sale_parts` (`credit_sale_id`);
-
---
--- Dumping data for table `credit_sale_parts`
---
-
-INSERT INTO `credit_sale_parts` VALUES ('a0d8a7b4-82c8-11f1-a4a0-4ad00a5d2118','a0d7024c-82c8-11f1-a4a0-4ad00a5d2118','31561dbe-c583-427b-9c6f-18cc648ce9a7','PD3453 - Tyre2',20,1500.00,30000.00,'2026-07-18 22:19:22',0);
+INSERT INTO `credit_sales` VALUES ('a0d7024c-82c8-11f1-a4a0-4ad00a5d2118','4200',NULL,'testc','2026-07-18','2026-08-17',30020.00,30020.00,0.00,'PAID','[{"description":"PD3453 - Tyre2","category":"Sale","quantity":20,"unitPrice":1500.0,"productId":"31561dbe-c583-427b-9c6f-18cc648ce9a7"}]','2026-07-18 22:19:22',NULL,0,1000.00,20.00,1000.00,0.00,0.00,0.00);
 
 --
 -- Table structure for table `quick_service_presets`

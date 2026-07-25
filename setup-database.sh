@@ -55,23 +55,9 @@ CREATE TABLE IF NOT EXISTS invoices (
     subtotal DECIMAL(12,2) NOT NULL DEFAULT 0,
     tax DECIMAL(12,2) NOT NULL DEFAULT 0,
     grand_total DECIMAL(12,2) NOT NULL DEFAULT 0,
+    line_items LONGTEXT,
     created_at DATETIME NOT NULL,
     updated_at DATETIME
-) ENGINE=InnoDB;
-
--- Ensure invoice_line_items table exists
-CREATE TABLE IF NOT EXISTS invoice_line_items (
-    id VARCHAR(36) PRIMARY KEY,
-    invoice_id VARCHAR(64),
-    invoice_ref VARCHAR(36) NOT NULL,
-    product_id VARCHAR(36),
-    description VARCHAR(255),
-    type VARCHAR(32),
-    qty INT,
-    unit_price DECIMAL(12,2),
-    total DECIMAL(12,2),
-    created_at DATETIME NOT NULL,
-    FOREIGN KEY (invoice_ref) REFERENCES invoices(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- Ensure expenses table exists
@@ -126,16 +112,7 @@ ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_at DATETIME;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS updated_at DATETIME;
 
 -- Check if foreign key exists
-SELECT COUNT(*) as fk_exists
-FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-WHERE TABLE_NAME = 'invoice_line_items'
-AND COLUMN_NAME = 'invoice_ref'
-AND REFERENCED_TABLE_NAME = 'invoices';
-
-EOF
-
 echo "Validating database schema..."
-mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" < /tmp/validate_schema.sql > /dev/null 2>&1
 echo "✓ Schema validated and prepared"
 echo ""
 
@@ -148,14 +125,6 @@ else
     echo "✗ invoices table missing"
     exit 1
 fi
-
-TABLES=$(mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" "$DB_NAME" -e "SHOW TABLES LIKE 'invoice_line_items';" 2>&1)
-if [[ $TABLES == *"invoice_line_items"* ]]; then
-    echo "✓ invoice_line_items table exists"
-else
-    echo "✗ invoice_line_items table missing"
-    exit 1
-fi
 echo ""
 
 # Show table structures
@@ -165,13 +134,8 @@ echo "invoices table:"
 mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" "$DB_NAME" -e "SHOW COLUMNS FROM invoices;" 2>&1 | head -15
 echo ""
 
-echo "invoice_line_items table:"
-mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" "$DB_NAME" -e "SHOW COLUMNS FROM invoice_line_items;" 2>&1 | head -15
-echo ""
-
 # Check row counts
 INVOICE_COUNT=$(mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" "$DB_NAME" -e "SELECT COUNT(*) FROM invoices;" 2>&1 | tail -1)
-LINEITEMS_COUNT=$(mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" "$DB_NAME" -e "SELECT COUNT(*) FROM invoice_line_items;" 2>&1 | tail -1)
 
 echo "Data Summary:"
 echo "  Invoices: $INVOICE_COUNT records"

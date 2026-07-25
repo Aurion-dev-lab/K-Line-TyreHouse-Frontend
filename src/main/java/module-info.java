@@ -28,8 +28,10 @@ module com.gui.kline {
     exports com.gui.kline.view;
 
 
+    exports com.gui.kline.models;
+
     opens com.gui.kline.controller to javafx.fxml;
     exports com.gui.kline.controller.form;
     opens com.gui.kline.controller.form to javafx.fxml;
-    opens com.gui.kline.models to javafx.base;
+    opens com.gui.kline.models to javafx.base, com.fasterxml.jackson.databind;
 }

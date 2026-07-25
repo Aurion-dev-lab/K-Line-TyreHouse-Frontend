@@ -56,6 +56,8 @@ public class InvoicesController implements Initializable {
     @FXML private VBox  vboxLineItems;
     @FXML private Label lblSubtotal;
     @FXML private Label lblTax;
+    @FXML private HBox  hboxDiscount;
+    @FXML private Label lblDiscount;
     @FXML private Label lblGrandTotal;
     @FXML private Button btnDownloadPdf;
     // Removed: cboInvType, cboInvProduct, txtInvService, txtInvQty, txtInvAmount, btnAddToInvoice
@@ -466,6 +468,10 @@ public class InvoicesController implements Initializable {
         vboxLineItems.getChildren().clear();
         lblSubtotal.setText("Rs. 0.00");
         lblTax.setText("Rs. 0.00");
+        if (hboxDiscount != null) {
+            hboxDiscount.setVisible(false);
+            hboxDiscount.setManaged(false);
+        }
         lblGrandTotal.setText("Rs. 0.00");
     }
 
@@ -486,6 +492,17 @@ public class InvoicesController implements Initializable {
         if (currentInvoiceDetail == null) return;
         lblSubtotal.setText("Rs. " + String.format("%,.2f", currentInvoiceDetail.getSubtotal()));
         lblTax.setText("Rs. "      + String.format("%,.2f", currentInvoiceDetail.getTax()));
+        
+        double discount = currentInvoiceDetail.getDiscountAmount();
+        if (discount > 0 && hboxDiscount != null && lblDiscount != null) {
+            hboxDiscount.setVisible(true);
+            hboxDiscount.setManaged(true);
+            lblDiscount.setText("- Rs. " + String.format("%,.2f", discount));
+        } else if (hboxDiscount != null) {
+            hboxDiscount.setVisible(false);
+            hboxDiscount.setManaged(false);
+        }
+
         lblGrandTotal.setText("Rs. "+ String.format("%,.2f", currentInvoiceDetail.getGrandTotal()));
     }
 
