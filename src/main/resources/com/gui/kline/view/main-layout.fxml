@@ -46,6 +46,9 @@
                     <Button fx:id="btnSales" maxWidth="Infinity" onAction="#onSales" styleClass="nav-button" text="   Credit Sales">
                         <graphic><FontIcon iconLiteral="fas-shopping-cart" /></graphic>
                     </Button>
+                    <Button fx:id="btnCreditCustomers" maxWidth="Infinity" onAction="#onCreditCustomers" styleClass="nav-button" text="   Credit Customers">
+                        <graphic><FontIcon iconLiteral="fas-address-book" /></graphic>
+                    </Button>
                      <Button fx:id="btnTyreExports" maxWidth="Infinity" onAction="#onTyreExports" styleClass="nav-button" text="  Tyre Exports">
                          <graphic><FontIcon iconLiteral="fas-truck" /></graphic>
                      </Button>

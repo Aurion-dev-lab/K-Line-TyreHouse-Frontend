@@ -24,12 +24,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class LayoutController {
 
@@ -42,7 +36,7 @@ public class LayoutController {
 
     @FXML private Button btnHideQuick, btnCollapse, btnUpload;
     @FXML private Button btnDashboard, btnWorkers, btnInventory, btnInvoices,
-            btnServices, btnSales, btnTyreExports, btnExpenses, btnSalary,
+            btnServices, btnSales, btnCreditCustomers, btnTyreExports, btnExpenses, btnSalary,
             btnAnalytics, btnReports, btnQuickActions;
     @FXML private FontIcon connectionBulb;
 
@@ -172,6 +166,7 @@ public class LayoutController {
     @FXML private void onInvoices()    { setActive(btnInvoices, "Invoices & Billing", "invoices"); }
     @FXML private void onServices()    { setActive(btnServices, "Services", "services"); }
     @FXML private void onSales()       { setActive(btnSales, "Credit Sales", "credit-sales"); }
+    @FXML private void onCreditCustomers() { setActive(btnCreditCustomers, "Credit Customers", "credit-customers"); }
     @FXML private void onTyreExports() { setActive(btnTyreExports, "Tyre Exports", "tyre-exports"); }
     @FXML private void onExpenses()    { setActive(btnExpenses, "Expenses", "expenses"); }
     @FXML private void onSalary()      { setActive(btnSalary, "Salary Management", "salary"); }

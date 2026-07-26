@@ -61,14 +61,35 @@ public final class DatabaseManager {
                     ")");
             statement.execute("CREATE INDEX IF NOT EXISTS idx_product_id ON product_images (product_id)");
 
-            statement.execute("CREATE TABLE IF NOT EXISTS customers (" +
+            // Rename customers table to credit_customers if exists
+            try {
+                statement.execute("ALTER TABLE customers RENAME TO credit_customers");
+            } catch (SQLException e) {
+                // table doesn't exist or already renamed
+            }
+
+            statement.execute("CREATE TABLE IF NOT EXISTS credit_customers (" +
                     "id TEXT PRIMARY KEY," +
                     "name TEXT NOT NULL," +
                     "phone TEXT," +
+                    "email TEXT," +
+                    "address TEXT," +
                     "created_at DATETIME NOT NULL," +
+                    "updated_at DATETIME," +
                     "sync_status INTEGER NOT NULL DEFAULT 0," +
                     "UNIQUE (name, phone)" +
                     ")");
+
+            // Migration: ensure email, address, updated_at columns exist
+            try {
+                statement.execute("ALTER TABLE credit_customers ADD COLUMN email TEXT");
+            } catch (SQLException e) {}
+            try {
+                statement.execute("ALTER TABLE credit_customers ADD COLUMN address TEXT");
+            } catch (SQLException e) {}
+            try {
+                statement.execute("ALTER TABLE credit_customers ADD COLUMN updated_at DATETIME");
+            } catch (SQLException e) {}
 
             statement.execute("CREATE TABLE IF NOT EXISTS invoices (" +
                     "id TEXT PRIMARY KEY," +

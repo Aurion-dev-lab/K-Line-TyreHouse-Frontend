@@ -64,7 +64,7 @@ public class LocalRestoreService {
                     "credit_sales", "invoices",
                     "worker_attendance", "salary_advances", "salary_payments",
                     "worker_credits", "tyre_exports", "quick_services", "services",
-                    "customers", "workers", "products", "expenses", "quick_service_presets",
+                    "customers", "credit_customers", "workers", "products", "expenses", "quick_service_presets",
                     "sync_tombstones"
                 };
                 for (String table : wipeOrder) {
@@ -79,7 +79,7 @@ public class LocalRestoreService {
                 log("Restoring data from cloud snapshot...");
 
                 restoreProducts(conn,              getNode(data, "products", null));
-                restoreCustomers(conn,             getNode(data, "customers", null));
+                restoreCustomers(conn,             getNode(data, "creditCustomers", "credit_customers"));
                 restoreWorkers(conn,               getNode(data, "workers", null));
                 restoreExpenses(conn,              getNode(data, "expenses", null));
                 restoreQuickServicePresets(conn,   getNode(data, "quickServicePresets", "quick_service_presets"));
@@ -125,7 +125,7 @@ public class LocalRestoreService {
     }
 
     private boolean isEmpty(JsonNode data) {
-        String[] keys = {"products", "customers", "workers", "invoices", "creditSales", "credit_sales", "expenses"};
+        String[] keys = {"products", "creditCustomers", "credit_customers", "workers", "invoices", "creditSales", "credit_sales", "expenses"};
         for (String k : keys) {
             JsonNode node = data.path(k);
             if (!node.isMissingNode() && node.isArray() && node.size() > 0) return false;
@@ -231,19 +231,22 @@ public class LocalRestoreService {
     private void restoreCustomers(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            String sql = "INSERT OR IGNORE INTO customers (id, name, phone, created_at, sync_status) VALUES (?,?,?,?,1)";
+            String sql = "INSERT OR IGNORE INTO credit_customers (id, name, phone, email, address, created_at, updated_at, sync_status) VALUES (?,?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
                     ps.setString(1, str(r, "id"));
                     ps.setString(2, str(r, "name"));
                     ps.setString(3, str(r, "phone"));
-                    ps.setString(4, str(r, "createdAt"));
+                    ps.setString(4, str(r, "email"));
+                    ps.setString(5, str(r, "address"));
+                    ps.setString(6, str(r, "createdAt"));
+                    ps.setString(7, str(r, "updatedAt"));
                     ps.addBatch();
                 }
                 ps.executeBatch();
             }
         }
-        log("  Restored: customers (" + count + " rows)");
+        log("  Restored: credit_customers (" + count + " rows)");
     }
 
     private void restoreWorkers(Connection conn, JsonNode arr) throws SQLException {

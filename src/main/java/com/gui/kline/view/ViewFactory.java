@@ -4,6 +4,7 @@ import com.gui.kline.controller.DashboardController;
 import com.gui.kline.controller.LayoutController;
 import com.gui.kline.controller.ReportsController;
 import com.gui.kline.controller.ServicesController;
+import com.gui.kline.controller.CreditCustomersController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -24,6 +25,17 @@ public class ViewFactory {
     private DashboardController dashboardController;
     private ServicesController servicesController;
     private ReportsController reportsController;
+    private CreditCustomersController creditCustomersController;
+
+    public void setCreditCustomersController(CreditCustomersController controller) {
+        this.creditCustomersController = controller;
+    }
+
+    public void refreshCreditCustomers() {
+        if (creditCustomersController != null) {
+            creditCustomersController.loadData();
+        }
+    }
     
     public void refreshDashboard() {
         if (dashboardController != null) {

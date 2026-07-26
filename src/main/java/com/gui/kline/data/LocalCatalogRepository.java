@@ -1,6 +1,7 @@
 package com.gui.kline.data;
 
 import com.gui.kline.models.Product;
+import com.gui.kline.models.CreditCustomer;
 import com.gui.kline.utils.ImagePathUtil;
 
 import java.sql.Connection;
@@ -27,7 +28,7 @@ public class LocalCatalogRepository {
     }
 
     public List<String> getCustomerNames() {
-        String sql = "SELECT DISTINCT name FROM customers ORDER BY name";
+        String sql = "SELECT DISTINCT name FROM credit_customers ORDER BY name";
         List<String> names = new ArrayList<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
@@ -36,7 +37,7 @@ public class LocalCatalogRepository {
                 names.add(rs.getString("name"));
             }
         } catch (SQLException ex) {
-            throw new IllegalStateException("Failed to read customers", ex);
+            throw new IllegalStateException("Failed to read credit_customers", ex);
         }
         return names;
     }
@@ -45,7 +46,7 @@ public class LocalCatalogRepository {
         if (name == null || name.isBlank()) {
             return;
         }
-        String sql = "INSERT INTO customers (id, name, phone, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP) " +
+        String sql = "INSERT INTO credit_customers (id, name, phone, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP) " +
                 "ON CONFLICT(name, phone) DO UPDATE SET phone = excluded.phone, sync_status = 0";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -62,7 +63,7 @@ public class LocalCatalogRepository {
         if (name == null || name.isBlank()) {
             return "";
         }
-        String sql = "SELECT phone FROM customers WHERE name = ? LIMIT 1";
+        String sql = "SELECT phone FROM credit_customers WHERE name = ? LIMIT 1";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, name.trim());
@@ -76,6 +77,87 @@ public class LocalCatalogRepository {
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to read customer phone", ex);
         }
+    }
+
+    public List<CreditCustomer> loadCreditCustomers() {
+        String sql = "SELECT id, name, phone, email, address, created_at, updated_at FROM credit_customers ORDER BY name";
+        List<CreditCustomer> list = new ArrayList<>();
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                list.add(new CreditCustomer(
+                        rs.getString("id"),
+                        rs.getString("name"),
+                        rs.getString("phone"),
+                        rs.getString("email"),
+                        rs.getString("address"),
+                        rs.getString("created_at"),
+                        rs.getString("updated_at")
+                ));
+            }
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to load credit customers", ex);
+        }
+        return list;
+    }
+
+    public void saveCreditCustomer(CreditCustomer customer) {
+        String sql = "INSERT INTO credit_customers (id, name, phone, email, address, created_at, updated_at, sync_status) " +
+                     "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0) " +
+                     "ON CONFLICT(id) DO UPDATE SET " +
+                     "  name = excluded.name, " +
+                     "  phone = excluded.phone, " +
+                     "  email = excluded.email, " +
+                     "  address = excluded.address, " +
+                     "  updated_at = CURRENT_TIMESTAMP, " +
+                     "  sync_status = 0";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, customer.getId() == null || customer.getId().isBlank() ? java.util.UUID.randomUUID().toString() : customer.getId());
+            stmt.setString(2, customer.getName());
+            stmt.setString(3, customer.getPhone());
+            stmt.setString(4, customer.getEmail());
+            stmt.setString(5, customer.getAddress());
+            stmt.executeUpdate();
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to save credit customer", ex);
+        }
+    }
+
+    public void deleteCreditCustomer(String id) {
+        String sql = "DELETE FROM credit_customers WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, id);
+            stmt.executeUpdate();
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to delete credit customer", ex);
+        }
+    }
+
+    public CreditCustomer findCreditCustomerById(String id) {
+        String sql = "SELECT id, name, phone, email, address, created_at, updated_at FROM credit_customers WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new CreditCustomer(
+                            rs.getString("id"),
+                            rs.getString("name"),
+                            rs.getString("phone"),
+                            rs.getString("email"),
+                            rs.getString("address"),
+                            rs.getString("created_at"),
+                            rs.getString("updated_at")
+                    );
+                }
+            }
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to find credit customer by id", ex);
+        }
+        return null;
     }
 
       public List<Product> loadProducts() {
