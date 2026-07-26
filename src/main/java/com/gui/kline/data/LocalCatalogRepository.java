@@ -105,7 +105,7 @@ public class LocalCatalogRepository {
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                list.add(new CreditCustomer(
+                CreditCustomer cc = new CreditCustomer(
                         rs.getString("id"),
                         rs.getString("name"),
                         rs.getString("phone"),
@@ -113,12 +113,32 @@ public class LocalCatalogRepository {
                         rs.getString("address"),
                         rs.getString("created_at"),
                         rs.getString("updated_at")
-                ));
+                );
+                list.add(cc);
             }
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to load credit customers", ex);
         }
         return list;
+    }
+
+    public void loadCustomerStats(CreditCustomer customer) {
+        String sql = "SELECT COALESCE(SUM(grand_total), 0) as total_amount, COALESCE(SUM(settlement), 0) as settle_amount FROM credit_sales WHERE customer_id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, customer.getId());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    double total = rs.getDouble("total_amount");
+                    double settle = rs.getDouble("settle_amount");
+                    customer.setTotalAmount(total);
+                    customer.setSettleAmount(settle);
+                    customer.setDueAmount(total - settle);
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to load stats for customer " + customer.getName() + ": " + ex.getMessage());
+        }
     }
 
     public void saveCreditCustomer(CreditCustomer customer) {

@@ -76,20 +76,24 @@ public class ExpenseController implements Initializable {
 
         // Set up actions column with delete button
         colActions.setCellFactory(col -> new TableCell<>() {
-            private final Button deleteBtn = new Button();
+            private final Button deleteBtn = new Button("Delete");
             {
-                deleteBtn.setGraphic(new FontIcon("fas-trash"));
-                deleteBtn.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
+                deleteBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #ef4444; -fx-text-fill: #ef4444; -fx-border-radius: 6; -fx-padding: 5 12; -fx-cursor: hand; -fx-font-size: 12px; -fx-font-weight: bold;");
                 deleteBtn.setOnAction(e -> {
                     Expense expense = getTableView().getItems().get(getIndex());
                     deleteExpense(expense);
                 });
+                setStyle("-fx-alignment: CENTER;");
             }
 
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                setGraphic(empty ? null : deleteBtn);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(deleteBtn);
+                }
             }
         });
 

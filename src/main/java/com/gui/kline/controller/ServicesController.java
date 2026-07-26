@@ -92,15 +92,11 @@ public class ServicesController implements Initializable {
         colRemark.setCellValueFactory(data -> data.getValue().remarkProperty());
         colPrice.setCellValueFactory(data -> data.getValue().priceLabelProperty());
 
-        // Set up actions column with delete button
         colActions.setCellFactory(col -> new javafx.scene.control.TableCell<ServiceRecord, String>() {
-            private final Button deleteBtn = new Button();
+            private final Button deleteBtn = new Button("Delete");
             {
-                FontIcon trashIcon = new FontIcon("fas-trash");
-                trashIcon.setIconColor(javafx.scene.paint.Color.web("#ef4444"));
-                trashIcon.setIconSize(14);
-                deleteBtn.setGraphic(trashIcon);
-                deleteBtn.getStyleClass().add("delete-action-btn");
+                deleteBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #ef4444; -fx-text-fill: #ef4444; -fx-border-radius: 6; -fx-padding: 5 12; -fx-cursor: hand; -fx-font-size: 12px; -fx-font-weight: bold;");
+                setStyle("-fx-alignment: CENTER;");
                 deleteBtn.setOnAction(e -> {
                     if (getIndex() >= 0 && getIndex() < getTableView().getItems().size()) {
                         ServiceRecord record = getTableView().getItems().get(getIndex());

@@ -115,8 +115,7 @@ public class WorkerManagementController {
         historyRowsContainer.getChildren().clear();
         for (WorkerAttendanceHistory row : attendanceRepository.loadHistory(from, to, historySearchField.getText())) {
             String[] status = statusLabel(row.getStatus());
-            String dateStr = row.getDate() != null ? row.getDate().toString() : "";
-            addHistoryRow(dateStr, row.getWorkerName(), status[0], status[1]);
+            addHistoryRow(row.getDate(), row.getWorkerId(), row.getWorkerName(), status[0], status[1]);
         }
     }
 
@@ -160,31 +159,21 @@ public class WorkerManagementController {
         actions.getChildren().addAll(p, h, a);
 
         HBox editDel = new HBox(15);
-        editDel.setMinWidth(100); editDel.setPrefWidth(100);
-        editDel.setAlignment(Pos.CENTER_RIGHT);
-        Label edit = new Label("✎"); edit.setStyle("-fx-text-fill: #3b82f6; -fx-cursor: hand; -fx-font-size: 14px;");
-        Label del = new Label("🗑"); del.setStyle("-fx-text-fill: #ef4444; -fx-cursor: hand; -fx-font-size: 14px;");
+        editDel.setMinWidth(160); editDel.setPrefWidth(160);
+        editDel.setAlignment(Pos.CENTER);
+        Label edit = new Label("Edit"); edit.setStyle("-fx-background-color: transparent; -fx-border-color: #3b82f6; -fx-text-fill: #3b82f6; -fx-border-radius: 6; -fx-padding: 5 12; -fx-cursor: hand; -fx-font-size: 12px; -fx-font-weight: bold;");
+        Label del = new Label("Delete"); del.setStyle("-fx-background-color: transparent; -fx-border-color: #ef4444; -fx-text-fill: #ef4444; -fx-border-radius: 6; -fx-padding: 5 12; -fx-cursor: hand; -fx-font-size: 12px; -fx-font-weight: bold;");
 
         edit.setOnMouseClicked(e -> openEditWorker(worker));
         del.setOnMouseClicked(e -> deleteWorker(worker));
 
-        // Add delete attendance button (only if attendance exists)
-        Label delAttendance = new Label("🗑");
-        delAttendance.setStyle("-fx-text-fill: #ef4444; -fx-cursor: hand; -fx-font-size: 14px;");
-        if (attendance.getStatus() == null || attendance.getStatus().isEmpty()) {
-            delAttendance.setDisable(true);
-            delAttendance.setStyle("-fx-text-fill: #666666; -fx-font-size: 14px;");
-        } else {
-            delAttendance.setOnMouseClicked(e -> handleDeleteAttendance(attendance));
-        }
-
-        editDel.getChildren().addAll(edit, del, delAttendance);
+        editDel.getChildren().addAll(edit, del);
 
         row.getChildren().addAll(nameBox, lblRate, actions, editDel);
         attendanceRowsContainer.getChildren().add(row);
     }
 
-    private void handleDeleteAttendance(WorkerAttendance attendance) {
+    private void handleDeleteAttendance(String workerId, String workerName, LocalDate date) {
         // Get owner window to prevent alert from opening as separate window
         javafx.stage.Window owner = null;
         if (attendanceRowsContainer != null && attendanceRowsContainer.getScene() != null) {
@@ -194,7 +183,7 @@ public class WorkerManagementController {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Delete Attendance");
         confirm.setHeaderText(null);
-        confirm.setContentText("Delete attendance record for " + attendance.getWorkerName() + " on " + attendance.getDate() + "?");
+        confirm.setContentText("Delete attendance record for " + workerName + " on " + date + "?");
         if (owner != null) {
             confirm.initOwner(owner);
             confirm.initModality(javafx.stage.Modality.WINDOW_MODAL);
@@ -204,10 +193,10 @@ public class WorkerManagementController {
             return;
         }
 
-        attendanceRepository.deleteAttendance(attendance.getWorkerId(), attendance.getDate());
+        attendanceRepository.deleteAttendance(workerId, date);
         loadAttendance(attendanceDatePicker.getValue());
         loadHistory();
-        loadMonthlySummary(YearMonth.from(attendance.getDate()));
+        loadMonthlySummary(YearMonth.from(date));
     }
 
     @FXML
@@ -327,13 +316,13 @@ public class WorkerManagementController {
         return new String[]{"ABSENT", "#ef4444"};
     }
 
-    private void addHistoryRow(String date, String worker, String status, String color) {
+    private void addHistoryRow(LocalDate date, String workerId, String worker, String status, String color) {
         HBox row = new HBox();
         row.setAlignment(Pos.CENTER_LEFT);
         row.setPadding(new Insets(12, 20, 12, 20));
         row.setStyle("-fx-border-color: transparent transparent #f0f2f5 transparent; -fx-background-color: white;");
 
-        Label lblDate = new Label(date);
+        Label lblDate = new Label(date.toString());
         lblDate.setMinWidth(250);
         lblDate.setPrefWidth(250);
         lblDate.setMaxWidth(250);
@@ -348,7 +337,7 @@ public class WorkerManagementController {
         statusContainer.setMinWidth(100);
         statusContainer.setPrefWidth(100);
         statusContainer.setMaxWidth(100);
-        statusContainer.setAlignment(Pos.CENTER_RIGHT);
+        statusContainer.setAlignment(Pos.CENTER);
 
         Label lblStatus = new Label(status);
         lblStatus.setStyle(
@@ -364,7 +353,19 @@ public class WorkerManagementController {
 
         statusContainer.getChildren().add(lblStatus);
 
-        row.getChildren().addAll(lblDate, lblWorker, statusContainer);
+        HBox actionsContainer = new HBox();
+        actionsContainer.setMinWidth(80);
+        actionsContainer.setPrefWidth(80);
+        actionsContainer.setMaxWidth(80);
+        actionsContainer.setAlignment(Pos.CENTER);
+
+        Label delAttendance = new Label("Delete");
+        delAttendance.setStyle("-fx-background-color: transparent; -fx-border-color: #ef4444; -fx-text-fill: #ef4444; -fx-border-radius: 6; -fx-padding: 5 12; -fx-cursor: hand; -fx-font-size: 12px; -fx-font-weight: bold;");
+        delAttendance.setOnMouseClicked(e -> handleDeleteAttendance(workerId, worker, date));
+        
+        actionsContainer.getChildren().add(delAttendance);
+
+        row.getChildren().addAll(lblDate, lblWorker, statusContainer, actionsContainer);
         historyRowsContainer.getChildren().add(row);
     }
 

@@ -25,7 +25,7 @@
             </children>
          </AnchorPane>
 
-            <ScrollPane fitToWidth="true" styleClass="nav-scroll" VBox.vgrow="ALWAYS">
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="nav-scroll" VBox.vgrow="ALWAYS">
                 <VBox spacing="2">
                     <padding><Insets left="10" right="10" /></padding>
                     <Button fx:id="btnDashboard" maxWidth="Infinity" onAction="#onDashboard" prefWidth="232.0" styleClass="nav-button" text="  Dashboard">
@@ -65,20 +65,21 @@
                         <graphic><FontIcon iconLiteral="fas-chart-bar" /></graphic>
                     </Button>
 
-                    <Region prefHeight="16" />
-      
-                                <Button fx:id="btnQuickActions" maxWidth="Infinity" onAction="#onQuickActions" prefHeight="42.0" prefWidth="218.0" styleClass="quick-action-button" text="   Manage Quick Actions">
-                        <graphic>
-                     <FontIcon iconColor="white" iconLiteral="fas-bolt" text="" />
-                  </graphic>
+                    <Region VBox.vgrow="ALWAYS" />
+
+                    <Button fx:id="btnQuickActions" maxWidth="Infinity" onAction="#onQuickActions" styleClass="nav-button" text="  Manage Actions">
+                        <graphic><FontIcon iconLiteral="fas-cog" /></graphic>
                     </Button>
-      
-                    <Region prefHeight="16" />
+
+                    <Region prefHeight="8" />
 
                 </VBox>
             </ScrollPane>
 
-            <Separator styleClass="sidebar-separator" />
+            <Button fx:id="btnQuickUse" maxWidth="Infinity" onAction="#onQuickUse" styleClass="quick-action-button" text="Quick Actions">
+                <VBox.margin><Insets bottom="16" left="16" right="16" top="16" /></VBox.margin>
+                <graphic><FontIcon iconLiteral="fas-bolt" /></graphic>
+            </Button>
             <Button fx:id="btnCollapse" maxWidth="Infinity" onAction="#onCollapse" styleClass="nav-button, collapse-btn" text="Collapse">
                 <padding><Insets bottom="18" left="20" right="20" top="18" /></padding>
                 <graphic><FontIcon fx:id="iconCollapse" iconLiteral="fas-angle-double-left" /></graphic>

@@ -9,13 +9,12 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<ScrollPane fitToHeight="true" fitToWidth="true" style="-fx-background-color: #f3f4f6; -fx-background: #f3f4f6;" stylesheets="@../css/service.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gui.kline.controller.ServicesController">
+<ScrollPane fitToHeight="true" fitToWidth="true" style="-fx-background-color: #f3f4f6; -fx-background: #f3f4f6;" stylesheets="@../css/service.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.gui.kline.controller.ServicesController">
     <content>
         <VBox spacing="20.0" style="-fx-background-color: #f3f4f6;">
             <padding>
@@ -50,7 +49,7 @@
                                     <children>
                                         <Label style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #111827;" text="Recent Service Records" />
                                         
-                                        <TextField fx:id="txtFilter" onKeyReleased="#handleFilter" minWidth="130.0" prefWidth="170.0" promptText="Filter services..." styleClass="filter-field" />
+                                        <TextField fx:id="txtFilter" minWidth="130.0" onKeyReleased="#handleFilter" prefWidth="170.0" promptText="Filter services..." styleClass="filter-field" />
 
                                         <Region HBox.hgrow="ALWAYS" />
 
@@ -70,13 +69,13 @@
                                         <TableView fx:id="tblServices" styleClass="main-services-table" VBox.vgrow="ALWAYS">
                                             <columns>
                                                 <TableColumn fx:id="colDate" minWidth="105.0" prefWidth="120.0" text="DATE" />
-                                                <TableColumn fx:id="colService" minWidth="150.0" prefWidth="180.0" text="SERVICE" />
-                                                <TableColumn fx:id="colRemark" minWidth="130.0" prefWidth="160.0" text="REMARK/NOTE" />
+                                                <TableColumn fx:id="colService" minWidth="150.0" prefWidth="200.0" text="SERVICE" />
+                                                <TableColumn fx:id="colRemark" minWidth="130.0" prefWidth="180.0" text="REMARK/NOTE" />
                                                 <TableColumn fx:id="colPrice" minWidth="95.0" prefWidth="110.0" text="PRICE" />
-                                                <TableColumn fx:id="colActions" minWidth="65.0" prefWidth="75.0" text="ACTIONS" />
+                                                <TableColumn fx:id="colActions" minWidth="65.0" prefWidth="90.0" text="ACTIONS" />
                                             </columns>
                                             <columnResizePolicy>
-                                                <TableView fx:constant="UNCONSTRAINED_RESIZE_POLICY" />
+                                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                                             </columnResizePolicy>
                                         </TableView>
                                     </content>
@@ -85,7 +84,7 @@
                         </VBox>
 
                         <!-- Service Insights Side Card -->
-                        <VBox minWidth="260.0" prefWidth="280.0" maxWidth="310.0" spacing="20.0" styleClass="insights-card">
+                        <VBox maxWidth="310.0" minWidth="260.0" prefWidth="280.0" spacing="20.0" styleClass="insights-card">
                             <padding>
                                 <Insets bottom="24.0" left="20.0" right="20.0" top="24.0" />
                             </padding>

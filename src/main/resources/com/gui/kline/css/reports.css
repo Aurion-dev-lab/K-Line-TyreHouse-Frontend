@@ -157,7 +157,6 @@
 .reports-header {
     -fx-font-size: 22px;
     -fx-font-weight: bold;
-    -fx-text-fill:  #d8dae0;
 }
 
 .reports-subheader {

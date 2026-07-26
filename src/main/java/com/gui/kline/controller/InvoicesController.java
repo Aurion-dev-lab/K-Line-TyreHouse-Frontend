@@ -27,6 +27,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -145,15 +146,9 @@ public class InvoicesController implements Initializable {
             private final Button btnDelete = new Button("✕");
             
             {
-                btnView.setStyle("-fx-background-color: #3b82f6; -fx-border-color: #1e3a8a; " +
-                        "-fx-border-radius: 6; -fx-font-size: 11px; -fx-text-fill: #ffffff; " +
-                        "-fx-padding: 4 10 4 10; -fx-cursor: hand; -fx-font-weight: bold;");
-                btnEdit.setStyle("-fx-background-color: #f59e0b; -fx-border-color: #b45309; " +
-                        "-fx-border-radius: 6; -fx-font-size: 11px; -fx-text-fill: #ffffff; " +
-                        "-fx-padding: 4 10 4 10; -fx-cursor: hand; -fx-font-weight: bold;");
-                btnDelete.setStyle("-fx-background-color: #ef4444; -fx-border-color: #991b1b; " +
-                        "-fx-border-radius: 6; -fx-font-size: 11px; -fx-text-fill: #ffffff; " +
-                        "-fx-padding: 4 8 4 8; -fx-cursor: hand; -fx-font-weight: bold;");
+                btnView.setStyle("-fx-background-color: transparent; -fx-border-color: #3b82f6; -fx-text-fill: #3b82f6; -fx-border-radius: 6; -fx-padding: 5 12; -fx-cursor: hand; -fx-font-size: 12px; -fx-font-weight: bold;");
+                btnEdit.setStyle("-fx-background-color: transparent; -fx-border-color: #d97706; -fx-text-fill: #d97706; -fx-border-radius: 6; -fx-padding: 5 12; -fx-cursor: hand; -fx-font-size: 12px; -fx-font-weight: bold;");
+                btnDelete.setStyle("-fx-background-color: transparent; -fx-border-color: #dc2626; -fx-text-fill: #dc2626; -fx-border-radius: 6; -fx-padding: 5 10; -fx-cursor: hand; -fx-font-size: 12px; -fx-font-weight: bold;");
                 
                 btnView.setOnAction(e -> {
                     InvoiceRow row = getTableView().getItems().get(getIndex());
@@ -168,6 +163,7 @@ public class InvoicesController implements Initializable {
                     onDeleteInvoice(row);
                 });
                 
+                box.setPadding(new Insets(5, 0, 0, 0));
                 box.setStyle("-fx-spacing: 6;");
                 box.getChildren().addAll(btnView, btnEdit, btnDelete);
             }

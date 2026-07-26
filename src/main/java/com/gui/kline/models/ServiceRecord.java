@@ -106,15 +106,6 @@ public class ServiceRecord {
         }
     }
 
-    // Customer-related methods for sync compatibility
-    public String getServiceName() { return service; }
-    public LocalDate getServiceDate() { return date; }
-    public String getCustomerId() { return customerId; }
-    public String getCustomerName() { return customerName; }
-
-    public void setCustomerId(String customerId) { this.customerId = customerId; }
-    public void setCustomerName(String customerName) { this.customerName = customerName; }
-
     public SimpleStringProperty dateLabelProperty() {
         return dateLabel;
     }
@@ -131,19 +122,9 @@ public class ServiceRecord {
         return priceLabel;
     }
 
-    public SimpleDoubleProperty priceProperty() {
-        return priceProperty;
-    }
-
-    // Actions property for delete button
     public SimpleStringProperty actionsProperty() {
         return new SimpleStringProperty("");
     }
-
-    // Sync field getters and setters
-
-    public boolean isSyncStatus() { return syncStatus; }
-    public void setSyncStatus(boolean syncStatus) { this.syncStatus = syncStatus; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

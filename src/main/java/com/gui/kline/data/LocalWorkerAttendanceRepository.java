@@ -63,7 +63,7 @@ public class LocalWorkerAttendanceRepository {
     }
 
     public List<WorkerAttendanceHistory> loadHistory(LocalDate from, LocalDate to, String nameFilter) {
-        String sql = "SELECT a.attendance_date, w.name, a.status " +
+        String sql = "SELECT a.attendance_date, a.worker_id, w.name, a.status " +
                 "FROM worker_attendance a " +
                 "JOIN workers w ON w.id = a.worker_id " +
                 "WHERE a.attendance_date BETWEEN ? AND ? AND w.name LIKE ? " +
@@ -78,6 +78,7 @@ public class LocalWorkerAttendanceRepository {
                 while (rs.next()) {
                     rows.add(new WorkerAttendanceHistory(
                             com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "attendance_date"),
+                            rs.getString("worker_id"),
                             rs.getString("name"),
                             rs.getString("status")
                     ));
