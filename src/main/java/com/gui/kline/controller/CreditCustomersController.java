@@ -26,6 +26,9 @@ public class CreditCustomersController {
     @FXML private TableColumn<CreditCustomer, String> colEmail;
     @FXML private TableColumn<CreditCustomer, String> colAddress;
     @FXML private TableColumn<CreditCustomer, String> colUpdatedAt;
+    @FXML private TableColumn<CreditCustomer, String> colAmount;
+    @FXML private TableColumn<CreditCustomer, String> colSettleAmount;
+    @FXML private TableColumn<CreditCustomer, String> colDueAmount;
     @FXML private TextField txtSearch;
 
     private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
@@ -40,6 +43,10 @@ public class CreditCustomersController {
         colAddress.setCellValueFactory(new PropertyValueFactory<>("address"));
         colUpdatedAt.setCellValueFactory(new PropertyValueFactory<>("updatedAt"));
 
+        colAmount.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(String.format("Rs. %.2f", cellData.getValue().getTotalAmount())));
+        colSettleAmount.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(String.format("Rs. %.2f", cellData.getValue().getSettleAmount())));
+        colDueAmount.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(String.format("Rs. %.2f", cellData.getValue().getDueAmount())));
+
         tblCustomers.setItems(filteredList);
         loadData();
         ViewModel.INSTANCE.getViewsFactory().setCreditCustomersController(this);
@@ -47,6 +54,9 @@ public class CreditCustomersController {
 
     public void loadData() {
         List<CreditCustomer> list = catalogRepository.loadCreditCustomers();
+        for (CreditCustomer customer : list) {
+            catalogRepository.loadCustomerStats(customer);
+        }
         masterList.setAll(list);
     }
 

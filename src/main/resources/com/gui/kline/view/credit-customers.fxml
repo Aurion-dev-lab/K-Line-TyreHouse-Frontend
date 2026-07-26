@@ -56,11 +56,14 @@
                      <content>
                         <TableView fx:id="tblCustomers" maxHeight="1.7976931348623157E308" styleClass="main-table">
                           <columns>
-                            <TableColumn fx:id="colName" prefWidth="180.0" text="NAME" />
-                            <TableColumn fx:id="colPhone" prefWidth="130.0" text="PHONE" />
-                            <TableColumn fx:id="colEmail" prefWidth="180.0" text="EMAIL" />
-                            <TableColumn fx:id="colAddress" prefWidth="230.0" text="ADDRESS" />
-                            <TableColumn fx:id="colUpdatedAt" prefWidth="140.0" text="LAST UPDATED" />
+                            <TableColumn fx:id="colName" prefWidth="160.0" text="NAME" />
+                            <TableColumn fx:id="colPhone" prefWidth="120.0" text="PHONE" />
+                            <TableColumn fx:id="colEmail" prefWidth="160.0" text="EMAIL" />
+                            <TableColumn fx:id="colAddress" prefWidth="180.0" text="ADDRESS" />
+                            <TableColumn fx:id="colAmount" prefWidth="110.0" text="TOTAL AMOUNT" />
+                            <TableColumn fx:id="colSettleAmount" prefWidth="110.0" text="SETTLED" />
+                            <TableColumn fx:id="colDueAmount" prefWidth="110.0" text="DUE AMOUNT" />
+                            <TableColumn fx:id="colUpdatedAt" prefWidth="120.0" text="LAST UPDATED" />
                           </columns>
                            <columnResizePolicy>
                               <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
