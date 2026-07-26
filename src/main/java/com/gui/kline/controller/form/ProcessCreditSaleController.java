@@ -69,7 +69,7 @@ public class ProcessCreditSaleController {
 
      @FXML
      public void initialize() {
-         lblCreditId.setText("CS-" + String.format("%04d", (int)(Math.random() * 9000 + 1000)));
+         lblCreditId.setText(com.gui.kline.utils.Utils.generateId("CS-", 8));
 
          dpSaleDate.setValue(LocalDate.now());
          dpDueDate.setValue(LocalDate.now().plusDays(30)); // 30-day default

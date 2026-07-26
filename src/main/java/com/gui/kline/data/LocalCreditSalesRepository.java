@@ -79,7 +79,7 @@ public class LocalCreditSalesRepository {
     }
 
     public CreditSaleDetail loadCreditSaleDetail(String creditId) {
-        String sql = "SELECT cs.*, cc.name AS customer_name FROM credit_sales cs " +
+        String sql = "SELECT cs.*, cc.name AS customer_name, cc.phone AS customer_phone FROM credit_sales cs " +
                 "LEFT JOIN credit_customers cc ON cs.customer_id = cc.id WHERE cs.credit_id = ?";
         CreditSaleDetail detail = null;
         
@@ -94,6 +94,7 @@ public class LocalCreditSalesRepository {
                 detail.setCreditId(rs.getString("credit_id"));
                 detail.setCustomerId(rs.getString("customer_id"));
                 detail.setCustomerName(rs.getString("customer_name"));
+                detail.setPhone(rs.getString("customer_phone"));
                 detail.setDate(LocalDate.parse(rs.getString("sale_date")));
                 detail.setDueDate(LocalDate.parse(rs.getString("due_date")));
                 detail.setSettlement(rs.getDouble("settlement"));

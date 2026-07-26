@@ -11,7 +11,11 @@ public class CreditSaleDetail {
     private LocalDate date;
     private LocalDate dueDate;
     private final List<Part> parts = new ArrayList<>();
+    private String phone;
     private double settlement = 0.0;
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
 
     public void addPart(Part part) { parts.add(part); }
     public void removePart(Part part) { parts.remove(part); }

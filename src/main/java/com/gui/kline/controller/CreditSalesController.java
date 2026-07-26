@@ -59,6 +59,7 @@ public class CreditSalesController implements Initializable {
     @FXML private Label lblCreditId;
     @FXML private Label lblCreditBadge;
     @FXML private Label lblCustomer;
+    @FXML private Label lblCustomerPhone;
     @FXML private Label lblSaleDate;
     @FXML private VBox  vboxParts;
     @FXML private Label lblSubtotal;
@@ -491,9 +492,12 @@ public class CreditSalesController implements Initializable {
         }
         currentSaleDetail = detail;
 
-        lblCreditId.setText("#" + sale.getCreditId());
+        lblCreditId.setText(sale.getCreditId());
         lblCreditBadge.setText("CREDIT");
         lblCustomer.setText(currentSaleDetail.getCustomer());
+        if (lblCustomerPhone != null) {
+            lblCustomerPhone.setText(currentSaleDetail.getPhone() != null && !currentSaleDetail.getPhone().isBlank() ? currentSaleDetail.getPhone() : "—");
+        }
         lblSaleDate.setText(sale.getDate());
 
         vboxParts.getChildren().clear();
@@ -532,9 +536,10 @@ public class CreditSalesController implements Initializable {
     }
 
     private void clearDetailPanel() {
-        lblCreditId.setText("#—");
+        lblCreditId.setText("—");
         lblCreditBadge.setText("CREDIT");
         lblCustomer.setText("—");
+        if (lblCustomerPhone != null) lblCustomerPhone.setText("—");
         lblSaleDate.setText("—");
         vboxParts.getChildren().clear();
         lblSubtotal.setText("Rs. 0.00");

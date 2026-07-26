@@ -71,7 +71,7 @@ public class InvoiceFormController {
 
     @FXML
     public void initialize() {
-        lblInvoiceId.setText("INV-" + System.currentTimeMillis() % 100000);
+        lblInvoiceId.setText(com.gui.kline.utils.Utils.generateId("INV-", 8));
         cmbInvoiceType.getItems().setAll("Sale", "Service");
         cmbInvoiceType.getSelectionModel().selectFirst();
         loadProductData();
