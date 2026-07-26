@@ -194,9 +194,11 @@ public class InvoicesController implements Initializable {
     private void onSearch(javafx.scene.input.KeyEvent event) {
         String q = txtSearch.getText().toLowerCase().trim();
         tblInvoices.setItems(q.isEmpty() ? invoiceList : invoiceList.filtered(inv ->
-                inv.getCustomer().toLowerCase().contains(q) ||
-                        inv.getDate().toLowerCase().contains(q)     ||
-                        inv.getInvoiceId().toLowerCase().contains(q)));
+                (inv.getCustomer() != null && inv.getCustomer().toLowerCase().contains(q)) ||
+                (inv.getDate() != null && inv.getDate().toLowerCase().contains(q)) ||
+                (inv.getInvoiceId() != null && inv.getInvoiceId().toLowerCase().contains(q)) ||
+                (inv.getType() != null && inv.getType().toLowerCase().contains(q)) ||
+                (inv.getStatus() != null && inv.getStatus().toLowerCase().contains(q))));
     }
 
     private void onViewInvoice(InvoiceRow invoice) {
@@ -341,15 +343,16 @@ public class InvoicesController implements Initializable {
      * Uses the service description as the remark and "Invoiced Service" as the service name.
      */
     private void insertServiceEntryForServiceInvoice(InvoiceDetail detail) {
-        String sql = "INSERT INTO services (id, name, price, service_date, remark) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO services (id, invoice_id, name, price, service_date, remark) VALUES (?, ?, ?, ?, ?, ?)";
         String today = LocalDate.now().toString();
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, UUID.randomUUID().toString());
-            ps.setString(2, "Invoiced Service");
-            ps.setDouble(3, detail.getGrandTotal());
-            ps.setString(4, today);
-            ps.setString(5, detail.getDescription() != null ? detail.getDescription() : "");
+            ps.setString(2, detail.getInvoiceId());
+            ps.setString(3, "Invoiced Service");
+            ps.setDouble(4, detail.getGrandTotal());
+            ps.setString(5, today);
+            ps.setString(6, detail.getDescription() != null ? detail.getDescription() : "");
             ps.executeUpdate();
         } catch (SQLException ex) {
             System.err.println("Failed to insert service entry for service invoice: " + ex.getMessage());
@@ -493,7 +496,7 @@ public class InvoicesController implements Initializable {
             return;
         }
 
-        lblInvoiceId.setText("#" + invoice.getInvoiceId());
+        lblInvoiceId.setText(invoice.getInvoiceId());
         lblCustomer.setText(currentInvoiceDetail.getCustomer());
         lblInvoiceDate.setText(invoice.getDate());
         
@@ -519,7 +522,7 @@ public class InvoicesController implements Initializable {
     }
 
     private void clearDetailPanel() {
-        lblInvoiceId.setText("#—");
+        lblInvoiceId.setText("—");
         lblCustomer.setText("—");
         lblInvoiceDate.setText("—");
         if (hboxType != null) {

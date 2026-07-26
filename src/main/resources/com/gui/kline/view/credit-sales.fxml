@@ -65,7 +65,7 @@
                     <Insets bottom="15" left="18" right="18" top="15" />
                 </padding>
                 <Label styleClass="panel-title" text="Credit Sale Detail" HBox.hgrow="ALWAYS" />
-                <Label fx:id="lblCreditId" styleClass="inv-badge" text="#—" />
+                <Label fx:id="lblCreditId" styleClass="inv-badge" text="—" />
                 <Label fx:id="lblCreditBadge" styleClass="credit-badge" text="CREDIT" />
             </HBox>
 

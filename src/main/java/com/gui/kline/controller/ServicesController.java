@@ -177,7 +177,7 @@ public class ServicesController implements Initializable {
         services.clear();
         try (Connection conn = DatabaseManager.getConnection()) {
             loadServiceRows(conn,
-                    "SELECT id, service_date, name, remark, price FROM services",
+                    "SELECT id, invoice_id, service_date, name, remark, price FROM services",
                     "services");
             loadQuickServiceRows(conn);
         } catch (SQLException ex) {
@@ -192,14 +192,16 @@ public class ServicesController implements Initializable {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 String id = rs.getString(1);
-                LocalDate serviceDate = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 2);
-                String name = rs.getString(3);
-                String remark = rs.getString(4);
-                double price = rs.getDouble(5);
+                String invoiceId = rs.getString(2);
+                LocalDate serviceDate = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 3);
+                String name = rs.getString(4);
+                String remark = rs.getString(5);
+                double price = rs.getDouble(6);
                 String finalRemark = remark != null ? remark : "";
                 
                 ServiceRecord record = new ServiceRecord(serviceDate, name, finalRemark, price);
                 record.setId(id);
+                record.setInvoiceId(invoiceId);
                 record.setSourceTable(sourceTable);
                 record.setIsQuickService("quick_services".equals(sourceTable));
                 services.add(record);
@@ -269,7 +271,8 @@ public class ServicesController implements Initializable {
 
             boolean matchesQuery = query.isEmpty()
                     || record.getService().toLowerCase().contains(query)
-                    || record.getRemark().toLowerCase().contains(query);
+                    || record.getRemark().toLowerCase().contains(query)
+                    || (record.getInvoiceId() != null && record.getInvoiceId().toLowerCase().contains(query));
 
             LocalDate date = record.getDate();
             boolean matchesDate = true;

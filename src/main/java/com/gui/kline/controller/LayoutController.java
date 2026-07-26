@@ -557,12 +557,12 @@ public class LayoutController {
     }
 
     private void searchInvoices(String searchTerm, List<SearchResult> results) {
-        String sql = "SELECT id, invoice_id, customer, grand_total, status FROM invoices " +
-                "WHERE invoice_id LIKE ? OR customer LIKE ? " +
+        String sql = "SELECT id, invoice_id, customer, grand_total, status, type FROM invoices " +
+                "WHERE invoice_id LIKE ? OR customer LIKE ? OR type LIKE ? OR status LIKE ? " +
                 "ORDER BY invoice_date DESC LIMIT 5";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            for (int i = 1; i <= 2; i++) ps.setString(i, searchTerm);
+            for (int i = 1; i <= 4; i++) ps.setString(i, searchTerm);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String id = rs.getString("id");

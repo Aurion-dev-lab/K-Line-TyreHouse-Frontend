@@ -73,7 +73,7 @@ public class ProcessCreditSaleController {
 
      @FXML
      public void initialize() {
-         lblCreditId.setText("#CS-" + String.format("%04d", (int)(Math.random() * 9000 + 1000)));
+         lblCreditId.setText("CS-" + String.format("%04d", (int)(Math.random() * 9000 + 1000)));
 
          dpSaleDate.setValue(LocalDate.now());
          dpDueDate.setValue(LocalDate.now().plusDays(30)); // 30-day default
@@ -363,7 +363,7 @@ public class ProcessCreditSaleController {
               return;
           }
 
-          String creditId = isEditMode ? editCreditId : lblCreditId.getText().replace("#CS-", "").replace("#", "");
+          String creditId = isEditMode ? editCreditId : lblCreditId.getText().trim();
           double total = parseDouble(lblTotal.getText());
 
           double existingPaid = 0.0;

@@ -11,6 +11,7 @@ public class ServiceRecord {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private String id;
+    private String invoiceId;
     private LocalDate date;
     private final SimpleStringProperty dateLabel;
     private String service;
@@ -48,6 +49,9 @@ public class ServiceRecord {
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
+
+    public String getInvoiceId() { return invoiceId; }
+    public void setInvoiceId(String invoiceId) { this.invoiceId = invoiceId; }
 
     public String getSourceTable() { return sourceTable; }
     public void setSourceTable(String sourceTable) { this.sourceTable = sourceTable; }

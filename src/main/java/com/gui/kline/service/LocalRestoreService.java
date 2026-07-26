@@ -365,14 +365,15 @@ public class LocalRestoreService {
     private void restoreServices(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            String sql = "INSERT OR IGNORE INTO services (id, name, price, service_date, remark, sync_status) VALUES (?,?,?,?,?,1)";
+            String sql = "INSERT OR IGNORE INTO services (id, invoice_id, name, price, service_date, remark, sync_status) VALUES (?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
                     ps.setString(1, str(r, "id"));
-                    ps.setString(2, str(r, "name"));
-                    ps.setObject(3, dbl(r, "price"));
-                    ps.setString(4, str(r, "serviceDate"));
-                    ps.setString(5, str(r, "remark"));
+                    ps.setString(2, str(r, "invoiceId"));
+                    ps.setString(3, str(r, "name"));
+                    ps.setObject(4, dbl(r, "price"));
+                    ps.setString(5, str(r, "serviceDate"));
+                    ps.setString(6, str(r, "remark"));
                     ps.addBatch();
                 }
                 ps.executeBatch();

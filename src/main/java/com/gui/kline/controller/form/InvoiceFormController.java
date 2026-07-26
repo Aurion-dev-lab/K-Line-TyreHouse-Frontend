@@ -70,7 +70,7 @@ public class InvoiceFormController {
 
     @FXML
     public void initialize() {
-        lblInvoiceId.setText("#INV-" + System.currentTimeMillis() % 100000);
+        lblInvoiceId.setText("INV-" + System.currentTimeMillis() % 100000);
         cmbInvoiceType.getItems().setAll("Sale", "Service");
         cmbInvoiceType.getSelectionModel().selectFirst();
         cmbCustomerName.setEditable(true);
@@ -378,7 +378,7 @@ public class InvoiceFormController {
     private void handleSave() {
         if (!validate()) return;
 
-        String invoiceId = lblInvoiceId.getText().replace("#", "");
+        String invoiceId = lblInvoiceId.getText().trim();
         String customerName = getCustomerName();
         String selectedType = cmbInvoiceType.getValue();
         if (selectedType == null || selectedType.isBlank()) {
@@ -554,7 +554,7 @@ public class InvoiceFormController {
     public void setEditMode(String invoiceId, InvoiceDetail detail) {
         this.editInvoiceId = invoiceId;
         this.originalDetail = detail;
-        lblInvoiceId.setText("#" + invoiceId);
+        lblInvoiceId.setText(invoiceId);
         if (lblTitle != null) {
             lblTitle.setText("Update Quotation");
         }

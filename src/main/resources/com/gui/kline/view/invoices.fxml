@@ -69,7 +69,7 @@
                     <Insets bottom="15" left="18" right="18" top="15" />
                 </padding>
                 <Label styleClass="panel-title" text="Invoice Detail" HBox.hgrow="ALWAYS" />
-                <Label fx:id="lblInvoiceId" styleClass="inv-badge" text="#—" />
+                <Label fx:id="lblInvoiceId" styleClass="inv-badge" text="—" />
             </HBox>
 
             <VBox spacing="8" styleClass="panel-meta">

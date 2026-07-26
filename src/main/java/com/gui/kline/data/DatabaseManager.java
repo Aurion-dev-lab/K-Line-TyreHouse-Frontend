@@ -115,6 +115,7 @@ public final class DatabaseManager {
 
             statement.execute("CREATE TABLE IF NOT EXISTS services (" +
                     "id TEXT PRIMARY KEY," +
+                    "invoice_id TEXT," +
                     "name TEXT," +
                     "price REAL NOT NULL DEFAULT 0," +
                     "service_date DATE," +

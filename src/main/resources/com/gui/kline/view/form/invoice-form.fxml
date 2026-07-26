@@ -35,7 +35,7 @@
                 <Label fx:id="lblInvoiceId"
                        style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #00c853;
                               -fx-background-color: #e8f5e9; -fx-background-radius: 8; -fx-padding: 4 10 4 10;"
-                       text="#INV-0001"/>
+                       text="INV-0001"/>
             </HBox>
 
             <!-- Scrollable Content -->

@@ -28,7 +28,7 @@
                 <VBox.margin><Insets bottom="4" left="32" right="32" top="32" /></VBox.margin>
                 <Label fx:id="lblDialogTitle" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1a1a2e;" text="New Credit Sale" />
                 <Region HBox.hgrow="ALWAYS" />
-                <Label fx:id="lblCreditId" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #f59e0b; -fx-background-color: #fef3c7; -fx-background-radius: 8; -fx-padding: 4 10 4 10;" text="#CS-0001" />
+                <Label fx:id="lblCreditId" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #f59e0b; -fx-background-color: #fef3c7; -fx-background-radius: 8; -fx-padding: 4 10 4 10;" text="CS-0001" />
             </HBox>
 
             <!-- Scrollable Content -->
