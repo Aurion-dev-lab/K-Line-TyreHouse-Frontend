@@ -89,7 +89,7 @@ public class AnalyticsController {
             // Load services revenue
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT service_date, SUM(price) as total FROM services " +
-                    "WHERE service_date BETWEEN ? AND ? GROUP BY service_date")) {
+                    "WHERE (invoice_id IS NULL OR invoice_id = '') AND (name IS NULL OR name != 'Invoiced Service') AND service_date BETWEEN ? AND ? GROUP BY service_date")) {
                 ps.setString(1, startDate.toString());
                 ps.setString(2, endDate.toString());
                 try (ResultSet rs = ps.executeQuery()) {

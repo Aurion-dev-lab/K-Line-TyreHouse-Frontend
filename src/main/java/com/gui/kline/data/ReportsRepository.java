@@ -118,7 +118,7 @@ public class ReportsRepository {
         // Get regular services
         String sql = "SELECT s.service_date, s.name, s.price, NULL as assigned_to " +
                 "FROM services s " +
-                "WHERE s.service_date BETWEEN ? AND ? " +
+                "WHERE (s.invoice_id IS NULL OR s.invoice_id = '') AND (s.name IS NULL OR s.name != 'Invoiced Service') AND s.service_date BETWEEN ? AND ? " +
                 "ORDER BY s.service_date DESC, s.name";
         
         try (Connection connection = DatabaseManager.getConnection();
@@ -327,7 +327,7 @@ public class ReportsRepository {
         // Total service revenue
         String servicesSql = "SELECT COALESCE(SUM(price), 0) as total_services " +
                 "FROM services " +
-                "WHERE service_date BETWEEN ? AND ?";
+                "WHERE (invoice_id IS NULL OR invoice_id = '') AND (name IS NULL OR name != 'Invoiced Service') AND service_date BETWEEN ? AND ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(servicesSql)) {

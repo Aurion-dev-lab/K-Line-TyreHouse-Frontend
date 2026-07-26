@@ -724,7 +724,7 @@ public class DashboardController implements Initializable {
                         "WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?",
                 startDate, endDate);
         double services = sumAmount(conn,
-                "SELECT COALESCE(SUM(price),0) FROM services WHERE service_date BETWEEN ? AND ?",
+                "SELECT COALESCE(SUM(price),0) FROM services WHERE (invoice_id IS NULL OR invoice_id = '') AND (name IS NULL OR name != 'Invoiced Service') AND service_date BETWEEN ? AND ?",
                 startDate, endDate);
         double quickServicesTotal = sumAmount(conn,
                 "SELECT COALESCE(SUM(price),0) FROM quick_services WHERE service_date BETWEEN ? AND ?",
@@ -743,7 +743,7 @@ public class DashboardController implements Initializable {
          double invoiceCost = calculateInvoiceProductCost(conn, startDate, endDate);
          double invoiceProfit = invoiceRevenue - invoiceCost;
          double servicesProfit = sumAmount(conn,
-                 "SELECT COALESCE(SUM(price),0) FROM services WHERE service_date BETWEEN ? AND ?",
+                 "SELECT COALESCE(SUM(price),0) FROM services WHERE (invoice_id IS NULL OR invoice_id = '') AND (name IS NULL OR name != 'Invoiced Service') AND service_date BETWEEN ? AND ?",
                  startDate, endDate);
          double quickServicesProfit = sumAmount(conn,
                  "SELECT COALESCE(SUM(price),0) FROM quick_services WHERE service_date BETWEEN ? AND ?",
