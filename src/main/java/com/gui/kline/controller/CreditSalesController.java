@@ -463,9 +463,6 @@ public class CreditSalesController implements Initializable {
             LocalInvoiceRepository invoiceRepository = new LocalInvoiceRepository();
             invoiceRepository.saveInvoice(invoiceDetail, invoiceRow);
 
-            // Enqueue for sync
-            enqueueInvoice(invoiceRow, invoiceDetail);
-
             showSuccess("Invoice generated successfully! You can now download it as PDF.");
         } catch (Exception ex) {
             showError("Failed to generate invoice: " + ex.getMessage());
@@ -532,30 +529,7 @@ public class CreditSalesController implements Initializable {
         }
     }
 
-    private void enqueueInvoice(InvoiceRow row, InvoiceDetail detail) {
-        if (detail == null) {
-            return;
-        }
-        String[] items = detail.getLineItems().stream()
-                .map(item -> JsonUtil.obj(
-                        JsonUtil.field("description", item.getDescription()),
-                        JsonUtil.field("type", item.getType()),
-                        JsonUtil.field("qty", item.getQty()),
-                        JsonUtil.field("unitPrice", item.getUnitPrice()),
-                        JsonUtil.field("total", item.getTotal())
-                ))
-                .toArray(String[]::new);
 
-        String payload = JsonUtil.obj(
-                JsonUtil.field("operation", "create"),
-                JsonUtil.field("invoiceId", row.getInvoiceId()),
-                JsonUtil.field("date", row.getDate()),
-                JsonUtil.field("customer", row.getCustomer()),
-                JsonUtil.field("type", row.getType()),
-                JsonUtil.field("status", row.getStatus()),
-                JsonUtil.field("total", row.getTotal()),
-                JsonUtil.fieldRaw("items", JsonUtil.array(items))
-        );    }
 
     @FXML
     private void onDeselect() {

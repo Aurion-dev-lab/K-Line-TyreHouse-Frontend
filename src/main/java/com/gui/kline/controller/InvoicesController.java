@@ -331,7 +331,6 @@ public class InvoicesController implements Initializable {
             insertServiceEntryForServiceInvoice(currentInvoiceDetail);
         }
         
-        enqueueInvoice(row, currentInvoiceDetail);
         showSuccess("Invoice " + (isEditMode ? "updated" : "created")
                 + " successfully. You can now download it as a PDF.");
         // Keep the detail panel open so the user can download the generated PDF.
@@ -571,33 +570,6 @@ public class InvoicesController implements Initializable {
     }
 
     private String generateInvoiceId() { return "INV" + System.currentTimeMillis(); }
-
-    private void enqueueInvoice(InvoiceRow row, InvoiceDetail detail) {
-        if (detail == null) {
-            return;
-        }
-        String[] items = detail.getLineItems().stream()
-                .map(item -> JsonUtil.obj(
-                        JsonUtil.field("description", item.getDescription()),
-                        JsonUtil.field("type", item.getType()),
-                        JsonUtil.field("qty", item.getQty()),
-                        JsonUtil.field("unitPrice", item.getUnitPrice()),
-                        JsonUtil.field("total", item.getTotal())
-                ))
-                .toArray(String[]::new);
-
-        String payload = JsonUtil.obj(
-                JsonUtil.field("invoiceId", row.getInvoiceId()),
-                JsonUtil.field("date", row.getDate()),
-                JsonUtil.field("customer", detail.getCustomer()),
-                JsonUtil.field("type", row.getType()),
-                JsonUtil.field("status", detail.getStatus()),
-                JsonUtil.field("itemCount", detail.getLineItems().size()),
-                JsonUtil.field("subtotal", detail.getSubtotal()),
-                JsonUtil.field("tax", detail.getTax()),
-                JsonUtil.field("grandTotal", detail.getGrandTotal()),
-                JsonUtil.fieldRaw("items", JsonUtil.array(items))
-        );    }
 
     private void loadFromLocal() {
         List<InvoiceRow> local = invoiceRepository.loadInvoices();

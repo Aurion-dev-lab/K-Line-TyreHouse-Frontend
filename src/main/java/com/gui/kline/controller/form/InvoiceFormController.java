@@ -36,7 +36,7 @@ public class InvoiceFormController {
 
     @FXML private Label              lblTitle;
     @FXML private Label              lblInvoiceId;
-    @FXML private ComboBox<String>   cmbCustomerName;
+    @FXML private TextField          txtCustomerName;
     @FXML private TextField          txtPhone;
     @FXML private TextField          txtVehicleNumber;
     @FXML private ComboBox<String>   cmbInvoiceType;
@@ -73,8 +73,6 @@ public class InvoiceFormController {
         lblInvoiceId.setText("INV-" + System.currentTimeMillis() % 100000);
         cmbInvoiceType.getItems().setAll("Sale", "Service");
         cmbInvoiceType.getSelectionModel().selectFirst();
-        cmbCustomerName.setEditable(true);
-        cmbCustomerName.getItems().setAll(catalogRepository.getCustomerNames());
         loadProductData();
         showSaleField();
         
@@ -409,11 +407,6 @@ public class InvoiceFormController {
             invoiceRepository.saveInvoice(detail, row);
             updateStockForSavedQuotation(detail);
 
-            // Enqueue
-            enqueueInvoice(row, detail);
-
-            catalogRepository.saveCustomer(customerName, txtPhone.getText().trim());
-
             closeDialog();
         } catch (Exception ex) {
             showError("Error: " + ex.getMessage());
@@ -448,34 +441,14 @@ public class InvoiceFormController {
         }
     }
 
-    private void enqueueInvoice(InvoiceRow row, InvoiceDetail detail) {
-        String[] items = detail.getLineItems().stream()
-                .map(item -> JsonUtil.obj(
-                        JsonUtil.field("description", item.getDescription()),
-                        JsonUtil.field("type", item.getType()),
-                        JsonUtil.field("qty", item.getQty()),
-                        JsonUtil.field("unitPrice", item.getUnitPrice()),
-                        JsonUtil.field("total", item.getTotal())
-                ))
-                .toArray(String[]::new);
-
-        String payload = JsonUtil.obj(
-                JsonUtil.field("invoiceId", row.getInvoiceId()),
-                JsonUtil.field("date", row.getDate()),
-                JsonUtil.field("customer", detail.getCustomer()),
-                JsonUtil.field("phone", txtPhone.getText().trim()),
-                JsonUtil.field("vehicle", txtVehicleNumber.getText().trim()),
-                JsonUtil.field("type", row.getType()),
-                JsonUtil.field("itemCount", detail.getLineItems().size()),
-                JsonUtil.field("subtotal", detail.getSubtotal()),
-                JsonUtil.field("tax", detail.getTax()),
-                JsonUtil.field("grandTotal", detail.getGrandTotal()),
-                JsonUtil.fieldRaw("items", JsonUtil.array(items))
-        );    }
-
     private boolean validate() {
         if (getCustomerName().isBlank()) {
             alert("Customer name required");
+            return false;
+        }
+
+        if (txtPhone.getText().trim().isBlank()) {
+            alert("Phone number required");
             return false;
         }
 
@@ -563,15 +536,8 @@ public class InvoiceFormController {
         }
 
         if (detail != null) {
-            cmbCustomerName.setValue(detail.getCustomer());
-            cmbCustomerName.getEditor().setText(detail.getCustomer());
-            
-            // Set phone number directly from detail, fallback to customer phone if empty
-            String phone = detail.getPhone();
-            if (phone == null || phone.isBlank()) {
-                phone = catalogRepository.getCustomerPhone(detail.getCustomer());
-            }
-            txtPhone.setText(phone);
+            txtCustomerName.setText(detail.getCustomer());
+            txtPhone.setText(detail.getPhone());
             
             // Set invoice type from existing data
             if (detail.getType() != null && !detail.getType().isBlank()) {
@@ -610,12 +576,7 @@ public class InvoiceFormController {
     }
 
     private String getCustomerName() {
-        String value = cmbCustomerName.getValue();
-        if (value != null && !value.isBlank()) {
-            return value.trim();
-        }
-        String typed = cmbCustomerName.getEditor().getText();
-        return typed == null ? "" : typed.trim();
+        return txtCustomerName != null && txtCustomerName.getText() != null ? txtCustomerName.getText().trim() : "";
     }
 
     private String formatProductLabel(Product product) {
