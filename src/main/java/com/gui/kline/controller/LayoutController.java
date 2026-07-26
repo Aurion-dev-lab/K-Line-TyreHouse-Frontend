@@ -1,7 +1,6 @@
 package com.gui.kline.controller;
 
 import com.gui.kline.data.DatabaseManager;
-import com.gui.kline.data.SyncDataRepository;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.service.NavigationService;
 import com.gui.kline.utils.AlertUtil;
@@ -37,7 +36,7 @@ public class LayoutController {
     @FXML private Button btnHideQuick, btnCollapse, btnUpload;
     @FXML private Button btnDashboard, btnWorkers, btnInventory, btnInvoices,
             btnServices, btnSales, btnCreditCustomers, btnTyreExports, btnExpenses, btnSalary,
-            btnAnalytics, btnReports, btnQuickActions;
+            btnAnalytics, btnReports, btnQuickActions, btnQuickUse;
     @FXML private FontIcon connectionBulb;
 
     @FXML private VBox quickServiceList;
@@ -125,6 +124,8 @@ public class LayoutController {
 
         iconCollapse.setIconLiteral(isCollapsed ? "fas-angle-double-right" : "fas-angle-double-left");
         btnCollapse.setText(isCollapsed ? "" : "Collapse");
+        btnQuickUse.setText(isCollapsed ? "" : "Quick Actions");
+        VBox.setMargin(btnQuickUse, isCollapsed ? new javafx.geometry.Insets(16, 8, 16, 8) : new javafx.geometry.Insets(16, 16, 16, 16));
 
         updateLeftAnchors(sideWidth);
     }
@@ -173,33 +174,12 @@ public class LayoutController {
     @FXML private void onAnalytics()   { setActive(btnAnalytics, "Analytics Charts", "analytics"); }
     @FXML private void onReports()     { setActive(btnReports, "Reports", "reports"); }
 
-    @FXML private void onQuickActions() {
-        Stage ownerStage = (Stage) btnQuickActions.getScene().getWindow();
-        QuickServicePresetsController controller = ViewModel.INSTANCE.getViewsFactory()
-                .getForm("form/quick-service-presets-dialog", ownerStage);
-        if (controller != null) {
-            controller.setOnSaved(() -> {
-                loadQuickActionsPanel();
-                loadQuickStats();
-                ViewModel.INSTANCE.getViewsFactory().refreshDashboardQuickActions();
-                ViewModel.INSTANCE.getViewsFactory().refreshServices();
-            });
-        }
+    @FXML public void onQuickActions() {
+        setActive(btnQuickActions, "Quick Actions Management", "quick-action");
     }
 
-    @FXML
-    private void onQuickPolish() {
-        logQuickService("Quick Polish", 500);
-    }
-
-    @FXML
-    private void onTyreAirFill() {
-        logQuickService("Tyre Air Fill", 100);
-    }
-
-    @FXML
-    private void onCoolantTopup() {
-        logQuickService("Coolant Top-up", 350);
+    @FXML private void onQuickUse() {
+        setActive(btnQuickUse, "Quick Actions", "quick-actions-use");
     }
 
     private void logQuickService(String service, double price) {
@@ -214,19 +194,10 @@ public class LayoutController {
         } catch (SQLException ex) {
             System.err.println("Failed to log quick service: " + ex.getMessage());
         }
-        enqueueQuickService(service, price);
         loadQuickStats();
     }
 
-    private void enqueueQuickService(String service, double price) {
-        String payload = JsonUtil.obj(
-                JsonUtil.field("service", service),
-                JsonUtil.field("price", price),
-                JsonUtil.field("date", java.time.LocalDate.now().toString())
-        );
-    }
-
-    private void loadQuickActionsPanel() {
+    public void loadQuickActionsPanel() {
         if (quickServiceList == null) return;
         quickServiceList.getChildren().clear();
 

@@ -59,20 +59,11 @@ public class DashboardController implements Initializable {
     @FXML private NumberAxis yAxis;
     @FXML private ComboBox<String> chartRangeCombo;
 
-    @FXML private VBox   stockAlertBox;
-    @FXML private Label  stockAlertLabel;
-    @FXML private Hyperlink viewInventoryLink;
-
     @FXML private Label quickServiceCountLabel;
     @FXML private Label quickServiceRevenueLabel;
 
-    @FXML private Button newSaleBtn;
-    @FXML private Button addServiceBtn;
-    @FXML private Button logWorkBtn;
-    @FXML private Button newExportBtn;
     @FXML private GridPane quickActionsGrid;
 
-    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();    
     private List<QuickService> quickServices = new ArrayList<>();
 
     @Override
@@ -81,7 +72,6 @@ public class DashboardController implements Initializable {
         setupChartRangeCombo();
         applyChartStyles();
 
-        // Load data-heavy sections on background threads to prevent UI freeze
         BackgroundTask.run(this::loadKpiDataSync, this::applyKpiData);
         BackgroundTask.run(this::loadQuickServiceStatsSync, this::applyQuickServiceStats);
         BackgroundTask.run(this::loadQuickServicesSync, services -> {
@@ -90,7 +80,6 @@ public class DashboardController implements Initializable {
         });
 
         loadChartData("Last 7 Days");
-        loadStockAlerts();
 
         // Register with ViewFactory for cross-controller refresh
         ViewModel.INSTANCE.getViewsFactory().setDashboardController(this);
@@ -351,30 +340,6 @@ public class DashboardController implements Initializable {
         }
 
         groupedData.forEach((key, value) -> series.getData().add(new XYChart.Data<>(key, value)));
-    }
-
-    private void loadStockAlerts() {
-        try {
-            List<Product> products = catalogRepository.loadProducts();
-            List<Product> lowStockItems = products.stream()
-                    .filter(Product::isLowStock)
-                    .collect(Collectors.toList());
-            
-            int lowStockCount = lowStockItems.size();
-            if (lowStockCount > 0) {
-                stockAlertBox.setVisible(true);
-                stockAlertBox.setManaged(true);
-                stockAlertLabel.setText(lowStockCount + " item" +
-                        (lowStockCount > 1 ? "s are" : " is") + " running low on stock.");
-            } else {
-                stockAlertBox.setVisible(false);
-                stockAlertBox.setManaged(false);
-            }
-        } catch (Exception ex) {
-            System.err.println("Error loading stock alerts: " + ex.getMessage());
-            stockAlertBox.setVisible(false);
-            stockAlertBox.setManaged(false);
-        }
     }
 
     private void applyChartStyles() {

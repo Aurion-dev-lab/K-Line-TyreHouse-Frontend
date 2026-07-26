@@ -8,6 +8,9 @@ public class CreditCustomer {
     private String address;
     private String createdAt;
     private String updatedAt;
+    private double totalAmount;
+    private double settleAmount;
+    private double dueAmount;
 
     public CreditCustomer(String id, String name, String phone, String email, String address, String createdAt, String updatedAt) {
         this.id = id;
@@ -39,4 +42,13 @@ public class CreditCustomer {
 
     public String getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
+
+    public double getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
+
+    public double getSettleAmount() { return settleAmount; }
+    public void setSettleAmount(double settleAmount) { this.settleAmount = settleAmount; }
+
+    public double getDueAmount() { return dueAmount; }
+    public void setDueAmount(double dueAmount) { this.dueAmount = dueAmount; }
 }

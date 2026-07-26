@@ -1,0 +1,106 @@
+/* analytics.css */
+
+/* Modernize chart fonts and background */
+.chart {
+    -fx-padding: 10px;
+    -fx-background-color: transparent;
+}
+.chart-content {
+    -fx-padding: 10px;
+}
+.chart-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+}
+
+/* Plot Background */
+.chart-plot-background {
+    -fx-background-color: transparent;
+}
+.chart-vertical-grid-lines,
+.chart-horizontal-grid-lines {
+    -fx-stroke: #f1f5f9;
+}
+.chart-alternative-row-fill,
+.chart-alternative-column-fill {
+    -fx-fill: transparent;
+    -fx-stroke: transparent;
+    -fx-stroke-width: 0;
+}
+.chart-horizontal-zero-line,
+.chart-vertical-zero-line {
+    -fx-stroke: #cbd5e1;
+}
+
+/* Axis styles */
+.axis {
+    -fx-tick-label-fill: #64748b;
+    -fx-font-size: 11px;
+}
+.axis:bottom, .axis:top {
+    -fx-border-color: #cbd5e1 transparent transparent transparent;
+}
+.axis:left, .axis:right {
+    -fx-border-color: transparent #cbd5e1 transparent transparent;
+}
+
+/* Legend */
+.chart-legend {
+    -fx-background-color: transparent;
+    -fx-padding: 20px;
+}
+.chart-legend-item {
+    -fx-text-fill: #475569;
+    -fx-font-size: 12px;
+}
+
+/* Area Chart (Revenue Trend) */
+/* Revenue Series (Blue) */
+.default-color0.chart-series-area-fill {
+    -fx-fill: rgba(59, 130, 246, 0.2); /* #3b82f6 with 20% opacity */
+}
+.default-color0.chart-series-area-line {
+    -fx-stroke: #3b82f6;
+    -fx-stroke-width: 2px;
+}
+.default-color0.chart-area-symbol {
+    -fx-background-color: #3b82f6, white;
+    -fx-background-insets: 0, 2;
+    -fx-background-radius: 4px;
+    -fx-padding: 4px;
+}
+
+/* Profit Series (Green) */
+.default-color1.chart-series-area-fill {
+    -fx-fill: rgba(34, 197, 94, 0.2); /* #22c55e with 20% opacity */
+}
+.default-color1.chart-series-area-line {
+    -fx-stroke: #22c55e;
+    -fx-stroke-width: 2px;
+}
+.default-color1.chart-area-symbol {
+    -fx-background-color: #22c55e, white;
+    -fx-background-insets: 0, 2;
+    -fx-background-radius: 4px;
+    -fx-padding: 4px;
+}
+
+/* Pie Chart (Inventory) */
+.pie-legend {
+    -fx-background-color: transparent;
+}
+.default-color0.chart-pie { -fx-pie-color: #3b82f6; -fx-border-color: white; -fx-border-width: 2px; }
+.default-color1.chart-pie { -fx-pie-color: #10b981; -fx-border-color: white; -fx-border-width: 2px; }
+.default-color2.chart-pie { -fx-pie-color: #f59e0b; -fx-border-color: white; -fx-border-width: 2px; }
+.default-color3.chart-pie { -fx-pie-color: #ef4444; -fx-border-color: white; -fx-border-width: 2px; }
+.default-color4.chart-pie { -fx-pie-color: #8b5cf6; -fx-border-color: white; -fx-border-width: 2px; }
+.default-color5.chart-pie { -fx-pie-color: #ec4899; -fx-border-color: white; -fx-border-width: 2px; }
+.default-color6.chart-pie { -fx-pie-color: #14b8a6; -fx-border-color: white; -fx-border-width: 2px; }
+.default-color7.chart-pie { -fx-pie-color: #f97316; -fx-border-color: white; -fx-border-width: 2px; }
+
+/* Bar Chart */
+.chart-bar {
+    -fx-bar-fill: #3b82f6;
+    -fx-background-radius: 4 4 0 0;
+}
