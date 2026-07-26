@@ -39,6 +39,7 @@ public class InvoiceFormController {
     @FXML private TextField          txtCustomerName;
     @FXML private TextField          txtPhone;
     @FXML private TextField          txtVehicleNumber;
+    @FXML private VBox               vboxVehicleNumber;
     @FXML private ComboBox<String>   cmbInvoiceType;
     @FXML private VBox               vboxProductSection;
     @FXML private VBox               vboxServiceSection;
@@ -214,7 +215,13 @@ public class InvoiceFormController {
             vboxBillingExtras.setVisible(false);
             vboxBillingExtras.setManaged(false);
         }
+        // Hide Vehicle Number for Sale invoices
+        if (vboxVehicleNumber != null) {
+            vboxVehicleNumber.setVisible(false);
+            vboxVehicleNumber.setManaged(false);
+        }
         txtServiceDesc.clear();
+        txtVehicleNumber.clear();
     }
 
     private void showServiceField() {
@@ -233,6 +240,11 @@ public class InvoiceFormController {
         if (vboxBillingExtras != null) {
             vboxBillingExtras.setVisible(true);
             vboxBillingExtras.setManaged(true);
+        }
+        // Show Vehicle Number for Service invoices
+        if (vboxVehicleNumber != null) {
+            vboxVehicleNumber.setVisible(true);
+            vboxVehicleNumber.setManaged(true);
         }
     }
 
@@ -388,6 +400,12 @@ public class InvoiceFormController {
         detail.setCustomer(customerName);
         detail.setPhone(txtPhone.getText() != null ? txtPhone.getText().trim() : "");
         detail.setDescription(txtServiceDesc.getText() != null ? txtServiceDesc.getText().trim() : "");
+        // Save vehicle number only for Service invoice, clear for Sale
+        if ("Service".equals(selectedType)) {
+            detail.setVehicleNumber(txtVehicleNumber.getText() != null ? txtVehicleNumber.getText().trim() : "");
+        } else {
+            detail.setVehicleNumber("");
+        }
         detail.setDate(LocalDate.now().toString());
         detail.setType(selectedType);
         detail.setStatus("quotation");
@@ -402,7 +420,7 @@ public class InvoiceFormController {
             double grandTotal = detail.getGrandTotal();
 
             InvoiceRow row = new InvoiceRow(invoiceId, LocalDate.now().toString(),
-                    customerName, selectedType, detail.getLineItems().size(), grandTotal, "quotation", detail.getPhone(), detail.getDescription());
+                    customerName, selectedType, detail.getLineItems().size(), grandTotal, "quotation", detail.getPhone(), detail.getDescription(), detail.getVehicleNumber());
 
             invoiceRepository.saveInvoice(detail, row);
             updateStockForSavedQuotation(detail);
@@ -454,11 +472,6 @@ public class InvoiceFormController {
 
         if ("Service".equals(cmbInvoiceType.getValue()) && txtServiceDesc.getText().trim().isBlank()) {
             alert("Service description required");
-            return false;
-        }
-
-        if (editInvoiceId == null && txtVehicleNumber.getText().isBlank()) {
-            alert("Vehicle number required");
             return false;
         }
         double labour = parse(txtLabour.getText());
@@ -538,6 +551,7 @@ public class InvoiceFormController {
         if (detail != null) {
             txtCustomerName.setText(detail.getCustomer());
             txtPhone.setText(detail.getPhone());
+            txtVehicleNumber.setText(detail.getVehicleNumber());
             
             // Set invoice type from existing data
             if (detail.getType() != null && !detail.getType().isBlank()) {

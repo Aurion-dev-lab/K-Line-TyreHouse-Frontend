@@ -64,26 +64,27 @@
                             </VBox>
                             <rowConstraints><RowConstraints/></rowConstraints>
                         </GridPane>
-                        <GridPane hgap="16">
-                            <columnConstraints>
-                                <ColumnConstraints hgrow="ALWAYS"/>
-                                <ColumnConstraints hgrow="ALWAYS"/>
-                            </columnConstraints>
-                            <VBox spacing="8" GridPane.columnIndex="0">
-                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="VEHICLE NUMBER"/>
-                                <TextField fx:id="txtVehicleNumber" promptText="WP ABC-1234"
-                                           style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
-                                                  -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
-                            </VBox>
-                            <VBox spacing="8" GridPane.columnIndex="1">
-                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="INVOICE TYPE"/>
-                                <ComboBox fx:id="cmbInvoiceType" maxWidth="Infinity" promptText="Select type"
-                                          onAction="#handleTypeChange"
-                                          style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
-                                                 -fx-padding: 8; -fx-border-color: transparent;"/>
-                            </VBox>
-                            <rowConstraints><RowConstraints/></rowConstraints>
-                        </GridPane>
+                        <HBox spacing="16" alignment="CENTER_LEFT">
+                            <children>
+                                <VBox fx:id="vboxVehicleNumber" spacing="8" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="VEHICLE NUMBER"/>
+                                        <TextField fx:id="txtVehicleNumber" promptText="WP ABC-1234"
+                                                   style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                                          -fx-padding: 12; -fx-border-color: transparent; -fx-font-size: 14px;"/>
+                                    </children>
+                                </VBox>
+                                <VBox spacing="8" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="INVOICE TYPE"/>
+                                        <ComboBox fx:id="cmbInvoiceType" maxWidth="Infinity" promptText="Select type"
+                                                  onAction="#handleTypeChange"
+                                                  style="-fx-background-color: #f8fafc; -fx-background-radius: 12;
+                                                         -fx-padding: 11; -fx-border-color: transparent; -fx-font-size: 14px;"/>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
                     </VBox>
 
                     <!-- ADD ITEM SECTION -->

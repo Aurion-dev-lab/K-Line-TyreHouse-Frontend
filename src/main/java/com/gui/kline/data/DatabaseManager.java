@@ -97,6 +97,7 @@ public final class DatabaseManager {
                     "customer TEXT," +
                     "phone TEXT," +
                     "description TEXT," +
+                    "vehicle_number TEXT," +
                     "invoice_date DATE," +
                     "type TEXT," +
                     "status TEXT," +
@@ -107,6 +108,7 @@ public final class DatabaseManager {
                     "updated_at DATETIME," +
                     "sync_status INTEGER NOT NULL DEFAULT 0" +
                     ")");
+
 
             statement.execute("CREATE TABLE IF NOT EXISTS credit_sales (" +
                     "id TEXT PRIMARY KEY," +

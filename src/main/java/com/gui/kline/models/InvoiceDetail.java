@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InvoiceDetail {
-    private String invoiceId, customer, date, type, phone, description;
+    private String invoiceId, customer, date, type, phone, description, vehicleNumber;
     private final List<LineItem> lineItems = new ArrayList<>();
     private double taxRate = 0.0;
     private double discountAmount = 0.0;
     private String status = "quotation";
+
+    public String getVehicleNumber() { return vehicleNumber != null ? vehicleNumber : ""; }
+    public void setVehicleNumber(String v) { vehicleNumber = v; }
 
     public String getDescription() { return description != null ? description : ""; }
     public void setDescription(String v) { description = v; }

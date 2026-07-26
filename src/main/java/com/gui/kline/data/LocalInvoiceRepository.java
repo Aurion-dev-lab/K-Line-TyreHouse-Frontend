@@ -30,9 +30,9 @@ public class LocalInvoiceRepository {
             lineItemsJson = "[]";
         }
 
-        String sql = "INSERT INTO invoices (id, invoice_id, customer, phone, description, invoice_date, type, status, subtotal, grand_total, line_items, created_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) " +
-                "ON CONFLICT(invoice_id) DO UPDATE SET customer = excluded.customer, phone = excluded.phone, description = excluded.description, type = excluded.type, status = excluded.status, subtotal = excluded.subtotal, grand_total = excluded.grand_total, line_items = excluded.line_items, sync_status = 0, updated_at = CURRENT_TIMESTAMP";
+        String sql = "INSERT INTO invoices (id, invoice_id, customer, phone, description, vehicle_number, invoice_date, type, status, subtotal, grand_total, line_items, created_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) " +
+                "ON CONFLICT(invoice_id) DO UPDATE SET customer = excluded.customer, phone = excluded.phone, description = excluded.description, vehicle_number = excluded.vehicle_number, type = excluded.type, status = excluded.status, subtotal = excluded.subtotal, grand_total = excluded.grand_total, line_items = excluded.line_items, sync_status = 0, updated_at = CURRENT_TIMESTAMP";
 
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -41,12 +41,13 @@ public class LocalInvoiceRepository {
             statement.setString(3, detail.getCustomer());
             statement.setString(4, detail.getPhone());
             statement.setString(5, detail.getDescription());
-            statement.setString(6, row.getDate());
-            statement.setString(7, row.getType());
-            statement.setString(8, detail.getStatus());
-            statement.setDouble(9, detail.getSubtotal());
-            statement.setDouble(10, detail.getGrandTotal());
-            statement.setString(11, lineItemsJson);
+            statement.setString(6, detail.getVehicleNumber());
+            statement.setString(7, row.getDate());
+            statement.setString(8, row.getType());
+            statement.setString(9, detail.getStatus());
+            statement.setDouble(10, detail.getSubtotal());
+            statement.setDouble(11, detail.getGrandTotal());
+            statement.setString(12, lineItemsJson);
             statement.executeUpdate();
 
             String lookup = "SELECT id FROM invoices WHERE invoice_id = ? LIMIT 1";
@@ -91,7 +92,7 @@ public class LocalInvoiceRepository {
      * Load all invoices with summary information
      */
     public List<InvoiceRow> loadInvoices() {
-        String sql = "SELECT invoice_id, customer, phone, description, invoice_date, type, status, line_items, grand_total FROM invoices ORDER BY invoice_date DESC";
+        String sql = "SELECT invoice_id, customer, phone, description, vehicle_number, invoice_date, type, status, line_items, grand_total FROM invoices ORDER BY invoice_date DESC";
         List<InvoiceRow> invoices = new ArrayList<>();
         
         try (Connection connection = DatabaseManager.getConnection();
@@ -117,7 +118,8 @@ public class LocalInvoiceRepository {
                         rs.getDouble("grand_total"),
                         rs.getString("status"),
                         rs.getString("phone"),
-                        rs.getString("description")
+                        rs.getString("description"),
+                        rs.getString("vehicle_number")
                 );
                 invoices.add(row);
             }
@@ -131,7 +133,7 @@ public class LocalInvoiceRepository {
      * Load complete invoice details including line items from JSON
      */
     public InvoiceDetail loadInvoiceDetail(String invoiceId) {
-        String sql = "SELECT invoice_id, customer, phone, description, invoice_date, type, subtotal, grand_total, status, line_items " +
+        String sql = "SELECT invoice_id, customer, phone, description, vehicle_number, invoice_date, type, subtotal, grand_total, status, line_items " +
                 "FROM invoices WHERE invoice_id = ? LIMIT 1";
         
         try (Connection connection = DatabaseManager.getConnection();
@@ -144,6 +146,7 @@ public class LocalInvoiceRepository {
                     detail.setCustomer(rs.getString("customer"));
                     detail.setPhone(rs.getString("phone"));
                     detail.setDescription(rs.getString("description"));
+                    detail.setVehicleNumber(rs.getString("vehicle_number"));
                     detail.setDate(rs.getString("invoice_date"));
                     detail.setType(rs.getString("type"));
                     detail.setStatus(rs.getString("status"));

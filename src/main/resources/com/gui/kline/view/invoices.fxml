@@ -92,6 +92,10 @@
                     <Label styleClass="meta-key" text="Phone " HBox.hgrow="ALWAYS" />
                     <Label fx:id="lblPhone" styleClass="meta-val" text="—" />
                 </HBox>
+                <HBox fx:id="hboxVehicleNumber" alignment="CENTER_LEFT">
+                    <Label styleClass="meta-key" text="Vehicle No " HBox.hgrow="ALWAYS" />
+                    <Label fx:id="lblVehicleNumber" styleClass="meta-val" text="—" />
+                </HBox>
             </VBox>
 
             <Separator styleClass="pnl-sep" />

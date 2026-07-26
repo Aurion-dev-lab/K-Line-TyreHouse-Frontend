@@ -66,6 +66,8 @@ public class InvoicesController implements Initializable {
     @FXML private Label lblDiscount;
     @FXML private Label lblGrandTotal;
     @FXML private Button btnDownloadPdf;
+    @FXML private HBox  hboxVehicleNumber;
+    @FXML private Label lblVehicleNumber;
     // Removed: cboInvType, cboInvProduct, txtInvService, txtInvQty, txtInvAmount, btnAddToInvoice
     // (These FXML elements were removed from the UI)
     // ...existing code...
@@ -306,7 +308,8 @@ public class InvoicesController implements Initializable {
                 currentInvoiceDetail.getGrandTotal(),
                 "completed",
                 currentInvoiceDetail.getPhone(),
-                currentInvoiceDetail.getDescription()
+                currentInvoiceDetail.getDescription(),
+                currentInvoiceDetail.getVehicleNumber()
         );
 
         int idx = -1;
@@ -504,12 +507,24 @@ public class InvoicesController implements Initializable {
                 hboxType.setVisible(false);
                 hboxType.setManaged(false);
             }
+            if (hboxVehicleNumber != null) {
+                hboxVehicleNumber.setVisible(true);
+                hboxVehicleNumber.setManaged(true);
+            }
+            if (lblVehicleNumber != null) {
+                String vehicle = currentInvoiceDetail.getVehicleNumber();
+                lblVehicleNumber.setText(vehicle != null && !vehicle.isBlank() ? vehicle : "—");
+            }
         } else {
             if (hboxType != null) {
                 hboxType.setVisible(true);
                 hboxType.setManaged(true);
             }
             lblInvoiceType.setText(invoice.getType());
+            if (hboxVehicleNumber != null) {
+                hboxVehicleNumber.setVisible(false);
+                hboxVehicleNumber.setManaged(false);
+            }
         }
         
         String phone = currentInvoiceDetail.getPhone();
@@ -530,6 +545,13 @@ public class InvoicesController implements Initializable {
         }
         lblInvoiceType.setText("—");
         lblPhone.setText("—");
+        if (lblVehicleNumber != null) {
+            lblVehicleNumber.setText("—");
+        }
+        if (hboxVehicleNumber != null) {
+            hboxVehicleNumber.setVisible(false);
+            hboxVehicleNumber.setManaged(false);
+        }
         vboxLineItems.getChildren().clear();
         lblSubtotal.setText("Rs. 0.00");
         if (hboxDiscount != null) {
