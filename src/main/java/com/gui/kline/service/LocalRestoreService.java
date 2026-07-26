@@ -340,21 +340,48 @@ public class LocalRestoreService {
     private void restoreCreditSales(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
+            com.gui.kline.data.LocalCatalogRepository catalogRepository = new com.gui.kline.data.LocalCatalogRepository();
             String sql = "INSERT OR IGNORE INTO credit_sales " +
-                    "(id, credit_id, customer, customer_name, sale_date, due_date, subtotal, paid_amount, amount, status, created_at, updated_at, sync_status) " +
+                    "(id, credit_id, customer_id, sale_date, due_date, sub_total, grand_total, settlement, status, parts, created_at, updated_at, sync_status) " +
                     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
                     ps.setString(1,  str(r, "id"));
                     ps.setString(2,  str(r, "creditId"));
-                    ps.setString(3,  str(r, "customer"));
-                    ps.setString(4,  str(r, "customerName"));
-                    ps.setString(5,  str(r, "saleDate"));
-                    ps.setString(6,  str(r, "dueDate"));
-                    ps.setObject(7,  dbl(r, "subtotal"));
-                    ps.setObject(8,  dbl(r, "paidAmount"));
-                    ps.setObject(9,  dbl(r, "amount"));
-                    ps.setString(10, str(r, "status"));
+                    
+                    String customerName = str(r, "customerName");
+                    if (customerName == null || customerName.isBlank()) {
+                        customerName = str(r, "customer");
+                    }
+                    String customerId = null;
+                    if (customerName != null && !customerName.isBlank()) {
+                        customerId = catalogRepository.getCustomerIdByName(customerName);
+                        if (customerId == null) {
+                            customerId = java.util.UUID.randomUUID().toString();
+                            String insCustomer = "INSERT OR IGNORE INTO credit_customers (id, name, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)";
+                            try (PreparedStatement ins = conn.prepareStatement(insCustomer)) {
+                                ins.setString(1, customerId);
+                                ins.setString(2, customerName.trim());
+                                ins.executeUpdate();
+                            }
+                        }
+                    }
+                    ps.setString(3,  customerId);
+                    ps.setString(4,  str(r, "saleDate"));
+                    ps.setString(5,  str(r, "dueDate"));
+                    
+                    double subTotal = dbl(r, "subtotal");
+                    double amount = dbl(r, "amount");
+                    double paidAmount = dbl(r, "paidAmount");
+                    if (subTotal == 0.0) {
+                        subTotal = amount;
+                    }
+                    
+                    ps.setDouble(6,  subTotal);
+                    ps.setDouble(7,  amount);
+                    ps.setDouble(8,  paidAmount);
+                    ps.setString(9,  str(r, "status"));
+                    ps.setString(10, str(r, "parts"));
                     ps.setString(11, str(r, "createdAt"));
                     ps.setString(12, str(r, "updatedAt"));
                     ps.addBatch();

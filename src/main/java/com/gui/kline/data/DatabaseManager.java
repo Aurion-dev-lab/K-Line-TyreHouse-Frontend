@@ -112,25 +112,19 @@ public final class DatabaseManager {
 
             statement.execute("CREATE TABLE IF NOT EXISTS credit_sales (" +
                     "id TEXT PRIMARY KEY," +
-                    "credit_id TEXT," +
-                    "customer TEXT," +
-                    "customer_name TEXT," +
+                    "credit_id TEXT UNIQUE," +
+                    "customer_id TEXT," +
                     "sale_date DATE," +
                     "due_date DATE," +
-                    "subtotal REAL NOT NULL DEFAULT 0," +
-                    "paid_amount REAL NOT NULL DEFAULT 0," +
-                    "amount REAL NOT NULL DEFAULT 0," +
-                    "labour REAL DEFAULT 0.00," +
-                    "parts_cost REAL DEFAULT 0.00," +
-                    "discount REAL DEFAULT 0.00," +
-                    "labour_cost REAL DEFAULT 0.00," +
-                    "extra_parts REAL DEFAULT 0.00," +
-                    "discount_amount REAL DEFAULT 0.00," +
+                    "sub_total REAL NOT NULL DEFAULT 0," +
+                    "grand_total REAL NOT NULL DEFAULT 0," +
+                    "settlement REAL NOT NULL DEFAULT 0," +
                     "status TEXT," +
                     "parts TEXT," +
                     "created_at DATETIME NOT NULL," +
                     "updated_at DATETIME," +
-                    "sync_status INTEGER NOT NULL DEFAULT 0" +
+                    "sync_status INTEGER NOT NULL DEFAULT 0," +
+                    "FOREIGN KEY(customer_id) REFERENCES credit_customers(id)" +
                     ")");
 
             statement.execute("DROP TABLE IF EXISTS invoice_line_items");

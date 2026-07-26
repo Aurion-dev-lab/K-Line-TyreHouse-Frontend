@@ -27,9 +27,9 @@ public class LocalCreditSalesRepository {
             partsJson = "[]";
         }
 
-        String sql = "INSERT INTO credit_sales (id, credit_id, sale_date, customer_name, due_date, subtotal, paid_amount, status, labour, parts_cost, discount, parts, created_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) " +
-                "ON CONFLICT(credit_id) DO UPDATE SET sale_date = excluded.sale_date, customer_name = excluded.customer_name, due_date = excluded.due_date, subtotal = excluded.subtotal, paid_amount = excluded.paid_amount, status = excluded.status, labour = excluded.labour, parts_cost = excluded.parts_cost, discount = excluded.discount, parts = excluded.parts, sync_status = 0, updated_at = CURRENT_TIMESTAMP";
+        String sql = "INSERT INTO credit_sales (id, credit_id, sale_date, customer_id, due_date, sub_total, grand_total, settlement, status, parts, created_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) " +
+                "ON CONFLICT(credit_id) DO UPDATE SET sale_date = excluded.sale_date, customer_id = excluded.customer_id, due_date = excluded.due_date, sub_total = excluded.sub_total, grand_total = excluded.grand_total, settlement = excluded.settlement, status = excluded.status, parts = excluded.parts, sync_status = 0, updated_at = CURRENT_TIMESTAMP";
          
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -37,15 +37,13 @@ public class LocalCreditSalesRepository {
             ps.setString(1, java.util.UUID.randomUUID().toString());
             ps.setString(2, row.getCreditId());
             ps.setString(3, row.getDate());
-            ps.setString(4, row.getCustomer());
+            ps.setString(4, detail.getCustomerId());
             ps.setString(5, row.getDueDate());
-            ps.setDouble(6, row.getAmount());
-            ps.setDouble(7, detail.getPaid());
-            ps.setString(8, row.getStatus());
-            ps.setDouble(9, detail.getLabour());
-            ps.setDouble(10, detail.getPartsCost());
-            ps.setDouble(11, detail.getDiscount());
-            ps.setString(12, partsJson);
+            ps.setDouble(6, detail.getSubtotal());
+            ps.setDouble(7, detail.getGrandTotal());
+            ps.setDouble(8, detail.getSettlement());
+            ps.setString(9, row.getStatus());
+            ps.setString(10, partsJson);
             
             ps.executeUpdate();
             
@@ -81,7 +79,8 @@ public class LocalCreditSalesRepository {
     }
 
     public CreditSaleDetail loadCreditSaleDetail(String creditId) {
-        String sql = "SELECT * FROM credit_sales WHERE credit_id = ?";
+        String sql = "SELECT cs.*, cc.name AS customer_name FROM credit_sales cs " +
+                "LEFT JOIN credit_customers cc ON cs.customer_id = cc.id WHERE cs.credit_id = ?";
         CreditSaleDetail detail = null;
         
         try (Connection conn = DatabaseManager.getConnection();
@@ -93,13 +92,11 @@ public class LocalCreditSalesRepository {
             if (rs.next()) {
                 detail = new CreditSaleDetail();
                 detail.setCreditId(rs.getString("credit_id"));
-                detail.setCustomer(rs.getString("customer_name"));
+                detail.setCustomerId(rs.getString("customer_id"));
+                detail.setCustomerName(rs.getString("customer_name"));
                 detail.setDate(LocalDate.parse(rs.getString("sale_date")));
                 detail.setDueDate(LocalDate.parse(rs.getString("due_date")));
-                detail.setPaid(rs.getDouble("paid_amount"));
-                try { detail.setLabour(rs.getDouble("labour")); } catch (SQLException e) { detail.setLabour(0); }
-                try { detail.setPartsCost(rs.getDouble("parts_cost")); } catch (SQLException e) { detail.setPartsCost(0); }
-                try { detail.setDiscount(rs.getDouble("discount")); } catch (SQLException e) { detail.setDiscount(0); }
+                detail.setSettlement(rs.getDouble("settlement"));
                 
                 String partsJson = rs.getString("parts");
                 if (partsJson != null && !partsJson.isBlank()) {
@@ -141,7 +138,7 @@ public class LocalCreditSalesRepository {
     }
 
     public void updatePayment(String creditId, double paidAmount) {
-        String sql = "UPDATE credit_sales SET paid_amount = ?, status = ?, sync_status = 0 WHERE credit_id = ?";
+        String sql = "UPDATE credit_sales SET settlement = ?, status = ?, sync_status = 0 WHERE credit_id = ?";
         
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -158,21 +155,14 @@ public class LocalCreditSalesRepository {
     }
 
     private double getTotalAmount(String creditId) {
-        String sql = "SELECT subtotal, labour, parts_cost, discount FROM credit_sales WHERE credit_id = ?";
+        String sql = "SELECT grand_total FROM credit_sales WHERE credit_id = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, creditId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                double subtotal = rs.getDouble("subtotal");
-                double labour = 0;
-                double partsCost = 0;
-                double discount = 0;
-                try { labour = rs.getDouble("labour"); } catch (SQLException e) {}
-                try { partsCost = rs.getDouble("parts_cost"); } catch (SQLException e) {}
-                try { discount = rs.getDouble("discount"); } catch (SQLException e) {}
-                return subtotal + labour + partsCost - discount;
+                return rs.getDouble("grand_total");
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to get total amount: " + e.getMessage());
@@ -181,7 +171,10 @@ public class LocalCreditSalesRepository {
     }
 
     public List<CreditSalesController.CreditSaleRow> loadAllCreditSales() {
-        String sql = "SELECT * FROM credit_sales ORDER BY sale_date DESC";
+        String sql = "SELECT cs.credit_id, cs.sale_date, cc.name AS customer_name, cs.due_date, " +
+                "cs.grand_total, cs.settlement, cs.status FROM credit_sales cs " +
+                "LEFT JOIN credit_customers cc ON cs.customer_id = cc.id " +
+                "ORDER BY cs.sale_date DESC";
         List<CreditSalesController.CreditSaleRow> sales = new ArrayList<>();
         
         try (Connection conn = DatabaseManager.getConnection();
@@ -192,10 +185,10 @@ public class LocalCreditSalesRepository {
                 CreditSalesController.CreditSaleRow row = new CreditSalesController.CreditSaleRow(
                     rs.getString("credit_id"),
                     rs.getString("sale_date"),
-                    rs.getString("customer_name"),
+                    rs.getString("customer_name") != null ? rs.getString("customer_name") : "Unknown",
                     rs.getString("due_date"),
-                    rs.getDouble("subtotal"),
-                    rs.getDouble("paid_amount"),
+                    rs.getDouble("grand_total"),
+                    rs.getDouble("settlement"),
                     rs.getString("status")
                 );
                 sales.add(row);

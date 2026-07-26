@@ -62,15 +62,11 @@ public class CreditSalesController implements Initializable {
     @FXML private Label lblSaleDate;
     @FXML private VBox  vboxParts;
     @FXML private Label lblSubtotal;
-    @FXML private Label lblLabour;
-    @FXML private Label lblPartsCost;
     @FXML private Label lblDiscount;
     @FXML private Label lblPaid;
     @FXML private Label lblAmountDue;
     @FXML private Button            btnSettleCredit;
-    @FXML private Button            btnGenerateSale;
     @FXML private Button            btnDeselect;
-    @FXML private Button            btnGenerateInvoice;
     @FXML private Button            btnDownloadInvoice;
 
     private final ObservableList<CreditSaleRow> creditSaleList =
@@ -100,7 +96,7 @@ public class CreditSalesController implements Initializable {
         colDueDate.setCellValueFactory(cd ->
                 new javafx.beans.property.SimpleStringProperty(cd.getValue().getDueDate()));
         colAmount.setCellValueFactory(cd ->
-                new javafx.beans.property.SimpleDoubleProperty(cd.getValue().getAmount()).asObject());
+                new javafx.beans.property.SimpleDoubleProperty(cd.getValue().getBalanceAmount()).asObject());
         colStatus.setCellValueFactory(cd ->
                 new javafx.beans.property.SimpleStringProperty(cd.getValue().getStatus()));
 
@@ -187,7 +183,7 @@ public class CreditSalesController implements Initializable {
      @FXML
      private void onNewCredit(ActionEvent event) {
          Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-         ViewModel.INSTANCE.getViewsFactory().getForm("form/credit-sale-dialog", ownerStage);
+         ViewModel.INSTANCE.getViewsFactory().getForm("form/credit-sale-form", ownerStage);
          
          // Add a listener to refresh table when dialog closes
          Stage dialogStage = ViewModel.INSTANCE.getViewsFactory().getLastDialogStage();
@@ -229,7 +225,7 @@ public class CreditSalesController implements Initializable {
         javafx.stage.Window owner = getOwnerWindow();
         if (owner instanceof Stage) {
             ProcessCreditSaleController controller = ViewModel.INSTANCE.getViewsFactory()
-                    .getForm("form/credit-sale-dialog", (Stage) owner);
+                    .getForm("form/credit-sale-form", (Stage) owner);
             if (controller != null) {
                 controller.setEditMode(sale.getCreditId(), detail);
             }
@@ -409,65 +405,7 @@ public class CreditSalesController implements Initializable {
         }
     }
 
-    @FXML
-    private void onGenerateInvoice(ActionEvent event) {
-        if (selectedSale == null || currentSaleDetail == null) {
-            showError("Select a credit sale first.");
-            return;
-        }
-        if (currentSaleDetail.getParts().isEmpty()) {
-            showError("This credit sale has no parts to invoice.");
-            return;
-        }
 
-        try {
-            // Create invoice from credit sale
-            String invoiceId = "INV" + System.currentTimeMillis();
-            String type = "Credit Sale";
-            String dateStr = LocalDate.now().toString();
-
-            // Convert parts to line items
-            List<LineItem> lineItems = currentSaleDetail.getParts().stream()
-                    .map(part -> new LineItem(
-                            part.getDescription(),
-                            "Sale",
-                            part.getQuantity(),
-                            part.getUnitPrice(),
-                            part.getProductId()
-                    ))
-                    .toList();
-
-            // Add line items to invoice detail
-            InvoiceDetail invoiceDetail = new InvoiceDetail();
-            invoiceDetail.setInvoiceId(invoiceId);
-            invoiceDetail.setCustomer(currentSaleDetail.getCustomer());
-            invoiceDetail.setDate(dateStr);
-            invoiceDetail.setType(type);
-            invoiceDetail.setStatus("completed");
-            for (LineItem item : lineItems) {
-                invoiceDetail.addLineItem(item);
-            }
-
-            // Create invoice row (use computed grand total from invoiceDetail)
-            InvoiceRow invoiceRow = new InvoiceRow(
-                    invoiceId,
-                    dateStr,
-                    currentSaleDetail.getCustomer(),
-                    type,
-                    lineItems.size(),
-                    invoiceDetail.getGrandTotal(),
-                    "completed"
-            );
-
-            // Save invoice
-            LocalInvoiceRepository invoiceRepository = new LocalInvoiceRepository();
-            invoiceRepository.saveInvoice(invoiceDetail, invoiceRow);
-
-            showSuccess("Invoice generated successfully! You can now download it as PDF.");
-        } catch (Exception ex) {
-            showError("Failed to generate invoice: " + ex.getMessage());
-        }
-    }
 
     @FXML
     private void onDownloadInvoice(ActionEvent event) {
@@ -580,8 +518,6 @@ public class CreditSalesController implements Initializable {
     private void updateTotals() {
         if (currentSaleDetail == null) return;
         lblSubtotal.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getSubtotal()));
-        if (lblLabour != null) lblLabour.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getLabour()));
-        if (lblPartsCost != null) lblPartsCost.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getPartsCost()));
         if (lblDiscount != null) lblDiscount.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getDiscount()));
         lblPaid.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getPaid()));
         lblAmountDue.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getAmountDue()));
@@ -602,8 +538,6 @@ public class CreditSalesController implements Initializable {
         lblSaleDate.setText("—");
         vboxParts.getChildren().clear();
         lblSubtotal.setText("Rs. 0.00");
-        if (lblLabour != null) lblLabour.setText("Rs. 0.00");
-        if (lblPartsCost != null) lblPartsCost.setText("Rs. 0.00");
         if (lblDiscount != null) lblDiscount.setText("Rs. 0.00");
         lblPaid.setText("Rs. 0.00");
         lblAmountDue.setText("Rs. 0.00");

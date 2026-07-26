@@ -70,9 +70,8 @@ public class AnalyticsController {
                 }
             }
             
-            // Load credit sales revenue
             try (PreparedStatement ps = conn.prepareStatement(
-                    "SELECT COALESCE(sale_date, DATE(created_at)) as d, SUM(COALESCE(subtotal, amount)) as total " +
+                    "SELECT COALESCE(sale_date, DATE(created_at)) as d, SUM(grand_total) as total " +
                     "FROM credit_sales WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d")) {
                 ps.setString(1, startDate.toString());
                 ps.setString(2, endDate.toString());
@@ -230,9 +229,8 @@ public class AnalyticsController {
                 }
             }
             
-            // Load credit sales by date
             try (PreparedStatement ps = conn.prepareStatement(
-                    "SELECT COALESCE(sale_date, DATE(created_at)) as d, SUM(COALESCE(subtotal, amount)) as total " +
+                    "SELECT COALESCE(sale_date, DATE(created_at)) as d, SUM(grand_total) as total " +
                     "FROM credit_sales WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d")) {
                 ps.setString(1, startDate.toString());
                 ps.setString(2, endDate.toString());

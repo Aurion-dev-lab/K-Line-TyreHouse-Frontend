@@ -576,14 +576,14 @@ public class LayoutController {
             System.err.println("Search invoices error: " + ex.getMessage());
         }
     }
-
     private void searchCreditSales(String searchTerm, List<SearchResult> results) {
-        String sql = "SELECT id, credit_id, customer_name, amount, status FROM credit_sales " +
-                "WHERE customer_name LIKE ? OR credit_id LIKE ? OR customer LIKE ? " +
-                "ORDER BY sale_date DESC LIMIT 5";
+        String sql = "SELECT cs.id, cs.credit_id, cc.name AS customer_name, cs.grand_total AS amount, cs.status FROM credit_sales cs " +
+                "LEFT JOIN credit_customers cc ON cs.customer_id = cc.id " +
+                "WHERE cc.name LIKE ? OR cs.credit_id LIKE ? " +
+                "ORDER BY cs.sale_date DESC LIMIT 5";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            for (int i = 1; i <= 3; i++) ps.setString(i, searchTerm);
+            for (int i = 1; i <= 2; i++) ps.setString(i, searchTerm);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String id = rs.getString("id");

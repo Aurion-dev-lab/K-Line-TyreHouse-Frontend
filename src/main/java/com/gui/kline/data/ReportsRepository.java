@@ -56,16 +56,12 @@ public class ReportsRepository {
             System.err.println("Failed to load sales data for reports: " + ex.getMessage());
         }
 
-        // Also include credit sales data
+        // Also include credit sales data with accurate product costs and profits
         String creditSql = "SELECT " +
                 "    cs.sale_date, " +
-                "    cs.customer_name as product_name, " +
-                "    cs.amount as revenue, " +
-                "    cs.paid_amount as paid_amount, " +
-                "    (cs.amount - cs.paid_amount) as balance " +
+                "    cs.parts " +
                 "FROM credit_sales cs " +
-                "WHERE cs.sale_date BETWEEN ? AND ? " +
-                "ORDER BY cs.sale_date DESC";
+                "WHERE cs.sale_date BETWEEN ? AND ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(creditSql)) {
@@ -77,16 +73,22 @@ public class ReportsRepository {
                 while (rs.next()) {
                     LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "sale_date");
                     if (date == null) date = LocalDate.now();
-                    String customerName = rs.getString("product_name");
-                    if (customerName == null || customerName.isBlank()) {
-                        customerName = "Credit Sale";
+                    String partsJson = rs.getString("parts");
+                    if (partsJson != null && !partsJson.isBlank()) {
+                        try {
+                            List<com.gui.kline.models.Part> items = mapper.readValue(partsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.Part>>() {});
+                            if (items != null) {
+                                for (com.gui.kline.models.Part item : items) {
+                                    String name = item.getDescription() != null ? item.getDescription() : "Credit Part";
+                                    int qty = item.getQuantity();
+                                    double revenue = item.getTotal();
+                                    double buyPrice = item.getProductId() != null ? productBuyPrices.getOrDefault(item.getProductId(), 0.0) : 0.0;
+                                    double profit = (item.getUnitPrice() - buyPrice) * qty;
+                                    sales.add(new ReportsController.SaleItem(name + " (Credit)", date, qty, revenue, profit));
+                                }
+                            }
+                        } catch (Exception ignored) {}
                     }
-                    double revenue = rs.getDouble("revenue");
-                    double profit = revenue * 0.3;
-                    
-                    sales.add(new ReportsController.SaleItem(
-                        customerName + " (Credit)", date, 1, revenue, profit
-                    ));
                 }
             }
         } catch (SQLException ex) {
@@ -287,7 +289,7 @@ public class ReportsRepository {
         // Total sales revenue
         String salesSql = "SELECT COALESCE(SUM(grand_total), 0) as total_sales " +
                 "FROM invoices " +
-                "WHERE status = 'completed' AND invoice_date BETWEEN ? AND ?";
+                "WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(salesSql)) {
@@ -305,9 +307,9 @@ public class ReportsRepository {
         }
         
         // Total credit sales
-        String creditSalesSql = "SELECT COALESCE(SUM(amount), 0) as total_credit " +
+        String creditSalesSql = "SELECT COALESCE(SUM(grand_total), 0) as total_credit " +
                 "FROM credit_sales " +
-                "WHERE sale_date BETWEEN ? AND ?";
+                "WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(creditSalesSql)) {
@@ -408,17 +410,18 @@ public class ReportsRepository {
         // invoice. Service and labour lines have no inventory cost, so they add
         // their full amount to profit.
         double invoiceProductCost = getCompletedInvoiceProductCost(startDate, endDate);
+        double creditSalesProductCost = getCreditSalesProductCost(startDate, endDate);
         
         // Tyre export costs (comp_price * tyres) - cost of purchasing tyres
         double tyreExportCosts = getTyreExportCosts(startDate, endDate);
         
-        summary.setProductCosts(invoiceProductCost + tyreExportCosts);
+        summary.setProductCosts(invoiceProductCost + creditSalesProductCost + tyreExportCosts);
         
         summary.setWorkerCosts(getWorkerCosts(startDate, endDate));
         
         // Calculate net profit
-        // Total revenue from all sources (sales + services + quick services + tyre exports)
-        // Note: credit sales are already included in total sales as they are recorded as invoices
+        // Total revenue from all sources (sales + credit sales + services + quick services + tyre exports)
+        // Note: credit sales are now explicitly summed to avoid duplicate invoice dependency
         double totalRevenue = summary.getTotalRevenue();
         
         // Total costs: general expenses + product costs + worker costs
@@ -428,6 +431,39 @@ public class ReportsRepository {
         summary.setNetProfit(totalRevenue - totalCosts);
         
         return summary;
+    }
+
+    private double getCreditSalesProductCost(LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT parts FROM credit_sales WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ?";
+        com.fasterxml.jackson.databind.ObjectMapper mapper = com.gui.kline.utils.JsonUtil.createObjectMapper();
+        java.util.Map<String, Double> productBuyPrices = loadProductBuyPrices();
+        double totalCost = 0.0;
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String partsJson = rs.getString("parts");
+                    if (partsJson != null && !partsJson.isBlank()) {
+                        try {
+                            List<com.gui.kline.models.Part> items = mapper.readValue(partsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.Part>>() {});
+                            if (items != null) {
+                                for (com.gui.kline.models.Part item : items) {
+                                    if (item.getProductId() != null) {
+                                        double buyPrice = productBuyPrices.getOrDefault(item.getProductId(), 0.0);
+                                        totalCost += item.getQuantity() * buyPrice;
+                                    }
+                                }
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to calculate credit sales product cost: " + ex.getMessage());
+        }
+        return totalCost;
     }
 
     private double getCompletedInvoiceProductCost(LocalDate startDate, LocalDate endDate) {
@@ -567,13 +603,14 @@ public class ReportsRepository {
         ObservableList<CustomerSummary> customerSummaries = FXCollections.observableArrayList();
         
         String sql = "SELECT " +
-                "    customer_name as customer, " +
+                "    cc.name as customer, " +
                 "    COUNT(*) as purchase_count, " +
-                "    SUM(amount) as total_amount, " +
-                "    SUM(paid_amount) as total_paid " +
-                "FROM credit_sales " +
-                "WHERE sale_date BETWEEN ? AND ? " +
-                "GROUP BY customer_name " +
+                "    SUM(cs.grand_total) as total_amount, " +
+                "    SUM(cs.settlement) as total_paid " +
+                "FROM credit_sales cs " +
+                "LEFT JOIN credit_customers cc ON cs.customer_id = cc.id " +
+                "WHERE cs.sale_date BETWEEN ? AND ? " +
+                "GROUP BY cs.customer_id " +
                 "ORDER BY total_amount DESC";
         
         try (Connection connection = DatabaseManager.getConnection();
@@ -661,7 +698,7 @@ public class ReportsRepository {
         public void setNetProfit(double netProfit) { this.netProfit = netProfit; }
         
         public double getTotalRevenue() {
-            return totalSales + serviceRevenue + quickServiceRevenue + tyreExportRevenue;
+            return totalSales + creditSales + serviceRevenue + quickServiceRevenue + tyreExportRevenue;
         }
         
         public double getTotalCosts() {

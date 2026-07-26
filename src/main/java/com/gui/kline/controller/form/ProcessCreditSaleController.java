@@ -35,8 +35,6 @@ public class ProcessCreditSaleController {
      @FXML private Label                lblDialogTitle;
      @FXML private Label                lblCreditId;
      @FXML private ComboBox<String>    cmbCustomerName;
-     @FXML private TextField           txtPhone;
-     @FXML private TextField           txtVehicleNumber;
      @FXML private DatePicker          dpSaleDate;
      @FXML private DatePicker          dpDueDate;
      @FXML private ChoiceBox<String>   cboPaymentTerms;
@@ -49,8 +47,6 @@ public class ProcessCreditSaleController {
      @FXML private Label               lblTotal;
      @FXML private Button              btnCancel;
      @FXML private Button              btnCreate;
-     @FXML private TextField           txtLabour;
-     @FXML private TextField           txtParts;
      @FXML private TextField           txtDiscount;
 
      private boolean isEditMode = false;
@@ -115,8 +111,6 @@ public class ProcessCreditSaleController {
          // Add listeners for cost fields
          txtPartPrice.textProperty().addListener((o, old, v) -> updateTotal());
          txtPartQty.textProperty().addListener((o, old, v) -> updateTotal());
-         txtLabour.textProperty().addListener((o, old, v) -> updateTotal());
-         txtParts.textProperty().addListener((o, old, v) -> updateTotal());
          txtDiscount.textProperty().addListener((o, old, v) -> updateTotal());
          
          // Add product search listener
@@ -257,11 +251,9 @@ public class ProcessCreditSaleController {
 
      private void updateTotal() {
          double partsTotal = addedParts.stream().mapToDouble(Part::getTotal).sum();
-         double labour = parseDouble(txtLabour.getText());
-         double parts = parseDouble(txtParts.getText());
          double discount = parseDouble(txtDiscount.getText());
          
-         double total = partsTotal + labour + parts - discount;
+         double total = partsTotal - discount;
          if (total < 0) total = 0;
          
          lblTotal.setText(String.format("%.2f", total));
@@ -289,7 +281,6 @@ public class ProcessCreditSaleController {
           lblCreditId.setText("#" + creditId);
           cmbCustomerName.setValue(detail.getCustomer());
           cmbCustomerName.getEditor().setText(detail.getCustomer());
-          txtPhone.setText(catalogRepository.getCustomerPhone(detail.getCustomer()));
           dpSaleDate.setValue(detail.getDate());
           dpDueDate.setValue(detail.getDueDate());
           
@@ -306,9 +297,6 @@ public class ProcessCreditSaleController {
               }
           }
           
-          // Set additional costs
-          txtLabour.setText(String.format("%.2f", detail.getLabour()));
-          txtParts.setText(String.format("%.2f", detail.getPartsCost()));
           txtDiscount.setText(String.format("%.2f", detail.getDiscount()));
           
           // Load existing parts
@@ -332,16 +320,14 @@ public class ProcessCreditSaleController {
       @FXML
       private void onCreate() {
           String customerName = getCustomerName();
-          String phone = txtPhone.getText().trim();
-          String vehicle = txtVehicleNumber.getText().trim();
-
           if (customerName.isBlank()) {
               alert("Customer name is required.");
               return;
           }
 
-          if (!isEditMode && vehicle.isBlank()) {
-              alert("Vehicle number is required.");
+          String customerId = catalogRepository.getCustomerIdByName(customerName);
+          if (customerId == null) {
+              alert("Customer must be a registered credit customer.");
               return;
           }
 
@@ -387,13 +373,11 @@ public class ProcessCreditSaleController {
               // Create CreditSaleDetail object
               CreditSaleDetail detail = new CreditSaleDetail();
               detail.setCreditId(creditId);
-              detail.setCustomer(customerName);
+              detail.setCustomerId(customerId);
+              detail.setCustomerName(customerName);
               detail.setDate(saleDate);
               detail.setDueDate(dueDate);
-              detail.setPaid(isEditMode ? existingPaid : 0);
-              detail.setLabour(parseDouble(txtLabour.getText()));
-              detail.setPartsCost(parseDouble(txtParts.getText()));
-              detail.setDiscount(parseDouble(txtDiscount.getText()));
+              detail.setSettlement(isEditMode ? existingPaid : 0.0);
               for (Part part : addedParts) {
                   detail.addPart(part);
               }
@@ -410,7 +394,7 @@ public class ProcessCreditSaleController {
                       customerName,
                       dueDate.toString(),
                       total,
-                      detail.getPaid(),
+                      detail.getSettlement(),
                       status
               );
 
@@ -419,9 +403,6 @@ public class ProcessCreditSaleController {
 
               // Create sync payload and enqueue
               enqueueCreditSale(row, detail);
-
-              // Save customer
-              catalogRepository.saveCustomer(customerName, phone);
 
               showSuccess("Credit sale " + (isEditMode ? "updated" : "created") + " successfully!");
               closeDialog();

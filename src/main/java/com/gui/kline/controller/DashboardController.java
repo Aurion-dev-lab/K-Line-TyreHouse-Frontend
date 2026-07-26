@@ -684,6 +684,10 @@ public class DashboardController implements Initializable {
                             "FROM invoices WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d",
                     startDate, endDate, totals);
             collectTotalsByDate(conn,
+                    "SELECT COALESCE(sale_date, DATE(created_at)) AS d, SUM(grand_total) AS total " +
+                            "FROM credit_sales WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d",
+                    startDate, endDate, totals);
+            collectTotalsByDate(conn,
                     "SELECT service_date, SUM(price) AS total FROM services WHERE service_date BETWEEN ? AND ? GROUP BY service_date",
                     startDate, endDate, totals);
             collectTotalsByDate(conn,
@@ -723,6 +727,10 @@ public class DashboardController implements Initializable {
                 "SELECT COALESCE(SUM(grand_total),0) FROM invoices " +
                         "WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?",
                 startDate, endDate);
+        double creditSales = sumAmount(conn,
+                "SELECT COALESCE(SUM(grand_total),0) FROM credit_sales " +
+                        "WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ?",
+                startDate, endDate);
         double services = sumAmount(conn,
                 "SELECT COALESCE(SUM(price),0) FROM services WHERE (invoice_id IS NULL OR invoice_id = '') AND (name IS NULL OR name != 'Invoiced Service') AND service_date BETWEEN ? AND ?",
                 startDate, endDate);
@@ -732,7 +740,7 @@ public class DashboardController implements Initializable {
         double tyreExports = sumAmount(conn,
                 "SELECT COALESCE(SUM(total_amount),0) FROM tyre_exports WHERE export_date BETWEEN ? AND ?",
                 startDate, endDate);
-        return invoices + services + quickServicesTotal + tyreExports;
+        return invoices + creditSales + services + quickServicesTotal + tyreExports;
     }
 
      private double sumProfit(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
@@ -742,6 +750,14 @@ public class DashboardController implements Initializable {
                  startDate, endDate);
          double invoiceCost = calculateInvoiceProductCost(conn, startDate, endDate);
          double invoiceProfit = invoiceRevenue - invoiceCost;
+         
+         double creditSalesRevenue = sumAmount(conn,
+                 "SELECT COALESCE(SUM(grand_total),0) FROM credit_sales " +
+                         "WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ?",
+                 startDate, endDate);
+         double creditSalesCost = calculateCreditSalesProductCost(conn, startDate, endDate);
+         double creditSalesProfit = creditSalesRevenue - creditSalesCost;
+         
          double servicesProfit = sumAmount(conn,
                  "SELECT COALESCE(SUM(price),0) FROM services WHERE (invoice_id IS NULL OR invoice_id = '') AND (name IS NULL OR name != 'Invoiced Service') AND service_date BETWEEN ? AND ?",
                  startDate, endDate);
@@ -760,7 +776,7 @@ public class DashboardController implements Initializable {
                  "SELECT COALESCE(SUM(amount),0) FROM expenses WHERE expense_date BETWEEN ? AND ?",
                  startDate, endDate);
          
-         return invoiceProfit + servicesProfit + quickServicesProfit + tyreExportsProfit - paidSalaries - totalExpenses;
+         return invoiceProfit + creditSalesProfit + servicesProfit + quickServicesProfit + tyreExportsProfit - paidSalaries - totalExpenses;
      }
 
     private double calculateTyreExportsProfit(LocalDate startDate, LocalDate endDate) {
@@ -796,6 +812,45 @@ public class DashboardController implements Initializable {
             return active;
         }
         return countRows(conn, "SELECT COUNT(*) FROM workers", null, null);
+    }
+
+    private double calculateCreditSalesProductCost(Connection conn, LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT parts FROM credit_sales WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ?";
+        com.fasterxml.jackson.databind.ObjectMapper mapper = com.gui.kline.utils.JsonUtil.createObjectMapper();
+        java.util.Map<String, Double> productBuyPrices = new java.util.HashMap<>();
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT id, buy_price FROM products")) {
+            while (rs.next()) {
+                productBuyPrices.put(rs.getString("id"), rs.getDouble("buy_price"));
+            }
+        } catch (SQLException ignored) {}
+
+        double totalCost = 0.0;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, startDate.toString());
+            ps.setString(2, endDate.toString());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String partsJson = rs.getString(1);
+                    if (partsJson != null && !partsJson.isBlank()) {
+                        try {
+                            List<com.gui.kline.models.Part> items = mapper.readValue(partsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.Part>>() {});
+                            if (items != null) {
+                                for (com.gui.kline.models.Part item : items) {
+                                    if (item.getProductId() != null) {
+                                        double buyPrice = productBuyPrices.getOrDefault(item.getProductId(), 0.0);
+                                        totalCost += item.getQuantity() * buyPrice;
+                                    }
+                                }
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to calculate credit sales cost: " + ex.getMessage());
+        }
+        return totalCost;
     }
 
     private double calculateInvoiceProductCost(Connection conn, LocalDate startDate, LocalDate endDate) {

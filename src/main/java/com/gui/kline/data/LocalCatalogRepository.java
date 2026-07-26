@@ -59,6 +59,25 @@ public class LocalCatalogRepository {
         }
     }
 
+    public String getCustomerIdByName(String name) {
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+        String sql = "SELECT id FROM credit_customers WHERE name = ? LIMIT 1";
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, name.trim());
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("id");
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to find customer ID by name: " + ex.getMessage());
+        }
+        return null;
+    }
+
     public String getCustomerPhone(String name) {
         if (name == null || name.isBlank()) {
             return "";
