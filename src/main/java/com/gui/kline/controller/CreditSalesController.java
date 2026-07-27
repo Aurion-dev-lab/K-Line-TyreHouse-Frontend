@@ -65,6 +65,7 @@ public class CreditSalesController implements Initializable {
     @FXML private VBox  vboxParts;
     @FXML private Label lblSubtotal;
     @FXML private Label lblDiscount;
+    @FXML private Label lblGrandTotal;
     @FXML private Label lblPaid;
     @FXML private Label lblAmountDue;
     @FXML private Button            btnSettleCredit;
@@ -98,7 +99,7 @@ public class CreditSalesController implements Initializable {
         colDueDate.setCellValueFactory(cd ->
                 new javafx.beans.property.SimpleStringProperty(cd.getValue().getDueDate()));
         colAmount.setCellValueFactory(cd ->
-                new javafx.beans.property.SimpleDoubleProperty(cd.getValue().getBalanceAmount()).asObject());
+                new javafx.beans.property.SimpleDoubleProperty(cd.getValue().getAmount()).asObject());
         colStatus.setCellValueFactory(cd ->
                 new javafx.beans.property.SimpleStringProperty(cd.getValue().getStatus()));
 
@@ -516,7 +517,12 @@ public class CreditSalesController implements Initializable {
     private void updateTotals() {
         if (currentSaleDetail == null) return;
         lblSubtotal.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getSubtotal()));
-        if (lblDiscount != null) lblDiscount.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getDiscount()));
+        if (lblDiscount != null) {
+            lblDiscount.setText("- Rs. " + String.format("%,.2f", currentSaleDetail.getDiscount()));
+        }
+        if (lblGrandTotal != null) {
+            lblGrandTotal.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getGrandTotal()));
+        }
         lblPaid.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getPaid()));
         lblAmountDue.setText("Rs. " + String.format("%,.2f", currentSaleDetail.getAmountDue()));
         updateActionState();
@@ -537,7 +543,8 @@ public class CreditSalesController implements Initializable {
         lblSaleDate.setText("—");
         vboxParts.getChildren().clear();
         lblSubtotal.setText("Rs. 0.00");
-        if (lblDiscount != null) lblDiscount.setText("Rs. 0.00");
+        if (lblDiscount != null) lblDiscount.setText("- Rs. 0.00");
+        if (lblGrandTotal != null) lblGrandTotal.setText("Rs. 0.00");
         lblPaid.setText("Rs. 0.00");
         lblAmountDue.setText("Rs. 0.00");
         updateActionState();

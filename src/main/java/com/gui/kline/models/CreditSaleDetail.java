@@ -13,6 +13,7 @@ public class CreditSaleDetail {
     private final List<Part> parts = new ArrayList<>();
     private String phone;
     private double settlement = 0.0;
+    private double discount = 0.0;
 
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
@@ -25,8 +26,11 @@ public class CreditSaleDetail {
         return parts.stream().mapToDouble(Part::getTotal).sum(); 
     }
     
+    public double getDiscount() { return discount; }
+    public void setDiscount(double discount) { this.discount = discount; }
+    
     public double getGrandTotal() { 
-        return getSubtotal(); 
+        return Math.max(0.0, getSubtotal() - discount); 
     }
     
     public double getSettlement() { 
@@ -72,5 +76,5 @@ public class CreditSaleDetail {
     @Deprecated
     public double getPartsCost() { return 0.0; }
     @Deprecated
-    public double getDiscount() { return 0.0; }
+    public double getDiscountValue() { return getDiscount(); }
 }

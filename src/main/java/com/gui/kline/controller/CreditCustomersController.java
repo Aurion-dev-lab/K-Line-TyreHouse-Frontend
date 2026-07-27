@@ -10,10 +10,14 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.util.List;
@@ -26,9 +30,12 @@ public class CreditCustomersController {
     @FXML private TableColumn<CreditCustomer, String> colEmail;
     @FXML private TableColumn<CreditCustomer, String> colAddress;
     @FXML private TableColumn<CreditCustomer, String> colUpdatedAt;
-    @FXML private TableColumn<CreditCustomer, String> colAmount;
-    @FXML private TableColumn<CreditCustomer, String> colSettleAmount;
-    @FXML private TableColumn<CreditCustomer, String> colDueAmount;
+
+    @FXML private FlowPane flowCards;
+    @FXML private Label lblTotalCredit;
+    @FXML private Label lblTotalSettled;
+    @FXML private Label lblTotalDue;
+
     @FXML private TextField txtSearch;
 
     private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
@@ -37,17 +44,15 @@ public class CreditCustomersController {
 
     @FXML
     public void initialize() {
+        // Tab 1 bindings
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colPhone.setCellValueFactory(new PropertyValueFactory<>("phone"));
         colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
         colAddress.setCellValueFactory(new PropertyValueFactory<>("address"));
         colUpdatedAt.setCellValueFactory(new PropertyValueFactory<>("updatedAt"));
 
-        colAmount.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(String.format("Rs. %.2f", cellData.getValue().getTotalAmount())));
-        colSettleAmount.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(String.format("Rs. %.2f", cellData.getValue().getSettleAmount())));
-        colDueAmount.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(String.format("Rs. %.2f", cellData.getValue().getDueAmount())));
-
         tblCustomers.setItems(filteredList);
+
         loadData();
         ViewModel.INSTANCE.getViewsFactory().setCreditCustomersController(this);
     }
@@ -58,6 +63,69 @@ public class CreditCustomersController {
             catalogRepository.loadCustomerStats(customer);
         }
         masterList.setAll(list);
+        buildOverviewCards(list);
+    }
+
+    private void buildOverviewCards(List<CreditCustomer> list) {
+        if (flowCards == null) return;
+        flowCards.getChildren().clear();
+
+        double totalCredit = 0.0;
+        double totalSettled = 0.0;
+        double totalDue = 0.0;
+
+        for (CreditCustomer c : list) {
+            totalCredit += c.getTotalAmount();
+            totalSettled += c.getSettleAmount();
+            totalDue += c.getDueAmount();
+
+            // Create Card Container
+            VBox card = new VBox();
+            card.getStyleClass().add("customer-credit-card");
+
+            // Customer Name Title
+            Label nameLbl = new Label(c.getName() != null ? c.getName() : "Unknown");
+            nameLbl.getStyleClass().add("customer-card-title");
+            card.getChildren().add(nameLbl);
+
+            // Total Credit Row
+            HBox creditRow = new HBox();
+            creditRow.getStyleClass().add("customer-card-row");
+            Label creditLabel = new Label("Total Credit Extended: ");
+            creditLabel.getStyleClass().add("customer-card-label");
+            Label creditVal = new Label(String.format("Rs. %,.2f", c.getTotalAmount()));
+            creditVal.getStyleClass().add("customer-card-value");
+            creditRow.getChildren().addAll(creditLabel, creditVal);
+            card.getChildren().add(creditRow);
+
+            // Settled Row
+            HBox settledRow = new HBox();
+            settledRow.getStyleClass().add("customer-card-row");
+            Label settledLabel = new Label("Amount Settled: ");
+            settledLabel.getStyleClass().add("customer-card-label");
+            Label settledVal = new Label(String.format("Rs. %,.2f", c.getSettleAmount()));
+            settledVal.getStyleClass().add("customer-card-value");
+            settledVal.getStyleClass().add("customer-card-settled-value");
+            settledRow.getChildren().addAll(settledLabel, settledVal);
+            card.getChildren().add(settledRow);
+
+            // Due Row (Highlighted Box)
+            VBox dueBox = new VBox();
+            dueBox.getStyleClass().add("customer-card-due-box");
+            Label dueLabel = new Label("OUTSTANDING DUE");
+            dueLabel.getStyleClass().add("customer-card-due-label");
+            Label dueVal = new Label(String.format("Rs. %,.2f", c.getDueAmount()));
+            dueVal.getStyleClass().add("customer-card-due-value");
+            dueBox.getChildren().addAll(dueLabel, dueVal);
+            card.getChildren().add(dueBox);
+
+            flowCards.getChildren().add(card);
+        }
+
+        // Set Top KPI Card Labels
+        lblTotalCredit.setText(String.format("Rs. %,.2f", totalCredit));
+        lblTotalSettled.setText(String.format("Rs. %,.2f", totalSettled));
+        lblTotalDue.setText(String.format("Rs. %,.2f", totalDue));
     }
 
     @FXML

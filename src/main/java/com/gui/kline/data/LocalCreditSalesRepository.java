@@ -99,6 +99,10 @@ public class LocalCreditSalesRepository {
                 detail.setDueDate(LocalDate.parse(rs.getString("due_date")));
                 detail.setSettlement(rs.getDouble("settlement"));
                 
+                double subTotal = rs.getDouble("sub_total");
+                double grandTotal = rs.getDouble("grand_total");
+                detail.setDiscount(Math.max(0.0, subTotal - grandTotal));
+                
                 String partsJson = rs.getString("parts");
                 if (partsJson != null && !partsJson.isBlank()) {
                     try {

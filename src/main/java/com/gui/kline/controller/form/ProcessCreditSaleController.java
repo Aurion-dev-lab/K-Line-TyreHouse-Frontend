@@ -378,6 +378,7 @@ public class ProcessCreditSaleController {
               detail.setDate(saleDate);
               detail.setDueDate(dueDate);
               detail.setSettlement(isEditMode ? existingPaid : 0.0);
+              detail.setDiscount(parseDouble(txtDiscount.getText()));
               for (Part part : addedParts) {
                   detail.addPart(part);
               }
