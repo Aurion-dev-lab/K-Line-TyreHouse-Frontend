@@ -32,6 +32,7 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 
 public class TyreExportsController implements Initializable {
@@ -43,7 +44,8 @@ public class TyreExportsController implements Initializable {
 
     @FXML private Label lblShipments;
     @FXML private Label lblTyres;
-    @FXML private Label lblProfit;
+    @FXML private Label lblGain;
+    @FXML private Label lblLoss;
     @FXML private Label lblPending;
 
     private final ObservableList<ExportRecord> masterList   = FXCollections.observableArrayList();
@@ -169,12 +171,14 @@ public class TyreExportsController implements Initializable {
     private void refreshStats() {
         int    shipments = filteredList.size();
         int    tyres     = filteredList.stream().mapToInt(ExportRecord::getTyres).sum();
-        double profit    = filteredList.stream().mapToDouble(this::calcProfit).sum();
+        double gains     = filteredList.stream().mapToDouble(this::calcProfit).filter(p -> p > 0).sum();
+        double losses    = Math.abs(filteredList.stream().mapToDouble(this::calcProfit).filter(p -> p < 0).sum());
         long   pending   = filteredList.stream().filter(r -> r.getBalanceAmount() > 0).count();
 
         lblShipments.setText(String.valueOf(shipments));
         lblTyres.setText(String.valueOf(tyres));
-        lblProfit.setText(String.format("Rs. %,.0f", profit));
+        lblGain.setText(String.format("Rs. %,.0f", gains));
+        lblLoss.setText(String.format("Rs. %,.0f", losses));
         lblPending.setText(String.valueOf(pending));
     }
 
@@ -188,179 +192,196 @@ public class TyreExportsController implements Initializable {
     }
 
     private HBox buildCard(ExportRecord r) {
-        Label avatar = new Label(initials(r.getCompany()));
-        avatar.setPrefSize(44, 44);
-        avatar.setMinSize(44, 44);
-        avatar.setMaxSize(44, 44);
-        avatar.setAlignment(Pos.CENTER);
-        avatar.setStyle(
-                "-fx-background-color: #EEF2FF; -fx-background-radius: 22;" +
-                        "-fx-text-fill: #4F46E5; -fx-font-size: 14px; -fx-font-weight: bold;"
-        );
-
+        // ── Row 1: Company name, meta chips, gain/loss, status badges ──────
         Label name = new Label(r.getCompany());
-        name.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+        name.getStyleClass().add("export-company-name");
 
-        Label exportId = chip(r.getExportId().isBlank() ? "draft export" : r.getExportId());
+        Label exportId = chip(r.getExportId().isBlank() ? "Draft" : r.getExportId());
+        exportId.getStyleClass().add("export-chip");
 
-        Label serialLbl = chip(r.getSerialNumber().isBlank() ? "" : "S/N: " + r.getSerialNumber());
-        serialLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #4F46E5; -fx-font-weight: bold;");
+        Label serialLbl = new Label(r.getSerialNumber().isBlank() ? "" : "S/N: " + r.getSerialNumber());
+        serialLbl.getStyleClass().add("export-chip");
 
-        Label tyresLbl   = chip(r.getTyres() + " tyres");
-        Label custLbl    = chip("Cust  Rs. " + String.format("%,.0f", r.getCustPrice()));
-        Label compLbl    = chip("Comp  Rs. " + String.format("%,.0f", r.getCompPrice()));
-        Label serviceLbl = new Label("Service  Rs. " + String.format("%,.0f", r.getServiceCharge()));
-        serviceLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #D97706;");
+        Label tyresLbl = new Label(r.getTyres() + " tyres");
+        tyresLbl.getStyleClass().add("export-chip");
+
         Label dateLbl = new Label(r.getDate().format(DATE_FMT));
-        dateLbl.setStyle(
-                "-fx-font-size: 11px; -fx-text-fill: #6B7280;" +
-                        "-fx-background-color: #F3F4F6; -fx-background-radius: 20;" +
-                        "-fx-padding: 2 8;"
-        );
+        dateLbl.getStyleClass().add("export-chip");
 
-        HBox sep1 = separator();
-        HBox sep2 = separator();
-
-        HBox meta = new HBox(8, exportId, serialLbl, tyresLbl, sep1, custLbl, compLbl, sep2, serviceLbl, dateLbl);
+        HBox meta = new HBox(6);
         meta.setAlignment(Pos.CENTER_LEFT);
+        meta.getChildren().add(exportId);
+        if (!r.getSerialNumber().isBlank()) meta.getChildren().add(serialLbl);
+        meta.getChildren().addAll(tyresLbl, dateLbl);
 
-        VBox info = new VBox(5, name, meta);
-        info.setAlignment(Pos.CENTER_LEFT);
-        HBox.setHgrow(info, Priority.ALWAYS);
+        VBox nameCol = new VBox(4, name, meta);
+        nameCol.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(nameCol, Priority.ALWAYS);
 
+        // Gain / Loss
         double profit = calcProfit(r);
-        Label profitAmt = new Label(String.format("Rs. %,.0f", profit));
-        profitAmt.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #059669;");
-        Label profitLbl = new Label("net profit");
-        profitLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #9CA3AF;");
-        VBox profitBox = new VBox(2, profitAmt, profitLbl);
+        Label profitAmt = new Label();
+        Label profitTag = new Label();
+        if (profit > 0) {
+            profitAmt.setText("+ Rs. " + String.format("%,.0f", profit));
+            profitAmt.getStyleClass().add("export-gain-amount");
+            profitTag.setText("gain");
+            profitTag.getStyleClass().add("export-gain-tag");
+        } else if (profit < 0) {
+            profitAmt.setText("- Rs. " + String.format("%,.0f", Math.abs(profit)));
+            profitAmt.getStyleClass().add("export-loss-amount");
+            profitTag.setText("loss");
+            profitTag.getStyleClass().add("export-loss-tag");
+        } else {
+            profitAmt.setText("Rs. 0");
+            profitAmt.getStyleClass().add("export-neutral-amount");
+            profitTag.setText("–");
+        }
+        HBox profitBox = new HBox(5, profitAmt, profitTag);
         profitBox.setAlignment(Pos.CENTER_RIGHT);
 
-        Label shipmentBadge = new Label(r.getStatus());
-        shipmentBadge.setStyle(statusStyle(r.getStatus()));
+        // Status badges
+        Label shipBadge = new Label(r.getStatus());
+        shipBadge.getStyleClass().add(shipmentBadgeClass(r.getStatus()));
 
-        Label paymentBadge = new Label(r.getPaymentStatus() + "  " + (r.getBalanceAmount() > 0 ? "Due Rs. " + String.format("%,.0f", r.getBalanceAmount()) : "Settled"));
-        paymentBadge.setStyle(paymentStatusStyle(r.getPaymentStatus(), r.getBalanceAmount()));
+        String payText = r.getPaymentStatus() +
+                (r.getBalanceAmount() > 0 ? "   Due Rs. " + String.format("%,.0f", r.getBalanceAmount()) : "  Settled");
+        Label payBadge = new Label(payText);
+        payBadge.getStyleClass().add(paymentBadgeClass(r.getPaymentStatus(), r.getBalanceAmount()));
 
-        Node actionNode = buildActionNode(r);
+        HBox badgesBox = new HBox(6, shipBadge, payBadge);
+        badgesBox.setAlignment(Pos.CENTER_RIGHT);
 
-        VBox rightCol = new VBox(6, profitBox, shipmentBadge, paymentBadge, actionNode);
-        rightCol.setAlignment(Pos.CENTER_RIGHT);
-        rightCol.setMinWidth(160);
+        VBox rightCol = new VBox(4, profitBox, badgesBox);
+        rightCol.setAlignment(Pos.TOP_RIGHT);
 
-        HBox card = new HBox(14, avatar, info, rightCol);
+        HBox topRow = new HBox(12, nameCol, rightCol);
+        topRow.setAlignment(Pos.CENTER_LEFT);
+
+        // ── Divider 1 ─────────────────────────────────────────────────────
+        Region div1 = new Region();
+        div1.getStyleClass().add("card-divider");
+        VBox.setMargin(div1, new Insets(8, 0, 8, 0));
+
+        // ── Row 2: Pricing ────────────────────────────────────────────────
+        Label cLabel = new Label("Customer Price: ");
+        cLabel.getStyleClass().add("pricing-label");
+        Label cValue = new Label("Rs. " + String.format("%,.0f", r.getCustPrice()));
+        cValue.getStyleClass().add("pricing-cust");
+
+        Label compLabel = new Label("Company Cost: ");
+        compLabel.getStyleClass().add("pricing-label");
+        Label compValue = new Label("Rs. " + String.format("%,.0f", r.getCompPrice()));
+        compValue.getStyleClass().add("pricing-comp");
+
+        Label fLabel = new Label("Service Fee: ");
+        fLabel.getStyleClass().add("pricing-label");
+        Label fValue = new Label("Rs. " + String.format("%,.0f", r.getServiceCharge()));
+        fValue.getStyleClass().add("pricing-fee");
+
+        Label tLabel = new Label("Grand Total: ");
+        tLabel.getStyleClass().add("pricing-label");
+        Label tValue = new Label("Rs. " + String.format("%,.0f", r.getGrandTotal()));
+        tValue.getStyleClass().add("pricing-total");
+
+        Label sLabel = new Label("Settled: ");
+        sLabel.getStyleClass().add("pricing-label");
+        Label sValue = new Label("Rs. " + String.format("%,.0f", r.getSettlement()));
+        sValue.getStyleClass().add("pricing-settled");
+
+        HBox pricingRow = new HBox(24,
+                new HBox(cLabel, cValue),
+                new HBox(compLabel, compValue),
+                new HBox(fLabel, fValue),
+                new HBox(tLabel, tValue),
+                new HBox(sLabel, sValue));
+        pricingRow.setAlignment(Pos.CENTER_LEFT);
+
+        // ── Divider 2 ─────────────────────────────────────────────────────
+        Region div2 = new Region();
+        div2.getStyleClass().add("card-divider");
+        VBox.setMargin(div2, new Insets(8, 0, 8, 0));
+
+        // ── Row 3: Actions ────────────────────────────────────────────────
+        HBox actionRow = (HBox) buildActionNode(r);
+
+        VBox cardContent = new VBox(topRow, div1, pricingRow, div2, actionRow);
+        cardContent.setAlignment(Pos.TOP_LEFT);
+        HBox.setHgrow(cardContent, Priority.ALWAYS);
+
+        HBox card = new HBox(cardContent);
         card.setAlignment(Pos.CENTER_LEFT);
         card.setPadding(new Insets(14, 18, 14, 18));
-        card.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 12;" +
-                        "-fx-border-color: #E5E7EB;" +
-                        "-fx-border-width: 1;" +
-                        "-fx-border-radius: 12;"
-        );
-        card.setOnMouseEntered(e -> card.setStyle(card.getStyle()
-                .replace("#E5E7EB", "#D1D5DB")));
-        card.setOnMouseExited(e -> card.setStyle(card.getStyle()
-                .replace("#D1D5DB", "#E5E7EB")));
+        card.getStyleClass().add("export-card");
 
         return card;
     }
 
     private Node buildActionNode(ExportRecord r) {
         String shipmentLabel = switch (r.getStatus()) {
-            case "PENDING"      -> "Mark as transport";
-            case "IN TRANSPORT" -> "Mark as delivered";
-            case "DELIVERED"    -> r.getBalanceAmount() > 0 ? null : "Mark as paid";
+            case "PENDING"      -> "Mark as In Transport";
+            case "IN TRANSPORT" -> "Mark as Delivered";
+            case "DELIVERED"    -> r.getBalanceAmount() > 0 ? null : "Mark as Paid";
             default             -> null;
         };
 
-        VBox box = new VBox(6);
-        box.setAlignment(Pos.CENTER_RIGHT);
+        HBox box = new HBox(8);
+        box.setAlignment(Pos.CENTER_LEFT);
 
         if (shipmentLabel != null) {
             Button btn = new Button(shipmentLabel);
-            btn.setStyle(
-                    "-fx-background-color: transparent;" +
-                            "-fx-border-color: #E5E7EB; -fx-border-width: 1;" +
-                            "-fx-border-radius: 8; -fx-background-radius: 8;" +
-                            "-fx-font-size: 12px; -fx-text-fill: #4F46E5;" +
-                            "-fx-font-weight: bold; -fx-padding: 5 10; -fx-cursor: hand;"
-            );
+            btn.getStyleClass().add("btn-action-outline-blue");
             btn.setOnAction(e -> advanceStatus(r));
             box.getChildren().add(btn);
         }
 
         if (r.getBalanceAmount() > 0) {
-            Button payBtn = new Button("Receive payment");
-            payBtn.setStyle(
-                    "-fx-background-color: #ecfeff;" +
-                            "-fx-border-color: #22c55e; -fx-border-width: 1;" +
-                            "-fx-border-radius: 8; -fx-background-radius: 8;" +
-                            "-fx-font-size: 12px; -fx-text-fill: #166534;" +
-                            "-fx-font-weight: bold; -fx-padding: 5 10; -fx-cursor: hand;"
-            );
+            Button payBtn = new Button("Settle Credit");
+            payBtn.getStyleClass().add("btn-action-outline-green");
             payBtn.setOnAction(e -> collectPayment(r));
             box.getChildren().add(payBtn);
         }
 
-        // Invoice buttons
-        HBox invoiceBox = new HBox(6);
-        invoiceBox.setAlignment(Pos.CENTER_RIGHT);
-
         Button generateInvoiceBtn = new Button("Generate Invoice");
-        generateInvoiceBtn.setStyle(
-                "-fx-background-color: #10B981; -fx-text-fill: white;" +
-                        "-fx-border-radius: 8; -fx-background-radius: 8;" +
-                        "-fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 5 10; -fx-cursor: hand;"
-        );
+        generateInvoiceBtn.getStyleClass().add("btn-action-green");
         generateInvoiceBtn.setOnAction(e -> onGenerateInvoiceForRecord(r));
-        invoiceBox.getChildren().add(generateInvoiceBtn);
+        box.getChildren().add(generateInvoiceBtn);
 
         Button downloadPdfBtn = new Button("Download PDF");
-        downloadPdfBtn.setStyle(
-                "-fx-background-color: #3B82F6; -fx-text-fill: white;" +
-                        "-fx-border-radius: 8; -fx-background-radius: 8;" +
-                        "-fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 5 10; -fx-cursor: hand;"
-        );
+        downloadPdfBtn.getStyleClass().add("btn-action-blue");
         downloadPdfBtn.setOnAction(e -> onDownloadInvoiceForRecord(r));
-        invoiceBox.getChildren().add(downloadPdfBtn);
-
-        box.getChildren().add(invoiceBox);
-
-        // Edit and Delete buttons
-        HBox editDeleteBox = new HBox(6);
-        editDeleteBox.setAlignment(Pos.CENTER_RIGHT);
+        box.getChildren().add(downloadPdfBtn);
 
         Button editBtn = new Button("Edit");
-        editBtn.setStyle(
-                "-fx-background-color: transparent;" +
-                        "-fx-border-color: #E5E7EB; -fx-border-width: 1;" +
-                        "-fx-border-radius: 8; -fx-background-radius: 8;" +
-                        "-fx-font-size: 12px; -fx-text-fill: #F59E0B;" +
-                        "-fx-font-weight: bold; -fx-padding: 5 10; -fx-cursor: hand;"
-        );
+        editBtn.getStyleClass().add("btn-action-outline-amber");
         editBtn.setOnAction(e -> onEditExport(r));
-        editDeleteBox.getChildren().add(editBtn);
+        box.getChildren().add(editBtn);
 
         Button deleteBtn = new Button("Delete");
-        deleteBtn.setStyle(
-                "-fx-background-color: transparent;" +
-                        "-fx-border-color: #E5E7EB; -fx-border-width: 1;" +
-                        "-fx-border-radius: 8; -fx-background-radius: 8;" +
-                        "-fx-font-size: 12px; -fx-text-fill: #EF4444;" +
-                        "-fx-font-weight: bold; -fx-padding: 5 10; -fx-cursor: hand;"
-        );
+        deleteBtn.getStyleClass().add("btn-action-outline-red");
         deleteBtn.setOnAction(e -> onDeleteExport(r));
-        editDeleteBox.getChildren().add(deleteBtn);
+        box.getChildren().add(deleteBtn);
 
-        box.getChildren().add(editDeleteBox);
-
-        if (box.getChildren().isEmpty()) {
-            Label done = new Label("✔  Done");
-            done.setStyle("-fx-font-size: 13px; -fx-text-fill: #10B981;");
-            return done;
-        }
         return box;
+    }
+
+    private String shipmentBadgeClass(String status) {
+        return switch (status) {
+            case "PENDING"      -> "badge-pending";
+            case "IN TRANSPORT" -> "badge-transport";
+            case "DELIVERED"    -> "badge-delivered";
+            case "PAID"         -> "badge-paid";
+            default             -> "badge-pending";
+        };
+    }
+
+    private String paymentBadgeClass(String payStatus, double balance) {
+        if (balance <= 0) return "badge-paid";
+        return switch (payStatus) {
+            case "PAID"    -> "badge-paid";
+            case "PARTIAL" -> "badge-partial";
+            default        -> "badge-credit";
+        };
     }
 
     private void advanceStatus(ExportRecord r) {
