@@ -95,6 +95,31 @@ public class ReportsRepository {
             System.err.println("Failed to load credit sales data: " + ex.getMessage());
         }
 
+        // Include tyre exports data in Sales Breakdown
+        String tyreSql = "SELECT export_date, company, tyres, grand_total, cust_price, comp_price, service_fee " +
+                "FROM tyre_exports WHERE export_date BETWEEN ? AND ?";
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(tyreSql)) {
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "export_date");
+                    if (date == null) date = LocalDate.now();
+                    String company = rs.getString("company");
+                    int qty = rs.getInt("tyres");
+                    double revenue = rs.getDouble("grand_total");
+                    double custPrice = rs.getDouble("cust_price");
+                    double compPrice = rs.getDouble("comp_price");
+                    double serviceFee = rs.getDouble("service_fee");
+                    double profit = (custPrice - compPrice) * qty + serviceFee;
+                    sales.add(new ReportsController.SaleItem("Tyre Export - " + company, date, qty, revenue, profit));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to load tyre export sales data: " + ex.getMessage());
+        }
+
         return sales;
     }
 

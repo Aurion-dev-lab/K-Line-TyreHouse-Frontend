@@ -26,6 +26,8 @@ public class NewExportDialogController implements Initializable {
 
     @FXML private TextField        txtSerialNumber;
     @FXML private TextField        txtCompany;
+    @FXML private TextField        txtTyreSize;
+    @FXML private TextField        txtTyreMake;
     @FXML private TextField        txtTyreCount;
     @FXML private TextField        txtServiceFee;
     @FXML private TextField        txtCustomerPrice;
@@ -51,6 +53,8 @@ public class NewExportDialogController implements Initializable {
     public void setEditMode(ExportRecord record) {
         txtSerialNumber.setText(record.getSerialNumber() != null ? record.getSerialNumber() : "");
         txtCompany.setText(record.getCompany());
+        txtTyreSize.setText(record.getTyreSize() != null ? record.getTyreSize() : "");
+        txtTyreMake.setText(record.getTyreMake() != null ? record.getTyreMake() : "");
         txtTyreCount.setText(String.valueOf(record.getTyres()));
         txtServiceFee.setText(String.valueOf(record.getServiceCharge()));
         txtCustomerPrice.setText(String.valueOf(record.getCustPrice()));
@@ -96,17 +100,19 @@ public class NewExportDialogController implements Initializable {
         String paymentStatus = paymentStatusFor(balanceAmount, paidAmount);
 
         ExportResult result = new ExportResult(
-            exportId,
+                exportId,
                 txtSerialNumber.getText().trim(),
                 txtCompany.getText().trim(),
+                txtTyreSize.getText().trim(),
+                txtTyreMake.getText().trim(),
                 parseTyres(),
                 parseDouble(txtServiceFee),
                 parseDouble(txtCustomerPrice),
                 parseDouble(txtCompanyPrice),
-            paidAmount,
-            totalAmount,
-            balanceAmount,
-            paymentStatus,
+                paidAmount,
+                totalAmount,
+                balanceAmount,
+                paymentStatus,
                 dpDateSent.getValue() != null ? dpDateSent.getValue() : LocalDate.now(),
                 cmbStatus.getValue(),
                 txtRemark.getText().trim()
@@ -163,6 +169,8 @@ public class NewExportDialogController implements Initializable {
             String    exportId,
             String    serialNumber,
             String    company,
+            String    tyreSize,
+            String    tyreMake,
             int       tyres,
             double    serviceFee,
             double    custPrice,

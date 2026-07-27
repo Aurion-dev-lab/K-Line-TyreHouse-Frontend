@@ -59,6 +59,28 @@
                     <rowConstraints><RowConstraints /></rowConstraints>
 
                     <VBox spacing="6" GridPane.columnIndex="0">
+                        <Label text="TYRE SIZE" styleClass="form-label" />
+                        <TextField fx:id="txtTyreSize"
+                                   promptText="e.g. 205/55R16"
+                                   styleClass="form-input" />
+                    </VBox>
+
+                    <VBox spacing="6" GridPane.columnIndex="1">
+                        <Label text="TYRE MAKE / BRAND" styleClass="form-label" />
+                        <TextField fx:id="txtTyreMake"
+                                   promptText="e.g. Michelin"
+                                   styleClass="form-input" />
+                    </VBox>
+                </GridPane>
+
+                <GridPane hgap="16">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="ALWAYS" />
+                        <ColumnConstraints hgrow="ALWAYS" />
+                    </columnConstraints>
+                    <rowConstraints><RowConstraints /></rowConstraints>
+
+                    <VBox spacing="6" GridPane.columnIndex="0">
                         <Label text="TYRE COUNT" styleClass="form-label" />
                         <TextField fx:id="txtTyreCount"
                                    promptText="0"

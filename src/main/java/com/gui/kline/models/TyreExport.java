@@ -11,6 +11,8 @@ public class TyreExport {
     private String exportId;
     private String serialNumber;
     private String company;
+    private String tyreSize;
+    private String tyreMake;
     private int tyres;
     private double custPrice;
     private double compPrice;
@@ -40,6 +42,12 @@ public class TyreExport {
 
     public String getCompany() { return company; }
     public void setCompany(String company) { this.company = company; }
+
+    public String getTyreSize() { return tyreSize; }
+    public void setTyreSize(String tyreSize) { this.tyreSize = tyreSize; }
+
+    public String getTyreMake() { return tyreMake; }
+    public void setTyreMake(String tyreMake) { this.tyreMake = tyreMake; }
 
     public int getTyres() { return tyres; }
     public void setTyres(int tyres) { this.tyres = tyres; }

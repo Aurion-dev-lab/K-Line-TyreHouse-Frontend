@@ -143,8 +143,10 @@ public final class DatabaseManager {
             statement.execute("CREATE TABLE IF NOT EXISTS tyre_exports (" +
                     "id TEXT PRIMARY KEY," +
                     "export_id TEXT UNIQUE," +
-                    "serial_number TEXT," +
+                    "serial_number TEXT UNIQUE," +
                     "company TEXT," +
+                    "tyre_size TEXT," +
+                    "tyre_make TEXT," +
                     "tyres INTEGER NOT NULL DEFAULT 0," +
                     "cust_price REAL NOT NULL DEFAULT 0," +
                     "comp_price REAL NOT NULL DEFAULT 0," +
@@ -263,6 +265,12 @@ public final class DatabaseManager {
             } catch (Exception ignored) {}
             try {
                 statement.execute("ALTER TABLE tyre_exports ADD COLUMN remark TEXT");
+            } catch (Exception ignored) {}
+            try {
+                statement.execute("ALTER TABLE tyre_exports ADD COLUMN tyre_size TEXT");
+            } catch (Exception ignored) {}
+            try {
+                statement.execute("ALTER TABLE tyre_exports ADD COLUMN tyre_make TEXT");
             } catch (Exception ignored) {}
 
             initialized = true;

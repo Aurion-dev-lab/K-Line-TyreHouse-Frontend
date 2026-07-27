@@ -730,8 +730,10 @@ public class DashboardController implements Initializable {
                  "SELECT COALESCE(SUM(price),0) FROM quick_services WHERE service_date BETWEEN ? AND ?",
                  startDate, endDate);
          
-         // Add tyre exports profit from sync_queue (calculated from JSON payload)
-         double tyreExportsProfit = calculateTyreExportsProfit(startDate, endDate);
+         // Add tyre exports profit: (cust_price - comp_price) * tyres + service_fee
+         double tyreExportsProfit = sumAmount(conn,
+                 "SELECT COALESCE(SUM((cust_price - comp_price) * tyres + service_fee), 0) FROM tyre_exports WHERE export_date BETWEEN ? AND ?",
+                 startDate, endDate);
          double paidSalaries = sumAmount(conn,
                  "SELECT COALESCE(SUM(amount),0) FROM salary_payments WHERE DATE(paid_at) BETWEEN ? AND ?",
                  startDate, endDate);
@@ -745,15 +747,13 @@ public class DashboardController implements Initializable {
      }
 
     private double calculateTyreExportsProfit(LocalDate startDate, LocalDate endDate) {
-        TyreExportRepository repository = new TyreExportRepository();
-        List<com.gui.kline.models.TyreExport> exports = repository.getAllExports();
-        return exports.stream()
-                .filter(e -> {
-                    LocalDate date = e.getExportDate();
-                    return date != null && !date.isBefore(startDate) && !date.isAfter(endDate);
-                })
-                .mapToDouble(e -> (e.getCustPrice() - e.getCompPrice()) * e.getTyres() + e.getServiceFee())
-                .sum();
+        try (Connection conn = com.gui.kline.data.DatabaseManager.getConnection()) {
+            return sumAmount(conn,
+                    "SELECT COALESCE(SUM((cust_price - comp_price) * tyres + service_fee), 0) FROM tyre_exports WHERE export_date BETWEEN ? AND ?",
+                    startDate, endDate);
+        } catch (Exception ex) {
+            return 0.0;
+        }
     }
 
      private int countServices(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {

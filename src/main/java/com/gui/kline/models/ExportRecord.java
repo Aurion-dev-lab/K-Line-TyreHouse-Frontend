@@ -12,6 +12,8 @@ public class ExportRecord {
     private final SimpleStringProperty exportId;
     private final SimpleStringProperty serialNumber;
     private final SimpleStringProperty company;
+    private final SimpleStringProperty tyreSize;
+    private final SimpleStringProperty tyreMake;
     private final SimpleIntegerProperty tyres;
     private final SimpleDoubleProperty custPrice;
     private final SimpleDoubleProperty compPrice;
@@ -27,16 +29,26 @@ public class ExportRecord {
     public ExportRecord(String company, int tyres, double custPrice,
                         double compPrice, double serviceCharge,
                         LocalDate date, String status) {
-        this("", "", company, tyres, custPrice, compPrice, serviceCharge,
+        this("", "", company, "", "", tyres, custPrice, compPrice, serviceCharge,
                 custPrice * tyres, (custPrice * tyres) + serviceCharge, 0.0, 0.0, date, status, "");
     }
 
     public ExportRecord(String exportId, String serialNumber, String company, int tyres, double custPrice,
                         double compPrice, double serviceCharge, double subTotal, double grandTotal,
                         double initialPayment, double settlement, LocalDate date, String status, String remark) {
+        this(exportId, serialNumber, company, "", "", tyres, custPrice, compPrice, serviceCharge,
+                subTotal, grandTotal, initialPayment, settlement, date, status, remark);
+    }
+
+    public ExportRecord(String exportId, String serialNumber, String company, String tyreSize, String tyreMake,
+                        int tyres, double custPrice, double compPrice, double serviceCharge, double subTotal,
+                        double grandTotal, double initialPayment, double settlement, LocalDate date,
+                        String status, String remark) {
         this.exportId       = new SimpleStringProperty(exportId == null ? "" : exportId);
         this.serialNumber   = new SimpleStringProperty(serialNumber == null ? "" : serialNumber);
-        this.company        = new SimpleStringProperty(company);
+        this.company        = new SimpleStringProperty(company == null ? "" : company);
+        this.tyreSize       = new SimpleStringProperty(tyreSize == null ? "" : tyreSize);
+        this.tyreMake       = new SimpleStringProperty(tyreMake == null ? "" : tyreMake);
         this.tyres          = new SimpleIntegerProperty(tyres);
         this.custPrice      = new SimpleDoubleProperty(custPrice);
         this.compPrice      = new SimpleDoubleProperty(compPrice);
@@ -53,6 +65,8 @@ public class ExportRecord {
     public SimpleStringProperty exportIdProperty()       { return exportId; }
     public SimpleStringProperty serialNumberProperty()   { return serialNumber; }
     public SimpleStringProperty companyProperty()       { return company; }
+    public SimpleStringProperty tyreSizeProperty()      { return tyreSize; }
+    public SimpleStringProperty tyreMakeProperty()      { return tyreMake; }
     public SimpleIntegerProperty tyresProperty()        { return tyres; }
     public SimpleDoubleProperty serviceChargeProperty() { return serviceCharge; }
     public SimpleDoubleProperty subTotalProperty()      { return subTotal; }
@@ -65,6 +79,8 @@ public class ExportRecord {
     public String getExportId()      { return exportId.get(); }
     public String getSerialNumber()  { return serialNumber.get(); }
     public String getCompany()       { return company.get(); }
+    public String getTyreSize()      { return tyreSize.get(); }
+    public String getTyreMake()      { return tyreMake.get(); }
     public int    getTyres()         { return tyres.get(); }
     public double getCustPrice()     { return custPrice.get(); }
     public double getCompPrice()     { return compPrice.get(); }
@@ -80,6 +96,8 @@ public class ExportRecord {
     public void setExportId(String v)      { exportId.set(v == null ? "" : v); }
     public void setSerialNumber(String v)  { serialNumber.set(v == null ? "" : v); }
     public void setCompany(String v)       { company.set(v); }
+    public void setTyreSize(String v)      { tyreSize.set(v == null ? "" : v); }
+    public void setTyreMake(String v)      { tyreMake.set(v == null ? "" : v); }
     public void setTyres(int v)            { tyres.set(v); }
     public void setCustPrice(double v)     { custPrice.set(v); }
     public void setCompPrice(double v)     { compPrice.set(v); }
