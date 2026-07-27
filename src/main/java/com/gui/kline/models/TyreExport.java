@@ -4,27 +4,24 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * TyreExport model class with sync support.
+ * Simplified TyreExport model class with sync support.
  */
 public class TyreExport {
     private String id;
     private String exportId;
-    private String operation;
     private String serialNumber;
     private String company;
     private int tyres;
     private double custPrice;
     private double compPrice;
     private double serviceFee;
-    private double paidAmount;
-    private double totalAmount;
-    private double balanceAmount;
-    private String paymentStatus;
+    private double subTotal;
+    private double grandTotal;
+    private double initialPayment;
+    private double settlement;
     private String status;
     private LocalDate exportDate;
-    private String notes;
-    private String createdBy;
-    private String updatedBy;
+    private String remark;
     
     // Sync fields
     private boolean syncStatus = false;
@@ -37,9 +34,6 @@ public class TyreExport {
 
     public String getExportId() { return exportId; }
     public void setExportId(String exportId) { this.exportId = exportId; }
-
-    public String getOperation() { return operation; }
-    public void setOperation(String operation) { this.operation = operation; }
 
     public String getSerialNumber() { return serialNumber; }
     public void setSerialNumber(String serialNumber) { this.serialNumber = serialNumber; }
@@ -59,17 +53,17 @@ public class TyreExport {
     public double getServiceFee() { return serviceFee; }
     public void setServiceFee(double serviceFee) { this.serviceFee = serviceFee; }
 
-    public double getPaidAmount() { return paidAmount; }
-    public void setPaidAmount(double paidAmount) { this.paidAmount = paidAmount; }
+    public double getSubTotal() { return subTotal; }
+    public void setSubTotal(double subTotal) { this.subTotal = subTotal; }
 
-    public double getTotalAmount() { return totalAmount; }
-    public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
+    public double getGrandTotal() { return grandTotal; }
+    public void setGrandTotal(double grandTotal) { this.grandTotal = grandTotal; }
 
-    public double getBalanceAmount() { return balanceAmount; }
-    public void setBalanceAmount(double balanceAmount) { this.balanceAmount = balanceAmount; }
+    public double getInitialPayment() { return initialPayment; }
+    public void setInitialPayment(double initialPayment) { this.initialPayment = initialPayment; }
 
-    public String getPaymentStatus() { return paymentStatus; }
-    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+    public double getSettlement() { return settlement; }
+    public void setSettlement(double settlement) { this.settlement = settlement; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
@@ -77,16 +71,8 @@ public class TyreExport {
     public LocalDate getExportDate() { return exportDate; }
     public void setExportDate(LocalDate exportDate) { this.exportDate = exportDate; }
 
-    public String getNotes() { return notes; }
-    public void setNotes(String notes) { this.notes = notes; }
-
-    public String getCreatedBy() { return createdBy; }
-    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
-
-    public String getUpdatedBy() { return updatedBy; }
-    public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
-
-    // Sync field getters and setters
+    public String getRemark() { return remark; }
+    public void setRemark(String remark) { this.remark = remark; }
 
     public boolean isSyncStatus() { return syncStatus; }
     public void setSyncStatus(boolean syncStatus) { this.syncStatus = syncStatus; }
@@ -96,4 +82,14 @@ public class TyreExport {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    // Dynamic calculations for backward compatibility / display
+    public double getPaidAmount() { return settlement; }
+    public double getBalanceAmount() { return Math.max(0.0, grandTotal - settlement); }
+    public String getPaymentStatus() {
+        double bal = getBalanceAmount();
+        if (bal <= 0) return "PAID";
+        if (settlement > 0) return "PARTIAL";
+        return "CREDIT";
+    }
 }

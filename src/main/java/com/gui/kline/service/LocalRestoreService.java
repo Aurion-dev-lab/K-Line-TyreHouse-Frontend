@@ -416,25 +416,33 @@ public class LocalRestoreService {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
             String sql = "INSERT OR IGNORE INTO tyre_exports " +
-                    "(id, export_id, operation, company, tyres, cust_price, comp_price, service_fee, paid_amount, total_amount, balance_amount, payment_status, status, export_date, updated_at, sync_status) " +
-                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)";
+                    "(id, export_id, serial_number, company, tyres, cust_price, comp_price, service_fee, sub_total, grand_total, initial_payment, settlement, status, export_date, remark, updated_at, sync_status) " +
+                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
+                    double custPrice = dbl(r, "custPrice") != null ? dbl(r, "custPrice").doubleValue() : 0.0;
+                    int tyres = num(r, "tyres") != null ? num(r, "tyres").intValue() : 0;
+                    double serviceFee = dbl(r, "serviceFee") != null ? dbl(r, "serviceFee").doubleValue() : 0.0;
+                    double paidAmount = dbl(r, "paidAmount") != null ? dbl(r, "paidAmount").doubleValue() : 0.0;
+                    double subTotal = custPrice * tyres;
+                    double grandTotal = subTotal + serviceFee;
+
                     ps.setString(1,  str(r, "id"));
                     ps.setString(2,  str(r, "exportId"));
-                    ps.setString(3,  str(r, "operation"));
+                    ps.setString(3,  str(r, "serialNumber"));
                     ps.setString(4,  str(r, "company"));
-                    ps.setObject(5,  num(r, "tyres"));
-                    ps.setObject(6,  dbl(r, "custPrice"));
-                    ps.setObject(7,  dbl(r, "compPrice"));
-                    ps.setObject(8,  dbl(r, "serviceFee"));
-                    ps.setObject(9,  dbl(r, "paidAmount"));
-                    ps.setObject(10, dbl(r, "totalAmount"));
-                    ps.setObject(11, dbl(r, "balanceAmount"));
-                    ps.setString(12, str(r, "paymentStatus"));
+                    ps.setInt(5,     tyres);
+                    ps.setDouble(6,  custPrice);
+                    ps.setDouble(7,  dbl(r, "compPrice") != null ? dbl(r, "compPrice").doubleValue() : 0.0);
+                    ps.setDouble(8,  serviceFee);
+                    ps.setDouble(9,  subTotal);
+                    ps.setDouble(10, grandTotal);
+                    ps.setDouble(11, paidAmount);
+                    ps.setDouble(12, paidAmount);
                     ps.setString(13, str(r, "status"));
                     ps.setString(14, str(r, "exportDate"));
-                    ps.setString(15, str(r, "updatedAt"));
+                    ps.setString(15, str(r, "notes")); // map notes to remark
+                    ps.setString(16, str(r, "updatedAt"));
                     ps.addBatch();
                 }
                 ps.executeBatch();

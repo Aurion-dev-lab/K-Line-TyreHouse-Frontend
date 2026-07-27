@@ -659,7 +659,7 @@ public class DashboardController implements Initializable {
                     "SELECT service_date, SUM(price) AS total FROM quick_services WHERE service_date BETWEEN ? AND ? GROUP BY service_date",
                     startDate, endDate, totals);
             collectTotalsByDate(conn,
-                    "SELECT export_date, SUM(total_amount) AS total FROM tyre_exports WHERE export_date BETWEEN ? AND ? GROUP BY export_date",
+                    "SELECT export_date, SUM(grand_total) AS total FROM tyre_exports WHERE export_date BETWEEN ? AND ? GROUP BY export_date",
                     startDate, endDate, totals);
         } catch (SQLException ex) {
             System.err.println("Error loading revenue totals: " + ex.getMessage());
@@ -703,7 +703,7 @@ public class DashboardController implements Initializable {
                 "SELECT COALESCE(SUM(price),0) FROM quick_services WHERE service_date BETWEEN ? AND ?",
                 startDate, endDate);
         double tyreExports = sumAmount(conn,
-                "SELECT COALESCE(SUM(total_amount),0) FROM tyre_exports WHERE export_date BETWEEN ? AND ?",
+                "SELECT COALESCE(SUM(grand_total),0) FROM tyre_exports WHERE export_date BETWEEN ? AND ?",
                 startDate, endDate);
         return invoices + creditSales + services + quickServicesTotal + tyreExports;
     }

@@ -575,22 +575,20 @@ public class LayoutController {
     }
 
     private void searchTyreExports(String searchTerm, List<SearchResult> results) {
-        String sql = "SELECT id, export_id, company, operation, total_amount FROM tyre_exports " +
-                "WHERE company LIKE ? OR export_id LIKE ? OR operation LIKE ? " +
+        String sql = "SELECT id, export_id, company, grand_total FROM tyre_exports " +
+                "WHERE company LIKE ? OR export_id LIKE ? " +
                 "ORDER BY export_date DESC LIMIT 5";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            for (int i = 1; i <= 3; i++) ps.setString(i, searchTerm);
+            for (int i = 1; i <= 2; i++) ps.setString(i, searchTerm);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String id = rs.getString("id");
                     String exportId = rs.getString("export_id");
                     String company = rs.getString("company");
-                    String operation = rs.getString("operation");
-                    double total = rs.getDouble("total_amount");
+                    double total = rs.getDouble("grand_total");
                     String displayId = (exportId != null && !exportId.isBlank()) ? exportId : id.substring(0, 8);
                     String subtitle = (company != null ? company : "N/A") +
-                            (operation != null ? " | " + operation : "") +
                             " | Rs. " + String.format("%.0f", total);
                     results.add(new SearchResult("Tyre Exports", "Export " + displayId, subtitle, id, "tyre-exports"));
                 }

@@ -143,22 +143,19 @@ public final class DatabaseManager {
             statement.execute("CREATE TABLE IF NOT EXISTS tyre_exports (" +
                     "id TEXT PRIMARY KEY," +
                     "export_id TEXT UNIQUE," +
-                    "operation TEXT," +
                     "serial_number TEXT," +
                     "company TEXT," +
                     "tyres INTEGER NOT NULL DEFAULT 0," +
                     "cust_price REAL NOT NULL DEFAULT 0," +
                     "comp_price REAL NOT NULL DEFAULT 0," +
                     "service_fee REAL NOT NULL DEFAULT 0," +
-                    "paid_amount REAL NOT NULL DEFAULT 0," +
-                    "total_amount REAL NOT NULL DEFAULT 0," +
-                    "balance_amount REAL NOT NULL DEFAULT 0," +
-                    "payment_status TEXT," +
+                    "sub_total REAL NOT NULL DEFAULT 0," +
+                    "grand_total REAL NOT NULL DEFAULT 0," +
+                    "initial_payment REAL NOT NULL DEFAULT 0," +
+                    "settlement REAL NOT NULL DEFAULT 0," +
                     "status TEXT," +
                     "export_date DATE," +
-                    "notes TEXT," +
-                    "created_by TEXT," +
-                    "updated_by TEXT," +
+                    "remark TEXT," +
                     "created_at DATETIME," +
                     "updated_at DATETIME," +
                     "sync_status INTEGER NOT NULL DEFAULT 0" +
@@ -250,6 +247,24 @@ public final class DatabaseManager {
                     ")");
 
             backfillProductCodes(connection);
+
+            // Migrations for tyre_exports schema update
+            try {
+                statement.execute("ALTER TABLE tyre_exports ADD COLUMN sub_total REAL NOT NULL DEFAULT 0");
+            } catch (Exception ignored) {}
+            try {
+                statement.execute("ALTER TABLE tyre_exports ADD COLUMN grand_total REAL NOT NULL DEFAULT 0");
+            } catch (Exception ignored) {}
+            try {
+                statement.execute("ALTER TABLE tyre_exports ADD COLUMN initial_payment REAL NOT NULL DEFAULT 0");
+            } catch (Exception ignored) {}
+            try {
+                statement.execute("ALTER TABLE tyre_exports ADD COLUMN settlement REAL NOT NULL DEFAULT 0");
+            } catch (Exception ignored) {}
+            try {
+                statement.execute("ALTER TABLE tyre_exports ADD COLUMN remark TEXT");
+            } catch (Exception ignored) {}
+
             initialized = true;
         } catch (SQLException ex) {
             System.err.println("=== DATABASE INITIALIZATION ERROR ===");

@@ -366,8 +366,8 @@ public class ReportsRepository {
             System.err.println("Failed to calculate quick service revenue: " + ex.getMessage());
         }
         
-        // Tyre exports revenue (total_amount from tyre exports)
-        String tyreExportRevenueSql = "SELECT COALESCE(SUM(total_amount), 0) as total_revenue " +
+        // Tyre exports revenue (grand_total from tyre exports)
+        String tyreExportRevenueSql = "SELECT COALESCE(SUM(grand_total), 0) as total_revenue " +
                 "FROM tyre_exports " +
                 "WHERE export_date BETWEEN ? AND ?";
         

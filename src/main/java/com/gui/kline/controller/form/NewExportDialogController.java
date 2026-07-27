@@ -39,6 +39,7 @@ public class NewExportDialogController implements Initializable {
     @FXML private ComboBox<String> cmbStatus;
     @FXML private Button           btnCancel;
     @FXML private Button           btnSave;
+    @FXML private TextField        txtRemark;
 
     private final String exportId = "EXP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     private Consumer<ExportResult> onSave;
@@ -57,6 +58,7 @@ public class NewExportDialogController implements Initializable {
         txtPaidNow.setText(String.valueOf(record.getPaidAmount()));
         dpDateSent.setValue(record.getDate());
         cmbStatus.setValue(record.getStatus());
+        txtRemark.setText(record.getRemark() != null ? record.getRemark() : "");
         refreshSummary();
     }
 
@@ -106,7 +108,8 @@ public class NewExportDialogController implements Initializable {
             balanceAmount,
             paymentStatus,
                 dpDateSent.getValue() != null ? dpDateSent.getValue() : LocalDate.now(),
-                cmbStatus.getValue()
+                cmbStatus.getValue(),
+                txtRemark.getText().trim()
         );
         if (onSave != null) onSave.accept(result);
         closeStage();
@@ -169,7 +172,8 @@ public class NewExportDialogController implements Initializable {
             double    balanceAmount,
             String    paymentStatus,
             LocalDate date,
-            String    status
+            String    status,
+            String    remark
     ) {}
 
     private String generateNextSerialNumber() {

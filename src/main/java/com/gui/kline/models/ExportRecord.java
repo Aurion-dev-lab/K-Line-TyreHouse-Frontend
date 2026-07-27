@@ -14,48 +14,40 @@ public class ExportRecord {
     private final SimpleStringProperty company;
     private final SimpleIntegerProperty tyres;
     private final SimpleDoubleProperty custPrice;
-    private final SimpleDoubleProperty  compPrice;
-    private final SimpleDoubleProperty  serviceCharge;
-    private final SimpleDoubleProperty  paidAmount;
-    private final SimpleDoubleProperty  totalAmount;
-    private final SimpleDoubleProperty  balanceAmount;
-    private final SimpleStringProperty  paymentStatus;
+    private final SimpleDoubleProperty compPrice;
+    private final SimpleDoubleProperty serviceCharge;
+    private final SimpleDoubleProperty subTotal;
+    private final SimpleDoubleProperty grandTotal;
+    private final SimpleDoubleProperty initialPayment;
+    private final SimpleDoubleProperty settlement;
     private final ObjectProperty<LocalDate> date;
-    private final SimpleStringProperty  status;
+    private final SimpleStringProperty status;
+    private final SimpleStringProperty remark;
 
     public ExportRecord(String company, int tyres, double custPrice,
                         double compPrice, double serviceCharge,
                         LocalDate date, String status) {
         this("", "", company, tyres, custPrice, compPrice, serviceCharge,
-                custPrice * tyres + serviceCharge, 0.0,
-                custPrice * tyres + serviceCharge, "PAID", date, status);
-    }
-
-    public ExportRecord(String exportId, String company, int tyres, double custPrice,
-                        double compPrice, double serviceCharge, double totalAmount,
-                        double paidAmount, double balanceAmount, String paymentStatus,
-                        LocalDate date, String status) {
-        this(exportId, "", company, tyres, custPrice, compPrice, serviceCharge,
-                totalAmount, paidAmount, balanceAmount, paymentStatus, date, status);
+                custPrice * tyres, (custPrice * tyres) + serviceCharge, 0.0, 0.0, date, status, "");
     }
 
     public ExportRecord(String exportId, String serialNumber, String company, int tyres, double custPrice,
-                        double compPrice, double serviceCharge, double totalAmount,
-                        double paidAmount, double balanceAmount, String paymentStatus,
-                        LocalDate date, String status) {
-        this.exportId      = new SimpleStringProperty(exportId == null ? "" : exportId);
-        this.serialNumber  = new SimpleStringProperty(serialNumber == null ? "" : serialNumber);
-        this.company       = new SimpleStringProperty(company);
-        this.tyres         = new SimpleIntegerProperty(tyres);
-        this.custPrice     = new SimpleDoubleProperty(custPrice);
-        this.compPrice     = new SimpleDoubleProperty(compPrice);
-        this.serviceCharge = new SimpleDoubleProperty(serviceCharge);
-        this.paidAmount    = new SimpleDoubleProperty(paidAmount);
-        this.totalAmount   = new SimpleDoubleProperty(totalAmount);
-        this.balanceAmount = new SimpleDoubleProperty(balanceAmount);
-        this.paymentStatus = new SimpleStringProperty(paymentStatus == null ? "PAID" : paymentStatus);
-        this.date          = new SimpleObjectProperty<>(date);
-        this.status        = new SimpleStringProperty(status);
+                        double compPrice, double serviceCharge, double subTotal, double grandTotal,
+                        double initialPayment, double settlement, LocalDate date, String status, String remark) {
+        this.exportId       = new SimpleStringProperty(exportId == null ? "" : exportId);
+        this.serialNumber   = new SimpleStringProperty(serialNumber == null ? "" : serialNumber);
+        this.company        = new SimpleStringProperty(company);
+        this.tyres          = new SimpleIntegerProperty(tyres);
+        this.custPrice      = new SimpleDoubleProperty(custPrice);
+        this.compPrice      = new SimpleDoubleProperty(compPrice);
+        this.serviceCharge  = new SimpleDoubleProperty(serviceCharge);
+        this.subTotal       = new SimpleDoubleProperty(subTotal);
+        this.grandTotal     = new SimpleDoubleProperty(grandTotal);
+        this.initialPayment = new SimpleDoubleProperty(initialPayment);
+        this.settlement     = new SimpleDoubleProperty(settlement);
+        this.date           = new SimpleObjectProperty<>(date);
+        this.status         = new SimpleStringProperty(status);
+        this.remark         = new SimpleStringProperty(remark == null ? "" : remark);
     }
 
     public SimpleStringProperty exportIdProperty()       { return exportId; }
@@ -63,38 +55,53 @@ public class ExportRecord {
     public SimpleStringProperty companyProperty()       { return company; }
     public SimpleIntegerProperty tyresProperty()        { return tyres; }
     public SimpleDoubleProperty serviceChargeProperty() { return serviceCharge; }
-    public SimpleDoubleProperty paidAmountProperty()     { return paidAmount; }
-    public SimpleDoubleProperty totalAmountProperty()    { return totalAmount; }
-    public SimpleDoubleProperty balanceAmountProperty()  { return balanceAmount; }
-    public SimpleStringProperty paymentStatusProperty()  { return paymentStatus; }
+    public SimpleDoubleProperty subTotalProperty()      { return subTotal; }
+    public SimpleDoubleProperty grandTotalProperty()    { return grandTotal; }
+    public SimpleDoubleProperty initialPaymentProperty(){ return initialPayment; }
+    public SimpleDoubleProperty settlementProperty()    { return settlement; }
     public SimpleStringProperty statusProperty()        { return status; }
+    public SimpleStringProperty remarkProperty()        { return remark; }
 
     public String getExportId()      { return exportId.get(); }
     public String getSerialNumber()  { return serialNumber.get(); }
-    public String  getCompany()       { return company.get(); }
-    public int     getTyres()         { return tyres.get(); }
-    public double  getCustPrice()     { return custPrice.get(); }
-    public double  getCompPrice()     { return compPrice.get(); }
-    public double  getServiceCharge() { return serviceCharge.get(); }
-    public double  getPaidAmount()    { return paidAmount.get(); }
-    public double  getTotalAmount()   { return totalAmount.get(); }
-    public double  getBalanceAmount() { return balanceAmount.get(); }
-    public String  getPaymentStatus() { return paymentStatus.get(); }
-    public LocalDate getDate()        { return date.get(); }
-    public String  getStatus()        { return status.get(); }
-    public void    setExportId(String v) { exportId.set(v == null ? "" : v); }
-    public void    setSerialNumber(String v) { serialNumber.set(v == null ? "" : v); }
-    public void    setCompany(String v) { company.set(v); }
-    public void    setTyres(int v) { tyres.set(v); }
-    public void    setCustPrice(double v) { custPrice.set(v); }
-    public void    setCompPrice(double v) { compPrice.set(v); }
-    public void    setServiceCharge(double v) { serviceCharge.set(v); }
-    public void    setPaidAmount(double v) { paidAmount.set(v); }
-    public void    setTotalAmount(double v) { totalAmount.set(v); }
-    public void    setBalanceAmount(double v) { balanceAmount.set(v); }
-    public void    setPaymentStatus(String v) { paymentStatus.set(v == null ? "PAID" : v); }
-    public void    setDate(LocalDate v) { date.set(v); }
-    public void    setStatus(String s){ status.set(s); }
+    public String getCompany()       { return company.get(); }
+    public int    getTyres()         { return tyres.get(); }
+    public double getCustPrice()     { return custPrice.get(); }
+    public double getCompPrice()     { return compPrice.get(); }
+    public double getServiceCharge() { return serviceCharge.get(); }
+    public double getSubTotal()      { return subTotal.get(); }
+    public double getGrandTotal()    { return grandTotal.get(); }
+    public double getInitialPayment() { return initialPayment.get(); }
+    public double getSettlement()    { return settlement.get(); }
+    public LocalDate getDate()       { return date.get(); }
+    public String getStatus()        { return status.get(); }
+    public String getRemark()        { return remark.get(); }
+
+    public void setExportId(String v)      { exportId.set(v == null ? "" : v); }
+    public void setSerialNumber(String v)  { serialNumber.set(v == null ? "" : v); }
+    public void setCompany(String v)       { company.set(v); }
+    public void setTyres(int v)            { tyres.set(v); }
+    public void setCustPrice(double v)     { custPrice.set(v); }
+    public void setCompPrice(double v)     { compPrice.set(v); }
+    public void setServiceCharge(double v) { serviceCharge.set(v); }
+    public void setSubTotal(double v)      { subTotal.set(v); }
+    public void setGrandTotal(double v)    { grandTotal.set(v); }
+    public void setInitialPayment(double v){ initialPayment.set(v); }
+    public void setSettlement(double v)    { settlement.set(v); }
+    public void setDate(LocalDate v)       { date.set(v); }
+    public void setStatus(String s)        { status.set(s); }
+    public void setRemark(String v)        { remark.set(v == null ? "" : v); }
+
+    // Dynamic Calculations / Backward Compatibility Methods
+    public double getPaidAmount()          { return getSettlement(); }
+    public double getBalanceAmount()       { return Math.max(0.0, getGrandTotal() - getSettlement()); }
+    public String getPaymentStatus() {
+        double bal = getBalanceAmount();
+        if (bal <= 0.0) return "PAID";
+        if (getSettlement() > 0.0) return "PARTIAL";
+        return "CREDIT";
+    }
+    public double getTotalAmount()         { return getGrandTotal(); }
 
     public String getPricesDisplay() {
         return String.format("C: Rs. %,.0f|P: Rs. %,.0f", getCustPrice(), getCompPrice());
@@ -103,8 +110,7 @@ public class ExportRecord {
         double profit = getCustPrice() - getCompPrice();
         return String.format("Rs. %,.0f|%s", profit, getDate().toString());
     }
-
     public double getNetTotal() {
-        return (getCustPrice() * getTyres()) + getServiceCharge();
+        return getGrandTotal();
     }
 }

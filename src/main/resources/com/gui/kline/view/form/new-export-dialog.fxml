@@ -156,6 +156,13 @@
                                 maxWidth="Infinity" />
                 </VBox>
 
+                <VBox spacing="6">
+                    <Label text="REMARK" styleClass="form-label" />
+                    <TextField fx:id="txtRemark"
+                               promptText="e.g. Exported via Colombo Port"
+                               styleClass="form-input" />
+                </VBox>
+
             </VBox>
 
             <Region styleClass="modal-divider" prefHeight="1" maxHeight="1">
