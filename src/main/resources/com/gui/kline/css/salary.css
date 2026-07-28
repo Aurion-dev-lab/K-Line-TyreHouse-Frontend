@@ -1,0 +1,265 @@
+/* Salary Section Stylesheet */
+
+.root-container {
+    -fx-background-color: #f3f4f6;
+}
+
+.page-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.page-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6B7280;
+}
+
+.month-picker-box {
+    -fx-background-color: white;
+    -fx-background-radius: 10px;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+    -fx-padding: 10 16 10 16;
+}
+
+.month-picker-icon {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 14px;
+}
+
+.combo-month {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-size: 13px;
+}
+
+/* Action Buttons */
+.btn-action-amber {
+    -fx-background-color: #f59e0b;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-background-radius: 10px;
+    -fx-padding: 12 20 12 20;
+    -fx-cursor: hand;
+}
+.btn-action-amber:hover {
+    -fx-background-color: #d97706;
+}
+
+.btn-action-danger {
+    -fx-background-color: #ef4444;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-background-radius: 10px;
+    -fx-padding: 12 20 12 20;
+    -fx-cursor: hand;
+}
+.btn-action-danger:hover {
+    -fx-background-color: #dc2626;
+}
+
+.btn-action-success {
+    -fx-background-color: #10b981;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-background-radius: 10px;
+    -fx-padding: 12 20 12 20;
+    -fx-cursor: hand;
+}
+.btn-action-success:hover {
+    -fx-background-color: #059669;
+}
+
+.btn-action-dark {
+    -fx-background-color: #111827;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-background-radius: 10px;
+    -fx-padding: 12 20 12 20;
+    -fx-cursor: hand;
+}
+.btn-action-dark:hover {
+    -fx-background-color: #1f2937;
+}
+
+/* Metric Cards */
+.metric-card {
+    -fx-background-color: white;
+    -fx-background-radius: 14px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);
+    -fx-padding: 20px;
+}
+
+.metric-card-green {
+    -fx-background-color: #ecfdf5;
+    -fx-background-radius: 14px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);
+    -fx-padding: 20px;
+}
+
+.metric-card-rose {
+    -fx-background-color: #fff1f2;
+    -fx-background-radius: 14px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);
+    -fx-padding: 20px;
+}
+
+.icon-box-green {
+    -fx-background-color: #d1fae5;
+    -fx-background-radius: 8px;
+    -fx-padding: 8px;
+}
+
+.icon-box-amber {
+    -fx-background-color: #fef3c7;
+    -fx-background-radius: 8px;
+    -fx-padding: 8px;
+}
+
+.icon-box-rose {
+    -fx-background-color: #fecdd3;
+    -fx-background-radius: 8px;
+    -fx-padding: 8px;
+}
+
+.icon-box-blue {
+    -fx-background-color: #dbeafe;
+    -fx-background-radius: 8px;
+    -fx-padding: 8px;
+}
+
+.metric-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6b7280;
+}
+
+.metric-value-green {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #059669;
+}
+
+.metric-value-dark {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.metric-value-amber {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #f59e0b;
+}
+
+.metric-value-rose {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #e11d48;
+}
+
+.metric-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #9ca3af;
+}
+
+/* Card Section Containers */
+.card-container {
+    -fx-background-color: white;
+    -fx-background-radius: 14px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);
+}
+
+.ledger-header-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.ledger-header-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #9ca3af;
+}
+
+.section-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #9ca3af;
+}
+
+/* Tables */
+.salary-table-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.salary-table-view .column-header-background {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: transparent transparent #e5e7eb transparent;
+    -fx-border-width: 1px;
+}
+
+.salary-table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-size: 40px;
+}
+
+.salary-table-view .column-header .label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6b7280;
+}
+
+/* Status Badges */
+.badge {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 20px;
+    -fx-padding: 4 14 4 14;
+}
+
+.badge-paid {
+    -fx-background-color: #d1fae5;
+    -fx-text-fill: #065f46;
+}
+
+.badge-partial {
+    -fx-background-color: #dbeafe;
+    -fx-text-fill: #1d4ed8;
+}
+
+.badge-no-payable {
+    -fx-background-color: #f3f4f6;
+    -fx-text-fill: #6b7280;
+}
+
+.badge-ready {
+    -fx-background-color: #fef3c7;
+    -fx-text-fill: #92400e;
+}
+
+.badge-advance {
+    -fx-background-color: #fef3c7;
+    -fx-text-fill: #b45309;
+}
+
+.badge-payout {
+    -fx-background-color: #d1fae5;
+    -fx-text-fill: #047857;
+}
+
+.badge-credit {
+    -fx-background-color: #fee2e2;
+    -fx-text-fill: #b91c1c;
+}
+
+.badge-settlement {
+    -fx-background-color: #dbeafe;
+    -fx-text-fill: #1d4ed8;
+}

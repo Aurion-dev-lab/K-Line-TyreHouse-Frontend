@@ -66,14 +66,16 @@ public class LocalWorkerAttendanceRepository {
         String sql = "SELECT a.attendance_date, a.worker_id, w.name, a.status " +
                 "FROM worker_attendance a " +
                 "JOIN workers w ON w.id = a.worker_id " +
-                "WHERE a.attendance_date BETWEEN ? AND ? AND w.name LIKE ? " +
+                "WHERE a.attendance_date BETWEEN ? AND ? AND (w.name LIKE ? OR w.id LIKE ?) " +
                 "ORDER BY a.attendance_date DESC";
         List<WorkerAttendanceHistory> rows = new ArrayList<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
+            String filter = "%" + (nameFilter == null ? "" : nameFilter.trim()) + "%";
             statement.setString(1, from.toString());
             statement.setString(2, to.toString());
-            statement.setString(3, "%" + (nameFilter == null ? "" : nameFilter.trim()) + "%");
+            statement.setString(3, filter);
+            statement.setString(4, filter);
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     rows.add(new WorkerAttendanceHistory(

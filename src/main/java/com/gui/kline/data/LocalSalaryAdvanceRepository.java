@@ -12,7 +12,7 @@ import java.util.UUID;
 
 public class LocalSalaryAdvanceRepository {
     public String saveAdvance(String workerId, String workerName, LocalDate date, double amount, String note) {
-        String id = UUID.randomUUID().toString();
+        String id = com.gui.kline.utils.Utils.generateId("ADV-", 8);
         String sql = "INSERT INTO salary_advances (id, worker_id, worker, amount, advance_date, note, created_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
         try (Connection connection = DatabaseManager.getConnection();

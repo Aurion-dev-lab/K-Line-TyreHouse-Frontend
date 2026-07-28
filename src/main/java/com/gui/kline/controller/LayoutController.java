@@ -502,11 +502,11 @@ public class LayoutController {
 
     private void searchWorkers(String searchTerm, List<SearchResult> results) {
         String sql = "SELECT id, name, phone, role FROM workers " +
-                "WHERE name LIKE ? OR phone LIKE ? OR role LIKE ? " +
+                "WHERE id LIKE ? OR name LIKE ? OR phone LIKE ? OR role LIKE ? " +
                 "ORDER BY name LIMIT 5";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            for (int i = 1; i <= 3; i++) ps.setString(i, searchTerm);
+            for (int i = 1; i <= 4; i++) ps.setString(i, searchTerm);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String id = rs.getString("id");

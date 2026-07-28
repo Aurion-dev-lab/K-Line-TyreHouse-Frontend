@@ -16,7 +16,7 @@ import java.util.UUID;
 
 public class LocalWorkerCreditRepository {
     public String saveCredit(String workerId, String workerName, LocalDate date, double amount, String note, String type) {
-        String id = UUID.randomUUID().toString();
+        String id = com.gui.kline.utils.Utils.generateId("CRD-", 8);
         String sql = "INSERT INTO worker_credits (id, worker_id, worker, amount, credit_type, credit_date, note, created_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
         try (Connection connection = DatabaseManager.getConnection();

@@ -1,5 +1,6 @@
 package com.gui.kline.data;
 
+import com.gui.kline.models.LedgerEntry;
 import com.gui.kline.models.WorkerSalary;
 
 import java.sql.Connection;
@@ -114,7 +115,7 @@ public class LocalSalaryRepository {
                     throw new IllegalArgumentException(String.format("The payment exceeds the remaining balance of Rs. %,.2f.", totalPayable - alreadyPaid));
                 }
 
-                String paymentId = UUID.randomUUID().toString();
+                String paymentId = com.gui.kline.utils.Utils.generateId("PAY-", 8);
                 String insertSql = "INSERT INTO salary_payments (id, worker_id, worker, period_from, period_to, amount, paid_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
                 try (PreparedStatement insert = connection.prepareStatement(insertSql)) {
                     insert.setString(1, paymentId);
@@ -221,6 +222,49 @@ public class LocalSalaryRepository {
             throw new IllegalStateException("Failed to load salary payments", ex);
         }
         return payments;
+    }
+
+    /**
+     * Loads unified payouts and advances ledger entries for a period.
+     */
+    public List<LedgerEntry> loadPayoutLedger(LocalDate from, LocalDate to) {
+        String sql = "SELECT id, entry_date, worker, entry_type, entry_note, amount FROM (" +
+                "  SELECT id, advance_date AS entry_date, worker, 'ADVANCE' AS entry_type, " +
+                "  CASE WHEN note IS NULL OR TRIM(note) = '' THEN 'Salary advance' ELSE note END AS entry_note, amount " +
+                "  FROM salary_advances " +
+                "  WHERE advance_date BETWEEN ? AND ? " +
+                "  UNION ALL " +
+                "  SELECT id, DATE(paid_at) AS entry_date, worker, 'PAYOUT' AS entry_type, " +
+                "  ('Salary payout for period ' || period_from || ' to ' || period_to) AS entry_note, amount " +
+                "  FROM salary_payments " +
+                "  WHERE DATE(paid_at) BETWEEN ? AND ? " +
+                ") ORDER BY entry_date DESC";
+
+        List<LedgerEntry> entries = new ArrayList<>();
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, from.toString());
+            statement.setString(2, to.toString());
+            statement.setString(3, from.toString());
+            statement.setString(4, to.toString());
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String dateStr = rs.getString("entry_date");
+                    LocalDate date = dateStr != null ? LocalDate.parse(dateStr) : from;
+                    entries.add(new LedgerEntry(
+                            rs.getString("id"),
+                            date,
+                            rs.getString("worker"),
+                            rs.getString("entry_type"),
+                            rs.getString("entry_note"),
+                            rs.getDouble("amount")
+                    ));
+                }
+            }
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to load payout ledger", ex);
+        }
+        return entries;
     }
 
     /**

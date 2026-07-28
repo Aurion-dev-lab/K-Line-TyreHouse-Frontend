@@ -5,6 +5,7 @@ import com.gui.kline.models.LedgerEntry;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.models.WorkerSalary;
 import com.gui.kline.data.LocalSalaryRepository;
+import com.gui.kline.data.LocalSalaryAdvanceRepository;
 import com.gui.kline.data.LocalWorkerCreditRepository;
 import com.gui.kline.utils.JsonUtil;
 import com.gui.kline.controller.form.GiveCreditDialogController;
@@ -51,6 +52,15 @@ public class SalaryController implements Initializable {
     @FXML private TableColumn<WorkerSalary, String>          colStatus;
     @FXML private TableColumn<WorkerSalary, WorkerSalary>    colSalaryActions;
 
+    @FXML private TableView<LedgerEntry>                     tblPayoutLedger;
+    @FXML private TableColumn<LedgerEntry, String>           colPayoutDate;
+    @FXML private TableColumn<LedgerEntry, String>           colPayoutWorker;
+    @FXML private TableColumn<LedgerEntry, LedgerEntry>      colPayoutType;
+    @FXML private TableColumn<LedgerEntry, String>           colPayoutNote;
+    @FXML private TableColumn<LedgerEntry, LedgerEntry>      colPayoutAmount;
+    @FXML private TableColumn<LedgerEntry, LedgerEntry>      colPayoutActions;
+    @FXML private HBox hboxPayoutSummary;
+
     @FXML private TableView<LedgerEntry>                     tblLedger;
     @FXML private TableColumn<LedgerEntry, String>           colLedgerDate;
     @FXML private TableColumn<LedgerEntry, String>           colLedgerWorker;
@@ -62,7 +72,9 @@ public class SalaryController implements Initializable {
 
     private final ObservableList<WorkerSalary> salaryList = FXCollections.observableArrayList();
     private final ObservableList<LedgerEntry>  ledgerList = FXCollections.observableArrayList();
+    private final ObservableList<LedgerEntry>  payoutLedgerList = FXCollections.observableArrayList();
     private final LocalSalaryRepository salaryRepository = new LocalSalaryRepository();
+    private final LocalSalaryAdvanceRepository advanceRepository = new LocalSalaryAdvanceRepository();
     private final LocalWorkerCreditRepository creditRepository = new LocalWorkerCreditRepository();
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -74,6 +86,7 @@ public class SalaryController implements Initializable {
         rangeTo = currentMonth.atEndOfMonth();
 
         setupSalaryTable();
+        setupPayoutLedgerTable();
         setupLedgerTable();
         reloadData();
     }
@@ -100,8 +113,10 @@ public class SalaryController implements Initializable {
             return;
         }
         salaryList.setAll(salaryRepository.loadWorkerSalaries(rangeFrom, rangeTo));
+        payoutLedgerList.setAll(salaryRepository.loadPayoutLedger(rangeFrom, rangeTo));
         ledgerList.setAll(creditRepository.loadLedger(rangeFrom, rangeTo));
         refreshSummary();
+        refreshPayoutSummary();
         refreshCreditSummary();
     }
 
@@ -112,23 +127,15 @@ public class SalaryController implements Initializable {
                 super.updateItem(w, empty);
                 if (empty || w == null) { setGraphic(null); return; }
 
-                Label avatar = new Label(String.valueOf(w.getName().charAt(0)));
-                avatar.setStyle(
-                        "-fx-background-color: " + w.getAvatarColor() + ";" +
-                                "-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;" +
-                                "-fx-background-radius: 50%; -fx-min-width: 36px; -fx-min-height: 36px;" +
-                                "-fx-alignment: center;"
-                );
-
                 Label name = new Label(w.getName());
                 name.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #111827;");
-                Label role = new Label(w.getRole());
-                role.setStyle("-fx-font-size: 10px; -fx-text-fill: #9ca3af;");
+
+                Label role = new Label(w.getRole() != null ? w.getRole() : "");
+                role.setStyle("-fx-font-size: 11px; -fx-text-fill: #6b7280;");
 
                 VBox info = new VBox(2, name, role);
-                HBox box  = new HBox(10, avatar, info);
-                box.setAlignment(Pos.CENTER_LEFT);
-                setGraphic(box); setText(null);
+                info.setAlignment(Pos.CENTER_LEFT);
+                setGraphic(info); setText(null);
                 setStyle("-fx-background-color: transparent; -fx-padding: 6 0 6 8;");
                 setAlignment(Pos.CENTER_LEFT);
             }
@@ -257,32 +264,49 @@ public class SalaryController implements Initializable {
             }
 
             private void showPaymentEditor(WorkerSalary worker) {
+                if (getTableRow() != null) {
+                    getTableRow().setPrefHeight(80);
+                }
+
                 TextField amount = new TextField(String.format("%.2f", worker.getRemainingPayable()));
                 amount.setPromptText("Amount");
-                amount.setPrefWidth(88);
-                amount.setStyle("-fx-font-size: 11px; -fx-background-radius: 7px; -fx-border-color: #9ca3af; -fx-border-radius: 7px;");
+                amount.setPrefWidth(110);
+                amount.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-alignment: center; -fx-background-radius: 6px; -fx-border-color: #d1d5db; -fx-border-radius: 6px; -fx-padding: 4 8 4 8;");
 
-                Button save = new Button("✓");
-                save.setStyle("-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 7px; -fx-cursor: hand;");
-                Button cancel = new Button("✕");
-                cancel.setStyle("-fx-background-color: #e5e7eb; -fx-text-fill: #374151; -fx-font-weight: bold; -fx-background-radius: 7px; -fx-cursor: hand;");
+                Button save = new Button("✓ Pay");
+                save.setStyle("-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 11px; -fx-background-radius: 6px; -fx-padding: 4 10 4 10; -fx-cursor: hand;");
+
+                Button cancel = new Button("Cancel");
+                cancel.setStyle("-fx-background-color: #f3f4f6; -fx-text-fill: #4b5563; -fx-font-weight: bold; -fx-font-size: 11px; -fx-background-radius: 6px; -fx-padding: 4 8 4 8; -fx-cursor: hand;");
 
                 Label error = new Label();
-                error.setStyle("-fx-text-fill: #dc2626; -fx-font-size: 9px;");
-                HBox editor = new HBox(4, amount, save, cancel);
-                editor.setAlignment(Pos.CENTER);
-                VBox content = new VBox(2, editor, error);
+                error.setStyle("-fx-text-fill: #dc2626; -fx-font-size: 10px; -fx-font-weight: bold;");
+
+                HBox buttonBox = new HBox(6, save, cancel);
+                buttonBox.setAlignment(Pos.CENTER);
+
+                VBox content = new VBox(4, amount, buttonBox, error);
                 content.setAlignment(Pos.CENTER);
+                content.setStyle("-fx-padding: 4 0 4 0;");
                 setGraphic(content);
 
                 save.setOnAction(event -> {
                     String errorMessage = paySalary(worker, amount.getText());
                     if (errorMessage != null) {
                         error.setText(errorMessage);
+                    } else {
+                        if (getTableRow() != null) {
+                            getTableRow().setPrefHeight(68);
+                        }
                     }
                 });
                 amount.setOnAction(event -> save.fire());
-                cancel.setOnAction(event -> updateItem(worker, false));
+                cancel.setOnAction(event -> {
+                    if (getTableRow() != null) {
+                        getTableRow().setPrefHeight(68);
+                    }
+                    updateItem(worker, false);
+                });
                 amount.requestFocus();
                 amount.selectAll();
             }
@@ -662,6 +686,157 @@ public class SalaryController implements Initializable {
                 "; -fx-font-size:11px; -fx-font-weight:bold;" +
                 " -fx-background-radius:20px; -fx-padding:3 8 3 8;");
         return l;
+    }
+
+    private void setupPayoutLedgerTable() {
+        if (tblPayoutLedger == null) return;
+
+        colPayoutDate.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getDate().toString()));
+        colPayoutDate.setCellFactory(col -> new TableCell<>() {
+            @Override protected void updateItem(String v, boolean empty) {
+                super.updateItem(v, empty);
+                setText(empty || v == null ? null : v);
+                setStyle("-fx-text-fill: #374151; -fx-font-size: 13px; -fx-background-color: transparent; -fx-alignment: center;");
+                setAlignment(Pos.CENTER);
+            }
+        });
+
+        colPayoutWorker.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getWorker()));
+        colPayoutWorker.setCellFactory(col -> new TableCell<>() {
+            @Override protected void updateItem(String v, boolean empty) {
+                super.updateItem(v, empty);
+                setText(empty || v == null ? null : v);
+                setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #111827; -fx-background-color: transparent; -fx-alignment: center;");
+                setAlignment(Pos.CENTER);
+            }
+        });
+
+        colPayoutType.setCellValueFactory(d -> new SimpleObjectProperty<>(d.getValue()));
+        colPayoutType.setCellFactory(col -> new TableCell<>() {
+            @Override protected void updateItem(LedgerEntry e, boolean empty) {
+                super.updateItem(e, empty);
+                if (empty || e == null) { setGraphic(null); return; }
+                boolean isAdvance = "ADVANCE".equalsIgnoreCase(e.getType());
+                Label badge = new Label((isAdvance ? "⏱ " : "✓ ") + e.getType());
+                badge.getStyleClass().add("badge");
+                badge.getStyleClass().add(isAdvance ? "badge-advance" : "badge-payout");
+                HBox wrap = new HBox(badge);
+                wrap.setAlignment(Pos.CENTER);
+                setGraphic(wrap); setText(null);
+                setStyle("-fx-background-color: transparent;");
+                setAlignment(Pos.CENTER);
+            }
+        });
+
+        colPayoutNote.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getNote()));
+        colPayoutNote.setCellFactory(col -> new TableCell<>() {
+            @Override protected void updateItem(String v, boolean empty) {
+                super.updateItem(v, empty);
+                setText(empty || v == null ? null : v);
+                setStyle("-fx-text-fill: #6b7280; -fx-font-style: italic; -fx-font-size: 13px; -fx-background-color: transparent; -fx-alignment: center-left;");
+                setAlignment(Pos.CENTER_LEFT);
+            }
+        });
+
+        colPayoutAmount.setCellValueFactory(d -> new SimpleObjectProperty<>(d.getValue()));
+        colPayoutAmount.setCellFactory(col -> new TableCell<>() {
+            @Override protected void updateItem(LedgerEntry e, boolean empty) {
+                super.updateItem(e, empty);
+                if (empty || e == null) { setText(null); return; }
+                boolean isAdvance = "ADVANCE".equalsIgnoreCase(e.getType());
+                setText(String.format("Rs. %,.0f", e.getAmount()));
+                setStyle(
+                        "-fx-font-weight: bold; -fx-font-size: 13px; -fx-background-color: transparent;" +
+                                "-fx-text-fill: " + (isAdvance ? "#d97706" : "#059669") + "; -fx-alignment: center;"
+                );
+                setAlignment(Pos.CENTER);
+            }
+        });
+
+        colPayoutActions.setCellValueFactory(d -> new SimpleObjectProperty<>(d.getValue()));
+        colPayoutActions.setCellFactory(col -> new TableCell<>() {
+            @Override protected void updateItem(LedgerEntry e, boolean empty) {
+                super.updateItem(e, empty);
+                if (empty || e == null) { setGraphic(null); return; }
+                Button del = new Button("🗑");
+                del.setStyle("-fx-background-color: transparent; -fx-text-fill: #fca5a5; -fx-font-size: 15px; -fx-cursor: hand;");
+                del.setOnMouseEntered(ev -> del.setStyle("-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-font-size: 15px; -fx-cursor: hand;"));
+                del.setOnMouseExited(ev  -> del.setStyle("-fx-background-color: transparent; -fx-text-fill: #fca5a5; -fx-font-size: 15px; -fx-cursor: hand;"));
+
+                del.setOnAction(ev -> {
+                    if ("ADVANCE".equalsIgnoreCase(e.getType())) {
+                        advanceRepository.deleteAdvance(e.getId());
+                    } else {
+                        salaryRepository.deleteSalaryPayment(e.getId());
+                    }
+                    reloadData();
+                });
+
+                HBox actionsBox = new HBox(del);
+                actionsBox.setAlignment(Pos.CENTER);
+                setGraphic(actionsBox); setText(null);
+                setStyle("-fx-background-color: transparent;");
+                setAlignment(Pos.CENTER);
+            }
+        });
+
+        tblPayoutLedger.setItems(payoutLedgerList);
+        tblPayoutLedger.setRowFactory(tv -> {
+            TableRow<LedgerEntry> row = new TableRow<>();
+            row.setPrefHeight(50);
+            row.setStyle("-fx-background-color: white; -fx-border-color: transparent transparent #f3f4f6 transparent;");
+            return row;
+        });
+    }
+
+    private void refreshPayoutSummary() {
+        if (hboxPayoutSummary == null) return;
+        hboxPayoutSummary.getChildren().clear();
+
+        Map<String, double[]> summary = new LinkedHashMap<>();
+        for (LedgerEntry e : payoutLedgerList) {
+            summary.putIfAbsent(e.getWorker(), new double[]{0, 0});
+            if ("ADVANCE".equalsIgnoreCase(e.getType())) {
+                summary.get(e.getWorker())[0] += e.getAmount();
+            } else {
+                summary.get(e.getWorker())[1] += e.getAmount();
+            }
+        }
+
+        if (summary.isEmpty()) {
+            Label emptyLbl = new Label("No payout or advance transactions recorded for this period.");
+            emptyLbl.setStyle("-fx-text-fill: #9ca3af; -fx-font-size: 13px; -fx-font-style: italic;");
+            hboxPayoutSummary.getChildren().add(emptyLbl);
+            return;
+        }
+
+        for (Map.Entry<String, double[]> entry : summary.entrySet()) {
+            double advances = entry.getValue()[0];
+            double payouts  = entry.getValue()[1];
+            double total    = advances + payouts;
+
+            VBox card = new VBox(6);
+            card.setStyle(
+                    "-fx-background-color: white; -fx-background-radius: 12px;" +
+                            "-fx-border-color: #f3f4f6; -fx-border-width: 1; -fx-border-radius: 12px;" +
+                            "-fx-padding: 14 18 14 18; -fx-min-width: 210px;"
+            );
+
+            Label name = new Label(entry.getKey());
+            name.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #111827;");
+
+            Label advancesLbl = new Label(String.format("Advances: Rs. %,.0f", advances));
+            advancesLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #d97706;");
+
+            Label payoutsLbl = new Label(String.format("Salary Paid: Rs. %,.0f", payouts));
+            payoutsLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #059669;");
+
+            Label totalLbl = new Label(String.format("Total Handed Out: Rs. %,.0f", total));
+            totalLbl.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+
+            card.getChildren().addAll(name, advancesLbl, payoutsLbl, totalLbl);
+            hboxPayoutSummary.getChildren().add(card);
+        }
     }
 
     private double computeWorkerCosts(LocalDate from, LocalDate to) {

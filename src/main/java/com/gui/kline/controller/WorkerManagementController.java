@@ -134,11 +134,14 @@ public class WorkerManagementController {
         row.setPadding(new Insets(12, 20, 12, 20));
         row.setStyle("-fx-border-color: transparent transparent #f0f2f5 transparent;");
 
-        VBox nameBox = new VBox(2);
+        VBox nameBox = new VBox(3);
         nameBox.setMinWidth(200); nameBox.setPrefWidth(200);
+        String workerIdStr = worker != null ? worker.getId() : (attendance != null ? attendance.getWorkerId() : "");
+        Label lblId = new Label(workerIdStr != null ? workerIdStr : "");
+        lblId.setStyle("-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #2563eb; -fx-background-color: #dbeafe; -fx-background-radius: 4px; -fx-padding: 2 6 2 6;");
         Label lblName = new Label(attendance.getWorkerName()); lblName.setStyle("-fx-font-weight: bold; -fx-text-fill: #1a1a2e;");
         Label lblRole = new Label(attendance.getRole()); lblRole.setStyle("-fx-font-size: 11px; -fx-text-fill: #888888;");
-        nameBox.getChildren().addAll(lblName, lblRole);
+        nameBox.getChildren().addAll(lblId, lblName, lblRole);
 
         Label lblRate = new Label(attendance.getRate());
         lblRate.setMinWidth(150); lblRate.setPrefWidth(150);
@@ -328,10 +331,19 @@ public class WorkerManagementController {
         lblDate.setMaxWidth(250);
         lblDate.setStyle("-fx-text-fill: #666666; -fx-font-size: 13px;");
 
-        Label lblWorker = new Label(worker);
-        lblWorker.setStyle("-fx-font-weight: bold; -fx-text-fill: #1a1a2e; -fx-font-size: 13px;");
-        HBox.setHgrow(lblWorker, Priority.ALWAYS);
-        lblWorker.setMaxWidth(Double.MAX_VALUE);
+        VBox workerBox = new VBox(2);
+        if (workerId != null && !workerId.isBlank()) {
+            Label lblId = new Label(workerId);
+            lblId.setStyle("-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #2563eb; -fx-background-color: #dbeafe; -fx-background-radius: 4px; -fx-padding: 2 6 2 6;");
+            Label lblWorker = new Label(worker);
+            lblWorker.setStyle("-fx-font-weight: bold; -fx-text-fill: #1a1a2e; -fx-font-size: 13px;");
+            workerBox.getChildren().addAll(lblId, lblWorker);
+        } else {
+            Label lblWorker = new Label(worker);
+            lblWorker.setStyle("-fx-font-weight: bold; -fx-text-fill: #1a1a2e; -fx-font-size: 13px;");
+            workerBox.getChildren().add(lblWorker);
+        }
+        HBox.setHgrow(workerBox, Priority.ALWAYS);
 
         StackPane statusContainer = new StackPane();
         statusContainer.setMinWidth(100);
@@ -365,7 +377,7 @@ public class WorkerManagementController {
         
         actionsContainer.getChildren().add(delAttendance);
 
-        row.getChildren().addAll(lblDate, lblWorker, statusContainer, actionsContainer);
+        row.getChildren().addAll(lblDate, workerBox, statusContainer, actionsContainer);
         historyRowsContainer.getChildren().add(row);
     }
 

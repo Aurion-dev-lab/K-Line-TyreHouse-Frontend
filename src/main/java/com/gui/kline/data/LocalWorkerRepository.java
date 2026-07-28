@@ -40,7 +40,7 @@ public class LocalWorkerRepository {
                 "VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, java.util.UUID.randomUUID().toString());
+            statement.setString(1, com.gui.kline.utils.Utils.generateId("WRK-", 6));
             statement.setString(2, name.trim());
             statement.setString(3, phone == null ? null : phone.trim());
             statement.setString(4, role == null ? null : role.trim());
