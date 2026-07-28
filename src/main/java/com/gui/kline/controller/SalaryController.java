@@ -690,6 +690,8 @@ public class SalaryController implements Initializable {
             double paid      = entry.getValue()[1];
             double remaining = given - paid;
 
+            if (remaining <= 0) continue;
+
             VBox card = new VBox(8);
             card.setStyle(
                     "-fx-background-color: white; -fx-background-radius: 12px;" +

@@ -25,6 +25,8 @@ public class LocalSalaryRepository {
         Map<String, Double> creditsById = creditRepository.balanceByWorkerId(from, to);
         Map<String, Double> creditsByName = creditRepository.balanceByWorkerName(from, to);
         Map<String, Double> paidAmountsByWorkerId = loadPaidAmountsByWorkerId(from, to);
+        Map<String, Double> payrollSettledById = loadPayrollSettledCreditsByWorkerId(from, to);
+        Map<String, Double> payrollSettledByName = loadPayrollSettledCreditsByWorkerName(from, to);
 
         String sql = "SELECT w.id, w.name, w.role, w.rate, " +
                 "SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) AS present, " +
@@ -58,13 +60,16 @@ public class LocalSalaryRepository {
                     if (creditBalance == 0.0) {
                         creditBalance = creditsByName.getOrDefault(name, 0.0);
                     }
-                    // A settlement can never create extra salary; treat an over-settled
-                    // credit ledger as a zero outstanding balance for payroll purposes.
                     creditBalance = Math.max(0, creditBalance);
+
+                    double payrollSettled = payrollSettledById.getOrDefault(workerId, 0.0);
+                    if (payrollSettled == 0.0) {
+                        payrollSettled = payrollSettledByName.getOrDefault(name, 0.0);
+                    }
 
                     double gross = (present + (halfDay * 0.5)) * rate;
                     double paidAmount = paidAmountsByWorkerId.getOrDefault(workerId, 0.0);
-                    double netPayable = Math.max(0, gross - advances - creditBalance);
+                    double netPayable = Math.max(0, gross - advances - creditBalance - payrollSettled);
                     String status = paymentStatus(netPayable, paidAmount);
 
                     salaries.add(new WorkerSalary(
@@ -78,6 +83,7 @@ public class LocalSalaryRepository {
                             gross,
                             advances,
                             creditBalance,
+                            payrollSettled,
                             paidAmount,
                             status
                     ));
@@ -87,6 +93,46 @@ public class LocalSalaryRepository {
             throw new IllegalStateException("Failed to load salaries", ex);
         }
         return salaries;
+    }
+
+    private Map<String, Double> loadPayrollSettledCreditsByWorkerId(LocalDate from, LocalDate to) {
+        String sql = "SELECT worker_id, SUM(amount) AS total FROM worker_credits " +
+                "WHERE credit_type = 'SETTLEMENT' AND note LIKE 'Auto-settled via payroll%' " +
+                "AND credit_date BETWEEN ? AND ? GROUP BY worker_id";
+        Map<String, Double> totals = new HashMap<>();
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, from.toString());
+            statement.setString(2, to.toString());
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    totals.put(rs.getString("worker_id"), rs.getDouble("total"));
+                }
+            }
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to load payroll credit settlements", ex);
+        }
+        return totals;
+    }
+
+    private Map<String, Double> loadPayrollSettledCreditsByWorkerName(LocalDate from, LocalDate to) {
+        String sql = "SELECT worker, SUM(amount) AS total FROM worker_credits " +
+                "WHERE credit_type = 'SETTLEMENT' AND note LIKE 'Auto-settled via payroll%' " +
+                "AND credit_date BETWEEN ? AND ? GROUP BY worker";
+        Map<String, Double> totals = new HashMap<>();
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, from.toString());
+            statement.setString(2, to.toString());
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    totals.put(rs.getString("worker"), rs.getDouble("total"));
+                }
+            }
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to load payroll credit settlements", ex);
+        }
+        return totals;
     }
 
     /** Saves a partial or complete payment for a worker and payroll period. */
@@ -135,13 +181,14 @@ public class LocalSalaryRepository {
                 if (creditSettlementAmount > 0) {
                     String creditId = com.gui.kline.utils.Utils.generateId("CRD-", 8);
                     String creditSql = "INSERT INTO worker_credits (id, worker_id, worker, amount, credit_type, credit_date, note, created_at) " +
-                            "VALUES (?, ?, ?, ?, 'SETTLEMENT', ?, 'Auto-settled via payroll payout', CURRENT_TIMESTAMP)";
+                            "VALUES (?, ?, ?, ?, 'SETTLEMENT', ?, ?, CURRENT_TIMESTAMP)";
                     try (PreparedStatement insertCredit = connection.prepareStatement(creditSql)) {
                         insertCredit.setString(1, creditId);
                         insertCredit.setString(2, workerId);
                         insertCredit.setString(3, workerName);
                         insertCredit.setDouble(4, creditSettlementAmount);
                         insertCredit.setString(5, LocalDate.now().toString());
+                        insertCredit.setString(6, "Auto-settled via payroll payout:" + paymentId);
                         insertCredit.executeUpdate();
                     }
                 }
@@ -207,11 +254,24 @@ public class LocalSalaryRepository {
      */
     public void deleteSalaryPayment(String paymentId) {
         String sql = "DELETE FROM salary_payments WHERE id = ?";
-        try (Connection connection = DatabaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, paymentId);
-            statement.executeUpdate();
-            DatabaseManager.logDeletion("salary_payments", paymentId);
+        String creditSql = "DELETE FROM worker_credits WHERE note LIKE '%:' || ? OR note = 'Auto-settled via payroll payout'";
+        try (Connection connection = DatabaseManager.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                    statement.setString(1, paymentId);
+                    statement.executeUpdate();
+                }
+                try (PreparedStatement creditStatement = connection.prepareStatement(creditSql)) {
+                    creditStatement.setString(1, paymentId);
+                    creditStatement.executeUpdate();
+                }
+                connection.commit();
+                DatabaseManager.logDeletion("salary_payments", paymentId);
+            } catch (SQLException ex) {
+                connection.rollback();
+                throw ex;
+            }
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to delete salary payment", ex);
         }

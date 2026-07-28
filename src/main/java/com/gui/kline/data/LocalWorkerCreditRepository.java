@@ -92,14 +92,13 @@ public class LocalWorkerCreditRepository {
         return null;
     }
 
-    public List<LedgerEntry> loadLedger(LocalDate from, LocalDate to) {
+    public List<LedgerEntry> loadLedger(LocalDate to) {
         String sql = "SELECT id, worker, credit_date, credit_type, note, amount " +
-                "FROM worker_credits WHERE credit_date BETWEEN ? AND ? ORDER BY credit_date DESC";
+                "FROM worker_credits WHERE credit_date <= ? ORDER BY credit_date DESC";
         List<LedgerEntry> entries = new ArrayList<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, from.toString());
-            statement.setString(2, to.toString());
+            statement.setString(1, to.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     String type = rs.getString("credit_type");
@@ -117,6 +116,10 @@ public class LocalWorkerCreditRepository {
             throw new IllegalStateException("Failed to load credit ledger", ex);
         }
         return entries;
+    }
+
+    public List<LedgerEntry> loadLedger(LocalDate from, LocalDate to) {
+        return loadLedger(to);
     }
 
     public Map<String, Double> balanceByWorkerId(LocalDate from, LocalDate to) {

@@ -61,13 +61,6 @@ public final class DatabaseManager {
                     ")");
             statement.execute("CREATE INDEX IF NOT EXISTS idx_product_id ON product_images (product_id)");
 
-            // Rename customers table to credit_customers if exists
-            try {
-                statement.execute("ALTER TABLE customers RENAME TO credit_customers");
-            } catch (SQLException e) {
-                // table doesn't exist or already renamed
-            }
-
             statement.execute("CREATE TABLE IF NOT EXISTS credit_customers (" +
                     "id TEXT PRIMARY KEY," +
                     "name TEXT NOT NULL," +
@@ -79,17 +72,6 @@ public final class DatabaseManager {
                     "sync_status INTEGER NOT NULL DEFAULT 0," +
                     "UNIQUE (name, phone)" +
                     ")");
-
-            // Migration: ensure email, address, updated_at columns exist
-            try {
-                statement.execute("ALTER TABLE credit_customers ADD COLUMN email TEXT");
-            } catch (SQLException e) {}
-            try {
-                statement.execute("ALTER TABLE credit_customers ADD COLUMN address TEXT");
-            } catch (SQLException e) {}
-            try {
-                statement.execute("ALTER TABLE credit_customers ADD COLUMN updated_at DATETIME");
-            } catch (SQLException e) {}
 
             statement.execute("CREATE TABLE IF NOT EXISTS invoices (" +
                     "id TEXT PRIMARY KEY," +
@@ -249,30 +231,6 @@ public final class DatabaseManager {
                     ")");
 
             backfillProductCodes(connection);
-
-            // Migrations for tyre_exports schema update
-            try {
-                statement.execute("ALTER TABLE tyre_exports ADD COLUMN sub_total REAL NOT NULL DEFAULT 0");
-            } catch (Exception ignored) {}
-            try {
-                statement.execute("ALTER TABLE tyre_exports ADD COLUMN grand_total REAL NOT NULL DEFAULT 0");
-            } catch (Exception ignored) {}
-            try {
-                statement.execute("ALTER TABLE tyre_exports ADD COLUMN initial_payment REAL NOT NULL DEFAULT 0");
-            } catch (Exception ignored) {}
-            try {
-                statement.execute("ALTER TABLE tyre_exports ADD COLUMN settlement REAL NOT NULL DEFAULT 0");
-            } catch (Exception ignored) {}
-            try {
-                statement.execute("ALTER TABLE tyre_exports ADD COLUMN remark TEXT");
-            } catch (Exception ignored) {}
-            try {
-                statement.execute("ALTER TABLE tyre_exports ADD COLUMN tyre_size TEXT");
-            } catch (Exception ignored) {}
-            try {
-                statement.execute("ALTER TABLE tyre_exports ADD COLUMN tyre_make TEXT");
-            } catch (Exception ignored) {}
-
             initialized = true;
         } catch (SQLException ex) {
             System.err.println("=== DATABASE INITIALIZATION ERROR ===");
