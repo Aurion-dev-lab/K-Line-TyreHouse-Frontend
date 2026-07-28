@@ -128,12 +128,14 @@
                     <VBox styleClass="card-container">
                         <TableView fx:id="tblSalary" prefHeight="220.0" styleClass="salary-table-view">
                             <columns>
-                                <TableColumn fx:id="colWorker" prefWidth="200.0" text="WORKER" />
-                                <TableColumn fx:id="colAttendance" prefWidth="160.0" text="ATTENDANCE" />
-                                <TableColumn fx:id="colGrossSalary" prefWidth="130.0" text="GROSS SALARY" />
-                                <TableColumn fx:id="colAdvances" prefWidth="110.0" text="ADVANCES" />
-                                <TableColumn fx:id="colCreditBalance" prefWidth="130.0" text="CREDIT BALANCE" />
+                                <TableColumn fx:id="colWorker" prefWidth="180.0" text="WORKER" />
+                                <TableColumn fx:id="colAttendance" prefWidth="140.0" text="ATTENDANCE" />
+                                <TableColumn fx:id="colGrossSalary" prefWidth="120.0" text="GROSS SALARY" />
+                                <TableColumn fx:id="colAdvances" prefWidth="100.0" text="ADVANCES" />
+                                <TableColumn fx:id="colCreditBalance" prefWidth="120.0" text="CREDIT BALANCE" />
+                                <TableColumn fx:id="colDeductCredit" prefWidth="120.0" text="DEDUCT CREDIT" />
                                 <TableColumn fx:id="colNetPayable" prefWidth="120.0" text="NET PAYABLE" />
+                                <TableColumn fx:id="colRemaining" prefWidth="120.0" text="REMAINING" />
                                 <TableColumn fx:id="colStatus" prefWidth="100.0" text="STATUS" />
                                 <TableColumn fx:id="colSalaryActions" prefWidth="170.0" text="PAYMENT" />
                             </columns>

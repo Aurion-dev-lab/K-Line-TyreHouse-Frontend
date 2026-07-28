@@ -92,6 +92,11 @@ public class LocalSalaryRepository {
     /** Saves a partial or complete payment for a worker and payroll period. */
     public String paySalary(String workerId, String workerName, LocalDate from, LocalDate to,
                             double paymentAmount, double totalPayable) {
+        return paySalary(workerId, workerName, from, to, paymentAmount, totalPayable, 0.0);
+    }
+
+    public String paySalary(String workerId, String workerName, LocalDate from, LocalDate to,
+                            double paymentAmount, double totalPayable, double creditSettlementAmount) {
         if (workerId == null || workerId.isBlank() || from == null || to == null ||
                 paymentAmount <= 0 || totalPayable <= 0 || from.isAfter(to)) {
             throw new IllegalArgumentException("A worker, valid payroll period, and positive payment amount are required.");
@@ -126,6 +131,21 @@ public class LocalSalaryRepository {
                     insert.setDouble(6, paymentAmount);
                     insert.executeUpdate();
                 }
+
+                if (creditSettlementAmount > 0) {
+                    String creditId = com.gui.kline.utils.Utils.generateId("CRD-", 8);
+                    String creditSql = "INSERT INTO worker_credits (id, worker_id, worker, amount, credit_type, credit_date, note, created_at) " +
+                            "VALUES (?, ?, ?, ?, 'SETTLEMENT', ?, 'Auto-settled via payroll payout', CURRENT_TIMESTAMP)";
+                    try (PreparedStatement insertCredit = connection.prepareStatement(creditSql)) {
+                        insertCredit.setString(1, creditId);
+                        insertCredit.setString(2, workerId);
+                        insertCredit.setString(3, workerName);
+                        insertCredit.setDouble(4, creditSettlementAmount);
+                        insertCredit.setString(5, LocalDate.now().toString());
+                        insertCredit.executeUpdate();
+                    }
+                }
+
                 connection.commit();
                 return paymentId;
             } catch (RuntimeException | SQLException ex) {

@@ -164,4 +164,33 @@ public class LocalWorkerCreditRepository {
         }
         return totals;
     }
+
+    /**
+     * Returns the current net outstanding credit balance for a single worker
+     * (all CREDIT entries minus all SETTLEMENT entries, up to today).
+     * Returns 0 if the worker has no credit history or is fully settled.
+     */
+    public double getOutstandingBalance(String workerId) {
+        if (workerId == null || workerId.isBlank()) return 0;
+        String sql = "SELECT credit_type, SUM(amount) AS total FROM worker_credits " +
+                "WHERE worker_id = ? GROUP BY credit_type";
+        double balance = 0;
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, workerId);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    double total = rs.getDouble("total");
+                    if ("SETTLEMENT".equalsIgnoreCase(rs.getString("credit_type"))) {
+                        balance -= total;
+                    } else {
+                        balance += total;
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to load outstanding credit balance", ex);
+        }
+        return Math.max(0, balance);
+    }
 }

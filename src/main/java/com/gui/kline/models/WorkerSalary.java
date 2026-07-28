@@ -25,9 +25,21 @@ public class WorkerSalary {
     public double getGrossSalary()   { return grossSalary; }
     public double getAdvances()      { return advances; }
     public double getCreditBalance() { return creditBalance; }
-    /** Cash salary due after salary advances and the worker's outstanding credit are deducted. */
-    public double getNetPayable()    { return Math.max(0, grossSalary - advances - creditBalance); }
+    /** Cash salary due after salary advances and optionally the worker's outstanding credit are deducted. */
+    public double getNetPayable()    { return getNetPayable(true); }
+    public double getNetPayable(boolean includeCreditDeduction) {
+        return Math.max(0, grossSalary - advances - (includeCreditDeduction ? creditBalance : 0));
+    }
     public double getPaidAmount()    { return paidAmount; }
-    public double getRemainingPayable() { return Math.max(0, getNetPayable() - paidAmount); }
-
+    public double getRemainingPayable() { return getRemainingPayable(true); }
+    public double getRemainingPayable(boolean includeCreditDeduction) {
+        return Math.max(0, getNetPayable(includeCreditDeduction) - paidAmount);
+    }
+    public String getStatus(boolean includeCreditDeduction) {
+        double net = getNetPayable(includeCreditDeduction);
+        if (net <= 0) return "NO PAYABLE";
+        if (paidAmount >= net - 0.0001) return "PAID";
+        if (paidAmount > 0) return "PARTIALLY PAID";
+        return "READY";
+    }
 }
