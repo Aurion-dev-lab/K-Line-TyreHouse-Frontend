@@ -46,20 +46,21 @@ public final class DatabaseManager {
                     "vehicle_type TEXT," +
                     "material TEXT," +
                     "supplier_name TEXT," +
-                    "image_path TEXT," +
+                    "image_paths TEXT," +
                     "created_at DATETIME," +
                     "updated_at DATETIME NOT NULL," +
                     "sync_status INTEGER NOT NULL DEFAULT 0" +
                     ")");
 
-            statement.execute("CREATE TABLE IF NOT EXISTS product_images (" +
-                    "id TEXT PRIMARY KEY," +
-                    "product_id TEXT NOT NULL," +
-                    "image_path TEXT NOT NULL," +
-                    "created_at DATETIME NOT NULL," +
-                    "sync_status INTEGER NOT NULL DEFAULT 0" +
-                    ")");
-            statement.execute("CREATE INDEX IF NOT EXISTS idx_product_id ON product_images (product_id)");
+            // Migration: Ensure image_paths column exists on existing databases
+            try {
+                statement.execute("ALTER TABLE products ADD COLUMN image_paths TEXT");
+            } catch (SQLException ignored) {
+                // Column already exists
+            }
+
+            // Drop legacy product_images table
+            statement.execute("DROP TABLE IF EXISTS product_images");
 
             statement.execute("CREATE TABLE IF NOT EXISTS credit_customers (" +
                     "id TEXT PRIMARY KEY," +

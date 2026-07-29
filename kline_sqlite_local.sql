@@ -65,7 +65,7 @@ CREATE TABLE `products` (
   `updated_at` DATETIME NOT NULL,
   `sync_status` TINYINT(1) NOT NULL DEFAULT 0,
   `minimum_stock_alert` INTEGER DEFAULT 5,
-  `image_path` TEXT DEFAULT NULL,
+  `image_paths` TEXT DEFAULT NULL,
   `brand` TEXT DEFAULT NULL,
   `description` TEXT DEFAULT NULL,
   `vehicle_type` TEXT DEFAULT NULL,
@@ -81,29 +81,7 @@ CREATE TABLE `products` (
 -- Dumping data for table `products`
 --
 
-INSERT INTO `products` VALUES ('100f338b-3119-46ef-b468-8e1eb40f3c04','prd23','test2','Batteries',100.00,200.00,10,'2026-07-18 22:25:27',0,5,NULL,'','','','','','2026-07-18 22:25:27'),('31561dbe-c583-427b-9c6f-18cc648ce9a7','PD3453','Tyre2','Spare Parts',1000.00,1500.00,176,'2026-07-18 22:25:46',0,30,NULL,'bajaj','test','test','rubber','test','2026-07-18 22:04:05');
-
---
--- Table structure for table `product_images`
---
-
-DROP TABLE IF EXISTS `product_images`;
-CREATE TABLE `product_images` (
-  `id` TEXT NOT NULL,
-  `product_id` TEXT NOT NULL,
-  `image_path` TEXT NOT NULL,
-  `created_at` DATETIME NOT NULL,
-  `sync_status` TINYINT(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`)
-);
-
-CREATE INDEX IF NOT EXISTS `idx_product_id` ON `product_images` (`product_id`);
-
---
--- Dumping data for table `product_images`
---
-
-INSERT INTO `product_images` VALUES ('40e68776-7f8b-11f1-b092-4ad00a5d2118','730b2b94-9d65-4968-8a42-0231bc7c9d86','product_images/1784037126531_23e4bda2-8cd6-4393-be4a-270c2cc75546.png','2026-07-14 19:22:29',0),('4c99f2e4-7f89-11f1-b092-4ad00a5d2118','14816369-3ae8-4905-a54f-1961ea8d5f05','product_images/1784036223445_9fe85e58-815f-4b65-b4e0-9a6ab738c8bf.jpeg','2026-07-14 19:08:29',0),('4c9a1148-7f89-11f1-b092-4ad00a5d2118','14816369-3ae8-4905-a54f-1961ea8d5f05','product_images/1784036285389_14816369-3ae8-4905-a54f-1961ea8d5f05.jpg','2026-07-14 19:08:29',0),('4c9a1fe4-7f89-11f1-b092-4ad00a5d2118','14816369-3ae8-4905-a54f-1961ea8d5f05','product_images/1784036292463_14816369-3ae8-4905-a54f-1961ea8d5f05.jpg','2026-07-14 19:08:29',0),('4c9a34e8-7f89-11f1-b092-4ad00a5d2118','14816369-3ae8-4905-a54f-1961ea8d5f05','product_images/1784036300521_14816369-3ae8-4905-a54f-1961ea8d5f05.jpeg','2026-07-14 19:08:29',0),('4c9a4c62-7f89-11f1-b092-4ad00a5d2118','14816369-3ae8-4905-a54f-1961ea8d5f05','product_images/1784036307453_14816369-3ae8-4905-a54f-1961ea8d5f05.jpeg','2026-07-14 19:08:29',0),('7a642f58-82c9-11f1-a4a0-4ad00a5d2118','100f338b-3119-46ef-b468-8e1eb40f3c04','/Users/minoka/Desktop/aurion/K-Line-TyreHouse-Frontend/product_images/1784393707441_c3b355b4-0753-439c-b91f-5e6d0d9c344d.jpeg','2026-07-18 22:25:27',0),('85c8eab4-82c9-11f1-a4a0-4ad00a5d2118','31561dbe-c583-427b-9c6f-18cc648ce9a7','/Users/minoka/Desktop/aurion/K-Line-TyreHouse-Frontend/product_images/1784393745049_31561dbe-c583-427b-9c6f-18cc648ce9a7.jpg','2026-07-18 22:25:46',0);
+INSERT INTO `products` VALUES ('100f338b-3119-46ef-b468-8e1eb40f3c04','prd23','test2','Batteries',100.00,200.00,10,'2026-07-18 22:25:27',0,5,'["/Users/minoka/Desktop/aurion/K-Line-TyreHouse-Frontend/product_images/1784393707441_c3b355b4-0753-439c-b91f-5e6d0d9c344d.jpeg"]','','','','','','2026-07-18 22:25:27'),('31561dbe-c583-427b-9c6f-18cc648ce9a7','PD3453','Tyre2','Spare Parts',1000.00,1500.00,176,'2026-07-18 22:25:46',0,30,'["/Users/minoka/Desktop/aurion/K-Line-TyreHouse-Frontend/product_images/1784393745049_31561dbe-c583-427b-9c6f-18cc648ce9a7.jpg"]','bajaj','test','test','rubber','test','2026-07-18 22:04:05');
 
 --
 -- Table structure for table `invoices`

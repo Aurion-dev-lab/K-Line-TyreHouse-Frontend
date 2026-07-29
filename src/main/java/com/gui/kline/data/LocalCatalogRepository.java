@@ -199,9 +199,25 @@ public class LocalCatalogRepository {
         return null;
     }
 
+    private static final com.google.gson.Gson GSON = new com.google.gson.Gson();
+
+    private List<String> parseJsonImagePaths(String json) {
+        if (json == null || json.isBlank()) return new ArrayList<>();
+        try {
+            java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<String>>(){}.getType();
+            List<String> list = GSON.fromJson(json, listType);
+            return list != null ? list : new ArrayList<>();
+        } catch (Exception e) {
+            // Fallback for legacy single string paths
+            List<String> fallback = new ArrayList<>();
+            fallback.add(json);
+            return fallback;
+        }
+    }
+
       public List<Product> loadProducts() {
           String sql = "SELECT id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
-                      "brand, description, vehicle_type, material, supplier_name, created_at FROM products ORDER BY product_code, name";
+                      "brand, description, vehicle_type, material, supplier_name, created_at, image_paths FROM products ORDER BY product_code, name";
           List<Product> products = new ArrayList<>();
           try (Connection connection = DatabaseManager.getConnection();
                PreparedStatement statement = connection.prepareStatement(sql);
@@ -222,57 +238,25 @@ public class LocalCatalogRepository {
                           rs.getString("material"),
                           rs.getString("supplier_name"),
                           rs.getString("created_at"),
-                          new java.util.ArrayList<>()
+                          parseJsonImagePaths(rs.getString("image_paths"))
                   );
                   products.add(product);
               }
-              
-              // Load images for all products
-              loadProductImages(connection, products);
-              
           } catch (SQLException ex) {
               throw new IllegalStateException("Failed to load products", ex);
           }
           return products;
       }
-      
-      private void loadProductImages(Connection connection, List<Product> products) throws SQLException {
-          if (products.isEmpty()) return;
-          
-          // Build list of product IDs
-          StringBuilder idsBuilder = new StringBuilder();
-          for (Product p : products) {
-              if (idsBuilder.length() > 0) idsBuilder.append(",");
-              idsBuilder.append("'").append(p.getId()).append("'");
-          }
-          
-          String sql = "SELECT product_id, image_path FROM product_images WHERE product_id IN (" + idsBuilder + ")";
-          try (PreparedStatement statement = connection.prepareStatement(sql);
-               ResultSet rs = statement.executeQuery()) {
-              while (rs.next()) {
-                  String productId = rs.getString("product_id");
-                  String imagePath = rs.getString("image_path");
-                  
-                  // Find product and add image
-                  for (Product p : products) {
-                      if (p.getId().equals(productId)) {
-                          p.addImagePath(imagePath);
-                          break;
-                      }
-                  }
-              }
-          }
-      }
 
     public Product findProductByCode(String productCode) {
         String sql = "SELECT id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
-                    "brand, description, vehicle_type, material, supplier_name, created_at FROM products WHERE product_code = ?";
+                    "brand, description, vehicle_type, material, supplier_name, created_at, image_paths FROM products WHERE product_code = ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, productCode);
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
-                    Product product = new Product(
+                    return new Product(
                             rs.getString("id"),
                             rs.getString("product_code"),
                             rs.getString("name"),
@@ -287,11 +271,8 @@ public class LocalCatalogRepository {
                             rs.getString("material"),
                             rs.getString("supplier_name"),
                             rs.getString("created_at"),
-                            new java.util.ArrayList<>()
+                            parseJsonImagePaths(rs.getString("image_paths"))
                     );
-                    // Load images from product_images table (source of truth)
-                    loadProductImages(connection, java.util.Collections.singletonList(product));
-                    return product;
                 }
             }
         } catch (SQLException ex) {
@@ -302,13 +283,13 @@ public class LocalCatalogRepository {
 
       public Product findProductById(String productId) {
           String sql = "SELECT id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
-                      "brand, description, vehicle_type, material, supplier_name, created_at FROM products WHERE id = ?";
+                      "brand, description, vehicle_type, material, supplier_name, created_at, image_paths FROM products WHERE id = ?";
           try (Connection connection = DatabaseManager.getConnection();
                PreparedStatement statement = connection.prepareStatement(sql)) {
               statement.setString(1, productId);
               try (ResultSet rs = statement.executeQuery()) {
                   if (rs.next()) {
-                      Product product = new Product(
+                      return new Product(
                               rs.getString("id"),
                               rs.getString("product_code"),
                               rs.getString("name"),
@@ -323,11 +304,8 @@ public class LocalCatalogRepository {
                               rs.getString("material"),
                               rs.getString("supplier_name"),
                               rs.getString("created_at"),
-                              new java.util.ArrayList<>()
+                              parseJsonImagePaths(rs.getString("image_paths"))
                       );
-                      // Load images from product_images table (source of truth)
-                      loadProductImages(connection, java.util.Collections.singletonList(product));
-                      return product;
                   }
               }
           } catch (SQLException ex) {
@@ -338,7 +316,7 @@ public class LocalCatalogRepository {
 
       public List<Product> getProductsByCategory(String category) {
           String sql = "SELECT id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
-                      "brand, description, vehicle_type, material, supplier_name, created_at, image_path FROM products WHERE category = ? ORDER BY product_code, name";
+                      "brand, description, vehicle_type, material, supplier_name, created_at, image_paths FROM products WHERE category = ? ORDER BY product_code, name";
           List<Product> products = new ArrayList<>();
           try (Connection connection = DatabaseManager.getConnection();
                PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -360,7 +338,7 @@ public class LocalCatalogRepository {
                               rs.getString("material"),
                               rs.getString("supplier_name"),
                               rs.getString("created_at"),
-                              rs.getString("image_path") != null ? java.util.Collections.singletonList(rs.getString("image_path")) : new java.util.ArrayList<>()
+                              parseJsonImagePaths(rs.getString("image_paths"))
                       );
                       products.add(product);
                   }
@@ -387,15 +365,14 @@ public class LocalCatalogRepository {
         if (product == null) {
             return;
         }
-        // Also write image_path on the products row so legacy queries still work
-        String firstImage = product.getImagePaths().isEmpty() ? null : product.getImagePaths().get(0);
+        String jsonImages = GSON.toJson(product.getImagePaths());
         String sql = "INSERT INTO products (id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
-                "brand, description, vehicle_type, material, supplier_name, image_path, created_at, updated_at) " +
+                "brand, description, vehicle_type, material, supplier_name, image_paths, created_at, updated_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP) " +
                 "ON CONFLICT(id) DO UPDATE SET product_code = excluded.product_code, name = excluded.name, category = excluded.category, buy_price = excluded.buy_price, " +
                 "sell_price = excluded.sell_price, stock = excluded.stock, minimum_stock_alert = excluded.minimum_stock_alert, " +
                 "brand = excluded.brand, description = excluded.description, vehicle_type = excluded.vehicle_type, " +
-                "material = excluded.material, supplier_name = excluded.supplier_name, image_path = excluded.image_path, " +
+                "material = excluded.material, supplier_name = excluded.supplier_name, image_paths = excluded.image_paths, " +
                 "created_at = COALESCE(products.created_at, CURRENT_TIMESTAMP), sync_status = 0, updated_at = CURRENT_TIMESTAMP";
         Connection connection = null;
         try {
@@ -416,7 +393,7 @@ public class LocalCatalogRepository {
             statement.setString(11, product.getVehicleType());
             statement.setString(12, product.getMaterial());
             statement.setString(13, product.getSupplierName());
-            statement.setString(14, firstImage);  // image_path — first image or null
+            statement.setString(14, jsonImages);  // image_paths JSON array string
 
             // Handle empty created_date - use null so COALESCE kicks in
             String createdDate = product.getCreatedDate();
@@ -427,10 +404,6 @@ public class LocalCatalogRepository {
             }
 
             statement.executeUpdate();
-
-            // Save all product images into the product_images child table
-            saveProductImages(connection, product);
-
             connection.commit();  // Explicitly commit transaction
 
         } catch (SQLException ex) {
@@ -454,40 +427,12 @@ public class LocalCatalogRepository {
             }
         }
     }
-    
-    private void saveProductImages(Connection connection, Product product) throws SQLException {
-        // Delete existing images for this product
-        String deleteSql = "DELETE FROM product_images WHERE product_id = ?";
-        try (PreparedStatement deleteStmt = connection.prepareStatement(deleteSql)) {
-            deleteStmt.setString(1, product.getId());
-            deleteStmt.executeUpdate();
-        }
-        
-        // Insert new images
-        String insertSql = "INSERT INTO product_images (id, product_id, image_path, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)";
-        try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
-            for (String imagePath : product.getImagePaths()) {
-                insertStmt.setString(1, java.util.UUID.randomUUID().toString());
-                insertStmt.setString(2, product.getId());
-                insertStmt.setString(3, imagePath);
-                insertStmt.addBatch();
-            }
-            insertStmt.executeBatch();
-        }
-    }
 
     public void deleteProduct(Product product) {
         if (product == null) {
             return;
         }
         try (Connection connection = DatabaseManager.getConnection()) {
-            // Delete product images first
-            String deleteImagesSql = "DELETE FROM product_images WHERE product_id = ?";
-            try (PreparedStatement deleteImagesStmt = connection.prepareStatement(deleteImagesSql)) {
-                deleteImagesStmt.setString(1, product.getId());
-                deleteImagesStmt.executeUpdate();
-            }
-            
             // Delete product
             String deleteProductSql = "DELETE FROM products WHERE id = ?";
             try (PreparedStatement deleteProductStmt = connection.prepareStatement(deleteProductSql)) {
