@@ -46,7 +46,7 @@ public class LocalCatalogRepository {
         if (name == null || name.isBlank()) {
             return;
         }
-        String sql = "INSERT INTO credit_customers (id, name, phone, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP) " +
+        String sql = "INSERT INTO credit_customers (id, name, phone, created_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now')) " +
                 "ON CONFLICT(name, phone) DO UPDATE SET phone = excluded.phone, sync_status = 0";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -143,13 +143,13 @@ public class LocalCatalogRepository {
 
     public void saveCreditCustomer(CreditCustomer customer) {
         String sql = "INSERT INTO credit_customers (id, name, phone, email, address, created_at, updated_at, sync_status) " +
-                     "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0) " +
+                     "VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now'), strftime('%Y-%m-%dT%H:%M:%S', 'now'), 0) " +
                      "ON CONFLICT(id) DO UPDATE SET " +
                      "  name = excluded.name, " +
                      "  phone = excluded.phone, " +
                      "  email = excluded.email, " +
                      "  address = excluded.address, " +
-                     "  updated_at = CURRENT_TIMESTAMP, " +
+                     "  updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now'), " +
                      "  sync_status = 0";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -350,7 +350,7 @@ public class LocalCatalogRepository {
       }
 
       public void updateProductStock(String productId, int quantityChange) {
-          String sql = "UPDATE products SET stock = stock + ?, sync_status = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+          String sql = "UPDATE products SET stock = stock + ?, sync_status = 0, updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now') WHERE id = ?";
           try (Connection connection = DatabaseManager.getConnection();
                PreparedStatement statement = connection.prepareStatement(sql)) {
               statement.setInt(1, quantityChange);
@@ -368,12 +368,12 @@ public class LocalCatalogRepository {
         String jsonImages = GSON.toJson(product.getImagePaths());
         String sql = "INSERT INTO products (id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
                 "brand, description, vehicle_type, material, supplier_name, image_paths, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, strftime('%Y-%m-%dT%H:%M:%S', 'now')), strftime('%Y-%m-%dT%H:%M:%S', 'now')) " +
                 "ON CONFLICT(id) DO UPDATE SET product_code = excluded.product_code, name = excluded.name, category = excluded.category, buy_price = excluded.buy_price, " +
                 "sell_price = excluded.sell_price, stock = excluded.stock, minimum_stock_alert = excluded.minimum_stock_alert, " +
                 "brand = excluded.brand, description = excluded.description, vehicle_type = excluded.vehicle_type, " +
                 "material = excluded.material, supplier_name = excluded.supplier_name, image_paths = excluded.image_paths, " +
-                "created_at = COALESCE(products.created_at, CURRENT_TIMESTAMP), sync_status = 0, updated_at = CURRENT_TIMESTAMP";
+                "created_at = COALESCE(products.created_at, strftime('%Y-%m-%dT%H:%M:%S', 'now')), sync_status = 0, updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now')";
         Connection connection = null;
         try {
             connection = DatabaseManager.getConnection();

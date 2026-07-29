@@ -28,8 +28,8 @@ public class LocalCreditSalesRepository {
         }
 
         String sql = "INSERT INTO credit_sales (id, credit_id, sale_date, customer_id, due_date, sub_total, grand_total, settlement, status, parts, created_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) " +
-                "ON CONFLICT(credit_id) DO UPDATE SET sale_date = excluded.sale_date, customer_id = excluded.customer_id, due_date = excluded.due_date, sub_total = excluded.sub_total, grand_total = excluded.grand_total, settlement = excluded.settlement, status = excluded.status, parts = excluded.parts, sync_status = 0, updated_at = CURRENT_TIMESTAMP";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now')) " +
+                "ON CONFLICT(credit_id) DO UPDATE SET sale_date = excluded.sale_date, customer_id = excluded.customer_id, due_date = excluded.due_date, sub_total = excluded.sub_total, grand_total = excluded.grand_total, settlement = excluded.settlement, status = excluded.status, parts = excluded.parts, sync_status = 0, updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now')";
          
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

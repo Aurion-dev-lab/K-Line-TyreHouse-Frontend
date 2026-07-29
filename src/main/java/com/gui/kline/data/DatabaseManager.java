@@ -29,7 +29,7 @@ public final class DatabaseManager {
                     "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "table_name TEXT NOT NULL," +
                     "record_id TEXT NOT NULL," +
-                    "client_deleted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP" +
+                    "client_deleted_at TIMESTAMP NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%S', 'now'))" +
                     ")");
 
             statement.execute("CREATE TABLE IF NOT EXISTS products (" +
@@ -51,16 +51,6 @@ public final class DatabaseManager {
                     "updated_at DATETIME NOT NULL," +
                     "sync_status INTEGER NOT NULL DEFAULT 0" +
                     ")");
-
-            // Migration: Ensure image_paths column exists on existing databases
-            try {
-                statement.execute("ALTER TABLE products ADD COLUMN image_paths TEXT");
-            } catch (SQLException ignored) {
-                // Column already exists
-            }
-
-            // Drop legacy product_images table
-            statement.execute("DROP TABLE IF EXISTS product_images");
 
             statement.execute("CREATE TABLE IF NOT EXISTS credit_customers (" +
                     "id TEXT PRIMARY KEY," +

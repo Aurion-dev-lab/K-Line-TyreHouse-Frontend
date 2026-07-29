@@ -44,7 +44,7 @@ public class SyncDataRepository {
                 for (int i = 1; i <= columnCount; i++) {
                     String columnName = metaData.getColumnName(i);
                     Object value = rs.getObject(i);
-                    row.put(columnName, value);
+                    row.put(columnName, normalizeValue(value));
                 }
                 rows.add(row);
             }
@@ -54,6 +54,19 @@ public class SyncDataRepository {
         }
         
         return rows;
+    }
+
+    /**
+     * Normalizes date-time strings from SQLite (e.g., "2026-07-29 08:35:13") into ISO-8601 ("2026-07-29T08:35:13").
+     */
+    private Object normalizeValue(Object value) {
+        if (value instanceof String s) {
+            String trimmed = s.trim();
+            if (trimmed.length() >= 19 && trimmed.charAt(10) == ' ' && trimmed.matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.*")) {
+                return trimmed.substring(0, 10) + "T" + trimmed.substring(11);
+            }
+        }
+        return value;
     }
 
     /**

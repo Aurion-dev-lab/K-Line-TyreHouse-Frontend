@@ -37,7 +37,7 @@ public class LocalWorkerRepository {
             return;
         }
         String sql = "INSERT INTO workers (id, name, phone, role, rate, salary_type, created_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
+                "VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now'))";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, com.gui.kline.utils.Utils.generateId("WRK-", 6));

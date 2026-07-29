@@ -31,8 +31,8 @@ public class LocalInvoiceRepository {
         }
 
         String sql = "INSERT INTO invoices (id, invoice_id, customer, phone, description, vehicle_number, invoice_date, type, status, subtotal, grand_total, line_items, created_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) " +
-                "ON CONFLICT(invoice_id) DO UPDATE SET customer = excluded.customer, phone = excluded.phone, description = excluded.description, vehicle_number = excluded.vehicle_number, type = excluded.type, status = excluded.status, subtotal = excluded.subtotal, grand_total = excluded.grand_total, line_items = excluded.line_items, sync_status = 0, updated_at = CURRENT_TIMESTAMP";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now')) " +
+                "ON CONFLICT(invoice_id) DO UPDATE SET customer = excluded.customer, phone = excluded.phone, description = excluded.description, vehicle_number = excluded.vehicle_number, type = excluded.type, status = excluded.status, subtotal = excluded.subtotal, grand_total = excluded.grand_total, line_items = excluded.line_items, sync_status = 0, updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now')";
 
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -179,7 +179,7 @@ public class LocalInvoiceRepository {
      * Update invoice status (completed, cancelled, etc.)
      */
     public void updateInvoiceStatus(String invoiceId, String status) {
-        String sql = "UPDATE invoices SET status = ?, sync_status = 0, updated_at = CURRENT_TIMESTAMP WHERE invoice_id = ?";
+        String sql = "UPDATE invoices SET status = ?, sync_status = 0, updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now') WHERE invoice_id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {

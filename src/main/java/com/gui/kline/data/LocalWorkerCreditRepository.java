@@ -18,7 +18,7 @@ public class LocalWorkerCreditRepository {
     public String saveCredit(String workerId, String workerName, LocalDate date, double amount, String note, String type) {
         String id = com.gui.kline.utils.Utils.generateId("CRD-", 8);
         String sql = "INSERT INTO worker_credits (id, worker_id, worker, amount, credit_type, credit_date, note, created_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now'))";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, id);
@@ -52,7 +52,7 @@ public class LocalWorkerCreditRepository {
 
     public void updateCredit(String id, String workerId, String workerName, LocalDate date, double amount, String note, String type) {
         if (id == null || id.isBlank()) return;
-        String sql = "UPDATE worker_credits SET worker_id = ?, worker = ?, amount = ?, credit_type = ?, credit_date = ?, note = ?, sync_status = 0, created_at = CURRENT_TIMESTAMP WHERE id = ?";
+        String sql = "UPDATE worker_credits SET worker_id = ?, worker = ?, amount = ?, credit_type = ?, credit_date = ?, note = ?, sync_status = 0, created_at = strftime('%Y-%m-%dT%H:%M:%S', 'now') WHERE id = ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, workerId);

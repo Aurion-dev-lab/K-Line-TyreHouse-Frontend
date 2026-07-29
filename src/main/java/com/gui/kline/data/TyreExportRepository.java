@@ -90,7 +90,7 @@ public class TyreExportRepository {
                 "comp_price, service_fee, sub_total, grand_total, initial_payment, settlement, " +
                 "status, export_date, remark, " +
                 "sync_status, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now'), strftime('%Y-%m-%dT%H:%M:%S', 'now')) " +
                 "ON CONFLICT(id) DO UPDATE SET export_id = excluded.export_id, " +
                 "serial_number = excluded.serial_number, company = excluded.company, " +
                 "tyre_size = excluded.tyre_size, tyre_make = excluded.tyre_make, tyres = excluded.tyres, " +
@@ -99,7 +99,7 @@ public class TyreExportRepository {
                 "initial_payment = excluded.initial_payment, settlement = excluded.settlement, " +
                 "status = excluded.status, export_date = excluded.export_date, remark = excluded.remark, " +
                 "sync_status = 0, " +
-                "updated_at = CURRENT_TIMESTAMP";
+                "updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now')";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {

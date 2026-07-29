@@ -167,7 +167,7 @@ public class LocalSalaryRepository {
                 }
 
                 String paymentId = com.gui.kline.utils.Utils.generateId("PAY-", 8);
-                String insertSql = "INSERT INTO salary_payments (id, worker_id, worker, period_from, period_to, amount, paid_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
+                String insertSql = "INSERT INTO salary_payments (id, worker_id, worker, period_from, period_to, amount, paid_at) VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now'))";
                 try (PreparedStatement insert = connection.prepareStatement(insertSql)) {
                     insert.setString(1, paymentId);
                     insert.setString(2, workerId);
@@ -181,7 +181,7 @@ public class LocalSalaryRepository {
                 if (creditSettlementAmount > 0) {
                     String creditId = com.gui.kline.utils.Utils.generateId("CRD-", 8);
                     String creditSql = "INSERT INTO worker_credits (id, worker_id, worker, amount, credit_type, credit_date, note, created_at) " +
-                            "VALUES (?, ?, ?, ?, 'SETTLEMENT', ?, ?, CURRENT_TIMESTAMP)";
+                            "VALUES (?, ?, ?, ?, 'SETTLEMENT', ?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now'))";
                     try (PreparedStatement insertCredit = connection.prepareStatement(creditSql)) {
                         insertCredit.setString(1, creditId);
                         insertCredit.setString(2, workerId);

@@ -47,8 +47,8 @@ public class LocalWorkerAttendanceRepository {
 
     public void upsertAttendance(String workerId, LocalDate date, String status) {
         String sql = "INSERT INTO worker_attendance (id, worker_id, attendance_date, status, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) " +
-                "ON CONFLICT(worker_id, attendance_date) DO UPDATE SET status = excluded.status, sync_status = 0, updated_at = CURRENT_TIMESTAMP";
+                "VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now'), strftime('%Y-%m-%dT%H:%M:%S', 'now')) " +
+                "ON CONFLICT(worker_id, attendance_date) DO UPDATE SET status = excluded.status, sync_status = 0, updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now')";
 
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {

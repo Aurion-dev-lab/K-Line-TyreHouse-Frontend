@@ -14,7 +14,7 @@ public class LocalSalaryAdvanceRepository {
     public String saveAdvance(String workerId, String workerName, LocalDate date, double amount, String note) {
         String id = com.gui.kline.utils.Utils.generateId("ADV-", 8);
         String sql = "INSERT INTO salary_advances (id, worker_id, worker, amount, advance_date, note, created_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
+                "VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now'))";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, id);

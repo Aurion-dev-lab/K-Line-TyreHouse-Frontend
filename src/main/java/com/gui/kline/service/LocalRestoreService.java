@@ -63,8 +63,7 @@ public class LocalRestoreService {
                 String[] wipeOrder = {
                     "credit_sales", "invoices",
                     "worker_attendance", "salary_advances", "salary_payments",
-                    "worker_credits", "tyre_exports", "quick_services", "services",
-                    "customers", "credit_customers", "workers", "products", "expenses", "quick_service_presets",
+                    "worker_credits", "tyre_exports", "quick_services", "services", "credit_customers", "workers", "products", "expenses", "quick_service_presets",
                     "sync_tombstones"
                 };
                 for (String table : wipeOrder) {
@@ -78,15 +77,15 @@ public class LocalRestoreService {
                 // Step 4: Populate tables from snapshot in FK-safe order
                 log("Restoring data from cloud snapshot...");
 
-                restoreProducts(conn,              getNode(data, "products", null));
-                restoreCustomers(conn,             getNode(data, "creditCustomers", "credit_customers"));
-                restoreWorkers(conn,               getNode(data, "workers", null));
-                restoreExpenses(conn,              getNode(data, "expenses", null));
+                restoreProducts(conn,              getNode(data, "products"));
+                restoreCustomers(conn,             getNode(data, "creditCustomers", "credit_customers", "customers"));
+                restoreWorkers(conn,               getNode(data, "workers"));
+                restoreExpenses(conn,              getNode(data, "expenses"));
                 restoreQuickServicePresets(conn,   getNode(data, "quickServicePresets", "quick_service_presets"));
 
-                restoreInvoices(conn,              getNode(data, "invoices", null));
+                restoreInvoices(conn,              getNode(data, "invoices"));
                 restoreCreditSales(conn,           getNode(data, "creditSales", "credit_sales"));
-                restoreServices(conn,              getNode(data, "services", null));
+                restoreServices(conn,              getNode(data, "services"));
                 restoreTyreExports(conn,           getNode(data, "tyreExports", "tyre_exports"));
                 restoreWorkerAttendance(conn,      getNode(data, "workerAttendance", "worker_attendance"));
                 restoreSalaryAdvances(conn,        getNode(data, "salaryAdvances", "salary_advances"));
@@ -107,12 +106,19 @@ public class LocalRestoreService {
 
     // ── Helpers ─────────────────────────────────────────────────────────────
 
-    private JsonNode getNode(JsonNode data, String camelCaseKey, String snakeCaseKey) {
-        JsonNode n = data.path(camelCaseKey);
-        if ((n.isMissingNode() || n.isNull() || !n.isArray() || n.size() == 0) && snakeCaseKey != null) {
-            JsonNode alt = data.path(snakeCaseKey);
-            if (!alt.isMissingNode() && !alt.isNull() && alt.isArray()) {
-                return alt;
+    private JsonNode getNode(JsonNode data, String primaryKey, String... alternateKeys) {
+        JsonNode n = data.path(primaryKey);
+        if (!n.isMissingNode() && !n.isNull() && n.isArray() && n.size() > 0) {
+            return n;
+        }
+        if (alternateKeys != null) {
+            for (String altKey : alternateKeys) {
+                if (altKey != null) {
+                    JsonNode alt = data.path(altKey);
+                    if (!alt.isMissingNode() && !alt.isNull() && alt.isArray() && alt.size() > 0) {
+                        return alt;
+                    }
+                }
             }
         }
         return n;
@@ -170,6 +176,11 @@ public class LocalRestoreService {
         return v.isNull() || v.isMissingNode() ? null : v.asDouble();
     }
 
+    private double dblVal(JsonNode n, String field, double def) {
+        Double val = dbl(n, field);
+        return val != null ? val : def;
+    }
+
     private Integer num(JsonNode n, String field) {
         if (n == null) return null;
         JsonNode v = n.path(field);
@@ -180,6 +191,11 @@ public class LocalRestoreService {
             }
         }
         return v.isNull() || v.isMissingNode() ? null : v.asInt();
+    }
+
+    private int numVal(JsonNode n, String field, int def) {
+        Integer val = num(n, field);
+        return val != null ? val : def;
     }
 
     private boolean bool(JsonNode n, String field, boolean def) {
@@ -201,8 +217,8 @@ public class LocalRestoreService {
         if (count > 0) {
             String sql = "INSERT OR IGNORE INTO products " +
                     "(id, product_code, name, category, buy_price, sell_price, stock, minimum_stock_alert, " +
-                    "brand, description, vehicle_type, material, supplier_name, created_at, updated_at, sync_status) " +
-                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)";
+                    "brand, description, vehicle_type, material, supplier_name, image_paths, created_at, updated_at, sync_status) " +
+                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
                     ps.setString(1,  str(r, "id"));
@@ -218,8 +234,9 @@ public class LocalRestoreService {
                     ps.setString(11, str(r, "vehicleType"));
                     ps.setString(12, str(r, "material"));
                     ps.setString(13, str(r, "supplierName"));
-                    ps.setString(14, str(r, "createdAt"));
-                    ps.setString(15, str(r, "updatedAt"));
+                    ps.setString(14, str(r, "imagePaths"));
+                    ps.setString(15, str(r, "createdAt"));
+                    ps.setString(16, str(r, "updatedAt"));
                     ps.addBatch();
                 }
                 ps.executeBatch();
@@ -314,21 +331,24 @@ public class LocalRestoreService {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
             String sql = "INSERT OR IGNORE INTO invoices " +
-                    "(id, invoice_id, customer, invoice_date, type, status, subtotal, tax, grand_total, created_at, updated_at, sync_status) " +
-                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,1)";
+                    "(id, invoice_id, customer, phone, description, vehicle_number, invoice_date, type, status, subtotal, grand_total, line_items, created_at, updated_at, sync_status) " +
+                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
                     ps.setString(1,  str(r, "id"));
                     ps.setString(2,  str(r, "invoiceId"));
                     ps.setString(3,  str(r, "customer"));
-                    ps.setString(4,  str(r, "invoiceDate"));
-                    ps.setString(5,  str(r, "type"));
-                    ps.setString(6,  str(r, "status"));
-                    ps.setObject(7,  dbl(r, "subtotal"));
-                    ps.setObject(8,  dbl(r, "tax"));
-                    ps.setObject(9,  dbl(r, "grandTotal"));
-                    ps.setString(10, str(r, "createdAt"));
-                    ps.setString(11, str(r, "updatedAt"));
+                    ps.setString(4,  str(r, "phone"));
+                    ps.setString(5,  str(r, "description"));
+                    ps.setString(6,  str(r, "vehicleNumber"));
+                    ps.setString(7,  str(r, "invoiceDate"));
+                    ps.setString(8,  str(r, "type"));
+                    ps.setString(9,  str(r, "status"));
+                    ps.setObject(10, dbl(r, "subtotal"));
+                    ps.setObject(11, dbl(r, "grandTotal"));
+                    ps.setString(12, str(r, "lineItems"));
+                    ps.setString(13, str(r, "createdAt"));
+                    ps.setString(14, str(r, "updatedAt"));
                     ps.addBatch();
                 }
                 ps.executeBatch();
@@ -349,20 +369,22 @@ public class LocalRestoreService {
                     ps.setString(1,  str(r, "id"));
                     ps.setString(2,  str(r, "creditId"));
                     
-                    String customerName = str(r, "customerName");
-                    if (customerName == null || customerName.isBlank()) {
-                        customerName = str(r, "customer");
-                    }
-                    String customerId = null;
-                    if (customerName != null && !customerName.isBlank()) {
-                        customerId = catalogRepository.getCustomerIdByName(customerName);
-                        if (customerId == null) {
-                            customerId = java.util.UUID.randomUUID().toString();
-                            String insCustomer = "INSERT OR IGNORE INTO credit_customers (id, name, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)";
-                            try (PreparedStatement ins = conn.prepareStatement(insCustomer)) {
-                                ins.setString(1, customerId);
-                                ins.setString(2, customerName.trim());
-                                ins.executeUpdate();
+                    String customerId = str(r, "customerId");
+                    if (customerId == null || customerId.isBlank()) {
+                        String customerName = str(r, "customerName");
+                        if (customerName == null || customerName.isBlank()) {
+                            customerName = str(r, "customer");
+                        }
+                        if (customerName != null && !customerName.isBlank()) {
+                            customerId = catalogRepository.getCustomerIdByName(customerName);
+                            if (customerId == null) {
+                                customerId = java.util.UUID.randomUUID().toString();
+                                String insCustomer = "INSERT OR IGNORE INTO credit_customers (id, name, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now'))";
+                                try (PreparedStatement ins = conn.prepareStatement(insCustomer)) {
+                                    ins.setString(1, customerId);
+                                    ins.setString(2, customerName.trim());
+                                    ins.executeUpdate();
+                                }
                             }
                         }
                     }
@@ -370,16 +392,16 @@ public class LocalRestoreService {
                     ps.setString(4,  str(r, "saleDate"));
                     ps.setString(5,  str(r, "dueDate"));
                     
-                    double subTotal = dbl(r, "subtotal");
-                    double amount = dbl(r, "amount");
-                    double paidAmount = dbl(r, "paidAmount");
+                    double subTotal = dblVal(r, "subTotal", dblVal(r, "sub_total", 0.0));
+                    double grandTotal = dblVal(r, "grandTotal", dblVal(r, "grand_total", dblVal(r, "amount", 0.0)));
                     if (subTotal == 0.0) {
-                        subTotal = amount;
+                        subTotal = grandTotal;
                     }
+                    double settlement = dblVal(r, "settlement", dblVal(r, "paidAmount", dblVal(r, "paid_amount", 0.0)));
                     
                     ps.setDouble(6,  subTotal);
-                    ps.setDouble(7,  amount);
-                    ps.setDouble(8,  paidAmount);
+                    ps.setDouble(7,  grandTotal);
+                    ps.setDouble(8,  settlement);
                     ps.setString(9,  str(r, "status"));
                     ps.setString(10, str(r, "parts"));
                     ps.setString(11, str(r, "createdAt"));
@@ -416,33 +438,36 @@ public class LocalRestoreService {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
             String sql = "INSERT OR IGNORE INTO tyre_exports " +
-                    "(id, export_id, serial_number, company, tyres, cust_price, comp_price, service_fee, sub_total, grand_total, initial_payment, settlement, status, export_date, remark, updated_at, sync_status) " +
-                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)";
+                    "(id, export_id, serial_number, company, tyre_size, tyre_make, tyres, cust_price, comp_price, service_fee, sub_total, grand_total, initial_payment, settlement, status, export_date, remark, created_at, updated_at, sync_status) " +
+                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (JsonNode r : arr) {
-                    double custPrice = dbl(r, "custPrice") != null ? dbl(r, "custPrice").doubleValue() : 0.0;
-                    int tyres = num(r, "tyres") != null ? num(r, "tyres").intValue() : 0;
-                    double serviceFee = dbl(r, "serviceFee") != null ? dbl(r, "serviceFee").doubleValue() : 0.0;
-                    double paidAmount = dbl(r, "paidAmount") != null ? dbl(r, "paidAmount").doubleValue() : 0.0;
-                    double subTotal = custPrice * tyres;
-                    double grandTotal = subTotal + serviceFee;
+                    double custPrice = dblVal(r, "custPrice", dblVal(r, "cust_price", 0.0));
+                    int tyres = numVal(r, "tyres", 0);
+                    double serviceFee = dblVal(r, "serviceFee", dblVal(r, "service_fee", 0.0));
+                    double paidAmount = dblVal(r, "paidAmount", dblVal(r, "initialPayment", dblVal(r, "settlement", 0.0)));
+                    double subTotal = dblVal(r, "subTotal", dblVal(r, "sub_total", custPrice * tyres));
+                    double grandTotal = dblVal(r, "grandTotal", dblVal(r, "grand_total", subTotal + serviceFee));
 
                     ps.setString(1,  str(r, "id"));
                     ps.setString(2,  str(r, "exportId"));
                     ps.setString(3,  str(r, "serialNumber"));
                     ps.setString(4,  str(r, "company"));
-                    ps.setInt(5,     tyres);
-                    ps.setDouble(6,  custPrice);
-                    ps.setDouble(7,  dbl(r, "compPrice") != null ? dbl(r, "compPrice").doubleValue() : 0.0);
-                    ps.setDouble(8,  serviceFee);
-                    ps.setDouble(9,  subTotal);
-                    ps.setDouble(10, grandTotal);
-                    ps.setDouble(11, paidAmount);
-                    ps.setDouble(12, paidAmount);
-                    ps.setString(13, str(r, "status"));
-                    ps.setString(14, str(r, "exportDate"));
-                    ps.setString(15, str(r, "notes")); // map notes to remark
-                    ps.setString(16, str(r, "updatedAt"));
+                    ps.setString(5,  str(r, "tyreSize"));
+                    ps.setString(6,  str(r, "tyreMake"));
+                    ps.setInt(7,     tyres);
+                    ps.setDouble(8,  custPrice);
+                    ps.setDouble(9,  dblVal(r, "compPrice", dblVal(r, "comp_price", 0.0)));
+                    ps.setDouble(10, serviceFee);
+                    ps.setDouble(11, subTotal);
+                    ps.setDouble(12, grandTotal);
+                    ps.setDouble(13, paidAmount);
+                    ps.setDouble(14, dblVal(r, "settlement", paidAmount));
+                    ps.setString(15, str(r, "status"));
+                    ps.setString(16, str(r, "exportDate"));
+                    ps.setString(17, str(r, "remark") != null ? str(r, "remark") : str(r, "notes"));
+                    ps.setString(18, str(r, "createdAt"));
+                    ps.setString(19, str(r, "updatedAt"));
                     ps.addBatch();
                 }
                 ps.executeBatch();
