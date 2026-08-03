@@ -17,7 +17,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.UUID;
+import com.gui.kline.utils.Utils;
 
 public class QuickServicePresetsController {
 
@@ -184,7 +184,7 @@ public class QuickServicePresetsController {
         String sql = "INSERT INTO quick_service_presets (id, service, price, active, icon, created_at) VALUES (?, ?, ?, 1, ?, CURRENT_TIMESTAMP)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, UUID.randomUUID().toString());
+            ps.setString(1, Utils.generateId("PRE-", 8));
             ps.setString(2, service);
             ps.setDouble(3, price);
             ps.setString(4, icon != null ? icon : "fas-bolt");

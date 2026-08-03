@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.UUID;
+import com.gui.kline.utils.Utils;
 
 import com.gui.kline.data.DatabaseManager;
 import com.gui.kline.data.LocalCatalogRepository;
@@ -345,7 +345,7 @@ public class InvoicesController implements Initializable {
         String today = LocalDate.now().toString();
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, UUID.randomUUID().toString());
+            ps.setString(1, Utils.generateId("SRV-", 8));
             ps.setString(2, detail.getInvoiceId());
             ps.setString(3, "Invoiced Service");
             ps.setDouble(4, detail.getGrandTotal());

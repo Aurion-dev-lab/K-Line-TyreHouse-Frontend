@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import com.gui.kline.models.Product;
 import com.gui.kline.utils.AlertUtil;
 import com.gui.kline.utils.ImagePathUtil;
+import com.gui.kline.utils.Utils;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -339,7 +340,7 @@ public class ProductFormController implements Initializable {
     private String copyImageToDirectory(File sourceFile) throws IOException {
         // Create unique filename: productId_timestamp.extension
         String extension = getFileExtension(sourceFile.getName());
-        String filename = System.currentTimeMillis() + "_" + (editingProduct != null ? editingProduct.getId() : java.util.UUID.randomUUID().toString()) + extension;
+        String filename = System.currentTimeMillis() + "_" + (editingProduct != null ? editingProduct.getId() : Utils.generateId("IMG-", 8)) + extension;
         
         Path targetPath = Paths.get(ImagePathUtil.getImageDirectory(), filename);
         Files.copy(sourceFile.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);

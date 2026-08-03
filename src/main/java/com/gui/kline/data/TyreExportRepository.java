@@ -1,6 +1,7 @@
 package com.gui.kline.data;
 
 import com.gui.kline.models.TyreExport;
+import com.gui.kline.utils.Utils;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -84,7 +85,7 @@ public class TyreExportRepository {
      * Save or update a tyre export
      */
     public String saveTyreExport(TyreExport tyreExport) {
-        String id = tyreExport.getId() != null ? tyreExport.getId() : java.util.UUID.randomUUID().toString();
+        String id = tyreExport.getId() != null ? tyreExport.getId() : Utils.generateId("EXP-PK-", 8);
         
         String sql = "INSERT INTO tyre_exports (id, export_id, serial_number, company, tyre_size, tyre_make, tyres, cust_price, " +
                 "comp_price, service_fee, sub_total, grand_total, initial_payment, settlement, " +

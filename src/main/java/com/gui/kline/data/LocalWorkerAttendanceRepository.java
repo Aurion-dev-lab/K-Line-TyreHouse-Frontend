@@ -3,6 +3,7 @@ package com.gui.kline.data;
 import com.gui.kline.models.WorkerAttendance;
 import com.gui.kline.models.WorkerAttendanceHistory;
 import com.gui.kline.models.WorkerMonthlySummary;
+import com.gui.kline.utils.Utils;
 
 import java.sql.Connection;
 import java.sql.Date;
@@ -52,7 +53,7 @@ public class LocalWorkerAttendanceRepository {
 
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, java.util.UUID.randomUUID().toString());
+            statement.setString(1, Utils.generateId("ATT-", 8));
             statement.setString(2, workerId);
             statement.setString(3, date.toString());
             statement.setString(4, status);

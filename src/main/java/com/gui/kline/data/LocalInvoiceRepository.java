@@ -7,6 +7,7 @@ import com.gui.kline.models.InvoiceRow;
 import com.gui.kline.models.LineItem;
 import com.gui.kline.models.Product;
 import com.gui.kline.utils.JsonUtil;
+import com.gui.kline.utils.Utils;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ public class LocalInvoiceRepository {
 
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, java.util.UUID.randomUUID().toString());
+            statement.setString(1, Utils.generateId("INV-PK-", 8));
             statement.setString(2, row.getInvoiceId());
             statement.setString(3, detail.getCustomer());
             statement.setString(4, detail.getPhone());

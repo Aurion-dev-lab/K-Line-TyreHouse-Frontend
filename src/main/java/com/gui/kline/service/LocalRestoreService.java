@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.gui.kline.data.DatabaseManager;
+import com.gui.kline.utils.Utils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -378,7 +379,7 @@ public class LocalRestoreService {
                         if (customerName != null && !customerName.isBlank()) {
                             customerId = catalogRepository.getCustomerIdByName(customerName);
                             if (customerId == null) {
-                                customerId = java.util.UUID.randomUUID().toString();
+                                customerId = Utils.generateId("CST-", 8);
                                 String insCustomer = "INSERT OR IGNORE INTO credit_customers (id, name, created_at) VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now'))";
                                 try (PreparedStatement ins = conn.prepareStatement(insCustomer)) {
                                     ins.setString(1, customerId);

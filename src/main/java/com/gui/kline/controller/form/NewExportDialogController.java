@@ -6,8 +6,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.ResourceBundle;
-import java.util.UUID;
 import java.util.function.Consumer;
+import com.gui.kline.utils.Utils;
 
 import com.gui.kline.models.ExportRecord;
 
@@ -43,7 +43,7 @@ public class NewExportDialogController implements Initializable {
     @FXML private Button           btnSave;
     @FXML private TextField        txtRemark;
 
-    private final String exportId = "EXP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    private final String exportId = Utils.generateId("EXP-", 8);
     private Consumer<ExportResult> onSave;
 
     public void setOnSave(Consumer<ExportResult> onSave) {

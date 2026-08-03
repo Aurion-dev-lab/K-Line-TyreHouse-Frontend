@@ -13,6 +13,7 @@ import com.gui.kline.data.TyreExportRepository;
 import com.gui.kline.models.ExportRecord;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.utils.JsonUtil;
+import com.gui.kline.utils.Utils;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -101,7 +102,7 @@ public class TyreExportsController implements Initializable {
         form.setOnSave(result -> {
             // Create TyreExport for local database
             com.gui.kline.models.TyreExport tyreExport = new com.gui.kline.models.TyreExport();
-            tyreExport.setId(java.util.UUID.randomUUID().toString());
+            tyreExport.setId(Utils.generateId("EXP-PK-", 8));
             tyreExport.setExportId(result.exportId());
             tyreExport.setSerialNumber(result.serialNumber());
             tyreExport.setCompany(result.company());

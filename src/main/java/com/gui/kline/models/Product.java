@@ -8,6 +8,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import com.gui.kline.utils.Utils;
 
 public class Product {
     private final StringProperty  id        = new SimpleStringProperty();
@@ -29,7 +30,7 @@ public class Product {
 
     public Product(String name, String category, double buyPrice,
                    double sellPrice, int stock) {
-        this.id.set(java.util.UUID.randomUUID().toString());
+        this.id.set(Utils.generateId("PRD-PK-", 8));
         this.code.set("");
         this.name.set(name);
         this.category.set(category);

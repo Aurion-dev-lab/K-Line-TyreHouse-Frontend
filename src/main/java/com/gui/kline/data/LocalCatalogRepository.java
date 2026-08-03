@@ -3,6 +3,7 @@ package com.gui.kline.data;
 import com.gui.kline.models.Product;
 import com.gui.kline.models.CreditCustomer;
 import com.gui.kline.utils.ImagePathUtil;
+import com.gui.kline.utils.Utils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -50,7 +51,7 @@ public class LocalCatalogRepository {
                 "ON CONFLICT(name, phone) DO UPDATE SET phone = excluded.phone, sync_status = 0";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, java.util.UUID.randomUUID().toString());
+            statement.setString(1, Utils.generateId("CST-", 8));
             statement.setString(2, name.trim());
             statement.setString(3, phone == null ? null : phone.trim());
             statement.executeUpdate();
@@ -153,7 +154,7 @@ public class LocalCatalogRepository {
                      "  sync_status = 0";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, customer.getId() == null || customer.getId().isBlank() ? java.util.UUID.randomUUID().toString() : customer.getId());
+            stmt.setString(1, customer.getId() == null || customer.getId().isBlank() ? Utils.generateId("CST-", 8) : customer.getId());
             stmt.setString(2, customer.getName());
             stmt.setString(3, customer.getPhone());
             stmt.setString(4, customer.getEmail());

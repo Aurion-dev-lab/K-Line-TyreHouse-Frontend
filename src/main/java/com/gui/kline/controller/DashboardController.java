@@ -8,6 +8,7 @@ import com.gui.kline.models.ViewModel;
 import com.gui.kline.service.NavigationService;
 import com.gui.kline.utils.BackgroundTask;
 import com.gui.kline.utils.JsonUtil;
+import com.gui.kline.utils.Utils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -886,7 +887,7 @@ public class DashboardController implements Initializable {
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(insert)) {
             LocalDate today = LocalDate.now();
-            ps.setString(1, java.util.UUID.randomUUID().toString());
+            ps.setString(1, Utils.generateId("QSV-", 8));
             ps.setString(2, service.name);
             ps.setDouble(3, service.price);
             ps.setString(4, today.toString());

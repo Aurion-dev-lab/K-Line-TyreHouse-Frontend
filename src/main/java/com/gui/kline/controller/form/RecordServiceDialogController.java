@@ -2,6 +2,7 @@ package com.gui.kline.controller.form;
 
 import com.gui.kline.data.DatabaseManager;
 import com.gui.kline.utils.JsonUtil;
+import com.gui.kline.utils.Utils;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -52,7 +53,7 @@ public class RecordServiceDialogController {
         String insert = "INSERT INTO services (id, name, price, service_date, remark) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(insert)) {
-            ps.setString(1, java.util.UUID.randomUUID().toString());
+            ps.setString(1, Utils.generateId("SRV-", 8));
             ps.setString(2, name);
             ps.setDouble(3, price);
             ps.setString(4, serviceDate.toString());

@@ -6,6 +6,7 @@ import com.gui.kline.service.NavigationService;
 import com.gui.kline.utils.AlertUtil;
 import com.gui.kline.utils.BackgroundTask;
 import com.gui.kline.utils.JsonUtil;
+import com.gui.kline.utils.Utils;
 import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -186,7 +187,7 @@ public class LayoutController {
         String insert = "INSERT INTO quick_services (id, service, price, service_date) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(insert)) {
-            ps.setString(1, java.util.UUID.randomUUID().toString());
+            ps.setString(1, Utils.generateId("QSV-", 8));
             ps.setString(2, service);
             ps.setDouble(3, price);
             ps.setString(4, java.time.LocalDate.now().toString());

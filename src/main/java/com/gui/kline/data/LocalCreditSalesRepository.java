@@ -6,6 +6,7 @@ import com.gui.kline.controller.CreditSalesController;
 import com.gui.kline.models.CreditSaleDetail;
 import com.gui.kline.models.Part;
 import com.gui.kline.utils.JsonUtil;
+import com.gui.kline.utils.Utils;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -34,7 +35,7 @@ public class LocalCreditSalesRepository {
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, java.util.UUID.randomUUID().toString());
+            ps.setString(1, Utils.generateId("CS-PK-", 8));
             ps.setString(2, row.getCreditId());
             ps.setString(3, row.getDate());
             ps.setString(4, detail.getCustomerId());

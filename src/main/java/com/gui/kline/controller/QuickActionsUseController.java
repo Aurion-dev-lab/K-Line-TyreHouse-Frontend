@@ -21,7 +21,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import com.gui.kline.utils.Utils;
 
 public class QuickActionsUseController {
 
@@ -179,7 +179,7 @@ public class QuickActionsUseController {
         String insert = "INSERT INTO quick_services (id, service, price, service_date) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(insert)) {
-            ps.setString(1, UUID.randomUUID().toString());
+            ps.setString(1, Utils.generateId("QSV-", 8));
             ps.setString(2, service.name);
             ps.setDouble(3, service.price);
             ps.setString(4, LocalDate.now().toString());

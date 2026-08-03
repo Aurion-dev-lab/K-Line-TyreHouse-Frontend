@@ -3,6 +3,7 @@ package com.gui.kline.controller.form;
 import com.gui.kline.data.DatabaseManager;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.utils.JsonUtil;
+import com.gui.kline.utils.Utils;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -103,7 +104,7 @@ public class QuickActionsPopupController {
         String insert = "INSERT INTO quick_services (id, service, price, service_date) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(insert)) {
-            ps.setString(1, java.util.UUID.randomUUID().toString());
+            ps.setString(1, Utils.generateId("QSV-", 8));
             ps.setString(2, service.name);
             ps.setDouble(3, service.price);
             ps.setString(4, java.time.LocalDate.now().toString());
