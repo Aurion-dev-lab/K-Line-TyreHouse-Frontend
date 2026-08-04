@@ -289,11 +289,13 @@ public class DashboardController implements Initializable {
             System.err.println("Error loading chart data: " + ex.getMessage());
         }
 
-        revenueChart.getData().add(series);
+        series.nodeProperty().addListener((obs, oldNode, newNode) -> {
+            if (newNode != null) {
+                newNode.setStyle("-fx-stroke: #22c55e; -fx-stroke-width: 2.5px;");
+            }
+        });
 
-        series.getNode().setStyle(
-                "-fx-stroke: #22c55e; -fx-stroke-width: 2.5px;"
-        );
+        revenueChart.getData().add(series);
     }
 
     private void populateChartData(XYChart.Series<String, Number> series,
@@ -649,7 +651,7 @@ public class DashboardController implements Initializable {
                             "FROM credit_sales WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ? GROUP BY d",
                     startDate, endDate, totals);
             collectTotalsByDate(conn,
-                    "SELECT service_date, SUM(price) AS total FROM services WHERE service_date BETWEEN ? AND ? GROUP BY service_date",
+                    "SELECT service_date, SUM(price) AS total FROM services WHERE (invoice_id IS NULL OR invoice_id = '') AND (name IS NULL OR name != 'Invoiced Service') AND service_date BETWEEN ? AND ? GROUP BY service_date",
                     startDate, endDate, totals);
             collectTotalsByDate(conn,
                     "SELECT service_date, SUM(price) AS total FROM quick_services WHERE service_date BETWEEN ? AND ? GROUP BY service_date",
@@ -753,9 +755,9 @@ public class DashboardController implements Initializable {
     }
 
      private int countServices(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
-         int services = countRows(conn,
-                 "SELECT COUNT(*) FROM services WHERE service_date BETWEEN ? AND ?",
-                 startDate, endDate);
+          int services = countRows(conn,
+                  "SELECT COUNT(*) FROM services WHERE (invoice_id IS NULL OR invoice_id = '') AND (name IS NULL OR name != 'Invoiced Service') AND service_date BETWEEN ? AND ?",
+                  startDate, endDate);
          int quick = countRows(conn,
                  "SELECT COUNT(*) FROM quick_services WHERE service_date BETWEEN ? AND ?",
                  startDate, endDate);

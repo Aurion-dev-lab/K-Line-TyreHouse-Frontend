@@ -46,6 +46,6 @@ public class FinancialSummary {
     }
     
     public double getTotalCosts() {
-        return totalExpenses + workerCosts;
+        return totalExpenses + productCosts + workerCosts;
     }
 }

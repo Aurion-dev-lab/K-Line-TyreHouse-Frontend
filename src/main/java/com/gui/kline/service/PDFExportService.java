@@ -133,6 +133,7 @@ public class PDFExportService {
         content.append(String.format("Quick Services:          Rs. %,.0f\n", summary.getQuickServiceRevenue()));
         content.append(String.format("Total Revenue:           Rs. %,.0f\n\n", summary.getTotalRevenue()));
         
+        content.append(String.format("Product Costs (COGS):    Rs. %,.0f\n", summary.getProductCosts()));
         content.append(String.format("Total Expenses:          Rs. %,.0f\n", summary.getTotalExpenses()));
         content.append(String.format("Worker Costs:            Rs. %,.0f\n", summary.getWorkerCosts()));
         content.append(String.format("Total Costs:             Rs. %,.0f\n\n", summary.getTotalCosts()));

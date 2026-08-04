@@ -700,7 +700,8 @@ public class ReportsController implements Initializable {
         report.append(String.format("Quick Services: Rs. %,.0f\n", summary.getQuickServiceRevenue()));
         report.append(String.format("Total Revenue: Rs. %,.0f\n\n", summary.getTotalRevenue()));
         
-        report.append("--- EXPENSES ---\n");
+        report.append("--- EXPENSES & COSTS ---\n");
+        report.append(String.format("Product Costs (COGS): Rs. %,.0f\n", summary.getProductCosts()));
         report.append(String.format("Total Expenses: Rs. %,.0f\n", summary.getTotalExpenses()));
         report.append(String.format("Worker Costs: Rs. %,.0f\n", summary.getWorkerCosts()));
         report.append(String.format("Total Costs: Rs. %,.0f\n\n", summary.getTotalCosts()));

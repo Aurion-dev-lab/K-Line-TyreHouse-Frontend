@@ -184,7 +184,7 @@
                                 <StackPane style="-fx-background-color: #fffbeb; -fx-background-radius: 8; -fx-padding: 8;">
                                     <FontIcon iconLiteral="fas-bolt" iconSize="15" iconColor="#d97706" />
                                 </StackPane>
-                                <Label text="Quick Services Today"
+                                <Label text="Quick Services (Period)"
                                        style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #0f172a;" />
                             </HBox>
 
