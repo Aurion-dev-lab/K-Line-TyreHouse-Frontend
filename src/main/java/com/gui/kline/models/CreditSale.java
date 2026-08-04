@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.gui.kline.models.dto.Part;
+
 /**
  * CreditSale model class with sync support.
  */

@@ -1,11 +1,11 @@
 package com.gui.kline.controller;
 
 import com.gui.kline.data.ReportsRepository;
-import com.gui.kline.data.ReportsRepository.DailySummary;
-import com.gui.kline.data.ReportsRepository.ExpenseItem;
-import com.gui.kline.data.ReportsRepository.FinancialSummary;
-import com.gui.kline.data.ReportsRepository.TopProduct;
-import com.gui.kline.data.ReportsRepository.CustomerSummary;
+import com.gui.kline.models.reports.CustomerSummary;
+import com.gui.kline.models.reports.DailySummary;
+import com.gui.kline.models.reports.ExpenseItem;
+import com.gui.kline.models.reports.FinancialSummary;
+import com.gui.kline.models.reports.TopProduct;
 import com.gui.kline.models.ViewModel;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -14,12 +14,10 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 
 import java.net.URL;
 import java.text.NumberFormat;

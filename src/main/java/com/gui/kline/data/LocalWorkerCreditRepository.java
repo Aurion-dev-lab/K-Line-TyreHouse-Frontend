@@ -1,9 +1,8 @@
 package com.gui.kline.data;
 
-import com.gui.kline.models.LedgerEntry;
+import com.gui.kline.models.dto.LedgerEntry;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -12,7 +11,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class LocalWorkerCreditRepository {
     public String saveCredit(String workerId, String workerName, LocalDate date, double amount, String note, String type) {

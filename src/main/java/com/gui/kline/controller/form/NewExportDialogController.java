@@ -9,7 +9,7 @@ import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import com.gui.kline.utils.Utils;
 
-import com.gui.kline.models.ExportRecord;
+import com.gui.kline.models.ui.ExportRecord;
 
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;

@@ -1,4 +1,4 @@
-package com.gui.kline.models;
+package com.gui.kline.models.dto;
 
 public class InvoiceRow {
     private final String invoiceId, date, customer, type, status, phone, description, vehicleNumber;

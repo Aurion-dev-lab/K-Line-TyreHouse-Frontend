@@ -1,9 +1,11 @@
-package com.gui.kline.models;
+package com.gui.kline.models.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.gui.kline.data.LocalCatalogRepository;
+import com.gui.kline.models.Product;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LineItem {
@@ -63,7 +65,8 @@ public class LineItem {
         if ("Labour".equals(productId) || "Additional parts".equals(productId)) {
             return productId;
         }
-        com.gui.kline.data.LocalCatalogRepository catalogRepo = new com.gui.kline.data.LocalCatalogRepository();
+
+        LocalCatalogRepository catalogRepo = new com.gui.kline.data.LocalCatalogRepository();
         Product p = catalogRepo.findProductById(productId);
         if (p != null) {
             String code = p.getCode();

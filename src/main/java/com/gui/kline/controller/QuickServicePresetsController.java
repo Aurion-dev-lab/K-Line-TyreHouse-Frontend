@@ -1,7 +1,7 @@
 package com.gui.kline.controller;
 
 import com.gui.kline.data.DatabaseManager;
-import com.gui.kline.models.QuickServicePreset;
+import com.gui.kline.models.ui.QuickServicePreset;
 import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

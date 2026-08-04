@@ -1,14 +1,12 @@
 package com.gui.kline.data;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class LocalSalaryAdvanceRepository {
     public String saveAdvance(String workerId, String workerName, LocalDate date, double amount, String note) {

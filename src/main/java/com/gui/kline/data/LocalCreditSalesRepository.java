@@ -3,8 +3,8 @@ package com.gui.kline.data;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gui.kline.controller.CreditSalesController;
-import com.gui.kline.models.CreditSaleDetail;
-import com.gui.kline.models.Part;
+import com.gui.kline.models.dto.CreditSaleDetail;
+import com.gui.kline.models.dto.Part;
 import com.gui.kline.utils.JsonUtil;
 import com.gui.kline.utils.Utils;
 

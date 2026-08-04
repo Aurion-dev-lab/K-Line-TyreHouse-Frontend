@@ -1,11 +1,9 @@
 package com.gui.kline.data;
 
-import com.gui.kline.models.TyreExport;
+import com.gui.kline.models.dto.TyreExport;
 import com.gui.kline.utils.Utils;
 
 import java.sql.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 

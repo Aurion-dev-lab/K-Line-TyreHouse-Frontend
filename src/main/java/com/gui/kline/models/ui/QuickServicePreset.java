@@ -1,7 +1,9 @@
-package com.gui.kline.models;
+package com.gui.kline.models.ui;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 public class QuickServicePreset {
     private final String id;
@@ -32,20 +34,24 @@ public class QuickServicePreset {
         return active.get();
     }
 
-    public SimpleStringProperty serviceProperty() {
+    public StringProperty serviceProperty() {
         return service;
     }
 
-    public SimpleStringProperty priceLabelProperty() {
+    public StringProperty priceLabelProperty() {
         return priceLabel;
     }
 
-    public SimpleStringProperty statusProperty() {
+    public StringProperty statusProperty() {
         return status;
     }
 
-    public SimpleStringProperty iconProperty() {
+    public StringProperty iconProperty() {
         return icon;
+    }
+
+    public BooleanProperty activeProperty() {
+        return active;
     }
 
     public String getService() {

@@ -1,4 +1,4 @@
-package com.gui.kline.models;
+package com.gui.kline.models.ui;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

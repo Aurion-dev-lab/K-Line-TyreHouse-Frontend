@@ -1,12 +1,11 @@
 package com.gui.kline.data;
 
-import com.gui.kline.models.WorkerAttendance;
-import com.gui.kline.models.WorkerAttendanceHistory;
-import com.gui.kline.models.WorkerMonthlySummary;
+import com.gui.kline.models.ui.WorkerAttendance;
+import com.gui.kline.models.reports.WorkerAttendanceHistory;
+import com.gui.kline.models.reports.WorkerMonthlySummary;
 import com.gui.kline.utils.Utils;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;

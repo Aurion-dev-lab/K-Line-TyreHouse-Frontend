@@ -1,10 +1,10 @@
 package com.gui.kline.data;
 
-import com.gui.kline.models.LedgerEntry;
-import com.gui.kline.models.WorkerSalary;
+import com.gui.kline.models.dto.LedgerEntry;
+import com.gui.kline.models.reports.SalaryPayment;
+import com.gui.kline.models.ui.WorkerSalary;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,8 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-
 public class LocalSalaryRepository {
     private final LocalSalaryAdvanceRepository advanceRepository = new LocalSalaryAdvanceRepository();
     private final LocalWorkerCreditRepository creditRepository = new LocalWorkerCreditRepository();
@@ -347,24 +345,5 @@ public class LocalSalaryRepository {
         return entries;
     }
 
-    /**
-     * Inner class to represent individual salary payments.
-     */
-    public static class SalaryPayment {
-        private final String id, worker;
-        private final double amount;
-        private final java.time.LocalDateTime paidAt;
 
-        public SalaryPayment(String id, String worker, double amount, java.time.LocalDateTime paidAt) {
-            this.id = id;
-            this.worker = worker;
-            this.amount = amount;
-            this.paidAt = paidAt;
-        }
-
-        public String getId() { return id; }
-        public String getWorker() { return worker; }
-        public double getAmount() { return amount; }
-        public java.time.LocalDateTime getPaidAt() { return paidAt; }
-    }
 }

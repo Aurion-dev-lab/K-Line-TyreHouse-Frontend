@@ -8,8 +8,8 @@ import java.util.List;
 import com.gui.kline.controller.CreditSalesController;
 import com.gui.kline.data.LocalCatalogRepository;
 import com.gui.kline.data.LocalCreditSalesRepository;
-import com.gui.kline.models.CreditSaleDetail;
-import com.gui.kline.models.Part;
+import com.gui.kline.models.dto.CreditSaleDetail;
+import com.gui.kline.models.dto.Part;
 import com.gui.kline.models.Product;
 import com.gui.kline.utils.JsonUtil;
 

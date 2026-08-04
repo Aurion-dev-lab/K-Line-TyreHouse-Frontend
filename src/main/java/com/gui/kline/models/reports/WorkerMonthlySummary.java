@@ -1,4 +1,4 @@
-package com.gui.kline.models;
+package com.gui.kline.models.reports;
 
 public class WorkerMonthlySummary {
     private final String workerName;

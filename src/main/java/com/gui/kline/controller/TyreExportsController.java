@@ -10,9 +10,11 @@ import java.util.ResourceBundle;
 import com.gui.kline.controller.form.NewExportDialogController;
 
 import com.gui.kline.data.TyreExportRepository;
-import com.gui.kline.models.ExportRecord;
+import com.gui.kline.models.ui.ExportRecord;
+import com.gui.kline.models.dto.InvoiceDetail;
+import com.gui.kline.models.dto.LineItem;
+import com.gui.kline.models.dto.TyreExport;
 import com.gui.kline.models.ViewModel;
-import com.gui.kline.utils.JsonUtil;
 import com.gui.kline.utils.Utils;
 
 import javafx.collections.FXCollections;
@@ -66,9 +68,9 @@ public class TyreExportsController implements Initializable {
 
     private void loadFromLocal() {
         // Load from local database using TyreExportRepository
-        List<com.gui.kline.models.TyreExport> exports = tyreExportRepository.getAllExports();
+        List<com.gui.kline.models.dto.TyreExport> exports = tyreExportRepository.getAllExports();
         masterList.clear();
-        for (com.gui.kline.models.TyreExport export : exports) {
+        for (com.gui.kline.models.dto.TyreExport export : exports) {
             ExportRecord record = new ExportRecord(
                 export.getExportId() != null ? export.getExportId() : export.getId(),
                 export.getSerialNumber() != null ? export.getSerialNumber() : "",
@@ -101,7 +103,7 @@ public class TyreExportsController implements Initializable {
         }
         form.setOnSave(result -> {
             // Create TyreExport for local database
-            com.gui.kline.models.TyreExport tyreExport = new com.gui.kline.models.TyreExport();
+            com.gui.kline.models.dto.TyreExport tyreExport = new com.gui.kline.models.dto.TyreExport();
             tyreExport.setId(Utils.generateId("EXP-PK-", 8));
             tyreExport.setExportId(result.exportId());
             tyreExport.setSerialNumber(result.serialNumber());
@@ -414,7 +416,7 @@ public class TyreExportsController implements Initializable {
         r.setStatus(next);
         
         // Save to database
-        com.gui.kline.models.TyreExport tyreExport = tyreExportRepository.getTyreExportByExportId(r.getExportId());
+        com.gui.kline.models.dto.TyreExport tyreExport = tyreExportRepository.getTyreExportByExportId(r.getExportId());
         if (tyreExport != null) {
             tyreExport.setStatus(next);
             tyreExportRepository.saveTyreExport(tyreExport);
@@ -465,7 +467,7 @@ public class TyreExportsController implements Initializable {
         r.setSettlement(newPaid);
 
         // Save to database
-        com.gui.kline.models.TyreExport tyreExport = tyreExportRepository.getTyreExportByExportId(r.getExportId());
+        com.gui.kline.models.dto.TyreExport tyreExport = tyreExportRepository.getTyreExportByExportId(r.getExportId());
         if (tyreExport != null) {
             tyreExport.setSettlement(newPaid);
             tyreExportRepository.saveTyreExport(tyreExport);
@@ -557,7 +559,7 @@ public class TyreExportsController implements Initializable {
             r.setRemark(result.remark());
 
             // Update in local database
-            com.gui.kline.models.TyreExport tyreExport = tyreExportRepository.getTyreExportByExportId(r.getExportId());
+            com.gui.kline.models.dto.TyreExport tyreExport = tyreExportRepository.getTyreExportByExportId(r.getExportId());
             if (tyreExport != null) {
                 tyreExport.setSerialNumber(result.serialNumber());
                 tyreExport.setCompany(result.company());
@@ -618,7 +620,7 @@ public class TyreExportsController implements Initializable {
             String dateStr = LocalDate.now().toString();
 
             // Create invoice detail
-            com.gui.kline.models.InvoiceDetail invoiceDetail = new com.gui.kline.models.InvoiceDetail();
+            com.gui.kline.models.dto.InvoiceDetail invoiceDetail = new com.gui.kline.models.dto.InvoiceDetail();
             invoiceDetail.setInvoiceId(invoiceId);
             invoiceDetail.setCustomer(r.getCompany());
             invoiceDetail.setDate(dateStr);
@@ -626,7 +628,7 @@ public class TyreExportsController implements Initializable {
             invoiceDetail.setStatus("completed");
 
             // Add line item for tyres
-            com.gui.kline.models.LineItem tyreItem = new com.gui.kline.models.LineItem(
+            com.gui.kline.models.dto.LineItem tyreItem = new com.gui.kline.models.dto.LineItem(
                     r.getTyres() + " tyres",
                     "Export",
                     r.getTyres(),
@@ -637,7 +639,7 @@ public class TyreExportsController implements Initializable {
 
             // Add line item for service fee if applicable
             if (r.getServiceCharge() > 0) {
-                com.gui.kline.models.LineItem serviceItem = new com.gui.kline.models.LineItem(
+                com.gui.kline.models.dto.LineItem serviceItem = new com.gui.kline.models.dto.LineItem(
                         "Service Charge",
                         "Service",
                         1,
@@ -696,3 +698,4 @@ public class TyreExportsController implements Initializable {
         a.showAndWait();
     }
 }
+

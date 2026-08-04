@@ -1,4 +1,4 @@
-package com.gui.kline.models;
+package com.gui.kline.models.ui;
 
 public class CreditCustomer {
     private String id;

@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * Helper for resolving, storing and deleting product image files in a way that
@@ -99,7 +100,7 @@ public final class ImagePathUtil {
     /**
      * Deletes every image file in the given list from disk.
      */
-    public static void deleteImageFiles(java.util.List<String> storedPaths) {
+    public static void deleteImageFiles(List<String> storedPaths) {
         if (storedPaths == null) return;
         for (String path : storedPaths) {
             deleteImageFile(path);

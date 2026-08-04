@@ -2,8 +2,6 @@ package com.gui.kline.controller;
 
 import com.gui.kline.controller.form.QuickActionsPopupController;
 import com.gui.kline.data.*;
-import com.gui.kline.models.Product;
-import com.gui.kline.models.ExportRecord;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.service.NavigationService;
 import com.gui.kline.utils.BackgroundTask;
@@ -22,10 +20,8 @@ import javafx.scene.control.*;
 import javafx.scene.Node;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.net.URL;
 import java.sql.Connection;
@@ -38,7 +34,6 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class DashboardController implements Initializable {
 
@@ -800,9 +795,9 @@ public class DashboardController implements Initializable {
                     String partsJson = rs.getString(1);
                     if (partsJson != null && !partsJson.isBlank()) {
                         try {
-                            List<com.gui.kline.models.Part> items = mapper.readValue(partsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.Part>>() {});
+                            List<com.gui.kline.models.dto.Part> items = mapper.readValue(partsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.Part>>() {});
                             if (items != null) {
-                                for (com.gui.kline.models.Part item : items) {
+                                for (com.gui.kline.models.dto.Part item : items) {
                                     if (item.getProductId() != null) {
                                         double buyPrice = productBuyPrices.getOrDefault(item.getProductId(), 0.0);
                                         totalCost += item.getQuantity() * buyPrice;
@@ -839,9 +834,9 @@ public class DashboardController implements Initializable {
                     String lineItemsJson = rs.getString(1);
                     if (lineItemsJson != null && !lineItemsJson.isBlank()) {
                         try {
-                            List<com.gui.kline.models.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.LineItem>>() {});
+                            List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
                             if (items != null) {
-                                for (com.gui.kline.models.LineItem item : items) {
+                                for (com.gui.kline.models.dto.LineItem item : items) {
                                     if (item.getProductId() != null) {
                                         double buyPrice = productBuyPrices.getOrDefault(item.getProductId(), 0.0);
                                         totalCost += item.getQty() * buyPrice;
@@ -945,3 +940,4 @@ public class DashboardController implements Initializable {
         }
     }
 }
+

@@ -1,7 +1,8 @@
-package com.gui.kline.models;
+package com.gui.kline.models.ui;
 
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -106,23 +107,23 @@ public class ServiceRecord {
         }
     }
 
-    public SimpleStringProperty dateLabelProperty() {
+    public StringProperty dateLabelProperty() {
         return dateLabel;
     }
 
-    public SimpleStringProperty serviceProperty() {
+    public StringProperty serviceProperty() {
         return serviceProperty;
     }
 
-    public SimpleStringProperty remarkProperty() {
+    public StringProperty remarkProperty() {
         return remarkProperty;
     }
 
-    public SimpleStringProperty priceLabelProperty() {
+    public StringProperty priceLabelProperty() {
         return priceLabel;
     }
 
-    public SimpleStringProperty actionsProperty() {
+    public StringProperty actionsProperty() {
         return new SimpleStringProperty("");
     }
 

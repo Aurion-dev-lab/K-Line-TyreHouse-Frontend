@@ -1,12 +1,16 @@
 package com.gui.kline.data;
 
 import com.gui.kline.controller.ReportsController;
+import com.gui.kline.models.reports.CustomerSummary;
+import com.gui.kline.models.reports.DailySummary;
+import com.gui.kline.models.reports.ExpenseItem;
+import com.gui.kline.models.reports.FinancialSummary;
+import com.gui.kline.models.reports.TopProduct;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.sql.*;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,9 +19,6 @@ import java.util.List;
  * Handles data retrieval for sales, services, expenses, and financial reports.
  */
 public class ReportsRepository {
-
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
     /**
      * Get sales data for the reports
      */
@@ -37,9 +38,9 @@ public class ReportsRepository {
                     String lineItemsJson = rs.getString("line_items");
                     if (lineItemsJson != null && !lineItemsJson.isBlank()) {
                         try {
-                            List<com.gui.kline.models.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.LineItem>>() {});
+                            List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
                             if (items != null) {
-                                for (com.gui.kline.models.LineItem item : items) {
+                                for (com.gui.kline.models.dto.LineItem item : items) {
                                     String name = item.getDescription() != null ? item.getDescription() : "Unknown Product";
                                     int qty = item.getQty();
                                     double revenue = item.getTotal();
@@ -76,9 +77,9 @@ public class ReportsRepository {
                     String partsJson = rs.getString("parts");
                     if (partsJson != null && !partsJson.isBlank()) {
                         try {
-                            List<com.gui.kline.models.Part> items = mapper.readValue(partsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.Part>>() {});
+                            List<com.gui.kline.models.dto.Part> items = mapper.readValue(partsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.Part>>() {});
                             if (items != null) {
-                                for (com.gui.kline.models.Part item : items) {
+                                for (com.gui.kline.models.dto.Part item : items) {
                                     String name = item.getDescription() != null ? item.getDescription() : "Credit Part";
                                     int qty = item.getQuantity();
                                     double revenue = item.getTotal();
@@ -472,9 +473,9 @@ public class ReportsRepository {
                     String partsJson = rs.getString("parts");
                     if (partsJson != null && !partsJson.isBlank()) {
                         try {
-                            List<com.gui.kline.models.Part> items = mapper.readValue(partsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.Part>>() {});
+                            List<com.gui.kline.models.dto.Part> items = mapper.readValue(partsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.Part>>() {});
                             if (items != null) {
-                                for (com.gui.kline.models.Part item : items) {
+                                for (com.gui.kline.models.dto.Part item : items) {
                                     if (item.getProductId() != null) {
                                         double buyPrice = productBuyPrices.getOrDefault(item.getProductId(), 0.0);
                                         totalCost += item.getQuantity() * buyPrice;
@@ -505,9 +506,9 @@ public class ReportsRepository {
                     String lineItemsJson = rs.getString("line_items");
                     if (lineItemsJson != null && !lineItemsJson.isBlank()) {
                         try {
-                            List<com.gui.kline.models.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.LineItem>>() {});
+                            List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
                             if (items != null) {
-                                for (com.gui.kline.models.LineItem item : items) {
+                                for (com.gui.kline.models.dto.LineItem item : items) {
                                     if (item.getProductId() != null) {
                                         double buyPrice = productBuyPrices.getOrDefault(item.getProductId(), 0.0);
                                         totalCost += item.getQty() * buyPrice;
@@ -559,9 +560,9 @@ public class ReportsRepository {
                     String lineItemsJson = rs.getString("line_items");
                     if (lineItemsJson != null && !lineItemsJson.isBlank()) {
                         try {
-                            List<com.gui.kline.models.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.LineItem>>() {});
+                            List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
                             if (items != null) {
-                                for (com.gui.kline.models.LineItem item : items) {
+                                for (com.gui.kline.models.dto.LineItem item : items) {
                                     String name = item.getDescription() != null ? item.getDescription() : "Unknown";
                                     double[] stats = productStats.computeIfAbsent(name, k -> new double[]{0, 0});
                                     stats[0] += item.getQty();
@@ -603,9 +604,9 @@ public class ReportsRepository {
                     String lineItemsJson = rs.getString("line_items");
                     if (lineItemsJson != null && !lineItemsJson.isBlank()) {
                         try {
-                            List<com.gui.kline.models.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.LineItem>>() {});
+                            List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
                             if (items != null) {
-                                for (com.gui.kline.models.LineItem item : items) {
+                                for (com.gui.kline.models.dto.LineItem item : items) {
                                     stats[1] += item.getQty();
                                     stats[2] += item.getTotal();
                                 }
@@ -662,130 +663,6 @@ public class ReportsRepository {
         return customerSummaries;
     }
 
-    // Model classes for report data
 
-    public static class ExpenseItem {
-        private final LocalDate date;
-        private final String description;
-        private final double amount;
-        private final String category;
-
-        public ExpenseItem(LocalDate date, String description, double amount, String category) {
-            this.date = date;
-            this.description = description;
-            this.amount = amount;
-            this.category = category;
-        }
-
-        public LocalDate getDate() { return date; }
-        public String getDescription() { return description; }
-        public double getAmount() { return amount; }
-        public String getCategory() { return category; }
-    }
-
-    public static class FinancialSummary {
-        private double totalSales;
-        private double creditSales;
-        private double serviceRevenue;
-        private double quickServiceRevenue;
-        private double tyreExportRevenue;
-        private double totalExpenses;
-        private double productCosts;
-        private double workerCosts;
-        private double netProfit;
-
-        // Getters and setters
-        public double getTotalSales() { return totalSales; }
-        public void setTotalSales(double totalSales) { this.totalSales = totalSales; }
-        
-        public double getCreditSales() { return creditSales; }
-        public void setCreditSales(double creditSales) { this.creditSales = creditSales; }
-        
-        public double getServiceRevenue() { return serviceRevenue; }
-        public void setServiceRevenue(double serviceRevenue) { this.serviceRevenue = serviceRevenue; }
-        
-        public double getQuickServiceRevenue() { return quickServiceRevenue; }
-        public void setQuickServiceRevenue(double quickServiceRevenue) { this.quickServiceRevenue = quickServiceRevenue; }
-        
-        public double getTyreExportRevenue() { return tyreExportRevenue; }
-        public void setTyreExportRevenue(double tyreExportRevenue) { this.tyreExportRevenue = tyreExportRevenue; }
-        
-        public double getTotalExpenses() { return totalExpenses; }
-        public void setTotalExpenses(double totalExpenses) { this.totalExpenses = totalExpenses; }
-        
-        public double getProductCosts() { return productCosts; }
-        public void setProductCosts(double productCosts) { this.productCosts = productCosts; }
-        
-        public double getWorkerCosts() { return workerCosts; }
-        public void setWorkerCosts(double workerCosts) { this.workerCosts = workerCosts; }
-        
-        public double getNetProfit() { return netProfit; }
-        public void setNetProfit(double netProfit) { this.netProfit = netProfit; }
-        
-        public double getTotalRevenue() {
-            return totalSales + creditSales + serviceRevenue + quickServiceRevenue + tyreExportRevenue;
-        }
-        
-        public double getTotalCosts() {
-            return totalExpenses + workerCosts;
-        }
-    }
-
-    public static class TopProduct {
-        private final String productName;
-        private final int quantity;
-        private final double revenue;
-
-        public TopProduct(String productName, int quantity, double revenue) {
-            this.productName = productName;
-            this.quantity = quantity;
-            this.revenue = revenue;
-        }
-
-        public String getProductName() { return productName; }
-        public int getQuantity() { return quantity; }
-        public double getRevenue() { return revenue; }
-    }
-
-    public static class DailySummary {
-        private final LocalDate date;
-        private final int invoiceCount;
-        private final int totalItems;
-        private final double totalRevenue;
-
-        public DailySummary(LocalDate date, int invoiceCount, int totalItems, double totalRevenue) {
-            this.date = date;
-            this.invoiceCount = invoiceCount;
-            this.totalItems = totalItems;
-            this.totalRevenue = totalRevenue;
-        }
-
-        public LocalDate getDate() { return date; }
-        public int getInvoiceCount() { return invoiceCount; }
-        public int getTotalItems() { return totalItems; }
-        public double getTotalRevenue() { return totalRevenue; }
-    }
-
-    public static class CustomerSummary {
-        private final String customer;
-        private final int purchaseCount;
-        private final double totalAmount;
-        private final double totalPaid;
-        private final double outstanding;
-
-        public CustomerSummary(String customer, int purchaseCount, double totalAmount, 
-                              double totalPaid, double outstanding) {
-            this.customer = customer;
-            this.purchaseCount = purchaseCount;
-            this.totalAmount = totalAmount;
-            this.totalPaid = totalPaid;
-            this.outstanding = outstanding;
-        }
-
-        public String getCustomer() { return customer; }
-        public int getPurchaseCount() { return purchaseCount; }
-        public double getTotalAmount() { return totalAmount; }
-        public double getTotalPaid() { return totalPaid; }
-        public double getOutstanding() { return outstanding; }
-    }
 }
+

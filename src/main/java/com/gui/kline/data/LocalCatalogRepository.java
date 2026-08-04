@@ -1,16 +1,19 @@
 package com.gui.kline.data;
 
 import com.gui.kline.models.Product;
-import com.gui.kline.models.CreditCustomer;
+import com.gui.kline.models.ui.CreditCustomer;
 import com.gui.kline.utils.ImagePathUtil;
 import com.gui.kline.utils.Utils;
 
+import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 public class LocalCatalogRepository {
     public List<String> getProductNames() {
@@ -200,12 +203,12 @@ public class LocalCatalogRepository {
         return null;
     }
 
-    private static final com.google.gson.Gson GSON = new com.google.gson.Gson();
+    private static final Gson GSON = new Gson();
 
     private List<String> parseJsonImagePaths(String json) {
         if (json == null || json.isBlank()) return new ArrayList<>();
         try {
-            java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<ArrayList<String>>(){}.getType();
+            Type listType = new TypeToken<ArrayList<String>>(){}.getType();
             List<String> list = GSON.fromJson(json, listType);
             return list != null ? list : new ArrayList<>();
         } catch (Exception e) {

@@ -2,17 +2,16 @@ package com.gui.kline.service;
 
 import com.gui.kline.controller.ReportsController;
 import com.gui.kline.data.ReportsRepository;
-import com.gui.kline.data.ReportsRepository.DailySummary;
-import com.gui.kline.data.ReportsRepository.ExpenseItem;
-import com.gui.kline.data.ReportsRepository.FinancialSummary;
-import com.gui.kline.data.ReportsRepository.TopProduct;
-import com.gui.kline.data.ReportsRepository.CustomerSummary;
+import com.gui.kline.models.reports.CustomerSummary;
+import com.gui.kline.models.reports.DailySummary;
+import com.gui.kline.models.reports.ExpenseItem;
+import com.gui.kline.models.reports.FinancialSummary;
+import com.gui.kline.models.reports.TopProduct;
 import com.gui.kline.controller.ReportsController.SaleItem;
 import com.gui.kline.controller.ReportsController.ServiceItem;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Test class for the Reports Section functionality.

@@ -1,9 +1,10 @@
 package com.gui.kline.controller;
 
 
-import com.gui.kline.models.LedgerEntry;
+import com.gui.kline.models.dto.LedgerEntry;
+import com.gui.kline.models.reports.SalaryPayment;
 import com.gui.kline.models.ViewModel;
-import com.gui.kline.models.WorkerSalary;
+import com.gui.kline.models.ui.WorkerSalary;
 import com.gui.kline.data.LocalSalaryRepository;
 import com.gui.kline.data.LocalSalaryAdvanceRepository;
 import com.gui.kline.data.LocalWorkerCreditRepository;
@@ -470,7 +471,7 @@ public class SalaryController implements Initializable {
                 LocalDate from = rangeFrom;
                 LocalDate to = rangeTo;
 
-                List<LocalSalaryRepository.SalaryPayment> payments = salaryRepository.loadSalaryPayments(worker.getWorkerId(), from, to);
+                List<SalaryPayment> payments = salaryRepository.loadSalaryPayments(worker.getWorkerId(), from, to);
                 if (payments.isEmpty()) {
                     AlertUtil.showInfo("No Payments", "No payments found for " + worker.getName() + " in this period.");
                     return;
@@ -492,7 +493,7 @@ public class SalaryController implements Initializable {
                 VBox content = new VBox(8);
                 content.setStyle("-fx-padding: 16;");
 
-                for (LocalSalaryRepository.SalaryPayment p : payments) {
+                for (SalaryPayment p : payments) {
                     HBox row = new HBox(10);
                     row.setAlignment(Pos.CENTER_LEFT);
 
@@ -520,7 +521,7 @@ public class SalaryController implements Initializable {
                 dialog.showAndWait();
             }
 
-            private boolean confirmDeletePayment(LocalSalaryRepository.SalaryPayment payment) {
+            private boolean confirmDeletePayment(SalaryPayment payment) {
                 Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
                 confirm.setTitle("Delete Payment");
                 confirm.setHeaderText(null);

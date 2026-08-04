@@ -1,12 +1,15 @@
-package com.gui.kline.models;
+package com.gui.kline.models.ui;
 
 import java.time.LocalDate;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 public class ExportRecord {
     private final SimpleStringProperty exportId;
@@ -62,19 +65,22 @@ public class ExportRecord {
         this.remark         = new SimpleStringProperty(remark == null ? "" : remark);
     }
 
-    public SimpleStringProperty exportIdProperty()       { return exportId; }
-    public SimpleStringProperty serialNumberProperty()   { return serialNumber; }
-    public SimpleStringProperty companyProperty()       { return company; }
-    public SimpleStringProperty tyreSizeProperty()      { return tyreSize; }
-    public SimpleStringProperty tyreMakeProperty()      { return tyreMake; }
-    public SimpleIntegerProperty tyresProperty()        { return tyres; }
-    public SimpleDoubleProperty serviceChargeProperty() { return serviceCharge; }
-    public SimpleDoubleProperty subTotalProperty()      { return subTotal; }
-    public SimpleDoubleProperty grandTotalProperty()    { return grandTotal; }
-    public SimpleDoubleProperty initialPaymentProperty(){ return initialPayment; }
-    public SimpleDoubleProperty settlementProperty()    { return settlement; }
-    public SimpleStringProperty statusProperty()        { return status; }
-    public SimpleStringProperty remarkProperty()        { return remark; }
+    public StringProperty exportIdProperty()       { return exportId; }
+    public StringProperty serialNumberProperty()   { return serialNumber; }
+    public StringProperty companyProperty()       { return company; }
+    public StringProperty tyreSizeProperty()      { return tyreSize; }
+    public StringProperty tyreMakeProperty()      { return tyreMake; }
+    public IntegerProperty tyresProperty()        { return tyres; }
+    public DoubleProperty serviceChargeProperty() { return serviceCharge; }
+    public DoubleProperty subTotalProperty()      { return subTotal; }
+    public DoubleProperty grandTotalProperty()    { return grandTotal; }
+    public DoubleProperty initialPaymentProperty(){ return initialPayment; }
+    public DoubleProperty settlementProperty()    { return settlement; }
+    public StringProperty statusProperty()        { return status; }
+    public StringProperty remarkProperty()        { return remark; }
+    public ObjectProperty<LocalDate> dateProperty(){ return date; }
+    public DoubleProperty custPriceProperty()     { return custPrice; }
+    public DoubleProperty compPriceProperty()     { return compPrice; }
 
     public String getExportId()      { return exportId.get(); }
     public String getSerialNumber()  { return serialNumber.get(); }

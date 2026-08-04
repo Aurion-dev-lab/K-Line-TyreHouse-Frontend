@@ -2,7 +2,7 @@ package com.gui.kline.controller;
 
 import com.gui.kline.controller.form.CreditCustomerFormController;
 import com.gui.kline.data.LocalCatalogRepository;
-import com.gui.kline.models.CreditCustomer;
+import com.gui.kline.models.ui.CreditCustomer;
 import com.gui.kline.models.ViewModel;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

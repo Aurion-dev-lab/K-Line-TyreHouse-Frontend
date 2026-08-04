@@ -8,11 +8,10 @@ import java.util.Map;
 
 import com.gui.kline.data.LocalCatalogRepository;
 import com.gui.kline.data.LocalInvoiceRepository;
-import com.gui.kline.models.InvoiceDetail;
-import com.gui.kline.models.InvoiceRow;
-import com.gui.kline.models.LineItem;
+import com.gui.kline.models.dto.InvoiceDetail;
+import com.gui.kline.models.dto.InvoiceRow;
+import com.gui.kline.models.dto.LineItem;
 import com.gui.kline.models.Product;
-import com.gui.kline.utils.JsonUtil;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

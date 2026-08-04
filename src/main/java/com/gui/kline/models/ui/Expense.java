@@ -1,7 +1,9 @@
-package com.gui.kline.models;
+package com.gui.kline.models.ui;
 
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -70,9 +72,9 @@ public class Expense {
         }
     }
 
-    public SimpleStringProperty dateLabelProperty() { return dateLabel; }
-    public SimpleStringProperty descriptionProperty() { return descriptionProperty; }
-    public SimpleStringProperty categoryProperty() { return categoryProperty; }
-    public SimpleDoubleProperty amountProperty() { return amountProperty; }
-    public SimpleStringProperty amountLabelProperty() { return amountLabel; }
+    public StringProperty dateLabelProperty() { return dateLabel; }
+    public StringProperty descriptionProperty() { return descriptionProperty; }
+    public StringProperty categoryProperty() { return categoryProperty; }
+    public DoubleProperty amountProperty() { return amountProperty; }
+    public StringProperty amountLabelProperty() { return amountLabel; }
 }

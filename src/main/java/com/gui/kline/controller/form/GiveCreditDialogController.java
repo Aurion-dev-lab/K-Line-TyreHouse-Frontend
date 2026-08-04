@@ -1,7 +1,7 @@
 package com.gui.kline.controller.form;
 
 import com.gui.kline.data.LocalWorkerCreditRepository;
-import com.gui.kline.models.LedgerEntry;
+import com.gui.kline.models.dto.LedgerEntry;
 import com.gui.kline.data.LocalWorkerRepository;
 import com.gui.kline.models.Worker;
 import com.gui.kline.utils.AlertUtil;

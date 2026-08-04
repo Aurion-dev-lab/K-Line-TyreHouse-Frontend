@@ -2,21 +2,17 @@ package com.gui.kline.controller;
 
 import com.gui.kline.controller.form.ExpenseDialogController;
 import com.gui.kline.data.DatabaseManager;
-import com.gui.kline.models.Expense;
+import com.gui.kline.models.ui.Expense;
 import com.gui.kline.models.ViewModel;
-import com.gui.kline.utils.JsonUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
-import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.net.URL;
 import java.sql.Connection;
@@ -26,7 +22,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Comparator;
-import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 

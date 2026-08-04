@@ -1,7 +1,7 @@
 package com.gui.kline.controller.form;
 
 import com.gui.kline.data.LocalCatalogRepository;
-import com.gui.kline.models.CreditCustomer;
+import com.gui.kline.models.ui.CreditCustomer;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;

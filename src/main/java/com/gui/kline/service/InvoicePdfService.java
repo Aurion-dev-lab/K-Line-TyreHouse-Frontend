@@ -4,8 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.time.LocalDate;
 
-import com.gui.kline.models.InvoiceDetail;
-import com.gui.kline.models.LineItem;
+import com.gui.kline.models.dto.InvoiceDetail;
+import com.gui.kline.models.dto.LineItem;
 import com.lowagie.text.Document;
 import com.lowagie.text.Font;
 import com.lowagie.text.PageSize;

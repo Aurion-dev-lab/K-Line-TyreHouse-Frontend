@@ -3,16 +3,14 @@ package com.gui.kline.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.gui.kline.data.DatabaseManager;
+import com.gui.kline.data.LocalCatalogRepository;
 import com.gui.kline.utils.Utils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -40,7 +38,7 @@ public class LocalRestoreService {
     public void wipeAndRestore(String snapshotJson) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
-        mapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         JsonNode root = mapper.readTree(snapshotJson);
         JsonNode data = root.path("data");
@@ -361,7 +359,7 @@ public class LocalRestoreService {
     private void restoreCreditSales(Connection conn, JsonNode arr) throws SQLException {
         int count = (arr != null && arr.isArray()) ? arr.size() : 0;
         if (count > 0) {
-            com.gui.kline.data.LocalCatalogRepository catalogRepository = new com.gui.kline.data.LocalCatalogRepository();
+            LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
             String sql = "INSERT OR IGNORE INTO credit_sales " +
                     "(id, credit_id, customer_id, sale_date, due_date, sub_total, grand_total, settlement, status, parts, created_at, updated_at, sync_status) " +
                     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)";

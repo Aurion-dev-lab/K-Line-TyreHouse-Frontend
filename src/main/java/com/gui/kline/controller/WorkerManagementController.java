@@ -20,9 +20,9 @@ import com.gui.kline.controller.form.AddWorkerController;
 import com.gui.kline.data.LocalWorkerAttendanceRepository;
 import com.gui.kline.data.LocalWorkerRepository;
 import com.gui.kline.models.Worker;
-import com.gui.kline.models.WorkerAttendance;
-import com.gui.kline.models.WorkerAttendanceHistory;
-import com.gui.kline.models.WorkerMonthlySummary;
+import com.gui.kline.models.ui.WorkerAttendance;
+import com.gui.kline.models.reports.WorkerAttendanceHistory;
+import com.gui.kline.models.reports.WorkerMonthlySummary;
 import com.gui.kline.utils.JsonUtil;
 
 import javafx.scene.control.Alert;

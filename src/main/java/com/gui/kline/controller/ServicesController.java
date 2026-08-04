@@ -2,7 +2,8 @@ package com.gui.kline.controller;
 
 import com.gui.kline.controller.form.RecordServiceDialogController;
 import com.gui.kline.data.DatabaseManager;
-import com.gui.kline.models.ServiceRecord;
+import com.gui.kline.models.ui.ServiceRecord;
+import com.gui.kline.models.dto.LineItem;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.utils.JsonUtil;
 import javafx.collections.FXCollections;
@@ -11,8 +12,6 @@ import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
@@ -22,9 +21,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
-import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.net.URL;
 import java.sql.Connection;
@@ -237,9 +234,9 @@ public class ServicesController implements Initializable {
                 String lineItemsJson = rs.getString(3);
                 if (lineItemsJson != null && !lineItemsJson.isBlank()) {
                     try {
-                        List<com.gui.kline.models.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.LineItem>>() {});
+                        List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
                         if (items != null) {
-                            for (com.gui.kline.models.LineItem item : items) {
+                            for (com.gui.kline.models.dto.LineItem item : items) {
                                 if ("Service".equalsIgnoreCase(item.getType())) {
                                     ServiceRecord record = new ServiceRecord(serviceDate, item.getDescription(), "Invoiced service", item.getTotal());
                                     record.setId(id);
@@ -376,4 +373,5 @@ public class ServicesController implements Initializable {
         }
     }
 }
+
 

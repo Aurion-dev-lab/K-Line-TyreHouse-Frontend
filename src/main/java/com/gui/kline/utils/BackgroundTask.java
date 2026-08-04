@@ -3,6 +3,7 @@ package com.gui.kline.utils;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -27,7 +28,7 @@ public final class BackgroundTask {
      * onFailure is called on the FX thread with the exception.
      */
     public static <T> void run(
-            java.util.concurrent.Callable<T> backgroundWork,
+            Callable<T> backgroundWork,
             Consumer<T> onSuccess,
             Consumer<Throwable> onFailure) {
 
@@ -61,7 +62,7 @@ public final class BackgroundTask {
      * Run a background task with only success callback (failures logged).
      */
     public static <T> void run(
-            java.util.concurrent.Callable<T> backgroundWork,
+            Callable<T> backgroundWork,
             Consumer<T> onSuccess) {
         run(backgroundWork, onSuccess, null);
     }

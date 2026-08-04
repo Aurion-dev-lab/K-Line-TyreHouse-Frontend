@@ -29,9 +29,15 @@ module com.gui.kline {
 
 
     exports com.gui.kline.models;
+    exports com.gui.kline.models.ui;
+    exports com.gui.kline.models.reports;
+    exports com.gui.kline.models.dto;
 
     opens com.gui.kline.controller to javafx.fxml;
     exports com.gui.kline.controller.form;
     opens com.gui.kline.controller.form to javafx.fxml;
     opens com.gui.kline.models to javafx.base, com.fasterxml.jackson.databind;
+    opens com.gui.kline.models.ui to javafx.base, com.fasterxml.jackson.databind;
+    opens com.gui.kline.models.reports to javafx.base, com.fasterxml.jackson.databind;
+    opens com.gui.kline.models.dto to javafx.base, com.fasterxml.jackson.databind;
 }

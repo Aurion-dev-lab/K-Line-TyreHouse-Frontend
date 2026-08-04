@@ -1,4 +1,4 @@
-package com.gui.kline.models;
+package com.gui.kline.models.dto;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
