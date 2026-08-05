@@ -51,11 +51,13 @@ public class ProcessCreditSaleController {
 
      private boolean isEditMode = false;
      private String editCreditId = null;
+     private CreditSaleDetail originalDetail = null;
      private List<Part> addedParts = new ArrayList<>();
      private List<Product> availableProducts = new ArrayList<>();
      private ObservableList<Product> allProducts = FXCollections.observableArrayList();
      private FilteredList<Product> filteredProducts;
-     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");     private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
+     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+     private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
      private final LocalCreditSalesRepository creditSalesRepository = new LocalCreditSalesRepository();
      private static final java.util.Map<String, Integer> TERMS_DAY_MAP = new java.util.HashMap<>();
      static {
@@ -190,17 +192,40 @@ public class ProcessCreditSaleController {
                  return;
              }
 
-             // Validate stock
-             if (selectedProduct.getStock() < qty) {
-                 alert("Insufficient stock. Available: " + selectedProduct.getStock() + 
-                       ", Requested: " + qty);
+             // Check if product already exists in addedParts
+             Part existingPart = addedParts.stream()
+                     .filter(p -> selectedProduct.getId() != null && selectedProduct.getId().equals(p.getProductId()))
+                     .findFirst()
+                     .orElse(null);
+
+             int existingQty = existingPart != null ? existingPart.getQuantity() : 0;
+             int newQty = existingQty + qty;
+
+             // Validate stock (including originalQty if editing)
+             int originalQty = 0;
+             if (isEditMode && originalDetail != null && originalDetail.getParts() != null) {
+                 originalQty = originalDetail.getParts().stream()
+                         .filter(p -> selectedProduct.getId() != null && selectedProduct.getId().equals(p.getProductId()))
+                         .mapToInt(Part::getQuantity)
+                         .sum();
+             }
+             int available = selectedProduct.getStock() + originalQty;
+
+             if (newQty > available) {
+                 alert("Insufficient stock. Available: " + available + 
+                       ", Requested: " + newQty);
                  return;
              }
 
-             Part part = new Part(formatProductLabel(selectedProduct), selectedProduct.getCategory(), qty, price, selectedProduct.getId());
-             addedParts.add(part);
-
-             addPartToUI(part);
+             if (existingPart != null) {
+                 existingPart.setQuantity(newQty);
+                 existingPart.setUnitPrice(price);
+                 refreshPartsUI();
+             } else {
+                 Part part = new Part(formatProductLabel(selectedProduct), selectedProduct.getCategory(), qty, price, selectedProduct.getId());
+                 addedParts.add(part);
+                 addPartToUI(part);
+             }
 
              // Reset fields
              cmbProduct.setValue(null);
@@ -212,6 +237,13 @@ public class ProcessCreditSaleController {
 
          } catch (NumberFormatException e) {
              alert("Invalid quantity or price. Please enter numbers.");
+         }
+     }
+
+     private void refreshPartsUI() {
+         vboxPartsList.getChildren().clear();
+         for (Part part : addedParts) {
+             addPartToUI(part);
          }
      }
 
@@ -276,6 +308,7 @@ public class ProcessCreditSaleController {
       public void setEditMode(String creditId, CreditSaleDetail detail) {
           this.isEditMode = true;
           this.editCreditId = creditId;
+          this.originalDetail = detail;
           
           lblDialogTitle.setText("Edit Credit Sale");
           lblCreditId.setText("#" + creditId);
