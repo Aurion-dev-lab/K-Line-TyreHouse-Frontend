@@ -128,6 +128,17 @@ public class TyreExportsController implements Initializable {
             // Save to local database
             tyreExportRepository.saveTyreExport(tyreExport);
             
+            // Record payment transaction into tyre_export_payments table if paid amount > 0
+            if (result.paidAmount() > 0) {
+                tyreExportRepository.recordExportPayment(
+                        result.exportId(),
+                        result.paidAmount(),
+                        "Cash",
+                        "Initial payment balance",
+                        result.date() != null ? result.date() : LocalDate.now()
+                );
+            }
+            
             // Refresh analytics and dashboard
             ViewModel.INSTANCE.getViewsFactory().refreshReports();
             ViewModel.INSTANCE.getViewsFactory().refreshDashboard();
@@ -466,12 +477,14 @@ public class TyreExportsController implements Initializable {
 
         r.setSettlement(newPaid);
 
-        // Save to database
-        com.gui.kline.models.dto.TyreExport tyreExport = tyreExportRepository.getTyreExportByExportId(r.getExportId());
-        if (tyreExport != null) {
-            tyreExport.setSettlement(newPaid);
-            tyreExportRepository.saveTyreExport(tyreExport);
-        }
+        // Record payment transaction in local database table tyre_export_payments
+        tyreExportRepository.recordExportPayment(
+                r.getExportId(),
+                amount,
+                "Cash",
+                "Tyre Export Settlement",
+                LocalDate.now()
+        );
         
         // Reload data from database to ensure UI is in sync
         loadFromLocal();

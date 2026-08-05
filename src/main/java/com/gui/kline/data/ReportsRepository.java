@@ -23,13 +23,15 @@ public class ReportsRepository {
     private boolean isLabourOrParts(String productId, String description) {
         if (productId != null) {
             String pId = productId.trim().toLowerCase();
-            if (pId.equals("labour") || pId.equals("additional parts") || pId.equals("parts") || pId.equals("labour cost") || pId.equals("parts cost")) {
+            if (pId.equals("labour") || pId.equals("additional parts") || pId.equals("parts")
+                    || pId.equals("labour cost") || pId.equals("parts cost")) {
                 return true;
             }
         }
         if (description != null) {
             String desc = description.trim().toLowerCase();
-            if (desc.equals("labour") || desc.equals("additional parts") || desc.equals("parts") || desc.equals("labour cost") || desc.equals("parts cost")) {
+            if (desc.equals("labour") || desc.equals("additional parts") || desc.equals("parts")
+                    || desc.equals("labour cost") || desc.equals("parts cost")) {
                 return true;
             }
         }
@@ -55,16 +57,16 @@ public class ReportsRepository {
                     String lineItemsJson = rs.getString("line_items");
                     if (lineItemsJson != null && !lineItemsJson.isBlank()) {
                         try {
-                            List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
+                            List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson,
+                                    new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
                             if (items != null) {
                                 for (com.gui.kline.models.dto.LineItem item : items) {
-                                    if (isLabourOrParts(item.getProductId(), item.getDescription())) {
-                                        continue;
-                                    }
+                                    if (isLabourOrParts(item.getProductId(), item.getDescription())) continue;
                                     String name = item.getDescription() != null ? item.getDescription() : "Unknown Product";
                                     int qty = item.getQty();
                                     double revenue = item.getTotal();
-                                    double buyPrice = item.getProductId() != null ? productBuyPrices.getOrDefault(item.getProductId(), 0.0) : 0.0;
+                                    double buyPrice = item.getProductId() != null
+                                            ? productBuyPrices.getOrDefault(item.getProductId(), 0.0) : 0.0;
                                     double profit = (item.getUnitPrice() - buyPrice) * qty;
                                     sales.add(new ReportsController.SaleItem(name, date, qty, revenue, profit));
                                 }
@@ -77,19 +79,13 @@ public class ReportsRepository {
             System.err.println("Failed to load sales data for reports: " + ex.getMessage());
         }
 
-        // Also include credit sales data with accurate product costs and profits
-        String creditSql = "SELECT " +
-                "    cs.sale_date, " +
-                "    cs.parts " +
-                "FROM credit_sales cs " +
+        // Also include credit sales data
+        String creditSql = "SELECT cs.sale_date, cs.parts FROM credit_sales cs " +
                 "WHERE COALESCE(cs.sale_date, DATE(cs.created_at)) BETWEEN ? AND ?";
-        
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(creditSql)) {
-            
             statement.setString(1, startDate.toString());
             statement.setString(2, endDate.toString());
-            
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "sale_date");
@@ -97,16 +93,16 @@ public class ReportsRepository {
                     String partsJson = rs.getString("parts");
                     if (partsJson != null && !partsJson.isBlank()) {
                         try {
-                            List<com.gui.kline.models.dto.Part> items = mapper.readValue(partsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.Part>>() {});
+                            List<com.gui.kline.models.dto.Part> items = mapper.readValue(partsJson,
+                                    new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.Part>>() {});
                             if (items != null) {
                                 for (com.gui.kline.models.dto.Part item : items) {
-                                    if (isLabourOrParts(item.getProductId(), item.getDescription())) {
-                                        continue;
-                                    }
+                                    if (isLabourOrParts(item.getProductId(), item.getDescription())) continue;
                                     String name = item.getDescription() != null ? item.getDescription() : "Credit Part";
                                     int qty = item.getQuantity();
                                     double revenue = item.getTotal();
-                                    double buyPrice = item.getProductId() != null ? productBuyPrices.getOrDefault(item.getProductId(), 0.0) : 0.0;
+                                    double buyPrice = item.getProductId() != null
+                                            ? productBuyPrices.getOrDefault(item.getProductId(), 0.0) : 0.0;
                                     double profit = (item.getUnitPrice() - buyPrice) * qty;
                                     sales.add(new ReportsController.SaleItem(name + " (Credit)", date, qty, revenue, profit));
                                 }
@@ -165,19 +161,17 @@ public class ReportsRepository {
      */
     public List<ReportsController.ServiceItem> getServiceData(LocalDate startDate, LocalDate endDate) {
         List<ReportsController.ServiceItem> services = new ArrayList<>();
-        
-        // Get regular services
+
         String sql = "SELECT s.service_date, s.name, s.price, NULL as assigned_to " +
                 "FROM services s " +
-                "WHERE (s.invoice_id IS NULL OR s.invoice_id = '') AND (s.name IS NULL OR (s.name != 'Invoiced Service' AND s.name != 'Labour' AND s.name != 'Additional parts')) AND COALESCE(s.service_date, DATE(s.created_at)) BETWEEN ? AND ? " +
+                "WHERE (s.invoice_id IS NULL OR s.invoice_id = '') " +
+                "AND (s.name IS NULL OR (s.name != 'Invoiced Service' AND s.name != 'Labour' AND s.name != 'Additional parts')) " +
+                "AND COALESCE(s.service_date, DATE(s.created_at)) BETWEEN ? AND ? " +
                 "ORDER BY s.service_date DESC, s.name";
-        
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            
             statement.setString(1, startDate.toString());
             statement.setString(2, endDate.toString());
-            
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "service_date");
@@ -185,41 +179,34 @@ public class ReportsRepository {
                     String name = rs.getString("name");
                     String assignedTo = rs.getString("assigned_to");
                     double fee = rs.getDouble("price");
-                    
                     services.add(new ReportsController.ServiceItem(name, date, assignedTo, fee));
                 }
             }
         } catch (SQLException ex) {
             System.err.println("Failed to load services data: " + ex.getMessage());
-            ex.printStackTrace();
         }
-        
-        // Get quick services
+
         String quickSql = "SELECT qs.service_date, qs.service as name, qs.price " +
                 "FROM quick_services qs " +
                 "WHERE COALESCE(qs.service_date, DATE(qs.created_at)) BETWEEN ? AND ? " +
                 "ORDER BY qs.service_date DESC";
-        
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(quickSql)) {
-            
             statement.setString(1, startDate.toString());
             statement.setString(2, endDate.toString());
-            
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "service_date");
                     if (date == null) date = LocalDate.now();
                     String name = rs.getString("name");
                     double fee = rs.getDouble("price");
-                    
                     services.add(new ReportsController.ServiceItem(name, date, null, fee));
                 }
             }
         } catch (SQLException ex) {
             System.err.println("Failed to load quick services data: " + ex.getMessage());
         }
-        
+
         return services;
     }
 
@@ -247,38 +234,28 @@ public class ReportsRepository {
      */
     public List<ExpenseItem> getExpenses(LocalDate startDate, LocalDate endDate) {
         List<ExpenseItem> expenses = new ArrayList<>();
-        
-        // Get tyre export costs (these are expenses - the cost to purchase tyres)
-        String tyreExportsSql = "SELECT " +
-                "    te.export_date, " +
-                "    te.company as description, " +
-                "    (te.comp_price * te.tyres) as amount, " +
-                "    'Tyre Purchase' as category " +
+
+        String tyreExportsSql = "SELECT te.export_date, te.company as description, " +
+                "(te.comp_price * te.tyres) as amount, 'Tyre Purchase' as category " +
                 "FROM tyre_exports te " +
                 "WHERE COALESCE(te.export_date, DATE(te.created_at)) BETWEEN ? AND ? " +
                 "ORDER BY te.export_date DESC";
-        
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(tyreExportsSql)) {
-            
             statement.setString(1, startDate.toString());
             statement.setString(2, endDate.toString());
-            
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "export_date");
                     if (date == null) date = LocalDate.now();
-                    String description = rs.getString("description");
-                    double amount = rs.getDouble("amount");
-                    String category = rs.getString("category");
-                    
-                    expenses.add(new ExpenseItem(date, description, amount, category));
+                    expenses.add(new ExpenseItem(date, rs.getString("description"),
+                            rs.getDouble("amount"), rs.getString("category")));
                 }
             }
         } catch (SQLException ex) {
             System.err.println("Failed to load tyre export expenses: " + ex.getMessage());
         }
-        
+
         String salaryPaymentsSql = "SELECT DATE(paid_at) AS payment_date, worker, amount " +
                 "FROM salary_payments WHERE DATE(paid_at) BETWEEN ? AND ? ORDER BY paid_at DESC";
         try (Connection connection = DatabaseManager.getConnection();
@@ -289,8 +266,7 @@ public class ReportsRepository {
                 while (rs.next()) {
                     LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "payment_date");
                     if (date == null) date = LocalDate.now();
-                    String worker = rs.getString("worker");
-                    expenses.add(new ExpenseItem(date, "Salary payment - " + worker,
+                    expenses.add(new ExpenseItem(date, "Salary payment - " + rs.getString("worker"),
                             rs.getDouble("amount"), "Worker Salary"));
                 }
             }
@@ -298,7 +274,6 @@ public class ReportsRepository {
             System.err.println("Failed to load salary payment expenses: " + ex.getMessage());
         }
 
-        // Get expenses from the expenses table
         String expensesTableSql = "SELECT expense_date, description, amount, category " +
                 "FROM expenses WHERE COALESCE(expense_date, DATE(created_at)) BETWEEN ? AND ? ORDER BY expense_date DESC";
         try (Connection connection = DatabaseManager.getConnection();
@@ -309,17 +284,16 @@ public class ReportsRepository {
                 while (rs.next()) {
                     LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "expense_date");
                     if (date == null) date = LocalDate.now();
-                    String description = rs.getString("description");
-                    double amount = rs.getDouble("amount");
                     String category = rs.getString("category");
                     if (category == null) category = "Other";
-                    expenses.add(new ExpenseItem(date, description, amount, category));
+                    expenses.add(new ExpenseItem(date, rs.getString("description"),
+                            rs.getDouble("amount"), category));
                 }
             }
         } catch (SQLException ex) {
             System.err.println("Failed to load expenses from expenses table: " + ex.getMessage());
         }
-        
+
         return expenses;
     }
 
@@ -328,122 +302,82 @@ public class ReportsRepository {
      */
     public FinancialSummary getFinancialSummary(LocalDate startDate, LocalDate endDate) {
         FinancialSummary summary = new FinancialSummary();
-        
-        // Total sales revenue
+
         String salesSql = "SELECT COALESCE(SUM(grand_total), 0) as total_sales " +
-                "FROM invoices " +
-                "WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?";
-        
+                "FROM invoices WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(salesSql)) {
-            
             statement.setString(1, startDate.toString());
             statement.setString(2, endDate.toString());
-            
             try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    summary.setTotalSales(rs.getDouble("total_sales"));
-                }
+                if (rs.next()) summary.setTotalSales(rs.getDouble("total_sales"));
             }
         } catch (SQLException ex) {
             System.err.println("Failed to calculate total sales: " + ex.getMessage());
         }
-        
-        // Total credit sales
+
         String creditSalesSql = "SELECT COALESCE(SUM(grand_total), 0) as total_credit " +
-                "FROM credit_sales " +
-                "WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ?";
-        
+                "FROM credit_sales WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(creditSalesSql)) {
-            
             statement.setString(1, startDate.toString());
             statement.setString(2, endDate.toString());
-            
             try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    summary.setCreditSales(rs.getDouble("total_credit"));
-                }
+                if (rs.next()) summary.setCreditSales(rs.getDouble("total_credit"));
             }
         } catch (SQLException ex) {
             System.err.println("Failed to calculate credit sales: " + ex.getMessage());
         }
-        
-        // Total service revenue
-        String servicesSql = "SELECT COALESCE(SUM(price), 0) as total_services " +
-                "FROM services " +
-                "WHERE (invoice_id IS NULL OR invoice_id = '') AND (name IS NULL OR (name != 'Invoiced Service' AND name != 'Labour' AND name != 'Additional parts')) AND COALESCE(service_date, DATE(created_at)) BETWEEN ? AND ?";
-        
+
+        String servicesSql = "SELECT COALESCE(SUM(price), 0) as total_services FROM services " +
+                "WHERE (invoice_id IS NULL OR invoice_id = '') " +
+                "AND (name IS NULL OR (name != 'Invoiced Service' AND name != 'Labour' AND name != 'Additional parts')) " +
+                "AND COALESCE(service_date, DATE(created_at)) BETWEEN ? AND ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(servicesSql)) {
-            
             statement.setString(1, startDate.toString());
             statement.setString(2, endDate.toString());
-            
             try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    summary.setServiceRevenue(rs.getDouble("total_services"));
-                }
+                if (rs.next()) summary.setServiceRevenue(rs.getDouble("total_services"));
             }
         } catch (SQLException ex) {
             System.err.println("Failed to calculate service revenue: " + ex.getMessage());
         }
-        
-        // Quick services revenue
-        String quickServicesSql = "SELECT COALESCE(SUM(price), 0) as total_quick " +
-                "FROM quick_services " +
+
+        String quickServicesSql = "SELECT COALESCE(SUM(price), 0) as total_quick FROM quick_services " +
                 "WHERE COALESCE(service_date, DATE(created_at)) BETWEEN ? AND ?";
-        
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(quickServicesSql)) {
-            
             statement.setString(1, startDate.toString());
             statement.setString(2, endDate.toString());
-            
             try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    summary.setQuickServiceRevenue(rs.getDouble("total_quick"));
-                }
+                if (rs.next()) summary.setQuickServiceRevenue(rs.getDouble("total_quick"));
             }
         } catch (SQLException ex) {
             System.err.println("Failed to calculate quick service revenue: " + ex.getMessage());
         }
-        
-        // Tyre exports revenue (grand_total from tyre exports)
+
         String tyreExportRevenueSql = "SELECT COALESCE(SUM(grand_total), 0) as total_revenue " +
-                "FROM tyre_exports " +
-                "WHERE COALESCE(export_date, DATE(created_at)) BETWEEN ? AND ?";
-        
+                "FROM tyre_exports WHERE COALESCE(export_date, DATE(created_at)) BETWEEN ? AND ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(tyreExportRevenueSql)) {
-            
             statement.setString(1, startDate.toString());
             statement.setString(2, endDate.toString());
-            
             try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    summary.setTyreExportRevenue(rs.getDouble("total_revenue"));
-                }
+                if (rs.next()) summary.setTyreExportRevenue(rs.getDouble("total_revenue"));
             }
         } catch (SQLException ex) {
             System.err.println("Failed to calculate tyre export revenue: " + ex.getMessage());
         }
 
-        // Get expenses from the expenses table
         String generalExpensesSql = "SELECT COALESCE(SUM(amount), 0) as total_expenses " +
-                "FROM expenses " +
-                "WHERE COALESCE(expense_date, DATE(created_at)) BETWEEN ? AND ?";
-        
+                "FROM expenses WHERE COALESCE(expense_date, DATE(created_at)) BETWEEN ? AND ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(generalExpensesSql)) {
-            
             statement.setString(1, startDate.toString());
             statement.setString(2, endDate.toString());
-            
             try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    summary.setTotalExpenses(summary.getTotalExpenses() + rs.getDouble("total_expenses"));
-                }
+                if (rs.next()) summary.setTotalExpenses(summary.getTotalExpenses() + rs.getDouble("total_expenses"));
             }
         } catch (SQLException ex) {
             System.err.println("Failed to calculate general expenses: " + ex.getMessage());
@@ -451,23 +385,15 @@ public class ReportsRepository {
 
         double invoiceProductCost = getCompletedInvoiceProductCost(startDate, endDate);
         double creditSalesProductCost = getCreditSalesProductCost(startDate, endDate);
-        
-        // Tyre export costs (comp_price * tyres) - cost of purchasing tyres
         double tyreExportCosts = getTyreExportCosts(startDate, endDate);
-        
+
         summary.setProductCosts(invoiceProductCost + creditSalesProductCost + tyreExportCosts);
-        
         summary.setWorkerCosts(getWorkerCosts(startDate, endDate));
-        
-        // Calculate net profit
+
         double totalRevenue = summary.getTotalRevenue();
-        
-        // Total costs: general expenses + product costs + worker costs
         double totalCosts = summary.getTotalExpenses() + summary.getProductCosts() + summary.getWorkerCosts();
-        
-        // Net profit = total revenue - total costs
         summary.setNetProfit(totalRevenue - totalCosts);
-        
+
         return summary;
     }
 
@@ -485,7 +411,8 @@ public class ReportsRepository {
                     String partsJson = rs.getString("parts");
                     if (partsJson != null && !partsJson.isBlank()) {
                         try {
-                            List<com.gui.kline.models.dto.Part> items = mapper.readValue(partsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.Part>>() {});
+                            List<com.gui.kline.models.dto.Part> items = mapper.readValue(partsJson,
+                                    new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.Part>>() {});
                             if (items != null) {
                                 for (com.gui.kline.models.dto.Part item : items) {
                                     if (item.getProductId() != null) {
@@ -518,7 +445,8 @@ public class ReportsRepository {
                     String lineItemsJson = rs.getString("line_items");
                     if (lineItemsJson != null && !lineItemsJson.isBlank()) {
                         try {
-                            List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
+                            List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson,
+                                    new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
                             if (items != null) {
                                 for (com.gui.kline.models.dto.LineItem item : items) {
                                     if (item.getProductId() != null) {
@@ -538,10 +466,8 @@ public class ReportsRepository {
     }
 
     private double getTyreExportCosts(LocalDate startDate, LocalDate endDate) {
-        String sql = "SELECT COALESCE(SUM(comp_price * tyres), 0) " +
-                "FROM tyre_exports " +
+        String sql = "SELECT COALESCE(SUM(comp_price * tyres), 0) FROM tyre_exports " +
                 "WHERE COALESCE(export_date, DATE(created_at)) BETWEEN ? AND ?";
-
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, startDate.toString());
@@ -572,12 +498,11 @@ public class ReportsRepository {
                     String lineItemsJson = rs.getString("line_items");
                     if (lineItemsJson != null && !lineItemsJson.isBlank()) {
                         try {
-                            List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
+                            List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson,
+                                    new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
                             if (items != null) {
                                 for (com.gui.kline.models.dto.LineItem item : items) {
-                                    if (isLabourOrParts(item.getProductId(), item.getDescription())) {
-                                        continue;
-                                    }
+                                    if (isLabourOrParts(item.getProductId(), item.getDescription())) continue;
                                     String name = item.getDescription() != null ? item.getDescription() : "Unknown";
                                     double[] stats = productStats.computeIfAbsent(name, k -> new double[]{0, 0});
                                     stats[0] += item.getQty();
@@ -594,7 +519,7 @@ public class ReportsRepository {
         productStats.entrySet().stream()
                 .sorted((a, b) -> Double.compare(b.getValue()[1], a.getValue()[1]))
                 .limit(limit)
-                .forEach(e -> topProducts.add(new TopProduct(e.getKey(), (int)e.getValue()[0], e.getValue()[1])));
+                .forEach(e -> topProducts.add(new TopProduct(e.getKey(), (int) e.getValue()[0], e.getValue()[1])));
         return topProducts;
     }
 
@@ -619,12 +544,11 @@ public class ReportsRepository {
                     String lineItemsJson = rs.getString("line_items");
                     if (lineItemsJson != null && !lineItemsJson.isBlank()) {
                         try {
-                            List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
+                            List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson,
+                                    new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
                             if (items != null) {
                                 for (com.gui.kline.models.dto.LineItem item : items) {
-                                    if (isLabourOrParts(item.getProductId(), item.getDescription())) {
-                                        continue;
-                                    }
+                                    if (isLabourOrParts(item.getProductId(), item.getDescription())) continue;
                                     stats[1] += item.getQty();
                                     stats[2] += item.getTotal();
                                 }
@@ -636,7 +560,7 @@ public class ReportsRepository {
         } catch (SQLException ex) {
             System.err.println("Failed to load daily sales summary: " + ex.getMessage());
         }
-        dailyMap.forEach((date, stats) -> dailySummaries.add(new DailySummary(date, (int)stats[0], (int)stats[1], stats[2])));
+        dailyMap.forEach((date, stats) -> dailySummaries.add(new DailySummary(date, (int) stats[0], (int) stats[1], stats[2])));
         return dailySummaries;
     }
 
@@ -645,7 +569,7 @@ public class ReportsRepository {
      */
     public ObservableList<CustomerSummary> getCustomerPurchaseSummary(LocalDate startDate, LocalDate endDate) {
         ObservableList<CustomerSummary> customerSummaries = FXCollections.observableArrayList();
-        
+
         String sql = "SELECT " +
                 "    cc.name as customer, " +
                 "    COUNT(*) as purchase_count, " +
@@ -656,13 +580,11 @@ public class ReportsRepository {
                 "WHERE COALESCE(cs.sale_date, DATE(cs.created_at)) BETWEEN ? AND ? " +
                 "GROUP BY cs.customer_id " +
                 "ORDER BY total_amount DESC";
-        
+
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            
             statement.setString(1, startDate.toString());
             statement.setString(2, endDate.toString());
-            
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     String customer = rs.getString("customer");
@@ -670,16 +592,81 @@ public class ReportsRepository {
                     double totalAmount = rs.getDouble("total_amount");
                     double totalPaid = rs.getDouble("total_paid");
                     double outstanding = totalAmount - totalPaid;
-                    
                     customerSummaries.add(new CustomerSummary(customer, purchaseCount, totalAmount, totalPaid, outstanding));
                 }
             }
         } catch (SQLException ex) {
             System.err.println("Failed to load customer purchase summary: " + ex.getMessage());
         }
-        
+
         return customerSummaries;
     }
 
+    /**
+     * Get payment transactions (settlement history) for Credit Sales and Tyre Exports
+     */
+    public List<ReportsController.PaymentItem> getPaymentTransactions(LocalDate startDate, LocalDate endDate) {
+        List<ReportsController.PaymentItem> list = new ArrayList<>();
 
+        String creditSql = "SELECT cp.id, cp.credit_id, COALESCE(cc.name, 'Credit Customer') as customer, " +
+                "cp.payment_date, cp.amount, cp.payment_method, cp.notes " +
+                "FROM credit_payments cp " +
+                "LEFT JOIN credit_sales cs ON cp.credit_id = cs.credit_id " +
+                "LEFT JOIN credit_customers cc ON cs.customer_id = cc.id " +
+                "WHERE DATE(cp.payment_date) BETWEEN ? AND ? ORDER BY cp.payment_date DESC";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(creditSql)) {
+            stmt.setString(1, startDate.toString());
+            stmt.setString(2, endDate.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "payment_date");
+                    if (date == null) date = LocalDate.now();
+                    list.add(new ReportsController.PaymentItem(
+                            rs.getString("id"),
+                            rs.getString("customer"),
+                            rs.getString("credit_id"),
+                            "Credit Sale",
+                            date,
+                            rs.getDouble("amount"),
+                            rs.getString("payment_method"),
+                            rs.getString("notes")
+                    ));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to load credit payments: " + ex.getMessage());
+        }
+
+        String exportSql = "SELECT id, export_id, company, payment_date, amount, payment_method, notes " +
+                "FROM tyre_export_payments " +
+                "WHERE DATE(payment_date) BETWEEN ? AND ? ORDER BY payment_date DESC";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(exportSql)) {
+            stmt.setString(1, startDate.toString());
+            stmt.setString(2, endDate.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "payment_date");
+                    if (date == null) date = LocalDate.now();
+                    String company = rs.getString("company");
+                    list.add(new ReportsController.PaymentItem(
+                            rs.getString("id"),
+                            company != null ? company : "Tyre Export Client",
+                            rs.getString("export_id"),
+                            "Tyre Export",
+                            date,
+                            rs.getDouble("amount"),
+                            rs.getString("payment_method"),
+                            rs.getString("notes")
+                    ));
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to load tyre export payments: " + ex.getMessage());
+        }
+
+        list.sort((a, b) -> b.date().compareTo(a.date()));
+        return list;
+    }
 }

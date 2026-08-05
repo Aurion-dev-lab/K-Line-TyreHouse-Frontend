@@ -143,20 +143,78 @@ public class LocalCreditSalesRepository {
         }
     }
 
-    public void updatePayment(String creditId, double paidAmount) {
-        String sql = "UPDATE credit_sales SET settlement = ?, status = ?, sync_status = 0 WHERE credit_id = ?";
+    public void recordPayment(String creditId, double installmentAmount, String method, String notes, LocalDate paymentDate) {
+        String paymentId = com.gui.kline.utils.Utils.generateId("PAY-CS-", 8);
+        String insertSql = "INSERT INTO credit_payments (id, credit_id, customer_id, payment_date, amount, payment_method, notes) " +
+                "VALUES (?, ?, (SELECT customer_id FROM credit_sales WHERE credit_id = ?), ?, ?, ?, ?)";
         
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setDouble(1, paidAmount);
-            double total = getTotalAmount(creditId);
-            String status = paidAmount >= total ? "PAID" : (paidAmount > 0 ? "PARTIAL" : "PENDING");
-            ps.setString(2, status);
-            ps.setString(3, creditId);
-            ps.executeUpdate();
+        try (Connection conn = DatabaseManager.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
+                ps.setString(1, paymentId);
+                ps.setString(2, creditId);
+                ps.setString(3, creditId);
+                ps.setString(4, paymentDate != null ? paymentDate.toString() : LocalDate.now().toString());
+                ps.setDouble(5, installmentAmount);
+                ps.setString(6, method != null && !method.isBlank() ? method : "Cash");
+                ps.setString(7, notes != null ? notes : "Credit Settlement");
+                ps.executeUpdate();
+            }
+
+            // Recalculate total settlement
+            double totalSettled = 0.0;
+            String sumSql = "SELECT COALESCE(SUM(amount), 0) FROM credit_payments WHERE credit_id = ?";
+            try (PreparedStatement psSum = conn.prepareStatement(sumSql)) {
+                psSum.setString(1, creditId);
+                ResultSet rs = psSum.executeQuery();
+                if (rs.next()) {
+                    totalSettled = rs.getDouble(1);
+                }
+            }
+
+            double grandTotal = getTotalAmount(creditId);
+            String status = totalSettled >= grandTotal ? "PAID" : (totalSettled > 0 ? "PARTIAL" : "PENDING");
+            String updateSql = "UPDATE credit_sales SET settlement = ?, status = ?, sync_status = 0 WHERE credit_id = ?";
+            try (PreparedStatement psUpd = conn.prepareStatement(updateSql)) {
+                psUpd.setDouble(1, totalSettled);
+                psUpd.setString(2, status);
+                psUpd.setString(3, creditId);
+                psUpd.executeUpdate();
+            }
+            conn.commit();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to update payment: " + e.getMessage());
+            throw new RuntimeException("Failed to record credit payment: " + e.getMessage());
+        }
+    }
+
+    public void updatePayment(String creditId, double paidAmount) {
+        double currentSettlement = 0.0;
+        String checkSql = "SELECT settlement FROM credit_sales WHERE credit_id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(checkSql)) {
+            ps.setString(1, creditId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                currentSettlement = rs.getDouble("settlement");
+            }
+        } catch (SQLException ignored) {}
+
+        double diff = paidAmount - currentSettlement;
+        if (diff > 0) {
+            recordPayment(creditId, diff, "Settlement", "Credit sale settlement payment", LocalDate.now());
+        } else {
+            String sql = "UPDATE credit_sales SET settlement = ?, status = ?, sync_status = 0 WHERE credit_id = ?";
+            try (Connection conn = DatabaseManager.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setDouble(1, paidAmount);
+                double total = getTotalAmount(creditId);
+                String status = paidAmount >= total ? "PAID" : (paidAmount > 0 ? "PARTIAL" : "PENDING");
+                ps.setString(2, status);
+                ps.setString(3, creditId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to update payment: " + e.getMessage());
+            }
         }
     }
 

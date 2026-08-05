@@ -246,4 +246,48 @@ public class TyreExportRepository {
         
         return tyreExport;
     }
+
+    public void recordExportPayment(String exportId, double installmentAmount, String method, String notes, java.time.LocalDate paymentDate) {
+        String paymentId = com.gui.kline.utils.Utils.generateId("PAY-EX-", 8);
+        String insertSql = "INSERT INTO tyre_export_payments (id, export_id, company, payment_date, amount, payment_method, notes) " +
+                "VALUES (?, ?, (SELECT company FROM tyre_exports WHERE export_id = ?), ?, ?, ?, ?)";
+        
+        try (Connection conn = DatabaseManager.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
+                ps.setString(1, paymentId);
+                ps.setString(2, exportId);
+                ps.setString(3, exportId);
+                ps.setString(4, paymentDate != null ? paymentDate.toString() : java.time.LocalDate.now().toString());
+                ps.setDouble(5, installmentAmount);
+                ps.setString(6, method != null && !method.isBlank() ? method : "Cash");
+                ps.setString(7, notes != null ? notes : "Tyre Export Settlement");
+                ps.executeUpdate();
+            }
+
+            double totalSettled = 0.0;
+            String sumSql = "SELECT COALESCE(SUM(amount), 0) FROM tyre_export_payments WHERE export_id = ?";
+            try (PreparedStatement psSum = conn.prepareStatement(sumSql)) {
+                psSum.setString(1, exportId);
+                ResultSet rs = psSum.executeQuery();
+                if (rs.next()) {
+                    totalSettled = rs.getDouble(1);
+                }
+            }
+
+            TyreExport export = getTyreExportByExportId(exportId);
+            double grandTotal = export != null ? export.getGrandTotal() : 0.0;
+            String status = totalSettled >= grandTotal ? "PAID" : (totalSettled > 0 ? "PARTIAL" : "PENDING");
+            String updateSql = "UPDATE tyre_exports SET settlement = ?, status = ?, sync_status = 0 WHERE export_id = ?";
+            try (PreparedStatement psUpd = conn.prepareStatement(updateSql)) {
+                psUpd.setDouble(1, totalSettled);
+                psUpd.setString(2, status);
+                psUpd.setString(3, exportId);
+                psUpd.executeUpdate();
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to record export payment: " + e.getMessage());
+        }
+    }
 }

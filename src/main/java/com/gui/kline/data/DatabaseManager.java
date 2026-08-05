@@ -3,6 +3,7 @@ package com.gui.kline.data;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -220,13 +221,56 @@ public final class DatabaseManager {
                     "sync_status INTEGER NOT NULL DEFAULT 0" +
                     ")");
 
+            statement.execute("CREATE TABLE IF NOT EXISTS credit_payments (" +
+                    "id TEXT PRIMARY KEY," +
+                    "credit_id TEXT NOT NULL," +
+                    "customer_id TEXT," +
+                    "payment_date TEXT NOT NULL," +
+                    "amount REAL NOT NULL," +
+                    "payment_method TEXT DEFAULT 'Cash'," +
+                    "notes TEXT," +
+                    "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP" +
+                    ")");
+
+            statement.execute("CREATE TABLE IF NOT EXISTS tyre_export_payments (" +
+                    "id TEXT PRIMARY KEY," +
+                    "export_id TEXT NOT NULL," +
+                    "company TEXT," +
+                    "payment_date TEXT NOT NULL," +
+                    "amount REAL NOT NULL," +
+                    "payment_method TEXT DEFAULT 'Cash'," +
+                    "notes TEXT," +
+                    "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP" +
+                    ")");
+
             backfillProductCodes(connection);
+            backfillPaymentHistory(connection);
             initialized = true;
         } catch (SQLException ex) {
             System.err.println("=== DATABASE INITIALIZATION ERROR ===");
             System.err.println("Database URL: " + DEFAULT_URL);
             System.err.println("Error Message: " + ex.getMessage());
             throw new IllegalStateException("Failed to initialize local database: " + ex.getMessage(), ex);
+        }
+    }
+
+    private static void backfillPaymentHistory(Connection conn) {
+        try (Statement stmt = conn.createStatement()) {
+            ResultSet rsCheck = stmt.executeQuery("SELECT COUNT(*) FROM credit_payments");
+            if (rsCheck.next() && rsCheck.getInt(1) == 0) {
+                stmt.executeUpdate("INSERT INTO credit_payments (id, credit_id, customer_id, payment_date, amount, payment_method, notes) " +
+                        "SELECT 'PAY-CS-' || substr(hex(randomblob(4)), 1, 8), credit_id, customer_id, COALESCE(sale_date, DATE(created_at)), settlement, 'Settlement', 'Initial payment balance' " +
+                        "FROM credit_sales WHERE settlement > 0");
+            }
+
+            ResultSet rsCheck2 = stmt.executeQuery("SELECT COUNT(*) FROM tyre_export_payments");
+            if (rsCheck2.next() && rsCheck2.getInt(1) == 0) {
+                stmt.executeUpdate("INSERT INTO tyre_export_payments (id, export_id, company, payment_date, amount, payment_method, notes) " +
+                        "SELECT 'PAY-EX-' || substr(hex(randomblob(4)), 1, 8), export_id, company, COALESCE(export_date, DATE(created_at)), settlement, 'Settlement', 'Initial payment balance' " +
+                        "FROM tyre_exports WHERE settlement > 0");
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to backfill payment history: " + ex.getMessage());
         }
     }
 

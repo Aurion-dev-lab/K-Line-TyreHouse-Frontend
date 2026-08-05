@@ -170,12 +170,10 @@
                         <VBox spacing="0" styleClass="report-section">
                             <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
                                 <Label style="-fx-font-size: 16px;" text="💳" />
-                                <Label styleClass="report-section-header" text="Outstanding Payments" />
+                                <Label styleClass="report-section-header" text="Payment &amp; Settlement History" />
                             </HBox>
                             <Separator styleClass="report-separator" />
-                            <VBox spacing="0">
-                                <Label styleClass="empty-state" text="Customer credit and payment tracking will be displayed here." />
-                            </VBox>
+                            <VBox fx:id="paymentHistoryContainer" spacing="0" />
                         </VBox>
                     </VBox>
                 </ScrollPane>

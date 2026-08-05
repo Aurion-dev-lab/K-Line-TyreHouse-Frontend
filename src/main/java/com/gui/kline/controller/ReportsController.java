@@ -68,6 +68,7 @@ public class ReportsController implements Initializable {
     
     // Analytics elements
     @FXML private VBox customerSummaryContainer;
+    @FXML private VBox paymentHistoryContainer;
     
     // Services tab elements
     @FXML private VBox servicesTabContent;
@@ -97,6 +98,17 @@ public class ReportsController implements Initializable {
             LocalDate date,
             String assignedTo,   // null -> "Unassigned"
             double fee
+    ) {}
+
+    public record PaymentItem(
+            String id,
+            String customerOrCompany,
+            String refId,
+            String type,
+            LocalDate date,
+            double amount,
+            String method,
+            String notes
     ) {}
 
     @Override
@@ -202,6 +214,7 @@ public class ReportsController implements Initializable {
         buildTopProductsSection(from, to);
         buildDailySalesSummary(from, to);
         buildCustomerAnalysis(from, to);
+        buildPaymentHistory(from, to);
     }
 
     private void updateSummaryMetrics(FinancialSummary summary) {
@@ -443,6 +456,60 @@ public class ReportsController implements Initializable {
         for (CustomerSummary customer : customerSummaries) {
             customerSummaryContainer.getChildren().add(buildCustomerSummaryRow(customer));
         }
+    }
+
+    private void buildPaymentHistory(LocalDate from, LocalDate to) {
+        if (paymentHistoryContainer == null) return;
+        
+        paymentHistoryContainer.getChildren().clear();
+        
+        List<PaymentItem> payments = reportsRepository.getPaymentTransactions(from, to);
+        if (payments.isEmpty()) {
+            paymentHistoryContainer.getChildren().add(emptyLabel("No payment transactions in this period"));
+            return;
+        }
+        
+        Label title = new Label("Recent Settlement Transactions");
+        title.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+        paymentHistoryContainer.getChildren().add(title);
+        paymentHistoryContainer.getChildren().add(new Separator());
+        
+        for (PaymentItem payment : payments) {
+            paymentHistoryContainer.getChildren().add(buildPaymentRow(payment));
+        }
+    }
+
+    private HBox buildPaymentRow(PaymentItem item) {
+        Label name = new Label(item.customerOrCompany());
+        name.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+
+        String method = (item.method() != null && !item.method().isBlank()) ? item.method() : "Cash";
+        Label sub = new Label(item.date().format(DF) + " • " + item.type() + " (" + item.refId() + ") • Method: " + method);
+        sub.setStyle("-fx-font-size: 11px; -fx-text-fill: #6B7280;");
+
+        VBox left = new VBox(3, name, sub);
+        HBox.setHgrow(left, Priority.ALWAYS);
+
+        Label amount = new Label("Rs. " + formatCurrency(item.amount()));
+        amount.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #16A34A;");
+        amount.setAlignment(Pos.CENTER_RIGHT);
+
+        String note = (item.notes() != null && !item.notes().isBlank()) ? item.notes() : "Settlement";
+        Label noteLabel = new Label(note);
+        noteLabel.setStyle("-fx-font-size: 10px; -fx-text-fill: #9CA3AF;");
+        noteLabel.setAlignment(Pos.CENTER_RIGHT);
+
+        VBox right = new VBox(3, amount, noteLabel);
+        right.setAlignment(Pos.CENTER_RIGHT);
+
+        HBox row = new HBox(left, right);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.setPadding(new Insets(12, 0, 12, 0));
+
+        VBox wrapper = new VBox(new Separator(), row);
+        HBox outer = new HBox(wrapper);
+        HBox.setHgrow(wrapper, Priority.ALWAYS);
+        return outer;
     }
 
     private HBox buildSaleRow(SaleItem item) {
