@@ -3,6 +3,7 @@ package com.gui.kline.data;
 import com.gui.kline.models.dto.LedgerEntry;
 import com.gui.kline.models.reports.SalaryPayment;
 import com.gui.kline.models.ui.WorkerSalary;
+import com.gui.kline.utils.SqliteUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -288,11 +289,15 @@ public class LocalSalaryRepository {
             statement.setString(3, to.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
+                    java.time.LocalDateTime paidAt = SqliteUtil.getLocalDateTime(rs, "paid_at");
+                    if (paidAt == null) {
+                        paidAt = java.time.LocalDateTime.now();
+                    }
                     payments.add(new SalaryPayment(
                             rs.getString("id"),
                             rs.getString("worker"),
                             rs.getDouble("amount"),
-                            rs.getTimestamp("paid_at").toLocalDateTime()
+                            paidAt
                     ));
                 }
             }

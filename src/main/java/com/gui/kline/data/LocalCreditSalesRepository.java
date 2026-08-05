@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gui.kline.controller.CreditSalesController;
 import com.gui.kline.models.dto.CreditSaleDetail;
+import com.gui.kline.models.dto.PaymentRecord;
 import com.gui.kline.models.dto.Part;
 import com.gui.kline.utils.JsonUtil;
 import com.gui.kline.utils.Utils;
@@ -264,6 +265,35 @@ public class LocalCreditSalesRepository {
         return sales;
     }
 
+    public List<PaymentRecord> getPaymentsForCredit(String creditId) {
+        List<PaymentRecord> payments = new ArrayList<>();
+        String sql = "SELECT id, credit_id, payment_date, amount, payment_method, notes " +
+                     "FROM credit_payments WHERE credit_id = ? ORDER BY payment_date ASC";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, creditId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    LocalDate date = null;
+                    String rawDate = rs.getString("payment_date");
+                    if (rawDate != null && !rawDate.isBlank()) {
+                        try { date = LocalDate.parse(rawDate.substring(0, 10)); } catch (Exception ignored) {}
+                    }
+                    payments.add(new PaymentRecord(
+                        rs.getString("id"),
+                        rs.getString("credit_id"),
+                        date,
+                        rs.getDouble("amount"),
+                        rs.getString("payment_method"),
+                        rs.getString("notes")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to load credit payments: " + e.getMessage());
+        }
+        return payments;
+    }
 
 }
 

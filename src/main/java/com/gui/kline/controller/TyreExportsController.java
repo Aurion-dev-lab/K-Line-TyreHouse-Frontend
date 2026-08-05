@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 
 import com.gui.kline.controller.form.NewExportDialogController;
+import com.gui.kline.controller.form.PaymentHistoryDialogController;
 
 import com.gui.kline.data.TyreExportRepository;
 import com.gui.kline.models.ui.ExportRecord;
@@ -377,6 +378,11 @@ public class TyreExportsController implements Initializable {
             box.getChildren().add(payBtn);
         }
 
+        Button historyBtn = new Button("Payment History");
+        historyBtn.getStyleClass().add("btn-action-outline-blue");
+        historyBtn.setOnAction(e -> onViewPaymentHistory(r));
+        box.getChildren().add(historyBtn);
+
         Button downloadPdfBtn = new Button("Download PDF");
         downloadPdfBtn.getStyleClass().add("btn-action-blue");
         downloadPdfBtn.setOnAction(e -> onDownloadInvoiceForRecord(r));
@@ -592,9 +598,23 @@ public class TyreExportsController implements Initializable {
                 tyreExportRepository.saveTyreExport(tyreExport);
             }
 
-            rebuildCards();
+        rebuildCards();
             refreshStats();
         });
+    }
+
+    private void onViewPaymentHistory(ExportRecord r) {
+        Stage owner = (Stage) cardContainer.getScene().getWindow();
+        PaymentHistoryDialogController dlg =
+                ViewModel.INSTANCE.getViewsFactory().getForm("form/payment-history-dialog", owner);
+        if (dlg != null) {
+            dlg.setData(
+                "EXPORT",
+                r.getExportId(),
+                r.getCompany(),
+                r.getGrandTotal()
+            );
+        }
     }
 
     private void onDeleteExport(ExportRecord r) {

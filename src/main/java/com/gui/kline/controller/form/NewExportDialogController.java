@@ -74,9 +74,6 @@ public class NewExportDialogController implements Initializable {
         cmbStatus.getSelectionModel().selectFirst();
         dpDateSent.setValue(LocalDate.now());
 
-        // Auto-generate next serial number
-        txtSerialNumber.setText(generateNextSerialNumber());
-
         enforceNumeric(txtTyreCount);
         enforceNumeric(txtServiceFee);
         enforceNumeric(txtCustomerPrice);
@@ -183,19 +180,4 @@ public class NewExportDialogController implements Initializable {
             String    status,
             String    remark
     ) {}
-
-    private String generateNextSerialNumber() {
-        try (Connection conn = com.gui.kline.data.DatabaseManager.getConnection();
-             PreparedStatement ps = conn.prepareStatement(
-                     "SELECT MAX(CAST(serial_number AS UNSIGNED)) AS max_num FROM tyre_exports WHERE serial_number REGEXP '^[0-9]+$'");
-             ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                int max = rs.getInt("max_num");
-                return String.format("%03d", max + 1);
-            }
-        } catch (Exception ex) {
-            System.err.println("Failed to generate serial number: " + ex.getMessage());
-        }
-        return "001";
-    }
 }

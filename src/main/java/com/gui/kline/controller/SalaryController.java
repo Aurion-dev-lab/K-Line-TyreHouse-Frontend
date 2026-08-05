@@ -10,6 +10,7 @@ import com.gui.kline.data.LocalSalaryAdvanceRepository;
 import com.gui.kline.data.LocalWorkerCreditRepository;
 import com.gui.kline.utils.JsonUtil;
 import com.gui.kline.controller.form.GiveCreditDialogController;
+import com.gui.kline.controller.form.PaymentHistoryDialogController;
 import com.gui.kline.controller.form.SalaryAdvanceController;
 import com.gui.kline.controller.form.SettleCreditDialogController;
 import com.gui.kline.utils.AlertUtil;
@@ -472,71 +473,25 @@ public class SalaryController implements Initializable {
                 LocalDate to = rangeTo;
 
                 List<SalaryPayment> payments = salaryRepository.loadSalaryPayments(worker.getWorkerId(), from, to);
-                if (payments.isEmpty()) {
-                    AlertUtil.showInfo("No Payments", "No payments found for " + worker.getName() + " in this period.");
-                    return;
+
+                Stage ownerStage = null;
+                if (tblSalary.getScene() != null && tblSalary.getScene().getWindow() instanceof Stage) {
+                    ownerStage = (Stage) tblSalary.getScene().getWindow();
                 }
 
-                Dialog<Void> dialog = new Dialog<>();
-                dialog.setTitle("Payment History - " + worker.getName());
-                dialog.setHeaderText(null);
-
-                javafx.stage.Window owner = null;
-                if (tblSalary.getScene() != null) {
-                    owner = tblSalary.getScene().getWindow();
-                }
-                if (owner != null) {
-                    dialog.initOwner(owner);
-                    dialog.initModality(javafx.stage.Modality.WINDOW_MODAL);
-                }
-
-                VBox content = new VBox(8);
-                content.setStyle("-fx-padding: 16;");
-
-                for (SalaryPayment p : payments) {
-                    HBox row = new HBox(10);
-                    row.setAlignment(Pos.CENTER_LEFT);
-
-                    Label dateLbl = new Label(p.getPaidAt().toLocalDate().toString());
-                    dateLbl.setPrefWidth(100);
-                    Label amountLbl = new Label(String.format("Rs. %,.0f", p.getAmount()));
-                    amountLbl.setPrefWidth(100);
-                    HBox.setHgrow(amountLbl, Priority.ALWAYS);
-
-                    Button del = new Button("🗑");
-                    del.setStyle("-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-font-size: 14px; -fx-cursor: hand;");
-                    del.setOnAction(ev -> {
-                        if (confirmDeletePayment(p)) {
-                            deletePayment(p.getId());
-                            dialog.close();
-                        }
+                PaymentHistoryDialogController controller =
+                        ViewModel.INSTANCE.getViewsFactory().getForm("form/payment-history-dialog", ownerStage);
+                if (controller != null) {
+                    controller.setSalaryData(worker, payments, (p) -> {
+                        deletePayment(p.getId());
+                        List<SalaryPayment> updatedPayments = salaryRepository.loadSalaryPayments(worker.getWorkerId(), from, to);
+                        WorkerSalary updatedWorker = salaryList.stream()
+                                .filter(w -> w.getWorkerId().equals(worker.getWorkerId()))
+                                .findFirst()
+                                .orElse(worker);
+                        controller.setSalaryData(updatedWorker, updatedPayments, null);
                     });
-
-                    row.getChildren().addAll(dateLbl, amountLbl, del);
-                    content.getChildren().add(row);
                 }
-
-                dialog.getDialogPane().setContent(content);
-                dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-                dialog.showAndWait();
-            }
-
-            private boolean confirmDeletePayment(SalaryPayment payment) {
-                Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-                confirm.setTitle("Delete Payment");
-                confirm.setHeaderText(null);
-                confirm.setContentText("Delete payment of Rs. " + String.format("%,.0f", payment.getAmount()) + " made on " + payment.getPaidAt().toLocalDate() + "?");
-
-                javafx.stage.Window owner = null;
-                if (tblSalary.getScene() != null) {
-                    owner = tblSalary.getScene().getWindow();
-                }
-                if (owner != null) {
-                    confirm.initOwner(owner);
-                    confirm.initModality(javafx.stage.Modality.WINDOW_MODAL);
-                }
-
-                return confirm.showAndWait().filter(btn -> btn == ButtonType.OK).isPresent();
             }
 
             private void deletePayment(String paymentId) {

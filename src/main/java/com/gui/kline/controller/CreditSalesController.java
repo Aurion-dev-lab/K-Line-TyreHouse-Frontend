@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 
 import com.gui.kline.controller.form.ProcessCreditSaleController;
+import com.gui.kline.controller.form.PaymentHistoryDialogController;
 import com.gui.kline.data.LocalCatalogRepository;
 import com.gui.kline.data.LocalCreditSalesRepository;
 import com.gui.kline.models.dto.CreditSaleDetail;
@@ -65,6 +66,7 @@ public class CreditSalesController implements Initializable {
     @FXML private Button            btnSettleCredit;
     @FXML private Button            btnDeselect;
     @FXML private Button            btnDownloadInvoice;
+    @FXML private Button            btnPaymentHistory;
 
     private final ObservableList<CreditSaleRow> creditSaleList =
             FXCollections.observableArrayList();    private final LocalCreditSalesRepository creditSalesRepository = new LocalCreditSalesRepository();
@@ -396,6 +398,26 @@ public class CreditSalesController implements Initializable {
     }
 
 
+
+    @FXML
+    private void onViewPaymentHistory(ActionEvent event) {
+        if (selectedSale == null || currentSaleDetail == null) {
+            showError("Select a credit sale first.");
+            return;
+        }
+        javafx.stage.Window owner = getOwnerWindow();
+        Stage ownerStage = (owner instanceof Stage) ? (Stage) owner : null;
+        PaymentHistoryDialogController dlg =
+                ViewModel.INSTANCE.getViewsFactory().getForm("form/payment-history-dialog", ownerStage);
+        if (dlg != null) {
+            dlg.setData(
+                "CREDIT",
+                selectedSale.getCreditId(),
+                selectedSale.getCustomer(),
+                selectedSale.getAmount()
+            );
+        }
+    }
 
     @FXML
     private void onDownloadInvoice(ActionEvent event) {

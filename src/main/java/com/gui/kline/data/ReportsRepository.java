@@ -166,7 +166,7 @@ public class ReportsRepository {
                 "FROM services s " +
                 "WHERE (s.invoice_id IS NULL OR s.invoice_id = '') " +
                 "AND (s.name IS NULL OR (s.name != 'Invoiced Service' AND s.name != 'Labour' AND s.name != 'Additional parts')) " +
-                "AND COALESCE(s.service_date, DATE(s.created_at)) BETWEEN ? AND ? " +
+                "AND s.service_date BETWEEN ? AND ? " +
                 "ORDER BY s.service_date DESC, s.name";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -188,7 +188,7 @@ public class ReportsRepository {
 
         String quickSql = "SELECT qs.service_date, qs.service as name, qs.price " +
                 "FROM quick_services qs " +
-                "WHERE COALESCE(qs.service_date, DATE(qs.created_at)) BETWEEN ? AND ? " +
+                "WHERE qs.service_date BETWEEN ? AND ? " +
                 "ORDER BY qs.service_date DESC";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(quickSql)) {
@@ -332,7 +332,7 @@ public class ReportsRepository {
         String servicesSql = "SELECT COALESCE(SUM(price), 0) as total_services FROM services " +
                 "WHERE (invoice_id IS NULL OR invoice_id = '') " +
                 "AND (name IS NULL OR (name != 'Invoiced Service' AND name != 'Labour' AND name != 'Additional parts')) " +
-                "AND COALESCE(service_date, DATE(created_at)) BETWEEN ? AND ?";
+                "AND service_date BETWEEN ? AND ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(servicesSql)) {
             statement.setString(1, startDate.toString());
@@ -345,7 +345,7 @@ public class ReportsRepository {
         }
 
         String quickServicesSql = "SELECT COALESCE(SUM(price), 0) as total_quick FROM quick_services " +
-                "WHERE COALESCE(service_date, DATE(created_at)) BETWEEN ? AND ?";
+                "WHERE service_date BETWEEN ? AND ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(quickServicesSql)) {
             statement.setString(1, startDate.toString());

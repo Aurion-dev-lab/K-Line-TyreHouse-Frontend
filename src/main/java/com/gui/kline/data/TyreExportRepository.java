@@ -1,6 +1,7 @@
 package com.gui.kline.data;
 
 import com.gui.kline.models.dto.TyreExport;
+import com.gui.kline.models.dto.PaymentRecord;
 import com.gui.kline.utils.Utils;
 
 import java.sql.*;
@@ -289,5 +290,35 @@ public class TyreExportRepository {
         } catch (SQLException e) {
             throw new RuntimeException("Failed to record export payment: " + e.getMessage());
         }
+    }
+
+    public List<PaymentRecord> getPaymentsForExport(String exportId) {
+        List<PaymentRecord> payments = new ArrayList<>();
+        String sql = "SELECT id, export_id, payment_date, amount, payment_method, notes " +
+                     "FROM tyre_export_payments WHERE export_id = ? ORDER BY payment_date ASC";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, exportId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    java.time.LocalDate date = null;
+                    String rawDate = rs.getString("payment_date");
+                    if (rawDate != null && !rawDate.isBlank()) {
+                        try { date = java.time.LocalDate.parse(rawDate.substring(0, 10)); } catch (Exception ignored) {}
+                    }
+                    payments.add(new PaymentRecord(
+                        rs.getString("id"),
+                        rs.getString("export_id"),
+                        date,
+                        rs.getDouble("amount"),
+                        rs.getString("payment_method"),
+                        rs.getString("notes")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to load export payments: " + e.getMessage());
+        }
+        return payments;
     }
 }

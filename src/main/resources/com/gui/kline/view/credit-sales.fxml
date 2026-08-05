@@ -159,9 +159,11 @@
                     <Insets bottom="18" left="18" right="18" top="12" />
                 </padding>
                 <Button fx:id="btnDownloadInvoice" maxWidth="1.7976931348623157E308" onAction="#onDownloadInvoice" styleClass="btn-download" text="⬇ Download PDF" />
+                <Button fx:id="btnPaymentHistory" maxWidth="1.7976931348623157E308" onAction="#onViewPaymentHistory" styleClass="btn-deselect" text="📋 Payment History" />
                 <Button fx:id="btnSettleCredit" maxWidth="1.7976931348623157E308" onAction="#onSettleCredit" styleClass="btn-generate" text="Settle Credit" />
                 <Button fx:id="btnDeselect" maxWidth="1.7976931348623157E308" onAction="#onDeselect" styleClass="btn-deselect" text="Close" />
             </VBox>
+
 
         </VBox>
     </HBox>
