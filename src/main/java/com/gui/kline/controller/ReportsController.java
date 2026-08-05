@@ -621,14 +621,35 @@ public class ReportsController implements Initializable {
     }
 
     private void filterReports(String searchText) {
-        if (searchText == null || searchText.isBlank()) {
-            refresh();
+        String query = searchText == null ? "" : searchText.trim().toLowerCase();
+        if (query.isEmpty()) {
+            buildSalesBreakdown(allSales);
+            buildServiceRevenue(allServices);
+            buildExpensesSection(allExpenses);
+            buildExpensesTabContent(allExpenses);
+            buildServicesTabContent(allServices);
             return;
         }
-        
-        // Filter logic would go here
-        // For now, just refresh to show all data
-        refresh();
+
+        List<SaleItem> filteredSales = allSales.stream()
+                .filter(s -> s.name() != null && s.name().toLowerCase().contains(query))
+                .toList();
+
+        List<ServiceItem> filteredServices = allServices.stream()
+                .filter(s -> (s.name() != null && s.name().toLowerCase().contains(query)) ||
+                             (s.assignedTo() != null && s.assignedTo().toLowerCase().contains(query)))
+                .toList();
+
+        List<ExpenseItem> filteredExpenses = allExpenses.stream()
+                .filter(e -> (e.getDescription() != null && e.getDescription().toLowerCase().contains(query)) ||
+                             (e.getCategory() != null && e.getCategory().toLowerCase().contains(query)))
+                .toList();
+
+        buildSalesBreakdown(filteredSales);
+        buildServiceRevenue(filteredServices);
+        buildExpensesSection(filteredExpenses);
+        buildExpensesTabContent(filteredExpenses);
+        buildServicesTabContent(filteredServices);
     }
 
     private String formatCurrency(double value) {

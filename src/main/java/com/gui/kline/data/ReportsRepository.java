@@ -19,12 +19,29 @@ import java.util.List;
  * Handles data retrieval for sales, services, expenses, and financial reports.
  */
 public class ReportsRepository {
+
+    private boolean isLabourOrParts(String productId, String description) {
+        if (productId != null) {
+            String pId = productId.trim().toLowerCase();
+            if (pId.equals("labour") || pId.equals("additional parts") || pId.equals("parts") || pId.equals("labour cost") || pId.equals("parts cost")) {
+                return true;
+            }
+        }
+        if (description != null) {
+            String desc = description.trim().toLowerCase();
+            if (desc.equals("labour") || desc.equals("additional parts") || desc.equals("parts") || desc.equals("labour cost") || desc.equals("parts cost")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Get sales data for the reports
      */
     public List<ReportsController.SaleItem> getSalesData(LocalDate startDate, LocalDate endDate) {
         List<ReportsController.SaleItem> sales = new ArrayList<>();
-        String sql = "SELECT invoice_date, line_items FROM invoices WHERE status = 'completed' AND invoice_date BETWEEN ? AND ?";
+        String sql = "SELECT invoice_date, line_items FROM invoices WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?";
         com.fasterxml.jackson.databind.ObjectMapper mapper = com.gui.kline.utils.JsonUtil.createObjectMapper();
         java.util.Map<String, Double> productBuyPrices = loadProductBuyPrices();
         try (Connection connection = DatabaseManager.getConnection();
@@ -41,6 +58,9 @@ public class ReportsRepository {
                             List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
                             if (items != null) {
                                 for (com.gui.kline.models.dto.LineItem item : items) {
+                                    if (isLabourOrParts(item.getProductId(), item.getDescription())) {
+                                        continue;
+                                    }
                                     String name = item.getDescription() != null ? item.getDescription() : "Unknown Product";
                                     int qty = item.getQty();
                                     double revenue = item.getTotal();
@@ -62,7 +82,7 @@ public class ReportsRepository {
                 "    cs.sale_date, " +
                 "    cs.parts " +
                 "FROM credit_sales cs " +
-                "WHERE cs.sale_date BETWEEN ? AND ?";
+                "WHERE COALESCE(cs.sale_date, DATE(cs.created_at)) BETWEEN ? AND ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(creditSql)) {
@@ -80,6 +100,9 @@ public class ReportsRepository {
                             List<com.gui.kline.models.dto.Part> items = mapper.readValue(partsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.Part>>() {});
                             if (items != null) {
                                 for (com.gui.kline.models.dto.Part item : items) {
+                                    if (isLabourOrParts(item.getProductId(), item.getDescription())) {
+                                        continue;
+                                    }
                                     String name = item.getDescription() != null ? item.getDescription() : "Credit Part";
                                     int qty = item.getQuantity();
                                     double revenue = item.getTotal();
@@ -98,7 +121,7 @@ public class ReportsRepository {
 
         // Include tyre exports data in Sales Breakdown
         String tyreSql = "SELECT export_date, company, tyres, grand_total, cust_price, comp_price, service_fee " +
-                "FROM tyre_exports WHERE export_date BETWEEN ? AND ?";
+                "FROM tyre_exports WHERE COALESCE(export_date, DATE(created_at)) BETWEEN ? AND ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(tyreSql)) {
             statement.setString(1, startDate.toString());
@@ -146,7 +169,7 @@ public class ReportsRepository {
         // Get regular services
         String sql = "SELECT s.service_date, s.name, s.price, NULL as assigned_to " +
                 "FROM services s " +
-                "WHERE (s.invoice_id IS NULL OR s.invoice_id = '') AND (s.name IS NULL OR s.name != 'Invoiced Service') AND s.service_date BETWEEN ? AND ? " +
+                "WHERE (s.invoice_id IS NULL OR s.invoice_id = '') AND (s.name IS NULL OR (s.name != 'Invoiced Service' AND s.name != 'Labour' AND s.name != 'Additional parts')) AND COALESCE(s.service_date, DATE(s.created_at)) BETWEEN ? AND ? " +
                 "ORDER BY s.service_date DESC, s.name";
         
         try (Connection connection = DatabaseManager.getConnection();
@@ -174,7 +197,7 @@ public class ReportsRepository {
         // Get quick services
         String quickSql = "SELECT qs.service_date, qs.service as name, qs.price " +
                 "FROM quick_services qs " +
-                "WHERE qs.service_date BETWEEN ? AND ? " +
+                "WHERE COALESCE(qs.service_date, DATE(qs.created_at)) BETWEEN ? AND ? " +
                 "ORDER BY qs.service_date DESC";
         
         try (Connection connection = DatabaseManager.getConnection();
@@ -232,7 +255,7 @@ public class ReportsRepository {
                 "    (te.comp_price * te.tyres) as amount, " +
                 "    'Tyre Purchase' as category " +
                 "FROM tyre_exports te " +
-                "WHERE te.export_date BETWEEN ? AND ? " +
+                "WHERE COALESCE(te.export_date, DATE(te.created_at)) BETWEEN ? AND ? " +
                 "ORDER BY te.export_date DESC";
         
         try (Connection connection = DatabaseManager.getConnection();
@@ -256,12 +279,6 @@ public class ReportsRepository {
             System.err.println("Failed to load tyre export expenses: " + ex.getMessage());
         }
         
-        // Note: Service fees from tyre exports are NOT added as expenses here
-        // because they are already included in the total_amount (revenue).
-        // The profit from tyre exports is calculated as:
-        // total_amount - (comp_price * tyres)
-        // This avoids double-counting the service fee.
-
         String salaryPaymentsSql = "SELECT DATE(paid_at) AS payment_date, worker, amount " +
                 "FROM salary_payments WHERE DATE(paid_at) BETWEEN ? AND ? ORDER BY paid_at DESC";
         try (Connection connection = DatabaseManager.getConnection();
@@ -283,7 +300,7 @@ public class ReportsRepository {
 
         // Get expenses from the expenses table
         String expensesTableSql = "SELECT expense_date, description, amount, category " +
-                "FROM expenses WHERE expense_date BETWEEN ? AND ? ORDER BY expense_date DESC";
+                "FROM expenses WHERE COALESCE(expense_date, DATE(created_at)) BETWEEN ? AND ? ORDER BY expense_date DESC";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(expensesTableSql)) {
             statement.setString(1, startDate.toString());
@@ -355,7 +372,7 @@ public class ReportsRepository {
         // Total service revenue
         String servicesSql = "SELECT COALESCE(SUM(price), 0) as total_services " +
                 "FROM services " +
-                "WHERE (invoice_id IS NULL OR invoice_id = '') AND (name IS NULL OR name != 'Invoiced Service') AND service_date BETWEEN ? AND ?";
+                "WHERE (invoice_id IS NULL OR invoice_id = '') AND (name IS NULL OR (name != 'Invoiced Service' AND name != 'Labour' AND name != 'Additional parts')) AND COALESCE(service_date, DATE(created_at)) BETWEEN ? AND ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(servicesSql)) {
@@ -375,7 +392,7 @@ public class ReportsRepository {
         // Quick services revenue
         String quickServicesSql = "SELECT COALESCE(SUM(price), 0) as total_quick " +
                 "FROM quick_services " +
-                "WHERE service_date BETWEEN ? AND ?";
+                "WHERE COALESCE(service_date, DATE(created_at)) BETWEEN ? AND ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(quickServicesSql)) {
@@ -395,7 +412,7 @@ public class ReportsRepository {
         // Tyre exports revenue (grand_total from tyre exports)
         String tyreExportRevenueSql = "SELECT COALESCE(SUM(grand_total), 0) as total_revenue " +
                 "FROM tyre_exports " +
-                "WHERE export_date BETWEEN ? AND ?";
+                "WHERE COALESCE(export_date, DATE(created_at)) BETWEEN ? AND ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(tyreExportRevenueSql)) {
@@ -415,7 +432,7 @@ public class ReportsRepository {
         // Get expenses from the expenses table
         String generalExpensesSql = "SELECT COALESCE(SUM(amount), 0) as total_expenses " +
                 "FROM expenses " +
-                "WHERE expense_date BETWEEN ? AND ?";
+                "WHERE COALESCE(expense_date, DATE(created_at)) BETWEEN ? AND ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(generalExpensesSql)) {
@@ -432,9 +449,6 @@ public class ReportsRepository {
             System.err.println("Failed to calculate general expenses: " + ex.getMessage());
         }
 
-        // Product cost is incurred when a quotation is generated as a completed
-        // invoice. Service and labour lines have no inventory cost, so they add
-        // their full amount to profit.
         double invoiceProductCost = getCompletedInvoiceProductCost(startDate, endDate);
         double creditSalesProductCost = getCreditSalesProductCost(startDate, endDate);
         
@@ -446,8 +460,6 @@ public class ReportsRepository {
         summary.setWorkerCosts(getWorkerCosts(startDate, endDate));
         
         // Calculate net profit
-        // Total revenue from all sources (sales + credit sales + services + quick services + tyre exports)
-        // Note: credit sales are now explicitly summed to avoid duplicate invoice dependency
         double totalRevenue = summary.getTotalRevenue();
         
         // Total costs: general expenses + product costs + worker costs
@@ -493,7 +505,7 @@ public class ReportsRepository {
     }
 
     private double getCompletedInvoiceProductCost(LocalDate startDate, LocalDate endDate) {
-        String sql = "SELECT line_items FROM invoices WHERE status = 'completed' AND invoice_date BETWEEN ? AND ?";
+        String sql = "SELECT line_items FROM invoices WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?";
         com.fasterxml.jackson.databind.ObjectMapper mapper = com.gui.kline.utils.JsonUtil.createObjectMapper();
         java.util.Map<String, Double> productBuyPrices = loadProductBuyPrices();
         double totalCost = 0.0;
@@ -528,7 +540,7 @@ public class ReportsRepository {
     private double getTyreExportCosts(LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT COALESCE(SUM(comp_price * tyres), 0) " +
                 "FROM tyre_exports " +
-                "WHERE export_date BETWEEN ? AND ?";
+                "WHERE COALESCE(export_date, DATE(created_at)) BETWEEN ? AND ?";
 
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -548,7 +560,7 @@ public class ReportsRepository {
      */
     public ObservableList<TopProduct> getTopSellingProducts(LocalDate startDate, LocalDate endDate, int limit) {
         ObservableList<TopProduct> topProducts = FXCollections.observableArrayList();
-        String sql = "SELECT line_items FROM invoices WHERE status = 'completed' AND invoice_date BETWEEN ? AND ?";
+        String sql = "SELECT line_items FROM invoices WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?";
         com.fasterxml.jackson.databind.ObjectMapper mapper = com.gui.kline.utils.JsonUtil.createObjectMapper();
         java.util.Map<String, double[]> productStats = new java.util.HashMap<>();
         try (Connection connection = DatabaseManager.getConnection();
@@ -563,6 +575,9 @@ public class ReportsRepository {
                             List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
                             if (items != null) {
                                 for (com.gui.kline.models.dto.LineItem item : items) {
+                                    if (isLabourOrParts(item.getProductId(), item.getDescription())) {
+                                        continue;
+                                    }
                                     String name = item.getDescription() != null ? item.getDescription() : "Unknown";
                                     double[] stats = productStats.computeIfAbsent(name, k -> new double[]{0, 0});
                                     stats[0] += item.getQty();
@@ -588,7 +603,7 @@ public class ReportsRepository {
      */
     public ObservableList<DailySummary> getDailySalesSummary(LocalDate startDate, LocalDate endDate) {
         ObservableList<DailySummary> dailySummaries = FXCollections.observableArrayList();
-        String sql = "SELECT invoice_date, line_items FROM invoices WHERE status = 'completed' AND invoice_date BETWEEN ? AND ?";
+        String sql = "SELECT invoice_date, line_items FROM invoices WHERE status = 'completed' AND COALESCE(invoice_date, DATE(created_at)) BETWEEN ? AND ?";
         com.fasterxml.jackson.databind.ObjectMapper mapper = com.gui.kline.utils.JsonUtil.createObjectMapper();
         java.util.Map<LocalDate, double[]> dailyMap = new java.util.TreeMap<>();
         try (Connection connection = DatabaseManager.getConnection();
@@ -607,6 +622,9 @@ public class ReportsRepository {
                             List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
                             if (items != null) {
                                 for (com.gui.kline.models.dto.LineItem item : items) {
+                                    if (isLabourOrParts(item.getProductId(), item.getDescription())) {
+                                        continue;
+                                    }
                                     stats[1] += item.getQty();
                                     stats[2] += item.getTotal();
                                 }
@@ -635,7 +653,7 @@ public class ReportsRepository {
                 "    SUM(cs.settlement) as total_paid " +
                 "FROM credit_sales cs " +
                 "LEFT JOIN credit_customers cc ON cs.customer_id = cc.id " +
-                "WHERE cs.sale_date BETWEEN ? AND ? " +
+                "WHERE COALESCE(cs.sale_date, DATE(cs.created_at)) BETWEEN ? AND ? " +
                 "GROUP BY cs.customer_id " +
                 "ORDER BY total_amount DESC";
         
@@ -665,4 +683,3 @@ public class ReportsRepository {
 
 
 }
-
