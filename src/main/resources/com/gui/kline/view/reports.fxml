@@ -97,7 +97,7 @@
                 <ScrollPane fitToHeight="true" fitToWidth="true" styleClass="report-scroll-pane">
                     <VBox fx:id="summaryContent" spacing="16" style="-fx-padding: 16;" styleClass="reports-container">
 
-                        <HBox spacing="16" VBox.vgrow="SOMETIMES">
+                        <HBox spacing="16" VBox.vgrow="NEVER">
                             <VBox spacing="0" styleClass="report-section" HBox.hgrow="ALWAYS">
                                 <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
                                     <Label style="-fx-font-size: 16px;" text="💲" />
@@ -113,9 +113,12 @@
                                     <Label styleClass="report-section-header" text="Service Revenue" />
                                 </HBox>
                                 <Separator styleClass="report-separator" />
-                                <VBox fx:id="serviceRevenueContainer" spacing="0" />
+                                <ScrollPane fitToWidth="true" prefHeight="460" styleClass="inner-scroll-pane" VBox.vgrow="ALWAYS">
+                                    <VBox fx:id="serviceRevenueContainer" spacing="0" />
+                                </ScrollPane>
                             </VBox>
                         </HBox>
+
 
                         <VBox spacing="0" styleClass="report-section" VBox.vgrow="SOMETIMES">
                             <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">

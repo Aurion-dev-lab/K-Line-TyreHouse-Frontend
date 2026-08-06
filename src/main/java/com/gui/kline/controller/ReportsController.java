@@ -19,6 +19,9 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 
+import com.gui.kline.service.PDFExportService;
+
+import java.io.File;
 import java.net.URL;
 import java.text.NumberFormat;
 import java.time.LocalDate;
@@ -338,17 +341,17 @@ public class ReportsController implements Initializable {
 
     private HBox buildServiceRowForTab(ServiceItem item) {
         Label name = new Label(item.name());
-        name.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+        name.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #111827;");
 
-        String assignee = (item.assignedTo() == null || item.assignedTo().isBlank()) ? "Unassigned" : item.assignedTo();
-        Label sub = new Label("Worker: " + assignee);
-        sub.setStyle("-fx-font-size: 11px; -fx-text-fill: #9CA3AF;");
+        String assignee = (item.assignedTo() == null || item.assignedTo().isBlank()) ? "Standard Service" : item.assignedTo();
+        Label sub = new Label("Type/Worker: " + assignee);
+        sub.setStyle("-fx-font-size: 10px; -fx-text-fill: #6B7280;");
 
-        VBox left = new VBox(3, name, sub);
+        VBox left = new VBox(2, name, sub);
         HBox.setHgrow(left, Priority.ALWAYS);
 
         Label fee = new Label("Rs. " + formatCurrency(item.fee()));
-        fee.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #2563EB;");
+        fee.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #2563EB;");
         fee.setAlignment(Pos.CENTER_RIGHT);
 
         VBox right = new VBox(fee);
@@ -356,9 +359,27 @@ public class ReportsController implements Initializable {
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(10, 0, 10, 0));
+        row.setPadding(new Insets(5, 0, 5, 0));
 
-        return row;
+        VBox wrapper = new VBox(new Separator(), row);
+        HBox outer = new HBox(wrapper);
+        HBox.setHgrow(wrapper, Priority.ALWAYS);
+        return outer;
+    }
+
+    private String normalizeCategory(String category) {
+        if (category == null || category.isBlank()) return "Other";
+        String lower = category.trim().toLowerCase();
+        if (lower.contains("worker") || lower.contains("salary") || lower.contains("payroll")) {
+            return "Worker Salary";
+        }
+        if (lower.contains("transport") || lower.contains("freight") || lower.contains("delivery")) {
+            return "Transport";
+        }
+        if (lower.contains("tyre purchase") || lower.contains("export")) {
+            return "Tyre Purchase";
+        }
+        return category.trim().substring(0, 1).toUpperCase() + category.trim().substring(1);
     }
 
     private void buildExpensesTabContent(List<ExpenseItem> expenses) {
@@ -370,10 +391,11 @@ public class ReportsController implements Initializable {
             return;
         }
         
-        // Group by category
-        Map<String, List<ExpenseItem>> byCategory = new HashMap<>();
+        // Group by normalized category
+        Map<String, List<ExpenseItem>> byCategory = new LinkedHashMap<>();
         for (ExpenseItem expense : expenses) {
-            byCategory.computeIfAbsent(expense.getCategory(), k -> new ArrayList<>()).add(expense);
+            String categoryKey = normalizeCategory(expense.getCategory());
+            byCategory.computeIfAbsent(categoryKey, k -> new ArrayList<>()).add(expense);
         }
         
         for (Map.Entry<String, List<ExpenseItem>> entry : byCategory.entrySet()) {
@@ -513,17 +535,41 @@ public class ReportsController implements Initializable {
     }
 
     private HBox buildSaleRow(SaleItem item) {
-        Label name = new Label(item.name());
-        name.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+        // Detect item type from name suffix
+        boolean isCredit = item.name().endsWith("(Credit)");
+        boolean isTyreExport = item.name().startsWith("Tyre Export -");
 
-        Label sub = new Label(item.date().format(DF) + " • " + item.qty() + " unit" + (item.qty() != 1 ? "s" : ""));
-        sub.setStyle("-fx-font-size: 11px; -fx-text-fill: #9CA3AF;");
+        String displayName = item.name();
+        String typeTag;
+        String typeColor;
+        if (isCredit) {
+            typeTag = "CREDIT SALE";
+            typeColor = "#9333EA";
+        } else if (isTyreExport) {
+            typeTag = "TYRE EXPORT";
+            typeColor = "#EA580C";
+        } else {
+            typeTag = "INVOICE";
+            typeColor = "#2563EB";
+        }
 
-        VBox left = new VBox(3, name, sub);
+        Label name = new Label(displayName);
+        name.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+
+        String qtyText = item.qty() > 0 ? item.qty() + " unit" + (item.qty() != 1 ? "s" : "") : "—";
+        Label sub = new Label(item.date().format(DF) + " • Qty: " + qtyText);
+        sub.setStyle("-fx-font-size: 11px; -fx-text-fill: #6B7280;");
+
+        Label badge = new Label(typeTag);
+        badge.setStyle("-fx-font-size: 9px; -fx-font-weight: bold; -fx-text-fill: " + typeColor +
+                "; -fx-background-color: transparent; -fx-border-color: " + typeColor +
+                "; -fx-border-radius: 4; -fx-padding: 1 5 1 5;");
+
+        VBox left = new VBox(2, new HBox(6, name, badge), sub);
         HBox.setHgrow(left, Priority.ALWAYS);
 
         Label rev = new Label("Rs. " + formatCurrency(item.revenue()));
-        rev.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+        rev.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #111827;");
         rev.setAlignment(Pos.CENTER_RIGHT);
 
         Label profit = new Label("PROFIT: RS. " + formatCurrency(item.profit()));
@@ -535,7 +581,7 @@ public class ReportsController implements Initializable {
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(14, 0, 14, 0));
+        row.setPadding(new Insets(10, 0, 10, 0));
 
         VBox wrapper = new VBox(new Separator(), row);
         wrapper.setPadding(new Insets(0));
@@ -546,29 +592,25 @@ public class ReportsController implements Initializable {
 
     private HBox buildServiceRow(ServiceItem item) {
         Label name = new Label(item.name());
-        name.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+        name.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #111827;");
 
-        String assignee = (item.assignedTo() == null || item.assignedTo().isBlank()) ? "Unassigned" : item.assignedTo();
+        String assignee = (item.assignedTo() == null || item.assignedTo().isBlank()) ? "Standard Service" : item.assignedTo();
         Label sub = new Label(item.date().format(DF) + " • " + assignee);
-        sub.setStyle("-fx-font-size: 11px; -fx-text-fill: #9CA3AF;");
+        sub.setStyle("-fx-font-size: 10px; -fx-text-fill: #6B7280;");
 
-        VBox left = new VBox(3, name, sub);
+        VBox left = new VBox(2, name, sub);
         HBox.setHgrow(left, Priority.ALWAYS);
 
         Label fee = new Label("Rs. " + formatCurrency(item.fee()));
-        fee.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #2563EB;");
+        fee.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #2563EB;");
         fee.setAlignment(Pos.CENTER_RIGHT);
 
-        Label feeTag = new Label("SERVICE FEE");
-        feeTag.setStyle("-fx-font-size: 10px; -fx-text-fill: #9CA3AF;");
-        feeTag.setAlignment(Pos.CENTER_RIGHT);
-
-        VBox right = new VBox(3, fee, feeTag);
+        VBox right = new VBox(fee);
         right.setAlignment(Pos.CENTER_RIGHT);
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(14, 0, 14, 0));
+        row.setPadding(new Insets(5, 0, 5, 0));
 
         VBox wrapper = new VBox(new Separator(), row);
         HBox outer = new HBox(wrapper);
@@ -578,7 +620,7 @@ public class ReportsController implements Initializable {
 
     private HBox buildExpenseRow(ExpenseItem expense) {
         Label description = new Label(expense.getDescription());
-        description.setStyle("-fx-font-size: 13px; -fx-text-fill: #111827;");
+        description.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #111827;");
 
         Label dateLabel = new Label(expense.getDate().format(DF) + " • " + expense.getCategory());
         dateLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #9CA3AF;");
@@ -595,9 +637,12 @@ public class ReportsController implements Initializable {
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(12, 0, 12, 0));
+        row.setPadding(new Insets(10, 0, 10, 0));
 
-        return row;
+        VBox wrapper = new VBox(new Separator(), row);
+        HBox outer = new HBox(wrapper);
+        HBox.setHgrow(wrapper, Priority.ALWAYS);
+        return outer;
     }
 
     private HBox buildTopProductRow(TopProduct product) {
@@ -733,25 +778,71 @@ public class ReportsController implements Initializable {
     @FXML
     private void handleExportPDF() {
         LocalDate from = startDatePicker.getValue();
-        LocalDate to = endDatePicker.getValue();
-        
+        LocalDate to   = endDatePicker.getValue();
+
         if (from == null || to == null) {
-            Alert alert = new Alert(Alert.AlertType.WARNING, 
+            Alert alert = new Alert(Alert.AlertType.WARNING,
                     "Please select a valid date range first.", ButtonType.OK);
             alert.setHeaderText("Date Range Required");
             alert.showAndWait();
             return;
         }
 
-        String reportText = generateBusinessReport(from, to);
-        
-        Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                "Generating PDF report for period: " + from + " to " + to + "\n\n" +
-                "PDF export functionality will be implemented with a PDF library.\n\n" + reportText,
-                ButtonType.OK);
-        alert.setHeaderText("PDF Export");
-        alert.setTitle("Generate Report");
-        alert.showAndWait();
+        String selectedReportType = reportTypeComboBox != null && reportTypeComboBox.getValue() != null 
+                ? reportTypeComboBox.getValue() : "Summary Report";
+
+        // Open file save dialog
+        javafx.stage.FileChooser fc = new javafx.stage.FileChooser();
+        fc.setTitle("Save " + selectedReportType + " PDF");
+        fc.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
+        String safeTypeName = selectedReportType.replaceAll("[^a-zA-Z0-9]", "_");
+        fc.setInitialFileName("KLine_" + safeTypeName + "_" + from + "_to_" + to + ".pdf");
+
+        File file = fc.showSaveDialog(exportBtn.getScene().getWindow());
+        if (file == null) return; // user cancelled
+
+        // Lock button during generation
+        exportBtn.setDisable(true);
+        exportBtn.setText("Generating...");
+
+        PDFExportService pdfService = new PDFExportService(reportsRepository);
+        executorService.submit(() -> {
+            boolean success;
+            switch (selectedReportType) {
+                case "Sales Analysis":
+                    success = pdfService.exportSalesReportToPDF(from, to, file);
+                    break;
+                case "Service Revenue":
+                    success = pdfService.exportServiceReportToPDF(from, to, file);
+                    break;
+                case "Expense Report":
+                    success = pdfService.exportExpenseReportToPDF(from, to, file);
+                    break;
+                case "Customer Analysis":
+                    success = pdfService.exportCustomerReportToPDF(from, to, file);
+                    break;
+                case "Summary Report":
+                default:
+                    success = pdfService.exportSummaryReportToPDF(from, to, file);
+                    break;
+            }
+
+            Platform.runLater(() -> {
+                exportBtn.setDisable(false);
+                exportBtn.setText("Export PDF");
+                if (success) {
+                    Alert ok = new Alert(Alert.AlertType.INFORMATION,
+                            "Report saved to:\n" + file.getAbsolutePath(), ButtonType.OK);
+                    ok.setHeaderText("PDF Report Generated");
+                    ok.showAndWait();
+                } else {
+                    Alert err = new Alert(Alert.AlertType.ERROR,
+                            "Failed to generate the PDF report. Please check the logs.", ButtonType.OK);
+                    err.setHeaderText("Export Failed");
+                    err.showAndWait();
+                }
+            });
+        });
     }
 
     @FXML

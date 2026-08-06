@@ -61,7 +61,6 @@ public class ReportsRepository {
                                     new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
                             if (items != null) {
                                 for (com.gui.kline.models.dto.LineItem item : items) {
-                                    if (isLabourOrParts(item.getProductId(), item.getDescription())) continue;
                                     String name = item.getDescription() != null ? item.getDescription() : "Unknown Product";
                                     int qty = item.getQty();
                                     double revenue = item.getTotal();
@@ -162,12 +161,17 @@ public class ReportsRepository {
     public List<ReportsController.ServiceItem> getServiceData(LocalDate startDate, LocalDate endDate) {
         List<ReportsController.ServiceItem> services = new ArrayList<>();
 
-        String sql = "SELECT s.service_date, s.name, s.price, NULL as assigned_to " +
+        // 1. Fetch from services table (including Service Invoices and individual services)
+        String sql = "SELECT s.service_date, " +
+                "CASE WHEN s.name IS NOT NULL AND s.name != '' AND s.name != 'Invoiced Service' THEN s.name " +
+                "     WHEN s.remark IS NOT NULL AND s.remark != '' THEN s.remark " +
+                "     WHEN s.invoice_id IS NOT NULL AND s.invoice_id != '' THEN ('Service Invoice #' || s.invoice_id) " +
+                "     ELSE 'Invoiced Service' END AS name, " +
+                "s.price, " +
+                "CASE WHEN s.invoice_id IS NOT NULL AND s.invoice_id != '' THEN 'Service Invoice' ELSE 'Standard Service' END AS assigned_to " +
                 "FROM services s " +
-                "WHERE (s.invoice_id IS NULL OR s.invoice_id = '') " +
-                "AND (s.name IS NULL OR (s.name != 'Invoiced Service' AND s.name != 'Labour' AND s.name != 'Additional parts')) " +
-                "AND s.service_date BETWEEN ? AND ? " +
-                "ORDER BY s.service_date DESC, s.name";
+                "WHERE s.service_date BETWEEN ? AND ? " +
+                "ORDER BY s.service_date DESC";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, startDate.toString());
@@ -186,6 +190,7 @@ public class ReportsRepository {
             System.err.println("Failed to load services data: " + ex.getMessage());
         }
 
+        // 2. Fetch Quick Services
         String quickSql = "SELECT qs.service_date, qs.service as name, qs.price " +
                 "FROM quick_services qs " +
                 "WHERE qs.service_date BETWEEN ? AND ? " +
@@ -200,7 +205,7 @@ public class ReportsRepository {
                     if (date == null) date = LocalDate.now();
                     String name = rs.getString("name");
                     double fee = rs.getDouble("price");
-                    services.add(new ReportsController.ServiceItem(name, date, null, fee));
+                    services.add(new ReportsController.ServiceItem(name, date, "Quick Service", fee));
                 }
             }
         } catch (SQLException ex) {
