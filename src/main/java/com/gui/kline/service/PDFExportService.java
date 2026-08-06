@@ -2,8 +2,10 @@ package com.gui.kline.service;
 
 import com.gui.kline.data.ReportsRepository;
 import com.gui.kline.models.reports.CustomerSummary;
+import com.gui.kline.models.reports.DailySummary;
 import com.gui.kline.models.reports.ExpenseItem;
 import com.gui.kline.models.reports.FinancialSummary;
+import com.gui.kline.models.reports.TopProduct;
 import com.gui.kline.controller.ReportsController.SaleItem;
 import com.gui.kline.controller.ReportsController.ServiceItem;
 import com.gui.kline.controller.ReportsController.PaymentItem;
@@ -107,11 +109,18 @@ public class PDFExportService {
     public boolean exportSalesReportToPDF(LocalDate startDate, LocalDate endDate, File outputFile) {
         try {
             java.util.List<SaleItem> sales = reportsRepository.getSalesData(startDate, endDate);
+            java.util.List<TopProduct> topProducts = reportsRepository.getTopSellingProducts(startDate, endDate, 10);
             Document doc = new Document(PageSize.A4, 36, 36, 50, 40);
             PdfWriter.getInstance(doc, new FileOutputStream(outputFile));
             doc.open();
 
             buildHeader(doc, "Sales Analysis Report", startDate, endDate);
+
+            if (topProducts != null && !topProducts.isEmpty()) {
+                addSectionBand(doc, "Top Selling Products");
+                buildTopProductsTable(doc, topProducts);
+            }
+
             if (!sales.isEmpty()) {
                 addSectionBand(doc, "Detailed Sales Transactions (" + sales.size() + " items)");
                 buildSalesTable(doc, sales);
@@ -120,6 +129,57 @@ public class PDFExportService {
             return true;
         } catch (Exception ex) {
             System.err.println("Export Sales failed: " + ex.getMessage()); ex.printStackTrace(); return false;
+        }
+    }
+
+    public boolean exportDailySummaryReportToPDF(LocalDate singleDate, LocalDate endDate, File outputFile) {
+        try {
+            LocalDate targetDate = endDate != null ? endDate : singleDate;
+            FinancialSummary            summary  = reportsRepository.getFinancialSummary(targetDate, targetDate);
+            java.util.List<DailySummary> dailySummaries = reportsRepository.getDailySalesSummary(targetDate, targetDate);
+            java.util.List<ExpenseItem> expenses = reportsRepository.getExpenses(targetDate, targetDate);
+
+            Document doc = new Document(PageSize.A4, 36, 36, 50, 40);
+            PdfWriter.getInstance(doc, new FileOutputStream(outputFile));
+            doc.open();
+
+            buildHeader(doc, "Daily Business Summary Report (" + targetDate.format(DATE_FMT) + ")", targetDate, targetDate);
+            addSectionBand(doc, "Financial Summary (" + targetDate.format(DATE_FMT) + ")");
+            buildFinancialSummary(doc, summary);
+
+            if (dailySummaries != null && !dailySummaries.isEmpty()) {
+                addSectionBand(doc, "Daily Sales & Transaction Breakdown");
+                buildDailySummaryTable(doc, dailySummaries);
+            }
+
+            if (expenses != null && !expenses.isEmpty()) {
+                addSectionBand(doc, "Daily Expenses Breakdown");
+                buildExpensesSection(doc, expenses);
+            }
+
+            doc.close();
+            return true;
+        } catch (Exception ex) {
+            System.err.println("Export Daily Summary failed: " + ex.getMessage()); ex.printStackTrace(); return false;
+        }
+    }
+
+    public boolean exportTopProductsReportToPDF(LocalDate startDate, LocalDate endDate, File outputFile) {
+        try {
+            java.util.List<TopProduct> topProducts = reportsRepository.getTopSellingProducts(startDate, endDate, 20);
+            Document doc = new Document(PageSize.A4, 36, 36, 50, 40);
+            PdfWriter.getInstance(doc, new FileOutputStream(outputFile));
+            doc.open();
+
+            buildHeader(doc, "Top Selling Products Report", startDate, endDate);
+            if (topProducts != null && !topProducts.isEmpty()) {
+                addSectionBand(doc, "Ranked Top Products");
+                buildTopProductsTable(doc, topProducts);
+            }
+            doc.close();
+            return true;
+        } catch (Exception ex) {
+            System.err.println("Export Top Products failed: " + ex.getMessage()); ex.printStackTrace(); return false;
         }
     }
 
@@ -248,6 +308,57 @@ public class PDFExportService {
             totalRev += item.revenue(); totalPft += item.profit();
         }
         tblFooter(t, "TOTALS", "", "", "Rs. " + fmt(totalRev), "Rs. " + fmt(totalPft));
+        doc.add(t);
+    }
+
+    private void buildDailySummaryTable(Document doc, java.util.List<DailySummary> dailySummaries) throws DocumentException {
+        PdfPTable t = new PdfPTable(4);
+        t.setWidthPercentage(100); t.setWidths(new float[]{2.5f, 2.5f, 2.5f, 3.5f});
+        t.setSpacingBefore(4); t.setSpacingAfter(14);
+        tblHeader(t, "Date", "Transactions", "Total Qty", "Daily Revenue");
+
+        int totalTx = 0, totalQty = 0; double totalRev = 0; boolean alt = false;
+        for (DailySummary d : dailySummaries) {
+            Color bg = alt ? GRAY_LIGHT : Color.WHITE; alt = !alt;
+            tblCell(t, d.getDate().format(DATE_FMT), subtleFont(), bg, Element.ALIGN_LEFT);
+            tblCell(t, String.valueOf(d.getInvoiceCount()), bodyFont(), bg, Element.ALIGN_CENTER);
+            tblCell(t, String.valueOf(d.getTotalItems()), bodyFont(), bg, Element.ALIGN_CENTER);
+            tblCell(t, "Rs. " + fmt(d.getTotalRevenue()), boldFont(), bg, Element.ALIGN_RIGHT);
+            totalTx += d.getInvoiceCount(); totalQty += d.getTotalItems(); totalRev += d.getTotalRevenue();
+        }
+        tblFooter(t, "TOTALS", String.valueOf(totalTx), String.valueOf(totalQty), "Rs. " + fmt(totalRev));
+        doc.add(t);
+    }
+
+    private void buildTopProductsTable(Document doc, java.util.List<TopProduct> topProducts) throws DocumentException {
+        PdfPTable t = new PdfPTable(5);
+        t.setWidthPercentage(100); t.setWidths(new float[]{1.2f, 4.8f, 1.8f, 2.4f, 2.8f});
+        t.setSpacingBefore(4); t.setSpacingAfter(14);
+
+        // Header
+        tblHeader(t, "Rank", "Product Name", "Qty Sold", "Selling Price", "Total Revenue");
+
+        int rank = 1; int totalQty = 0; double totalRev = 0; boolean alt = false;
+        for (TopProduct p : topProducts) {
+            Color bg = alt ? GRAY_LIGHT : Color.WHITE; alt = !alt;
+            tblCell(t, "#" + (rank++), subtleFont(), bg, Element.ALIGN_CENTER);
+            tblCell(t, truncate(p.getProductName(), 42), boldFont(), bg, Element.ALIGN_LEFT);
+            tblCell(t, String.valueOf(p.getQuantity()), bodyFont(), bg, Element.ALIGN_CENTER);
+            tblCell(t, "Rs. " + fmt(p.getUnitPrice()), bodyFont(), bg, Element.ALIGN_RIGHT);
+            tblCell(t, "Rs. " + fmt(p.getRevenue()), greenFont(), bg, Element.ALIGN_RIGHT);
+            totalQty += p.getQuantity();
+            totalRev += p.getRevenue();
+        }
+        
+        // Footer aligned cleanly across all 5 columns
+        Font f = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, NAVY);
+        
+        PdfPCell c1 = new PdfPCell(new Phrase("TOTAL", f)); c1.setBackgroundColor(GRAY_HEADER); c1.setPadding(7); c1.setBorderColor(new Color(209,213,219)); c1.setBorderWidth(0.5f); t.addCell(c1);
+        PdfPCell c2 = new PdfPCell(new Phrase("", f)); c2.setBackgroundColor(GRAY_HEADER); c2.setPadding(7); c2.setBorderColor(new Color(209,213,219)); c2.setBorderWidth(0.5f); t.addCell(c2);
+        PdfPCell c3 = new PdfPCell(new Phrase(String.valueOf(totalQty), f)); c3.setBackgroundColor(GRAY_HEADER); c3.setPadding(7); c3.setBorderColor(new Color(209,213,219)); c3.setBorderWidth(0.5f); c3.setHorizontalAlignment(Element.ALIGN_CENTER); t.addCell(c3);
+        PdfPCell c4 = new PdfPCell(new Phrase("", f)); c4.setBackgroundColor(GRAY_HEADER); c4.setPadding(7); c4.setBorderColor(new Color(209,213,219)); c4.setBorderWidth(0.5f); t.addCell(c4);
+        PdfPCell c5 = new PdfPCell(new Phrase("Rs. " + fmt(totalRev), f)); c5.setBackgroundColor(GRAY_HEADER); c5.setPadding(7); c5.setBorderColor(new Color(209,213,219)); c5.setBorderWidth(0.5f); c5.setHorizontalAlignment(Element.ALIGN_RIGHT); t.addCell(c5);
+        
         doc.add(t);
     }
 

@@ -61,6 +61,7 @@ public class ReportsRepository {
                                     new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
                             if (items != null) {
                                 for (com.gui.kline.models.dto.LineItem item : items) {
+                                    if (isLabourOrParts(item.getProductId(), item.getDescription())) continue;
                                     String name = item.getDescription() != null ? item.getDescription() : "Unknown Product";
                                     int qty = item.getQty();
                                     double revenue = item.getTotal();
@@ -521,6 +522,37 @@ public class ReportsRepository {
         } catch (SQLException ex) {
             System.err.println("Failed to load top selling products: " + ex.getMessage());
         }
+
+        // Include credit sales parts
+        String creditSql = "SELECT parts FROM credit_sales WHERE COALESCE(sale_date, DATE(created_at)) BETWEEN ? AND ?";
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(creditSql)) {
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String partsJson = rs.getString("parts");
+                    if (partsJson != null && !partsJson.isBlank()) {
+                        try {
+                            List<com.gui.kline.models.dto.Part> items = mapper.readValue(partsJson,
+                                    new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.Part>>() {});
+                            if (items != null) {
+                                for (com.gui.kline.models.dto.Part item : items) {
+                                    if (isLabourOrParts(item.getProductId(), item.getDescription())) continue;
+                                    String name = item.getDescription() != null ? item.getDescription() : "Credit Part";
+                                    double[] stats = productStats.computeIfAbsent(name, k -> new double[]{0, 0});
+                                    stats[0] += item.getQuantity();
+                                    stats[1] += item.getTotal();
+                                }
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to load credit sales top products: " + ex.getMessage());
+        }
+
         productStats.entrySet().stream()
                 .sorted((a, b) -> Double.compare(b.getValue()[1], a.getValue()[1]))
                 .limit(limit)
@@ -553,7 +585,6 @@ public class ReportsRepository {
                                     new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
                             if (items != null) {
                                 for (com.gui.kline.models.dto.LineItem item : items) {
-                                    if (isLabourOrParts(item.getProductId(), item.getDescription())) continue;
                                     stats[1] += item.getQty();
                                     stats[2] += item.getTotal();
                                 }
@@ -565,6 +596,58 @@ public class ReportsRepository {
         } catch (SQLException ex) {
             System.err.println("Failed to load daily sales summary: " + ex.getMessage());
         }
+
+        // Include credit sales daily summary
+        String creditSql = "SELECT cs.sale_date, cs.parts FROM credit_sales cs WHERE COALESCE(cs.sale_date, DATE(cs.created_at)) BETWEEN ? AND ?";
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(creditSql)) {
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "sale_date");
+                    if (date == null) date = LocalDate.now();
+                    double[] stats = dailyMap.computeIfAbsent(date, k -> new double[]{0, 0, 0});
+                    stats[0] += 1;
+                    String partsJson = rs.getString("parts");
+                    if (partsJson != null && !partsJson.isBlank()) {
+                        try {
+                            List<com.gui.kline.models.dto.Part> items = mapper.readValue(partsJson,
+                                    new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.Part>>() {});
+                            if (items != null) {
+                                for (com.gui.kline.models.dto.Part item : items) {
+                                    stats[1] += item.getQuantity();
+                                    stats[2] += item.getTotal();
+                                }
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to load credit daily sales summary: " + ex.getMessage());
+        }
+
+        // Include tyre exports daily summary
+        String tyreSql = "SELECT export_date, tyres, grand_total FROM tyre_exports WHERE COALESCE(export_date, DATE(created_at)) BETWEEN ? AND ?";
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(tyreSql)) {
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    LocalDate date = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "export_date");
+                    if (date == null) date = LocalDate.now();
+                    double[] stats = dailyMap.computeIfAbsent(date, k -> new double[]{0, 0, 0});
+                    stats[0] += 1;
+                    stats[1] += rs.getInt("tyres");
+                    stats[2] += rs.getDouble("grand_total");
+                }
+            }
+        } catch (SQLException ex) {
+            System.err.println("Failed to load tyre export daily summary: " + ex.getMessage());
+        }
+
         dailyMap.forEach((date, stats) -> dailySummaries.add(new DailySummary(date, (int) stats[0], (int) stats[1], stats[2])));
         return dailySummaries;
     }

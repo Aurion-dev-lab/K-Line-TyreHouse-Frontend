@@ -821,6 +821,12 @@ public class ReportsController implements Initializable {
                 case "Customer Analysis":
                     success = pdfService.exportCustomerReportToPDF(from, to, file);
                     break;
+                case "Daily Summary":
+                    success = pdfService.exportDailySummaryReportToPDF(to, to, file);
+                    break;
+                case "Top Products":
+                    success = pdfService.exportTopProductsReportToPDF(from, to, file);
+                    break;
                 case "Summary Report":
                 default:
                     success = pdfService.exportSummaryReportToPDF(from, to, file);

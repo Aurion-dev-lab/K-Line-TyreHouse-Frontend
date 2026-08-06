@@ -6,15 +6,22 @@ package com.gui.kline.models.reports;
 public class TopProduct {
     private final String productName;
     private final int quantity;
+    private final double unitPrice;
     private final double revenue;
 
-    public TopProduct(String productName, int quantity, double revenue) {
+    public TopProduct(String productName, int quantity, double unitPrice, double revenue) {
         this.productName = productName;
         this.quantity = quantity;
+        this.unitPrice = unitPrice;
         this.revenue = revenue;
+    }
+
+    public TopProduct(String productName, int quantity, double revenue) {
+        this(productName, quantity, quantity > 0 ? revenue / quantity : 0.0, revenue);
     }
 
     public String getProductName() { return productName; }
     public int getQuantity() { return quantity; }
+    public double getUnitPrice() { return unitPrice; }
     public double getRevenue() { return revenue; }
 }
