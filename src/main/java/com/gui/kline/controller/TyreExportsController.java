@@ -652,18 +652,39 @@ public class TyreExportsController implements Initializable {
             String type = "Tyre Export";
             String dateStr = LocalDate.now().toString();
 
+            // Fetch payment history for this tyre export
+            List<com.gui.kline.models.dto.PaymentRecord> payments = tyreExportRepository.getPaymentsForExport(r.getExportId());
+
             // Create invoice detail
             com.gui.kline.models.dto.InvoiceDetail invoiceDetail = new com.gui.kline.models.dto.InvoiceDetail();
             invoiceDetail.setInvoiceId(invoiceId);
+            invoiceDetail.setSerialNumber(r.getSerialNumber());
             invoiceDetail.setCustomer(r.getCompany());
-            invoiceDetail.setDate(dateStr);
+            invoiceDetail.setDate(r.getDate() != null ? r.getDate().toString() : dateStr);
             invoiceDetail.setType(type);
-            invoiceDetail.setStatus("completed");
+            invoiceDetail.setStatus(r.getPaymentStatus());
+            invoiceDetail.setInitialPayment(r.getInitialPayment());
+            invoiceDetail.setTyreSize(r.getTyreSize());
+            invoiceDetail.setTyreMake(r.getTyreMake());
+            invoiceDetail.setRemark(r.getRemark());
+            invoiceDetail.setPaymentHistory(payments);
 
-            // Add line item for tyres
+            // Construct detailed item description for tyres
+            StringBuilder tyreDesc = new StringBuilder();
+            tyreDesc.append(r.getTyres()).append(" Tyres");
+            if (!r.getTyreSize().isBlank() || !r.getTyreMake().isBlank()) {
+                tyreDesc.append(" (");
+                if (!r.getTyreSize().isBlank()) tyreDesc.append(r.getTyreSize());
+                if (!r.getTyreMake().isBlank()) {
+                    if (!r.getTyreSize().isBlank()) tyreDesc.append(" ");
+                    tyreDesc.append(r.getTyreMake());
+                }
+                tyreDesc.append(")");
+            }
+
             com.gui.kline.models.dto.LineItem tyreItem = new com.gui.kline.models.dto.LineItem(
-                    r.getTyres() + " tyres",
-                    "Export",
+                    tyreDesc.toString(),
+                    "Sale",
                     r.getTyres(),
                     r.getCustPrice(),
                     null
@@ -673,11 +694,11 @@ public class TyreExportsController implements Initializable {
             // Add line item for service fee if applicable
             if (r.getServiceCharge() > 0) {
                 com.gui.kline.models.dto.LineItem serviceItem = new com.gui.kline.models.dto.LineItem(
-                        "Service Charge",
+                        "Service Charge & Handling",
                         "Service",
                         1,
                         r.getServiceCharge(),
-                        null
+                        "Service Charge"
                 );
                 invoiceDetail.addLineItem(serviceItem);
             }

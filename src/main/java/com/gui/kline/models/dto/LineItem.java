@@ -24,6 +24,9 @@ public class LineItem {
     @JsonProperty("total")
     private double total;
 
+    @JsonProperty("description")
+    private String customDescription;
+
     public LineItem() {}
 
     public LineItem(String description, String type, int qty, double unitPrice) {
@@ -31,6 +34,7 @@ public class LineItem {
     }
 
     public LineItem(String description, String type, int qty, double unitPrice, String productId) {
+        this.customDescription = description;
         if ("Service".equalsIgnoreCase(type)) {
             this.productId = description;
         } else {
@@ -39,6 +43,9 @@ public class LineItem {
         this.qty = qty;
         this.unitPrice = unitPrice;
     }
+
+    public String getCustomDescription() { return customDescription; }
+    public void setCustomDescription(String v) { this.customDescription = v; }
 
     public String getProductId() { return productId; }
     public void setProductId(String productId) { this.productId = productId; }
@@ -59,8 +66,11 @@ public class LineItem {
     // Virtual getters to support UI without storing redundant fields in JSON
     @JsonIgnore
     public String getDescription() {
+        if (customDescription != null && !customDescription.isBlank()) {
+            return customDescription;
+        }
         if (productId == null || productId.isBlank()) {
-            return "Unknown Item";
+            return "Custom Item";
         }
         if ("Labour".equals(productId) || "Additional parts".equals(productId)) {
             return productId;

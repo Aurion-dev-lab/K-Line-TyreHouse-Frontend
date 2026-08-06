@@ -447,13 +447,32 @@ public class CreditSalesController implements Initializable {
                     ))
                     .toList();
 
+            // Fetch previous settlement history for this credit sale
+            List<com.gui.kline.models.dto.PaymentRecord> payments = creditSalesRepository.getPaymentsForCredit(invoiceId);
+
             // Create invoice detail for PDF
             InvoiceDetail invoiceDetail = new InvoiceDetail();
             invoiceDetail.setInvoiceId(invoiceId);
             invoiceDetail.setCustomer(currentSaleDetail.getCustomer());
-            invoiceDetail.setDate(dateStr);
+            if (currentSaleDetail.getPhone() != null && !currentSaleDetail.getPhone().isBlank()) {
+                invoiceDetail.setPhone(currentSaleDetail.getPhone());
+            }
+            if (currentSaleDetail.getDate() != null) {
+                invoiceDetail.setDate(currentSaleDetail.getDate().toString());
+            } else if (selectedSale.getDate() != null) {
+                invoiceDetail.setDate(selectedSale.getDate());
+            } else {
+                invoiceDetail.setDate(dateStr);
+            }
+            if (currentSaleDetail.getDueDate() != null) {
+                invoiceDetail.setDueDate(currentSaleDetail.getDueDate().toString());
+                invoiceDetail.setPaymentTerms("Due by " + currentSaleDetail.getDueDate().toString());
+            }
             invoiceDetail.setType(type);
-            invoiceDetail.setStatus("completed");
+            invoiceDetail.setStatus(selectedSale.getStatus());
+            invoiceDetail.setDiscountAmount(currentSaleDetail.getDiscount());
+            invoiceDetail.setPaymentHistory(payments);
+
             for (LineItem item : lineItems) {
                 invoiceDetail.addLineItem(item);
             }
