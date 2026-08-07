@@ -60,6 +60,7 @@ public class LocalRestoreService {
                 // Step 2: Wipe local tables in reverse dependency order
                 log("Purging local tables...");
                 String[] wipeOrder = {
+                    "credit_payments", "tyre_export_payments",
                     "credit_sales", "invoices",
                     "worker_attendance", "salary_advances", "salary_payments",
                     "worker_credits", "tyre_exports", "quick_services", "services", "credit_customers", "workers", "products", "expenses", "quick_service_presets",
@@ -84,8 +85,10 @@ public class LocalRestoreService {
 
                 restoreInvoices(conn,              getNode(data, "invoices"));
                 restoreCreditSales(conn,           getNode(data, "creditSales", "credit_sales"));
+                restoreCreditPayments(conn,        getNode(data, "creditPayments", "credit_payments"));
                 restoreServices(conn,              getNode(data, "services"));
                 restoreTyreExports(conn,           getNode(data, "tyreExports", "tyre_exports"));
+                restoreTyreExportPayments(conn,    getNode(data, "tyreExportPayments", "tyre_export_payments"));
                 restoreWorkerAttendance(conn,      getNode(data, "workerAttendance", "worker_attendance"));
                 restoreSalaryAdvances(conn,        getNode(data, "salaryAdvances", "salary_advances"));
                 restoreSalaryPayments(conn,        getNode(data, "salaryPayments", "salary_payments"));
@@ -130,7 +133,7 @@ public class LocalRestoreService {
     }
 
     private boolean isEmpty(JsonNode data) {
-        String[] keys = {"products", "creditCustomers", "credit_customers", "workers", "invoices", "creditSales", "credit_sales", "expenses"};
+        String[] keys = {"products", "creditCustomers", "credit_customers", "workers", "invoices", "creditSales", "credit_sales", "creditPayments", "credit_payments", "expenses", "tyreExports", "tyre_exports", "tyreExportPayments", "tyre_export_payments"};
         for (String k : keys) {
             JsonNode node = data.path(k);
             if (!node.isMissingNode() && node.isArray() && node.size() > 0) return false;
@@ -575,5 +578,49 @@ public class LocalRestoreService {
             }
         }
         log("  Restored: quick_services (" + count + " rows)");
+    }
+
+    private void restoreCreditPayments(Connection conn, JsonNode arr) throws SQLException {
+        int count = (arr != null && arr.isArray()) ? arr.size() : 0;
+        if (count > 0) {
+            String sql = "INSERT OR IGNORE INTO credit_payments (id, credit_id, customer_id, payment_date, amount, payment_method, notes, created_at, sync_status) VALUES (?,?,?,?,?,?,?,?,1)";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (JsonNode r : arr) {
+                    ps.setString(1, str(r, "id"));
+                    ps.setString(2, str(r, "creditId"));
+                    ps.setString(3, str(r, "customerId"));
+                    ps.setString(4, str(r, "paymentDate"));
+                    ps.setObject(5, dbl(r, "amount"));
+                    ps.setString(6, str(r, "paymentMethod"));
+                    ps.setString(7, str(r, "notes"));
+                    ps.setString(8, str(r, "createdAt"));
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+        }
+        log("  Restored: credit_payments (" + count + " rows)");
+    }
+
+    private void restoreTyreExportPayments(Connection conn, JsonNode arr) throws SQLException {
+        int count = (arr != null && arr.isArray()) ? arr.size() : 0;
+        if (count > 0) {
+            String sql = "INSERT OR IGNORE INTO tyre_export_payments (id, export_id, company, payment_date, amount, payment_method, notes, created_at, sync_status) VALUES (?,?,?,?,?,?,?,?,1)";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (JsonNode r : arr) {
+                    ps.setString(1, str(r, "id"));
+                    ps.setString(2, str(r, "exportId"));
+                    ps.setString(3, str(r, "company"));
+                    ps.setString(4, str(r, "paymentDate"));
+                    ps.setObject(5, dbl(r, "amount"));
+                    ps.setString(6, str(r, "paymentMethod"));
+                    ps.setString(7, str(r, "notes"));
+                    ps.setString(8, str(r, "createdAt"));
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+        }
+        log("  Restored: tyre_export_payments (" + count + " rows)");
     }
 }

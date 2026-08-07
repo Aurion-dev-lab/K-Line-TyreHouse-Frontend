@@ -229,7 +229,8 @@ public final class DatabaseManager {
                     "amount REAL NOT NULL," +
                     "payment_method TEXT DEFAULT 'Cash'," +
                     "notes TEXT," +
-                    "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP" +
+                    "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                    "sync_status INTEGER NOT NULL DEFAULT 0" +
                     ")");
 
             statement.execute("CREATE TABLE IF NOT EXISTS tyre_export_payments (" +
@@ -240,8 +241,12 @@ public final class DatabaseManager {
                     "amount REAL NOT NULL," +
                     "payment_method TEXT DEFAULT 'Cash'," +
                     "notes TEXT," +
-                    "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP" +
+                    "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                    "sync_status INTEGER NOT NULL DEFAULT 0" +
                     ")");
+
+            ensureSyncStatusColumn(connection, "credit_payments");
+            ensureSyncStatusColumn(connection, "tyre_export_payments");
 
             backfillProductCodes(connection);
             backfillPaymentHistory(connection);
@@ -327,6 +332,24 @@ public final class DatabaseManager {
                 "UPDATE products SET product_code = 'PRD-' || UPPER(SUBSTR(REPLACE(id, '-', ''), 1, 8)), sync_status = 0 " +
                         "WHERE product_code IS NULL OR product_code = ''")) {
             ps.executeUpdate();
+        }
+    }
+
+    private static void ensureSyncStatusColumn(Connection conn, String tableName) {
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("PRAGMA table_info(" + tableName + ")")) {
+            boolean hasSyncStatus = false;
+            while (rs.next()) {
+                if ("sync_status".equalsIgnoreCase(rs.getString("name"))) {
+                    hasSyncStatus = true;
+                    break;
+                }
+            }
+            if (!hasSyncStatus) {
+                stmt.execute("ALTER TABLE " + tableName + " ADD COLUMN sync_status INTEGER NOT NULL DEFAULT 0");
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to ensure sync_status column on " + tableName + ": " + e.getMessage());
         }
     }
 
