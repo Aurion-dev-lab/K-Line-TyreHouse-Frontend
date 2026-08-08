@@ -103,8 +103,9 @@
                                     <Label style="-fx-font-size: 16px;" text="💲" />
                                     <Label styleClass="report-section-header" text="Sales Breakdown" />
                                 </HBox>
-                                <Separator styleClass="report-separator" />
-                                <VBox fx:id="salesBreakdownContainer" spacing="0" />
+                                <ScrollPane fitToWidth="true" minHeight="450" prefHeight="450" styleClass="inner-scroll-pane" VBox.vgrow="ALWAYS">
+                                    <VBox fx:id="salesBreakdownContainer" spacing="12" style="-fx-padding: 4;" />
+                                </ScrollPane>
                             </VBox>
 
                             <VBox spacing="0" styleClass="report-section" HBox.hgrow="ALWAYS">
@@ -112,9 +113,8 @@
                                     <Label style="-fx-font-size: 16px;" text="🔧" />
                                     <Label styleClass="report-section-header" text="Service Revenue" />
                                 </HBox>
-                                <Separator styleClass="report-separator" />
-                                <ScrollPane fitToWidth="true" prefHeight="460" styleClass="inner-scroll-pane" VBox.vgrow="ALWAYS">
-                                    <VBox fx:id="serviceRevenueContainer" spacing="0" />
+                                <ScrollPane fitToWidth="true" minHeight="450" prefHeight="450" styleClass="inner-scroll-pane" VBox.vgrow="ALWAYS">
+                                    <VBox fx:id="serviceRevenueContainer" spacing="12" style="-fx-padding: 4;" />
                                 </ScrollPane>
                             </VBox>
                         </HBox>
@@ -125,8 +125,9 @@
                                 <Label style="-fx-font-size: 16px;" text="💰" />
                                 <Label styleClass="report-section-header" text="Expenses" />
                             </HBox>
-                            <Separator styleClass="report-separator" />
-                            <VBox fx:id="expensesContainer" spacing="0" />
+                            <ScrollPane fitToWidth="true" minHeight="450" prefHeight="450" styleClass="inner-scroll-pane" VBox.vgrow="ALWAYS">
+                                <VBox fx:id="expensesContainer" spacing="12" style="-fx-padding: 4;" />
+                            </ScrollPane>
                         </VBox>
                     </VBox>
                 </ScrollPane>
@@ -136,23 +137,27 @@
             <Tab fx:id="salesTab" closable="false" text="Sales Analysis">
                 <ScrollPane fitToHeight="true" fitToWidth="true" styleClass="report-scroll-pane">
                     <VBox spacing="16" style="-fx-padding: 16;" styleClass="reports-container">
-                        <VBox spacing="0" styleClass="report-section">
-                            <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
-                                <Label style="-fx-font-size: 16px;" text="🏆" />
-                                <Label styleClass="report-section-header" text="Top Selling Products" />
-                            </HBox>
-                            <Separator styleClass="report-separator" />
-                            <VBox fx:id="topProductsContainer" spacing="0" />
-                        </VBox>
+                        <HBox spacing="16" VBox.vgrow="ALWAYS">
+                            <VBox spacing="0" styleClass="report-section" HBox.hgrow="ALWAYS">
+                                <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
+                                    <Label style="-fx-font-size: 16px;" text="🏆" />
+                                    <Label styleClass="report-section-header" text="Top Selling Products" />
+                                </HBox>
+                                <ScrollPane fitToWidth="true" minHeight="650" prefHeight="650" styleClass="inner-scroll-pane" VBox.vgrow="ALWAYS">
+                                    <VBox fx:id="topProductsContainer" spacing="12" style="-fx-padding: 4;" />
+                                </ScrollPane>
+                            </VBox>
 
-                        <VBox spacing="0" styleClass="report-section">
-                            <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
-                                <Label style="-fx-font-size: 16px;" text="📅" />
-                                <Label styleClass="report-section-header" text="Daily Sales Summary" />
-                            </HBox>
-                            <Separator styleClass="report-separator" />
-                            <VBox fx:id="dailySalesContainer" spacing="0" />
-                        </VBox>
+                            <VBox spacing="0" styleClass="report-section" HBox.hgrow="ALWAYS">
+                                <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
+                                    <Label style="-fx-font-size: 16px;" text="📅" />
+                                    <Label styleClass="report-section-header" text="Daily Sales Summary" />
+                                </HBox>
+                                <ScrollPane fitToWidth="true" minHeight="650" prefHeight="650" styleClass="inner-scroll-pane" VBox.vgrow="ALWAYS">
+                                    <VBox fx:id="dailySalesContainer" spacing="12" style="-fx-padding: 4;" />
+                                </ScrollPane>
+                            </VBox>
+                        </HBox>
                     </VBox>
                 </ScrollPane>
             </Tab>
@@ -161,23 +166,27 @@
             <Tab fx:id="analyticsTab" closable="false" text="Customer Analysis">
                 <ScrollPane fitToHeight="true" fitToWidth="true" styleClass="report-scroll-pane">
                     <VBox spacing="16" style="-fx-padding: 16;" styleClass="reports-container">
-                        <VBox spacing="0" styleClass="report-section">
-                            <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
-                                <Label style="-fx-font-size: 16px;" text="👥" />
-                                <Label styleClass="report-section-header" text="Customer Credit Analysis" />
-                            </HBox>
-                            <Separator styleClass="report-separator" />
-                            <VBox fx:id="customerSummaryContainer" spacing="0" />
-                        </VBox>
+                        <HBox spacing="16" VBox.vgrow="ALWAYS">
+                            <VBox spacing="0" styleClass="report-section" HBox.hgrow="ALWAYS">
+                                <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
+                                    <Label style="-fx-font-size: 16px;" text="👥" />
+                                    <Label styleClass="report-section-header" text="Customer Credit Analysis" />
+                                </HBox>
+                                <ScrollPane fitToWidth="true" minHeight="650" prefHeight="650" styleClass="inner-scroll-pane" VBox.vgrow="ALWAYS">
+                                    <VBox fx:id="customerSummaryContainer" spacing="12" style="-fx-padding: 4;" />
+                                </ScrollPane>
+                            </VBox>
 
-                        <VBox spacing="0" styleClass="report-section">
-                            <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
-                                <Label style="-fx-font-size: 16px;" text="💳" />
-                                <Label styleClass="report-section-header" text="Payment &amp; Settlement History" />
-                            </HBox>
-                            <Separator styleClass="report-separator" />
-                            <VBox fx:id="paymentHistoryContainer" spacing="0" />
-                        </VBox>
+                            <VBox spacing="0" styleClass="report-section" HBox.hgrow="ALWAYS">
+                                <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 16 0;">
+                                    <Label style="-fx-font-size: 16px;" text="💳" />
+                                    <Label styleClass="report-section-header" text="Payment &amp; Settlement History" />
+                                </HBox>
+                                <ScrollPane fitToWidth="true" minHeight="650" prefHeight="650" styleClass="inner-scroll-pane" VBox.vgrow="ALWAYS">
+                                    <VBox fx:id="paymentHistoryContainer" spacing="12" style="-fx-padding: 4;" />
+                                </ScrollPane>
+                            </VBox>
+                        </HBox>
                     </VBox>
                 </ScrollPane>
             </Tab>
@@ -191,8 +200,9 @@
                                 <Label style="-fx-font-size: 16px;" text="🔧" />
                                 <Label styleClass="report-section-header" text="All Services" />
                             </HBox>
-                            <Separator styleClass="report-separator" />
-                            <VBox fx:id="servicesTabContent" spacing="0" />
+                            <ScrollPane fitToWidth="true" minHeight="650" prefHeight="650" styleClass="inner-scroll-pane" VBox.vgrow="ALWAYS">
+                                <VBox fx:id="servicesTabContent" spacing="12" style="-fx-padding: 4;" />
+                            </ScrollPane>
                         </VBox>
                     </VBox>
                 </ScrollPane>
@@ -207,8 +217,9 @@
                                 <Label style="-fx-font-size: 16px;" text="💰" />
                                 <Label styleClass="report-section-header" text="All Expenses" />
                             </HBox>
-                            <Separator styleClass="report-separator" />
-                            <VBox fx:id="expensesTabContent" spacing="0" />
+                            <ScrollPane fitToWidth="true" minHeight="650" prefHeight="650" styleClass="inner-scroll-pane" VBox.vgrow="ALWAYS">
+                                <VBox fx:id="expensesTabContent" spacing="12" style="-fx-padding: 4;" />
+                            </ScrollPane>
                         </VBox>
                     </VBox>
                 </ScrollPane>
