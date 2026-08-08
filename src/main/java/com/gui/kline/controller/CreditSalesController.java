@@ -295,6 +295,11 @@ public class CreditSalesController implements Initializable {
             dialog.initModality(javafx.stage.Modality.WINDOW_MODAL);
         }
 
+        // Apply custom styling to the dialog pane
+        javafx.scene.control.DialogPane dialogPane = dialog.getDialogPane();
+        dialogPane.getStylesheets().add(getClass().getResource("/com/gui/kline/css/sales-dialog.css").toExternalForm());
+        dialogPane.getStyleClass().add("custom-alert");
+
         Optional<String> result = dialog.showAndWait();
         if (result.isEmpty()) {
             return;

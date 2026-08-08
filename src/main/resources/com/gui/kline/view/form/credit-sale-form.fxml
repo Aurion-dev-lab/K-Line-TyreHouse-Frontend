@@ -52,8 +52,7 @@
                         
                         <VBox spacing="8">
                             <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="CUSTOMER NAME" />
-                            <ComboBox fx:id="cmbCustomerName" maxWidth="Infinity" promptText="e.g. Kumara Enterprises" editable="true"
-                                      style="-fx-background-color: #f1f5f9; -fx-background-radius: 8; -fx-padding: 6 12; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-font-size: 14px;" />
+                            <ComboBox fx:id="cmbCustomerName" maxWidth="Infinity" promptText="e.g. Kumara Enterprises" editable="true" styleClass="dialog-combo-box" />
                         </VBox>
                     </VBox>
 
@@ -71,11 +70,11 @@
                             </columnConstraints>
                             <VBox spacing="8" GridPane.columnIndex="0">
                                 <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="SALE DATE" />
-                                <DatePicker fx:id="dpSaleDate" maxWidth="Infinity" style="-fx-background-color: #f1f5f9; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-padding: 4 8;" />
+                                <DatePicker fx:id="dpSaleDate" maxWidth="Infinity" styleClass="dialog-date-picker" />
                             </VBox>
                             <VBox spacing="8" GridPane.columnIndex="1">
                                 <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="DUE DATE" />
-                                <DatePicker fx:id="dpDueDate" maxWidth="Infinity" style="-fx-background-color: #f1f5f9; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-padding: 4 8;" />
+                                <DatePicker fx:id="dpDueDate" maxWidth="Infinity" styleClass="dialog-date-picker" />
                             </VBox>
                             <rowConstraints><RowConstraints /></rowConstraints>
                         </GridPane>
@@ -103,7 +102,7 @@
                             <VBox spacing="8">
                                 <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="SELECT PRODUCT" />
                                 <ComboBox fx:id="cmbProduct" prefWidth="250" promptText="Choose a product..."
-                                          style="-fx-background-color: #f1f5f9; -fx-background-radius: 8; -fx-padding: 6 12; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-font-size: 14px;" />
+                                          style="-fx-background-color: #f1f5f9; -fx-background-radius: 8; -fx-padding: 6 12; -fx-border-color: #e2e8f0; -fx-border-radius: 8;" />
                             </VBox>
                         </HBox>
 
