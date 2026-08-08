@@ -59,6 +59,9 @@ public class TyreExportsController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        dpFrom.setValue(LocalDate.now());
+        dpTo.setValue(LocalDate.now());
+        
         filteredList = new FilteredList<>(masterList, p -> true);
         filteredList.addListener((ListChangeListener<ExportRecord>) c -> {
             rebuildCards();
@@ -388,10 +391,12 @@ public class TyreExportsController implements Initializable {
         downloadPdfBtn.setOnAction(e -> onDownloadInvoiceForRecord(r));
         box.getChildren().add(downloadPdfBtn);
 
-        Button editBtn = new Button("Edit");
-        editBtn.getStyleClass().add("btn-action-outline-amber");
-        editBtn.setOnAction(e -> onEditExport(r));
-        box.getChildren().add(editBtn);
+        if (r.getBalanceAmount() > 0) {
+            Button editBtn = new Button("Edit");
+            editBtn.getStyleClass().add("btn-action-outline-amber");
+            editBtn.setOnAction(e -> onEditExport(r));
+            box.getChildren().add(editBtn);
+        }
 
         Button deleteBtn = new Button("Delete");
         deleteBtn.getStyleClass().add("btn-action-outline-red");

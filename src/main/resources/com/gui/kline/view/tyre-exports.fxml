@@ -25,8 +25,8 @@
         <!-- Header -->
         <HBox alignment="CENTER_LEFT" style="-fx-padding: 24 28 16 28;">
             <VBox HBox.hgrow="ALWAYS" spacing="3">
-                <Label text="Tyre Export Tracking" styleClass="page-title"/>
-                <Label text="Manage bulk tyre shipments to companies" styleClass="page-subtitle"/>
+                <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;" text="Tyre Export Tracking" />
+                <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;" text="Manage bulk tyre shipments to companies" />
             </VBox>
             <Button fx:id="btnNewExport" text="+ New Export Record" onAction="#handleNewExport"
                     styleClass="btn-new-export"/>
@@ -34,25 +34,40 @@
 
         <!-- Stat Cards -->
         <HBox spacing="10" style="-fx-padding: 0 28 16 28;">
-            <VBox prefWidth="160" styleClass="stat-card">
+            <VBox spacing="10" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="📦" style="-fx-font-size: 18px; -fx-background-color: #EFF6FF; -fx-background-radius: 8; -fx-padding: 6 8 6 8;" />
+                    <Label text="SHIPMENTS" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;" />
+                </HBox>
                 <Label fx:id="lblShipments" text="0" styleClass="stat-value"/>
-                <Label text="Shipments" styleClass="stat-label"/>
             </VBox>
-            <VBox prefWidth="160" styleClass="stat-card">
+            <VBox spacing="10" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="🔄" style="-fx-font-size: 18px; -fx-background-color: #F0FDF4; -fx-background-radius: 8; -fx-padding: 6 8 6 8;" />
+                    <Label text="TYRES EXPORTED" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;" />
+                </HBox>
                 <Label fx:id="lblTyres" text="0" styleClass="stat-value"/>
-                <Label text="Tyres exported" styleClass="stat-label"/>
             </VBox>
-            <VBox prefWidth="160" styleClass="stat-card">
+            <VBox spacing="10" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="📈" style="-fx-font-size: 18px; -fx-background-color: #ECFDF5; -fx-background-radius: 8; -fx-padding: 6 8 6 8;" />
+                    <Label text="TOTAL GAIN" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;" />
+                </HBox>
                 <Label fx:id="lblGain" text="Rs. 0" styleClass="stat-value-gain"/>
-                <Label text="Total Gain" styleClass="stat-label"/>
             </VBox>
-            <VBox prefWidth="160" styleClass="stat-card">
+            <VBox spacing="10" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="📉" style="-fx-font-size: 18px; -fx-background-color: #FEF2F2; -fx-background-radius: 8; -fx-padding: 6 8 6 8;" />
+                    <Label text="TOTAL LOSS" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;" />
+                </HBox>
                 <Label fx:id="lblLoss" text="Rs. 0" styleClass="stat-value-loss"/>
-                <Label text="Total Loss" styleClass="stat-label"/>
             </VBox>
-            <VBox prefWidth="160" styleClass="stat-card">
+            <VBox spacing="10" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="⏳" style="-fx-font-size: 18px; -fx-background-color: #FFFBEB; -fx-background-radius: 8; -fx-padding: 6 8 6 8;" />
+                    <Label text="CREDIT DUE" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;" />
+                </HBox>
                 <Label fx:id="lblPending" text="0" styleClass="stat-value-amber"/>
-                <Label text="Credit due" styleClass="stat-label"/>
             </VBox>
         </HBox>
 
