@@ -171,7 +171,19 @@ public class InvoicesController implements Initializable {
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                setGraphic(empty ? null : box);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    InvoiceRow row = getTableView().getItems().get(getIndex());
+                    if (row != null && "completed".equalsIgnoreCase(row.getStatus())) {
+                        btnEdit.setVisible(false);
+                        btnEdit.setManaged(false);
+                    } else {
+                        btnEdit.setVisible(true);
+                        btnEdit.setManaged(true);
+                    }
+                    setGraphic(box);
+                }
             }
         });
     }
