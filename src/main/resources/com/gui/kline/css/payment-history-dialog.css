@@ -6,17 +6,14 @@
 /* ── Card ──────────────────────────────────────────────────────────────── */
 .modal-card {
     -fx-background-color: #FFFFFF;
-    -fx-background-radius: 14;
     -fx-border-color: #E2E8E4;
     -fx-border-width: 1;
-    -fx-border-radius: 14;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.14), 28, 0, 0, 8);
 }
 
 /* ── Header ────────────────────────────────────────────────────────────── */
 .header-icon {
     -fx-background-color: #E8F7F0;
-    -fx-background-radius: 50;
     -fx-min-width: 40;
     -fx-min-height: 40;
     -fx-max-width: 40;

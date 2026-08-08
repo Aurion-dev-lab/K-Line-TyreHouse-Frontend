@@ -200,8 +200,8 @@
 }
 
 .salary-table-view .column-header-background {
-    -fx-background-color: #f9fafb;
-    -fx-border-color: transparent transparent #e5e7eb transparent;
+    -fx-background-color: linear-gradient(to right, #10B981, #059669);
+    -fx-border-color: transparent transparent #047857 transparent;
     -fx-border-width: 1px;
 }
 
@@ -211,9 +211,18 @@
 }
 
 .salary-table-view .column-header .label {
-    -fx-font-size: 11px;
+    -fx-font-size: 12px;
     -fx-font-weight: bold;
-    -fx-text-fill: #6b7280;
+    -fx-text-fill: #ffffff;
+}
+
+.salary-table-view .table-row-cell:hover {
+    -fx-background-color: #ecfdf5;
+    -fx-cursor: hand;
+}
+
+.salary-table-view .table-row-cell:selected {
+    -fx-background-color: #d1fae5;
 }
 
 /* Status Badges */
