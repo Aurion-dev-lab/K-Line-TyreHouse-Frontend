@@ -50,7 +50,7 @@
                         <TableColumn fx:id="colCustomer" prefWidth="150" text="CUSTOMER" />
                         <TableColumn fx:id="colType" prefWidth="90" text="TYPE" />
                         <TableColumn fx:id="colStatus" prefWidth="105" text="STATUS" />
-                        <TableColumn fx:id="colItems" prefWidth="60" text="ITEMS" />
+                        <TableColumn fx:id="colItems" prefWidth="90" text="ITEMS" />
                         <TableColumn fx:id="colTotal" prefWidth="110" text="TOTAL" />
                         <TableColumn fx:id="colAction" minWidth="250" prefWidth="250" text="ACTIONS" />
                     </columns>

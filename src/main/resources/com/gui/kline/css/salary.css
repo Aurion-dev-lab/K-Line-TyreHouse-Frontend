@@ -45,6 +45,7 @@
     -fx-padding: 12 20 12 20;
     -fx-cursor: hand;
 }
+
 .btn-action-amber:hover {
     -fx-background-color: #d97706;
 }
@@ -58,6 +59,7 @@
     -fx-padding: 12 20 12 20;
     -fx-cursor: hand;
 }
+
 .btn-action-danger:hover {
     -fx-background-color: #dc2626;
 }
@@ -71,6 +73,7 @@
     -fx-padding: 12 20 12 20;
     -fx-cursor: hand;
 }
+
 .btn-action-success:hover {
     -fx-background-color: #059669;
 }
@@ -84,6 +87,7 @@
     -fx-padding: 12 20 12 20;
     -fx-cursor: hand;
 }
+
 .btn-action-dark:hover {
     -fx-background-color: #1f2937;
 }
@@ -92,21 +96,21 @@
 .metric-card {
     -fx-background-color: white;
     -fx-background-radius: 14px;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 10, 0, 0, 2);
     -fx-padding: 20px;
 }
 
 .metric-card-green {
     -fx-background-color: #ecfdf5;
     -fx-background-radius: 14px;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 10, 0, 0, 2);
     -fx-padding: 20px;
 }
 
 .metric-card-rose {
     -fx-background-color: #fff1f2;
     -fx-background-radius: 14px;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 10, 0, 0, 2);
     -fx-padding: 20px;
 }
 
@@ -173,7 +177,7 @@
 .card-container {
     -fx-background-color: white;
     -fx-background-radius: 14px;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 10, 0, 0, 2);
 }
 
 .ledger-header-title {
