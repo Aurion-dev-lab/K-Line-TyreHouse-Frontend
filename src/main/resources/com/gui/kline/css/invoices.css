@@ -7,16 +7,17 @@
 }
 
 .btn-primary {
-    -fx-background-color: #10B981;
+    -fx-background-color: #00c881;
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-padding: 10 20;
     -fx-background-radius: 10;
     -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,200,129,0.3), 8, 0, 0, 3);
 }
 
 .btn-primary:hover {
-    -fx-background-color: #19c78d;
+    -fx-background-color: #00b573;
 }
 
 .left-card {
@@ -52,7 +53,7 @@
 }
 
 .search-field:focused {
-    -fx-border-color: #06b6d4;
+    -fx-border-color: #00c881;
     -fx-background-color: #ffffff;
 }
 
@@ -60,20 +61,27 @@
     -fx-background-color: #ffffff;
     -fx-background-radius: 0 0 12 12;
     -fx-border-color: transparent;
-    -fx-table-cell-border-color: #f1f5f9;
+    -fx-table-cell-border-color: #f0fdf8;
 }
 
 .main-table .column-header-background {
-    -fx-background-color: #10B981;
-    -fx-background-radius: 0;
-    -fx-border-color: transparent transparent #047857 transparent;
-    -fx-border-width: 0 0 1 0;
+    -fx-background-color: #00c881;
+    -fx-background-radius: 12 12 0 0;
+    -fx-border-color: transparent transparent #009e65 transparent;
+    -fx-border-width: 0 0 2 0;
     -fx-pref-height: 50px;
+}
+
+/* Filler is the empty space after the last column — must be rounded separately */
+.main-table .column-header-background .filler {
+    -fx-background-color: #00c881;
+    -fx-background-radius: 0 12 0 0;
+    -fx-border-color: transparent;
 }
 
 .main-table .column-header {
     -fx-background-color: transparent;
-    -fx-border-color: transparent #047857 transparent transparent;
+    -fx-border-color: transparent rgba(0,0,0,0.12) transparent transparent;
     -fx-border-width: 0 1 0 0;
     -fx-padding: 18 14 18 14;
 }
@@ -87,22 +95,22 @@
 
 .main-table .table-row-cell {
     -fx-background-color: #ffffff;
-    -fx-border-color: #f1f5f9;
+    -fx-border-color: #f0fdf8;
     -fx-border-width: 0 0 1 0;
     -fx-cell-size: 56px;
 }
 
 .main-table .table-row-cell:odd {
-    -fx-background-color: #f8fafc;
+    -fx-background-color: #f6fefb;
 }
 
 .main-table .table-row-cell:hover {
-    -fx-background-color: #ecfdf5;
+    -fx-background-color: #e6fff6;
     -fx-cursor: hand;
 }
 
 .main-table .table-row-cell:selected {
-    -fx-background-color: #d1fae5;
+    -fx-background-color: #b3f0dc;
 }
 
 .main-table .table-cell {
@@ -379,7 +387,7 @@
 }
 
 .btn-generate {
-    -fx-background-color: #10b981;
+    -fx-background-color: #00c881;
     -fx-text-fill: #ffffff;
     -fx-font-size: 12px;
     -fx-font-weight: bold;
@@ -387,10 +395,11 @@
     -fx-border-color: transparent;
     -fx-padding: 10 0 10 0;
     -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,200,129,0.3), 8, 0, 0, 3);
 }
 
 .btn-generate:hover {
-    -fx-background-color: #059669;
+    -fx-background-color: #00b573;
 }
 
 .btn-deselect {
