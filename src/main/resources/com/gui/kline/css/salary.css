@@ -197,27 +197,72 @@
     -fx-text-fill: #9ca3af;
 }
 
-/* Tables */
+/* ==========================================================
+   Tables
+   Same design language reused across tblSalary, tblPayoutLedger
+   and tblLedger: solid header block, thin column separators
+   in BOTH the header and the body using the same border-width
+   (0 1px 0 0, i.e. right edge only) and the same box model, so
+   the divider lines land on the same pixel column-for-column.
+   Previously the header divider was a different color/width
+   rule than the body divider, which is what made them look
+   inconsistent - now both use one shared border spec.
+   ========================================================== */
+
 .salary-table-view {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
+    -fx-padding: 0;
 }
 
+/* --- Header row background --- */
 .salary-table-view .column-header-background {
     -fx-background-color: linear-gradient(to right, #10B981, #059669);
     -fx-border-color: transparent transparent #047857 transparent;
-    -fx-border-width: 1px;
+    -fx-border-width: 0 0 1px 0;
+    -fx-background-radius: 14px 14px 0 0;
 }
 
+/* Corner region above the vertical scrollbar - match the header so
+   it never renders as a stray white/blank box. */
+.salary-table-view .column-header-background .filler {
+    -fx-background-color: #059669;
+    -fx-border-color: transparent transparent transparent rgba(255,255,255,0.35);
+    -fx-border-width: 0 0 0 1px;
+}
+
+/* --- Individual header cells: right-edge divider --- */
 .salary-table-view .column-header {
     -fx-background-color: transparent;
-    -fx-size: 40px;
+    -fx-border-color: transparent rgba(255,255,255,0.35) transparent transparent;
+    -fx-border-width: 0 1px 0 0;
+    -fx-pref-height: 44px;
+    -fx-alignment: CENTER;
+    -fx-size: 44px;
 }
 
+/* Header text: wrap instead of overflowing past its own column. */
 .salary-table-view .column-header .label {
-    -fx-font-size: 12px;
+    -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-text-fill: #ffffff;
+    -fx-wrap-text: true;
+    -fx-text-alignment: center;
+    -fx-alignment: CENTER;
+    -fx-padding: 4 6 4 6;
+    -fx-content-display: CENTER;
+}
+
+/* --- Body rows / cells --- */
+.salary-table-view .table-row-cell {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #f3f4f6 transparent;
+    -fx-border-width: 0 0 1px 0;
+    -fx-table-cell-border-color: transparent;
+}
+
+.salary-table-view .table-row-cell:odd {
+    -fx-background-color: #fafafa;
 }
 
 .salary-table-view .table-row-cell:hover {
@@ -227,6 +272,44 @@
 
 .salary-table-view .table-row-cell:selected {
     -fx-background-color: #d1fae5;
+}
+
+/* Same right-edge divider rule as the header, same color family,
+   so the vertical lines read as one continuous grid top-to-bottom. */
+.salary-table-view .table-cell {
+    -fx-font-size: 12px;
+    -fx-text-fill: #111827;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 8 10 8 10;
+    -fx-wrap-text: true;
+    -fx-border-color: transparent #e5e7eb transparent transparent;
+    -fx-border-width: 0 1px 0 0;
+}
+
+/* Placeholder text shown for empty tables */
+.salary-table-view .placeholder .label {
+    -fx-text-fill: #9ca3af;
+    -fx-font-size: 12px;
+}
+
+/* --- Scrollbars: slim, unobtrusive --- */
+.salary-table-view .scroll-bar:vertical,
+.salary-table-view .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+
+.salary-table-view .scroll-bar .thumb {
+    -fx-background-color: #d1d5db;
+    -fx-background-radius: 6px;
+}
+
+.salary-table-view .scroll-bar .track,
+.salary-table-view .scroll-bar .track-background {
+    -fx-background-color: transparent;
+}
+
+.salary-table-view .corner {
+    -fx-background-color: #059669;
 }
 
 /* Status Badges */

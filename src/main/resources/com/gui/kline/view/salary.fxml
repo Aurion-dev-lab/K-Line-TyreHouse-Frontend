@@ -137,7 +137,7 @@
                                 <TableColumn fx:id="colNetPayable" prefWidth="120.0" text="NET PAYABLE" />
                                 <TableColumn fx:id="colRemaining" prefWidth="120.0" text="REMAINING" />
                                 <TableColumn fx:id="colStatus" prefWidth="100.0" text="STATUS" />
-                                <TableColumn fx:id="colSalaryActions" prefWidth="170.0" text="PAYMENT" />
+                                <TableColumn fx:id="colSalaryActions" prefWidth="150.0" minWidth="150.0" text="PAYMENT" />
                             </columns>
                             <columnResizePolicy>
                                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
