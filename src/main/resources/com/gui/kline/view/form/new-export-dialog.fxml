@@ -28,7 +28,7 @@
 
         <VBox styleClass="modal-card" maxWidth="700" minWidth="500" prefWidth="660" maxHeight="520" prefHeight="500" spacing="0">
 
-            <Label text="New Export Record" styleClass="modal-title">
+            <Label fx:id="lblModalTitle" text="New Export Record" styleClass="modal-title">
                 <VBox.margin><Insets top="20" left="28" right="28" bottom="16" /></VBox.margin>
             </Label>
 

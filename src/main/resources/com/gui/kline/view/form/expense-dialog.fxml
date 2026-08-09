@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefWidth="480.0" style="-fx-background-color: transparent;" stylesheets="@../css/expenses.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.gui.kline.controller.form.ExpenseDialogController">
+<AnchorPane prefWidth="480.0" style="-fx-background-color: transparent;" stylesheets="@../../css/expenses.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.gui.kline.controller.form.ExpenseDialogController">
 
     <VBox spacing="0" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 4);" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
 

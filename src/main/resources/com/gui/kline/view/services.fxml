@@ -91,13 +91,47 @@
                             <children>
                                 <Label style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;" text="Service Insights" />
 
-                                <VBox spacing="14.0">
+                                <VBox spacing="10.0">
                                     <children>
+                                        <HBox alignment="CENTER_LEFT">
+                                            <children>
+                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 13px;" text="Services Revenue" />
+                                                <Region HBox.hgrow="ALWAYS" />
+                                                <Label fx:id="lblServiceRevenue" style="-fx-text-fill: #3b82f6; -fx-font-size: 15px; -fx-font-weight: bold;" text="Rs. 0" />
+                                            </children>
+                                        </HBox>
+                                        <HBox alignment="CENTER_LEFT">
+                                            <children>
+                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 12px;" text="Services Count" />
+                                                <Region HBox.hgrow="ALWAYS" />
+                                                <Label fx:id="lblServiceCount" style="-fx-text-fill: #e2e8f0; -fx-font-size: 14px; -fx-font-weight: bold;" text="0" />
+                                            </children>
+                                        </HBox>
+
+                                        <Separator opacity="0.1" />
+
+                                        <HBox alignment="CENTER_LEFT">
+                                            <children>
+                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 13px;" text="Quick Services Revenue" />
+                                                <Region HBox.hgrow="ALWAYS" />
+                                                <Label fx:id="lblQuickServiceRevenue" style="-fx-text-fill: #fbbf24; -fx-font-size: 15px; -fx-font-weight: bold;" text="Rs. 0" />
+                                            </children>
+                                        </HBox>
+                                        <HBox alignment="CENTER_LEFT">
+                                            <children>
+                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 12px;" text="Quick Services Count" />
+                                                <Region HBox.hgrow="ALWAYS" />
+                                                <Label fx:id="lblQuickServiceCount" style="-fx-text-fill: #e2e8f0; -fx-font-size: 14px; -fx-font-weight: bold;" text="0" />
+                                            </children>
+                                        </HBox>
+
+                                        <Separator opacity="0.1" />
+
                                         <HBox alignment="CENTER_LEFT">
                                             <children>
                                                 <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 13px;" text="Total Services" />
                                                 <Region HBox.hgrow="ALWAYS" />
-                                                <Label fx:id="lblTotalServices" style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;" text="0" />
+                                                <Label fx:id="lblTotalServices" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" text="0" />
                                             </children>
                                         </HBox>
                                         <HBox alignment="CENTER_LEFT">
@@ -105,13 +139,6 @@
                                                 <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 13px;" text="Total Revenue" />
                                                 <Region HBox.hgrow="ALWAYS" />
                                                 <Label fx:id="lblTotalRevenue" style="-fx-text-fill: #10b981; -fx-font-size: 17px; -fx-font-weight: bold;" text="Rs. 0" />
-                                            </children>
-                                        </HBox>
-                                        <HBox alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 13px;" text="Total Profit" />
-                                                <Region HBox.hgrow="ALWAYS" />
-                                                <Label fx:id="lblTotalProfit" style="-fx-text-fill: #fbbf24; -fx-font-size: 17px; -fx-font-weight: bold;" text="Rs. 0" />
                                             </children>
                                         </HBox>
                                     </children>

@@ -131,9 +131,29 @@ public class ViewFactory {
         }
     }*/
 
+    private java.net.URL resolveFxmlUrl(String viewOrPage) {
+        String path = viewOrPage.startsWith("/") ? viewOrPage : "/com/gui/kline/view/" + viewOrPage + ".fxml";
+        java.net.URL url = ViewFactory.class.getResource(path);
+        if (url == null) {
+            url = getClass().getResource(path);
+        }
+        if (url == null && path.startsWith("/")) {
+            url = Thread.currentThread().getContextClassLoader().getResource(path.substring(1));
+        }
+        if (url == null) {
+            System.err.println("Could not resolve FXML resource for path: " + path);
+        }
+        return url;
+    }
+
     public void getView(String view, Stage ownerStage) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gui/kline/view/" + view + ".fxml"));
+            java.net.URL resource = resolveFxmlUrl(view);
+            if (resource == null) {
+                System.err.println("Cannot load view: " + view + " because FXML resource is missing.");
+                return;
+            }
+            FXMLLoader loader = new FXMLLoader(resource);
             Parent root = loader.load();
 
             Stage stage;
@@ -170,61 +190,28 @@ public class ViewFactory {
 
     public Node getPage(String page){
         try{
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gui/kline/view/" + page + ".fxml"));
+            java.net.URL resource = resolveFxmlUrl(page);
+            if (resource == null) {
+                System.err.println("Cannot load page: " + page + " because FXML resource is missing.");
+                return null;
+            }
+            FXMLLoader loader = new FXMLLoader(resource);
             return loader.load();
         }catch (Exception e){
+            System.err.println("Error loading page: " + page + " - " + e.getMessage());
             e.printStackTrace();
         }
         return null;
     }
 
-/*    public <T> T getForm(String view, Stage ownerStage) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gui/kline/view/" + view + ".fxml"));
-            Parent root = loader.load();
-            T controller = loader.getController();
-
-            Stage stage = new Stage();
-            
-            // Use provided owner or fall back to primary stage
-            Stage actualOwner = ownerStage != null ? ownerStage : primaryStage;
-            
-            // Only set modality and owner if owner stage is available
-            if (actualOwner != null) {
-                stage.initModality(Modality.WINDOW_MODAL);
-                stage.initOwner(actualOwner);
-            }
-
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
-
-            // Center the dialog over the owner window
-            if (actualOwner != null) {
-                stage.setX(actualOwner.getX() + (actualOwner.getWidth() - root.prefWidth(-1)) / 2);
-                stage.setY(actualOwner.getY() + (actualOwner.getHeight() - root.prefHeight(-1)) / 2);
-            }
-            
-            // Set minimum size based on content
-            stage.setMinWidth(root.prefWidth(-1));
-            stage.setMinHeight(root.prefHeight(-1));
-
-            stage.show();
-            
-            // Store reference so callers can access it
-            lastDialogStage = stage;
-
-            return controller;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-    */
-
     public <T> T getForm(String view, Stage ownerStage) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gui/kline/view/" + view + ".fxml"));
+            java.net.URL resource = resolveFxmlUrl(view);
+            if (resource == null) {
+                System.err.println("Cannot load form: " + view + " because FXML resource is missing.");
+                return null;
+            }
+            FXMLLoader loader = new FXMLLoader(resource);
             Parent root = loader.load();
             T controller = loader.getController();
 
