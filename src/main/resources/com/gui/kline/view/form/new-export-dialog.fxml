@@ -26,30 +26,38 @@
                AnchorPane.leftAnchor="0"
                AnchorPane.rightAnchor="0">
 
-        <VBox styleClass="modal-card" maxWidth="560" minWidth="400" maxHeight="580" spacing="0">
+        <VBox styleClass="modal-card" maxWidth="700" minWidth="500" prefWidth="660" maxHeight="520" prefHeight="500" spacing="0">
 
-            <Label text="New Export Record" styleClass="modal-title">
-                <VBox.margin><Insets top="28" left="28" right="28" bottom="20" /></VBox.margin>
+            <Label fx:id="lblModalTitle" text="New Export Record" styleClass="modal-title">
+                <VBox.margin><Insets top="20" left="28" right="28" bottom="16" /></VBox.margin>
             </Label>
 
             <Region styleClass="modal-divider" prefHeight="1" maxHeight="1" />
 
-            <VBox spacing="18">
-                <padding><Insets top="24" left="28" right="28" bottom="8" /></padding>
+            <VBox spacing="12">
+                <padding><Insets top="16" left="28" right="28" bottom="8" /></padding>
 
-                <VBox spacing="6">
-                    <Label text="SERIAL NUMBER" styleClass="form-label" />
-                    <TextField fx:id="txtSerialNumber"
-                               promptText="e.g. EXP-001"
-                               styleClass="form-input" />
-                </VBox>
+                <GridPane hgap="16">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="ALWAYS" />
+                        <ColumnConstraints hgrow="ALWAYS" />
+                    </columnConstraints>
+                    <rowConstraints><RowConstraints /></rowConstraints>
 
-                <VBox spacing="6">
-                    <Label text="COMPANY NAME" styleClass="form-label" />
-                    <TextField fx:id="txtCompany"
-                               promptText="e.g. ABC Motors"
-                               styleClass="form-input" />
-                </VBox>
+                    <VBox spacing="6" GridPane.columnIndex="0">
+                        <Label text="SERIAL NUMBER" styleClass="form-label" />
+                        <TextField fx:id="txtSerialNumber"
+                                   promptText="e.g. EXP-001"
+                                   styleClass="form-input" />
+                    </VBox>
+
+                    <VBox spacing="6" GridPane.columnIndex="1">
+                        <Label text="COMPANY NAME" styleClass="form-label" />
+                        <TextField fx:id="txtCompany"
+                                   promptText="e.g. ABC Motors"
+                                   styleClass="form-input" />
+                    </VBox>
+                </GridPane>
 
                 <GridPane hgap="16">
                     <columnConstraints>
@@ -95,7 +103,7 @@
                     </VBox>
                 </GridPane>
 
-                <VBox spacing="10" style="-fx-background-color: #F9FAFB; -fx-background-radius: 10; -fx-border-color: #E5E7EB; -fx-border-radius: 10; -fx-border-width: 1; -fx-padding: 14;">
+                <VBox spacing="8" style="-fx-background-color: #F9FAFB; -fx-background-radius: 10; -fx-border-color: #E5E7EB; -fx-border-radius: 10; -fx-border-width: 1; -fx-padding: 10;">
                     <Label text="PAYMENT SUMMARY" styleClass="form-label" />
                     <GridPane hgap="14" vgap="10">
                         <columnConstraints>
@@ -171,19 +179,27 @@
                     </VBox>
                 </GridPane>
 
-                <VBox spacing="6">
-                    <Label text="DATE SENT" styleClass="form-label" />
-                    <DatePicker fx:id="dpDateSent"
-                                styleClass="form-datepicker"
-                                maxWidth="Infinity" />
-                </VBox>
+                <GridPane hgap="16">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="ALWAYS" />
+                        <ColumnConstraints hgrow="ALWAYS" />
+                    </columnConstraints>
+                    <rowConstraints><RowConstraints /></rowConstraints>
 
-                <VBox spacing="6">
-                    <Label text="REMARK" styleClass="form-label" />
-                    <TextField fx:id="txtRemark"
-                               promptText="e.g. Exported via Colombo Port"
-                               styleClass="form-input" />
-                </VBox>
+                    <VBox spacing="6" GridPane.columnIndex="0">
+                        <Label text="DATE SENT" styleClass="form-label" />
+                        <DatePicker fx:id="dpDateSent"
+                                    styleClass="form-datepicker"
+                                    maxWidth="Infinity" />
+                    </VBox>
+
+                    <VBox spacing="6" GridPane.columnIndex="1">
+                        <Label text="REMARK" styleClass="form-label" />
+                        <TextField fx:id="txtRemark"
+                                   promptText="e.g. Exported via Colombo Port"
+                                   styleClass="form-input" />
+                    </VBox>
+                </GridPane>
 
             </VBox>
 

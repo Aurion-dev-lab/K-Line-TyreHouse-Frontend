@@ -6,41 +6,56 @@
 
 /* Page layout structure styling */
 .credit-customers-tab-pane {
-    -fx-background-color: #F0F2F5;
+    -fx-background-color: transparent;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
 }
 
-.credit-customers-tab-pane > *.tab-header-area > *.headers-region > *.tab-header-background {
-    -fx-background-color: #d8dee7;
+.credit-customers-tab-pane .tab-header-area {
+    -fx-padding: 0 20 0 20;
+    -fx-border-color: #E2E8F0;
+    -fx-border-width: 0 0 1 0;
 }
 
-.credit-customers-tab-pane > *.tab-header-area > *.headers-region > *.tab {
+.credit-customers-tab-pane .tab-header-background {
+    -fx-background-color: transparent;
+}
+
+.credit-customers-tab-pane .tab {
+    -fx-background-color: transparent;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-padding: 12 24 12 24;
+    -fx-cursor: hand;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 3 0;
+}
+
+.credit-customers-tab-pane .tab .tab-label {
+    -fx-text-fill: #64748B;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+}
+
+.credit-customers-tab-pane .tab:hover .tab-label {
+    -fx-text-fill: #0F172A;
+}
+
+.credit-customers-tab-pane .tab:selected {
+    -fx-border-color: #4F46E5;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.credit-customers-tab-pane .tab:selected .tab-label {
+    -fx-text-fill: #4F46E5;
+}
+
+.credit-customers-tab-pane .tab-content-area {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
-    -fx-font-size: 13px;
-    -fx-font-weight: 500;
-    -fx-text-fill: #6B7280;
-    -fx-padding: 8 16 8 16;
-    -fx-background-radius: 8 8 0 0;
-}
-
-.credit-customers-tab-pane > *.tab-header-area > *.headers-region > *.tab:hover {
-    -fx-background-color: #E5E7EB;
-}
-
-.credit-customers-tab-pane > *.tab-header-area > *.headers-region > *.tab:selected {
-    -fx-background-color: #d9dbe1;
-    -fx-text-fill: white;
-    -fx-border-radius: 8 8 0 0;
-}
-
-.credit-customers-tab-pane > *.tab-header-area > *.headers-region > *.tab:selected > *.tab-label {
-    -fx-text-fill: white;
-}
-
-.credit-customers-tab-pane > *.tab-content-area {
-    -fx-background-color: #F0F2F5;
-    -fx-border-color: #E5E7EB;
-    -fx-border-width: 1 0 0 0;
 }
 
 /* Summary Metric Cards at the Top */

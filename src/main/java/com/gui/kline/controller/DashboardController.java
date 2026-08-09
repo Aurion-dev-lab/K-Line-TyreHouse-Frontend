@@ -1,11 +1,9 @@
 package com.gui.kline.controller;
 
-import com.gui.kline.controller.form.QuickActionsPopupController;
 import com.gui.kline.data.*;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.service.NavigationService;
 import com.gui.kline.utils.BackgroundTask;
-import com.gui.kline.utils.JsonUtil;
 import com.gui.kline.utils.Utils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -21,7 +19,6 @@ import javafx.scene.Node;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 
 import java.net.URL;
 import java.sql.Connection;
@@ -36,6 +33,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class DashboardController implements Initializable {
+
+    private static final int MAX_QUICK_ACTIONS = 4;
 
     @FXML private Label periodSalesLabel;
     @FXML private Label periodProfitLabel;
@@ -162,10 +161,11 @@ public class DashboardController implements Initializable {
 
     private List<QuickService> loadQuickServicesSync() {
         List<QuickService> services = new ArrayList<>();
-        String sql = "SELECT id, service, price, icon FROM quick_service_presets WHERE active = 1 ORDER BY service";
+        String sql = "SELECT id, service, price, icon FROM quick_service_presets WHERE active = 1 ORDER BY service LIMIT ?";
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, MAX_QUICK_ACTIONS);
+            try (ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 services.add(new QuickService(
                         rs.getString("id"),
@@ -173,6 +173,7 @@ public class DashboardController implements Initializable {
                         rs.getDouble("price"),
                         rs.getString("icon")
                 ));
+            }
             }
         } catch (SQLException ex) {
             System.err.println("Error loading quick services: " + ex.getMessage());
@@ -390,7 +391,8 @@ public class DashboardController implements Initializable {
     }
 
     public void refreshQuickActions() {
-        loadQuickServicesSync();
+        quickServices = loadQuickServicesSync();
+        populateQuickActionsGrid();
     }
 
     public void refreshData() {
@@ -424,57 +426,6 @@ public class DashboardController implements Initializable {
         }
     }
 
-    @FXML
-    private void handleViewInventory() {
-        navigateTo("inventory");
-    }
-
-    @FXML
-    private void handleNewSale() {
-        showInfo("New Sale", "Opening New Sale form…");
-    }
-
-    @FXML
-    private void handleAddService() {
-        navigateTo("services");
-    }
-
-    @FXML
-    private void handleLogWork() {
-        showInfo("Log Work", "Opening Log Work form…");
-    }
-
-    @FXML
-    private void handleNewExport() {
-        showInfo("New Export", "Opening Export wizard…");
-    }
-    
-    private void loadQuickServices() {
-        try {
-            quickServices.clear();
-            String sql = "SELECT id, service, price, icon FROM quick_service_presets WHERE active = 1 ORDER BY service";
-            try (Connection conn = DatabaseManager.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql);
-                 ResultSet rs = ps.executeQuery()) {
-                
-                while (rs.next()) {
-                    QuickService qs = new QuickService(
-                            rs.getString("id"),
-                            rs.getString("service"),
-                            rs.getDouble("price"),
-                            rs.getString("icon")
-                    );
-                    quickServices.add(qs);
-                }
-            }
-            populateQuickActionsGrid();
-        } catch (Exception ex) {
-            System.err.println("Error loading quick services: " + ex.getMessage());
-            quickServices.clear();
-            populateQuickActionsGrid();
-        }
-    }
-    
     private void populateQuickActionsGrid() {
         if (quickActionsGrid == null) return;
 
@@ -493,7 +444,9 @@ public class DashboardController implements Initializable {
         int row = 0;
         int col = 0;
 
-        for (QuickService service : quickServices) {
+        int limit = Math.min(quickServices.size(), MAX_QUICK_ACTIONS);
+        for (int i = 0; i < limit; i++) {
+            QuickService service = quickServices.get(i);
             Button btn = createQuickActionButton(service);
             GridPane.setColumnIndex(btn, col);
             GridPane.setRowIndex(btn, row);
@@ -571,32 +524,7 @@ public class DashboardController implements Initializable {
 
     @FXML
     private void handleExpandQuickActions() {
-        try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
-                    getClass().getResource("/com/gui/kline/view/form/quick-actions-popup.fxml"));
-            javafx.scene.Parent root = loader.load();
-            QuickActionsPopupController controller = loader.getController();
-
-            // Convert inner QuickService list to popup's QuickService list
-            List<QuickActionsPopupController.QuickService> popupServices = new ArrayList<>();
-            for (QuickService qs : quickServices) {
-                popupServices.add(new QuickActionsPopupController.QuickService(
-                        qs.id, qs.name, qs.price, qs.icon));
-            }
-            controller.setServices(popupServices);
-            controller.setOnActionLogged(this::refreshData);
-
-            Stage stage = new Stage();
-            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
-            stage.initOwner(quickActionsGrid.getScene().getWindow());
-            javafx.scene.Scene scene = new javafx.scene.Scene(root);
-            scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
-            stage.setScene(scene);
-            stage.show();
-        } catch (Exception ex) {
-            System.err.println("Error opening quick actions popup: " + ex.getMessage());
-            ex.printStackTrace();
-        }
+        navigateTo("quick-actions-use");
     }
 
     @FXML
@@ -744,16 +672,6 @@ public class DashboardController implements Initializable {
          return invoiceProfit + creditSalesProfit + servicesProfit + quickServicesProfit + tyreExportsProfit - paidSalaries - totalExpenses;
      }
 
-    private double calculateTyreExportsProfit(LocalDate startDate, LocalDate endDate) {
-        try (Connection conn = com.gui.kline.data.DatabaseManager.getConnection()) {
-            return sumAmount(conn,
-                    "SELECT COALESCE(SUM((cust_price - comp_price) * tyres + service_fee), 0) FROM tyre_exports WHERE export_date BETWEEN ? AND ?",
-                    startDate, endDate);
-        } catch (Exception ex) {
-            return 0.0;
-        }
-    }
-
      private int countServices(Connection conn, LocalDate startDate, LocalDate endDate) throws SQLException {
           int services = countRows(conn,
                   "SELECT COUNT(*) FROM services WHERE (invoice_id IS NULL OR invoice_id = '') AND (name IS NULL OR name != 'Invoiced Service') AND service_date BETWEEN ? AND ?",
@@ -894,32 +812,8 @@ public class DashboardController implements Initializable {
             return;
         }
 
-        String payload = JsonUtil.obj(
-                JsonUtil.field("service", service.name),
-                JsonUtil.field("price", service.price),
-                JsonUtil.field("date", LocalDate.now().toString())
-        );    }
-
-    private int getMaxRowIndex(GridPane grid) {
-        int max = -1;
-        for (Node node : grid.getChildren()) {
-            Integer rowIndex = GridPane.getRowIndex(node);
-            int row = rowIndex == null ? 0 : rowIndex;
-            if (row > max) {
-                max = row;
-            }
-        }
-        return Math.max(max, 0);
     }
 
-    private void showInfo(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-    
     // Inner classes for data modeling
     private static class KPIMetrics {
         double sales = 0;

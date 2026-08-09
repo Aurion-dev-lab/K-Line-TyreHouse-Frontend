@@ -52,8 +52,7 @@
                         
                         <VBox spacing="8">
                             <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="CUSTOMER NAME" />
-                            <ComboBox fx:id="cmbCustomerName" maxWidth="Infinity" promptText="e.g. Kumara Enterprises" editable="true"
-                                      style="-fx-background-color: #f1f5f9; -fx-background-radius: 8; -fx-padding: 6 12; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-font-size: 14px;" />
+                            <ComboBox fx:id="cmbCustomerName" maxWidth="Infinity" promptText="e.g. Kumara Enterprises" editable="true" styleClass="dialog-combo-box" />
                         </VBox>
                     </VBox>
 
@@ -71,11 +70,11 @@
                             </columnConstraints>
                             <VBox spacing="8" GridPane.columnIndex="0">
                                 <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="SALE DATE" />
-                                <DatePicker fx:id="dpSaleDate" maxWidth="Infinity" style="-fx-background-color: #f1f5f9; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-padding: 4 8;" />
+                                <DatePicker fx:id="dpSaleDate" maxWidth="Infinity" styleClass="dialog-date-picker" />
                             </VBox>
                             <VBox spacing="8" GridPane.columnIndex="1">
                                 <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="DUE DATE" />
-                                <DatePicker fx:id="dpDueDate" maxWidth="Infinity" style="-fx-background-color: #f1f5f9; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-padding: 4 8;" />
+                                <DatePicker fx:id="dpDueDate" maxWidth="Infinity" styleClass="dialog-date-picker" />
                             </VBox>
                             <rowConstraints><RowConstraints /></rowConstraints>
                         </GridPane>
@@ -103,7 +102,7 @@
                             <VBox spacing="8">
                                 <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="SELECT PRODUCT" />
                                 <ComboBox fx:id="cmbProduct" prefWidth="250" promptText="Choose a product..."
-                                          style="-fx-background-color: #f1f5f9; -fx-background-radius: 8; -fx-padding: 6 12; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-font-size: 14px;" />
+                                          style="-fx-background-color: #f1f5f9; -fx-background-radius: 8; -fx-padding: 6 12; -fx-border-color: #e2e8f0; -fx-border-radius: 8;" />
                             </VBox>
                         </HBox>
 
@@ -125,7 +124,7 @@
                             </VBox>
                             <VBox spacing="8" GridPane.columnIndex="2" alignment="BOTTOM_RIGHT">
                                 <Button fx:id="btnAddPart" onAction="#onAddPart" prefHeight="42" maxWidth="Infinity"
-                                        style="-fx-background-color: #3b82f6; -fx-background-radius: 8; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-cursor: hand;" text="+ Add" />
+                                        style="-fx-background-color: #10b981; -fx-background-radius: 8; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-cursor: hand; -fx-padding: 8 16;" text="+ Add" />
                             </VBox>
                             <rowConstraints><RowConstraints /></rowConstraints>
                         </GridPane>
@@ -176,9 +175,9 @@
             <!-- Action Buttons -->
             <HBox alignment="CENTER_RIGHT" spacing="16" style="-fx-padding: 24 32; -fx-background-color: white; -fx-background-radius: 0 0 12 12; -fx-border-color: #e2e8f0; -fx-border-width: 1 0 0 0;">
                 <Button fx:id="btnCancel" onAction="#onCancel" prefHeight="45" prefWidth="120"
-                        style="-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-font-weight: bold; -fx-cursor: hand; -fx-font-size: 14px; -fx-border-color: #e2e8f0; -fx-border-radius: 8;" text="Cancel" />
+                        style="-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-font-weight: bold; -fx-cursor: hand; -fx-font-size: 14px; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-padding: 8 20;" text="Cancel" />
                 <Button fx:id="btnCreate" onAction="#onCreate" prefHeight="45" prefWidth="200"
-                        style="-fx-background-color: #00c853; -fx-background-radius: 8; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 5, 0, 0, 2);" text="Save Credit Sale" />
+                        style="-fx-background-color: #10b981; -fx-background-radius: 8; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-cursor: hand; -fx-padding: 8 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 5, 0, 0, 2);" text="Save Credit Sale" />
             </HBox>
 
         </VBox>

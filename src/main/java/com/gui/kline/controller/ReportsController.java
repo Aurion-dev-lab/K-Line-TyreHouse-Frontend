@@ -359,12 +359,8 @@ public class ReportsController implements Initializable {
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(5, 0, 5, 0));
-
-        VBox wrapper = new VBox(new Separator(), row);
-        HBox outer = new HBox(wrapper);
-        HBox.setHgrow(wrapper, Priority.ALWAYS);
-        return outer;
+        row.getStyleClass().add("report-row");
+        return row;
     }
 
     private String normalizeCategory(String category) {
@@ -428,10 +424,7 @@ public class ReportsController implements Initializable {
             return;
         }
         
-        Label title = new Label("Top Selling Products");
-        title.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;");
-        topProductsContainer.getChildren().add(title);
-        topProductsContainer.getChildren().add(new Separator());
+        // FXML already has the header
         
         for (TopProduct product : topProducts) {
             topProductsContainer.getChildren().add(buildTopProductRow(product));
@@ -449,10 +442,7 @@ public class ReportsController implements Initializable {
             return;
         }
         
-        Label title = new Label("Daily Sales Summary");
-        title.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;");
-        dailySalesContainer.getChildren().add(title);
-        dailySalesContainer.getChildren().add(new Separator());
+        // FXML already has the header
         
         for (DailySummary summary : dailySummaries) {
             dailySalesContainer.getChildren().add(buildDailySummaryRow(summary));
@@ -470,10 +460,7 @@ public class ReportsController implements Initializable {
             return;
         }
         
-        Label title = new Label("Customer Credit Analysis");
-        title.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;");
-        customerSummaryContainer.getChildren().add(title);
-        customerSummaryContainer.getChildren().add(new Separator());
+        // FXML already has the header
         
         for (CustomerSummary customer : customerSummaries) {
             customerSummaryContainer.getChildren().add(buildCustomerSummaryRow(customer));
@@ -491,10 +478,7 @@ public class ReportsController implements Initializable {
             return;
         }
         
-        Label title = new Label("Recent Settlement Transactions");
-        title.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;");
-        paymentHistoryContainer.getChildren().add(title);
-        paymentHistoryContainer.getChildren().add(new Separator());
+        // FXML already has the header
         
         for (PaymentItem payment : payments) {
             paymentHistoryContainer.getChildren().add(buildPaymentRow(payment));
@@ -526,12 +510,8 @@ public class ReportsController implements Initializable {
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(12, 0, 12, 0));
-
-        VBox wrapper = new VBox(new Separator(), row);
-        HBox outer = new HBox(wrapper);
-        HBox.setHgrow(wrapper, Priority.ALWAYS);
-        return outer;
+        row.getStyleClass().add("report-row");
+        return row;
     }
 
     private HBox buildSaleRow(SaleItem item) {
@@ -581,13 +561,8 @@ public class ReportsController implements Initializable {
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(10, 0, 10, 0));
-
-        VBox wrapper = new VBox(new Separator(), row);
-        wrapper.setPadding(new Insets(0));
-        HBox outer = new HBox(wrapper);
-        HBox.setHgrow(wrapper, Priority.ALWAYS);
-        return outer;
+        row.getStyleClass().add("report-row");
+        return row;
     }
 
     private HBox buildServiceRow(ServiceItem item) {
@@ -610,12 +585,8 @@ public class ReportsController implements Initializable {
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(5, 0, 5, 0));
-
-        VBox wrapper = new VBox(new Separator(), row);
-        HBox outer = new HBox(wrapper);
-        HBox.setHgrow(wrapper, Priority.ALWAYS);
-        return outer;
+        row.getStyleClass().add("report-row");
+        return row;
     }
 
     private HBox buildExpenseRow(ExpenseItem expense) {
@@ -637,12 +608,8 @@ public class ReportsController implements Initializable {
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(10, 0, 10, 0));
-
-        VBox wrapper = new VBox(new Separator(), row);
-        HBox outer = new HBox(wrapper);
-        HBox.setHgrow(wrapper, Priority.ALWAYS);
-        return outer;
+        row.getStyleClass().add("report-row");
+        return row;
     }
 
     private HBox buildTopProductRow(TopProduct product) {
@@ -664,7 +631,7 @@ public class ReportsController implements Initializable {
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(12, 0, 12, 0));
+        row.getStyleClass().add("report-row");
 
         return row;
     }
@@ -689,7 +656,7 @@ public class ReportsController implements Initializable {
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(12, 0, 12, 0));
+        row.getStyleClass().add("report-row");
 
         return row;
     }
@@ -721,7 +688,7 @@ public class ReportsController implements Initializable {
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(12, 0, 12, 0));
+        row.getStyleClass().add("report-row");
 
         return row;
     }

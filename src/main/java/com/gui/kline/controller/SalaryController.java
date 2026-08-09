@@ -311,10 +311,10 @@ public class SalaryController implements Initializable {
                 wrap.setAlignment(Pos.CENTER);
 
                 if (hasPayments) {
-                    Button del = new Button("🗑");
-                    del.setStyle("-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-font-size: 15px; -fx-cursor: hand;");
-                    del.setOnMouseEntered(ev -> del.setStyle("-fx-background-color: transparent; -fx-text-fill: #dc2626; -fx-font-size: 15px; -fx-cursor: hand;"));
-                    del.setOnMouseExited(ev -> del.setStyle("-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-font-size: 15px; -fx-cursor: hand;"));
+                    Button del = new Button("History");
+                    del.setStyle("-fx-background-color: transparent; -fx-text-fill: #6b7280; -fx-font-size: 12px; -fx-font-weight: bold; -fx-cursor: hand; -fx-underline: true;");
+                    del.setOnMouseEntered(ev -> del.setStyle("-fx-background-color: transparent; -fx-text-fill: #374151; -fx-font-size: 12px; -fx-font-weight: bold; -fx-cursor: hand; -fx-underline: true;"));
+                    del.setOnMouseExited(ev -> del.setStyle("-fx-background-color: transparent; -fx-text-fill: #6b7280; -fx-font-size: 12px; -fx-font-weight: bold; -fx-cursor: hand; -fx-underline: true;"));
                     del.setOnAction(ev -> showPaymentHistory(worker));
                     wrap.getChildren().add(del);
                 }
@@ -586,12 +586,12 @@ public class SalaryController implements Initializable {
             @Override protected void updateItem(LedgerEntry e, boolean empty) {
                 super.updateItem(e, empty);
                 if (empty || e == null) { setGraphic(null); return; }
-                Button del = new Button("🗑");
-                del.setStyle("-fx-background-color: transparent; -fx-text-fill: #fca5a5; -fx-font-size: 15px; -fx-cursor: hand;");
-                del.setOnMouseEntered(ev -> del.setStyle("-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-font-size: 15px; -fx-cursor: hand;"));
-                del.setOnMouseExited(ev  -> del.setStyle("-fx-background-color: transparent; -fx-text-fill: #fca5a5; -fx-font-size: 15px; -fx-cursor: hand;"));
-                Button edit = new Button("✎");
-                edit.setStyle("-fx-background-color: transparent; -fx-text-fill: #60a5fa; -fx-font-size: 15px; -fx-cursor: hand;");
+                Button del = new Button("Delete");
+                del.setStyle("-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-font-size: 12px; -fx-font-weight: bold; -fx-cursor: hand;");
+                del.setOnMouseEntered(ev -> del.setStyle("-fx-background-color: transparent; -fx-text-fill: #dc2626; -fx-font-size: 12px; -fx-font-weight: bold; -fx-cursor: hand;"));
+                del.setOnMouseExited(ev  -> del.setStyle("-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-font-size: 12px; -fx-font-weight: bold; -fx-cursor: hand;"));
+                Button edit = new Button("Edit");
+                edit.setStyle("-fx-background-color: transparent; -fx-text-fill: #3b82f6; -fx-font-size: 12px; -fx-font-weight: bold; -fx-cursor: hand;");
                 edit.setOnAction(ev -> {
                     Stage ownerStage = (Stage) ((Node) ev.getSource()).getScene().getWindow();
                     if (e.getType().equalsIgnoreCase("SETTLEMENT")) {
@@ -874,10 +874,10 @@ public class SalaryController implements Initializable {
             @Override protected void updateItem(LedgerEntry e, boolean empty) {
                 super.updateItem(e, empty);
                 if (empty || e == null) { setGraphic(null); return; }
-                Button del = new Button("🗑");
-                del.setStyle("-fx-background-color: transparent; -fx-text-fill: #fca5a5; -fx-font-size: 15px; -fx-cursor: hand;");
-                del.setOnMouseEntered(ev -> del.setStyle("-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-font-size: 15px; -fx-cursor: hand;"));
-                del.setOnMouseExited(ev  -> del.setStyle("-fx-background-color: transparent; -fx-text-fill: #fca5a5; -fx-font-size: 15px; -fx-cursor: hand;"));
+                Button del = new Button("Delete");
+                del.setStyle("-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-font-size: 12px; -fx-font-weight: bold; -fx-cursor: hand;");
+                del.setOnMouseEntered(ev -> del.setStyle("-fx-background-color: transparent; -fx-text-fill: #dc2626; -fx-font-size: 12px; -fx-font-weight: bold; -fx-cursor: hand;"));
+                del.setOnMouseExited(ev  -> del.setStyle("-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-font-size: 12px; -fx-font-weight: bold; -fx-cursor: hand;"));
 
                 del.setOnAction(ev -> {
                     if ("ADVANCE".equalsIgnoreCase(e.getType())) {

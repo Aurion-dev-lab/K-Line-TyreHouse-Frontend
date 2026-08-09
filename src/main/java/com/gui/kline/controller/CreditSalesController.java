@@ -154,13 +154,30 @@ public class CreditSalesController implements Initializable {
                 
                 box.setPadding(new Insets(5, 0, 0, 0));
                 box.setStyle("-fx-spacing: 6;");
+                box.setAlignment(javafx.geometry.Pos.CENTER);
                 box.getChildren().addAll(btnView, btnEdit, btnSettle, btnDelete);
             }
             
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                setGraphic(empty ? null : box);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    CreditSaleRow row = getTableView().getItems().get(getIndex());
+                    if (row != null && "PAID".equalsIgnoreCase(row.getStatus())) {
+                        btnEdit.setVisible(false);
+                        btnEdit.setManaged(false);
+                        btnSettle.setVisible(false);
+                        btnSettle.setManaged(false);
+                    } else {
+                        btnEdit.setVisible(true);
+                        btnEdit.setManaged(true);
+                        btnSettle.setVisible(true);
+                        btnSettle.setManaged(true);
+                    }
+                    setGraphic(box);
+                }
             }
         });
     }
@@ -294,6 +311,11 @@ public class CreditSalesController implements Initializable {
             dialog.initOwner(owner);
             dialog.initModality(javafx.stage.Modality.WINDOW_MODAL);
         }
+
+        // Apply custom styling to the dialog pane
+        javafx.scene.control.DialogPane dialogPane = dialog.getDialogPane();
+        dialogPane.getStylesheets().add(getClass().getResource("/com/gui/kline/css/sales-dialog.css").toExternalForm());
+        dialogPane.getStyleClass().add("custom-alert");
 
         Optional<String> result = dialog.showAndWait();
         if (result.isEmpty()) {

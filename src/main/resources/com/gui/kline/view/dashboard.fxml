@@ -220,20 +220,16 @@
                                 </HBox>
                                 <Button onAction="#handleExpandQuickActions"
                                         style="-fx-background-color: #2d2d4e; -fx-text-fill: #94a3b8; -fx-font-size: 13px; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 5 10; -fx-border-color: #3d3d6e; -fx-border-radius: 8;"
-                                        text="⛶" />
+                                        text="Open" />
                             </HBox>
 
-                            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
-                                        style="-fx-background: #1a1a2e; -fx-background-color: #1a1a2e; -fx-border-color: transparent;"
-                                        styleClass="dashboard-quick-scroll">
-                                <GridPane fx:id="quickActionsGrid" hgap="10" vgap="10"
-                                          style="-fx-background-color: #1a1a2e;">
-                                    <columnConstraints>
-                                        <ColumnConstraints hgrow="ALWAYS" percentWidth="50" />
-                                        <ColumnConstraints hgrow="ALWAYS" percentWidth="50" />
-                                    </columnConstraints>
-                                </GridPane>
-                            </ScrollPane>
+                            <GridPane fx:id="quickActionsGrid" hgap="10" vgap="10" VBox.vgrow="ALWAYS"
+                                      style="-fx-background-color: #1a1a2e;">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50" />
+                                    <ColumnConstraints hgrow="ALWAYS" percentWidth="50" />
+                                </columnConstraints>
+                            </GridPane>
                         </VBox>
 
                     </VBox>

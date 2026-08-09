@@ -541,7 +541,7 @@ public class InvoiceFormController {
         this.originalDetail = detail;
         lblInvoiceId.setText(invoiceId);
         if (lblTitle != null) {
-            lblTitle.setText("Update Quotation");
+            lblTitle.setText("Edit Quotation");
         }
         if (btnSave != null) {
             btnSave.setText("Update Quotation");

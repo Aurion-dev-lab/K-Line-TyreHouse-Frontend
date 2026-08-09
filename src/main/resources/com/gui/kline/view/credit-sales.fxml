@@ -47,7 +47,7 @@
                         <TableColumn fx:id="colDate" prefWidth="100" text="DATE" />
                         <TableColumn fx:id="colCustomer" prefWidth="150" text="CUSTOMER" />
                         <TableColumn fx:id="colDueDate" prefWidth="100" text="DUE DATE" />
-                        <TableColumn fx:id="colAmount" prefWidth="100" text="TOTAL AMOUNT" />
+                        <TableColumn fx:id="colAmount" prefWidth="130" text="TOTAL AMOUNT" />
                         <TableColumn fx:id="colStatus" prefWidth="90" text="STATUS" />
                         <TableColumn fx:id="colAction" prefWidth="300" text="ACTIONS" />
                     </columns>
@@ -159,7 +159,7 @@
                     <Insets bottom="18" left="18" right="18" top="12" />
                 </padding>
                 <Button fx:id="btnDownloadInvoice" maxWidth="1.7976931348623157E308" onAction="#onDownloadInvoice" styleClass="btn-download" text="⬇ Download PDF" />
-                <Button fx:id="btnPaymentHistory" maxWidth="1.7976931348623157E308" onAction="#onViewPaymentHistory" styleClass="btn-deselect" text="📋 Payment History" />
+                <Button fx:id="btnPaymentHistory" maxWidth="1.7976931348623157E308" onAction="#onViewPaymentHistory" styleClass="btn-history" text="📋 Payment History" />
                 <Button fx:id="btnSettleCredit" maxWidth="1.7976931348623157E308" onAction="#onSettleCredit" styleClass="btn-generate" text="Settle Credit" />
                 <Button fx:id="btnDeselect" maxWidth="1.7976931348623157E308" onAction="#onDeselect" styleClass="btn-deselect" text="Close" />
             </VBox>

@@ -49,7 +49,7 @@
                 <VBox spacing="8">
                     <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #94a3b8;" text="PRODUCT IMAGES (OPTIONAL)" />
                     <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Button fx:id="btnChooseImage" onAction="#handleChooseImage" style="-fx-background-color: #6366f1; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 8 16; -fx-background-radius: 8; -fx-cursor: hand;" text="Add Images" />
+                        <Button fx:id="btnChooseImage" onAction="#handleChooseImage" style="-fx-background-color: #00c881; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 8 16; -fx-background-radius: 8; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(0,200,129,0.3), 8, 0, 0, 3);" text="Add Images" />
                         <Button fx:id="btnClearImage" managed="false" onAction="#handleClearImage" style="-fx-background-color: transparent; -fx-text-fill: #dc2626; -fx-font-size: 13px; -fx-font-weight: bold; -fx-padding: 8 16; -fx-background-radius: 8; -fx-cursor: hand; -fx-border-color: #fecaca; -fx-border-width: 1; -fx-border-radius: 8;" text="Clear All" visible="false" />
                     </HBox>
                     <ImageView fx:id="imgPreview" fitHeight="120" fitWidth="120" managed="false" preserveRatio="true" style="-fx-background-color: #f3f4f6; -fx-background-radius: 12; -fx-padding: 8;" visible="false" />
@@ -132,8 +132,8 @@
 
                 <HBox alignment="CENTER_RIGHT" spacing="16">
                     <VBox.margin><Insets top="10" /></VBox.margin>
-                    <Button fx:id="btnCancel" onAction="#handleCancel" prefHeight="45" prefWidth="120" style="-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-font-weight: bold; -fx-cursor: hand;" text="Cancel" />
-                    <Button fx:id="btnSubmit" onAction="#handleSubmit" prefHeight="50" prefWidth="180" style="-fx-background-color: #00c853; -fx-background-radius: 14; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-cursor: hand;" text="Save Product" />
+                    <Button fx:id="btnCancel" onAction="#handleCancel" prefHeight="45" prefWidth="120" style="-fx-background-color: transparent; -fx-border-color: #cbd5e1; -fx-border-radius: 14; -fx-background-radius: 14; -fx-text-fill: #475569; -fx-font-weight: bold; -fx-font-size: 13px; -fx-cursor: hand;" text="Cancel" />
+                    <Button fx:id="btnSubmit" onAction="#handleSubmit" prefHeight="50" prefWidth="180" style="-fx-background-color: #00c881; -fx-background-radius: 14; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(0,200,129,0.35), 10, 0, 0, 4);" text="Save Product" />
                 </HBox>
             </VBox>
             </ScrollPane>

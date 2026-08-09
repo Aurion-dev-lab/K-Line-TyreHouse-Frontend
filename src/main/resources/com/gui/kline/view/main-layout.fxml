@@ -96,9 +96,6 @@
              <Button fx:id="btnUpload" onAction="#onUpload" styleClass="hide-quick-button" text="Upload">
                 <graphic><FontIcon iconColor="#10b981" iconLiteral="fas-cloud-upload-alt" iconSize="14" /></graphic>
             </Button>
-            <StackPane styleClass="connection-indicator">
-                <FontIcon fx:id="connectionBulb" iconColor="#9ca3af" iconLiteral="fas-circle" iconSize="8" />
-            </StackPane>
          <AnchorPane>
             <children>
                <HBox alignment="CENTER_LEFT" layoutY="16.0" prefWidth="200" spacing="6" styleClass="search-box">
@@ -107,9 +104,6 @@
                </HBox>
             </children>
          </AnchorPane>
-            <StackPane styleClass="user-avatar">
-                <Label fx:id="lblUserInitials" styleClass="user-initials" text="AD" />
-            </StackPane>
         </HBox>
 
         <AnchorPane fx:id="contentPane" layoutY="67.2" prefHeight="700.0" prefWidth="681.0" style="-fx-background-color: #f9fafb;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="260.0" AnchorPane.rightAnchor="260.0" AnchorPane.topAnchor="67.0" />

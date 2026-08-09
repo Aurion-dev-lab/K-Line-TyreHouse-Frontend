@@ -9,43 +9,43 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="400.0" prefWidth="400.0" style="-fx-background-color: #F9FAFB;" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.gui.kline.controller.form.ExpenseDialogController">
+<AnchorPane prefWidth="480.0" style="-fx-background-color: transparent;" stylesheets="@../../css/expenses.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.gui.kline.controller.form.ExpenseDialogController">
 
-    <VBox spacing="0" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
+    <VBox spacing="0" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, 0, 4);" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
 
-        <HBox alignment="CENTER_LEFT" style="-fx-padding: 20 24 16 24;">
-            <VBox spacing="3" HBox.hgrow="ALWAYS">
-                <Label style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #111827;" text="Add Expense" />
-                <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;" text="Record shop expenses" />
-            </VBox>
-        </HBox>
+        <!-- Header -->
+        <VBox style="-fx-padding: 24 32 20 32; -fx-background-color: #f8fafc; -fx-background-radius: 12 12 0 0; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1 0;">
+            <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #0f172a;" text="Add Expense" />
+            <Label style="-fx-font-size: 13px; -fx-text-fill: #64748b;" text="Record a new shop expense" />
+        </VBox>
 
-        <VBox spacing="16" style="-fx-padding: 0 24 20 24;">
-            <VBox spacing="4">
-                <Label style="-fx-font-size: 12px; -fx-text-fill: #374151;" text="Date" />
-                <DatePicker fx:id="dpDate" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 13px;" HBox.hgrow="ALWAYS" />
-            </VBox>
-
-            <VBox spacing="4">
-                <Label style="-fx-font-size: 12px; -fx-text-fill: #374151;" text="Description" />
-                <TextField fx:id="txtDescription" promptText="Enter expense description" style="-fx-font-size: 13px; -fx-padding: 8 12;" HBox.hgrow="ALWAYS" />
+        <!-- Form Fields -->
+        <VBox spacing="20" style="-fx-padding: 24 32 32 32;">
+            <VBox spacing="8">
+                <Label style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Date" />
+                <DatePicker fx:id="dpDate" maxWidth="Infinity" />
             </VBox>
 
-            <VBox spacing="4">
-                <Label style="-fx-font-size: 12px; -fx-text-fill: #374151;" text="Category" />
-            <ComboBox fx:id="cmbCategory" style="-fx-font-size: 13px;" HBox.hgrow="ALWAYS" />
+            <VBox spacing="8">
+                <Label style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Description" />
+                <TextField fx:id="txtDescription" promptText="Enter expense description" style="-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 10 14; -fx-font-size: 13px;" />
             </VBox>
 
-            <VBox spacing="4">
-                <Label style="-fx-font-size: 12px; -fx-text-fill: #374151;" text="Amount" />
-                <TextField fx:id="txtAmount" promptText="0.00" style="-fx-font-size: 13px; -fx-padding: 8 12;" HBox.hgrow="ALWAYS" />
+            <VBox spacing="8">
+                <Label style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Category" />
+                <ComboBox fx:id="cmbCategory" promptText="Select category" maxWidth="Infinity" style="-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 4 8; -fx-font-size: 13px;" />
+            </VBox>
+
+            <VBox spacing="8">
+                <Label style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Amount (Rs.)" />
+                <TextField fx:id="txtAmount" promptText="0.00" style="-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 10 14; -fx-font-size: 13px; -fx-font-weight: bold;" />
             </VBox>
         </VBox>
 
-        <HBox alignment="CENTER_RIGHT" style="-fx-padding: 0 24 20 24;">
-            <Button fx:id="btnCancel" onAction="#handleCancel" style="-fx-background-color: transparent; -fx-border-color: #E5E7EB; -fx-border-width: 1;                            -fx-border-radius: 8; -fx-background-radius: 8; -fx-font-size: 13px;                            -fx-text-fill: #374151; -fx-padding: 8 16; -fx-cursor: hand;" text="Cancel" />
-         <Label prefHeight="18.0" prefWidth="14.0" />
-            <Button fx:id="btnSave" onAction="#handleSave" style="-fx-background-color: #10B981; -fx-text-fill: white;                            -fx-border-radius: 8; -fx-background-radius: 8; -fx-font-size: 13px;                            -fx-font-weight: bold; -fx-padding: 8 16; -fx-cursor: hand;" text="Save Expense" />
+        <!-- Actions -->
+        <HBox alignment="CENTER_RIGHT" spacing="12" style="-fx-padding: 20 32; -fx-background-color: #f8fafc; -fx-background-radius: 0 0 12 12; -fx-border-color: #e2e8f0; -fx-border-width: 1 0 0 0;">
+            <Button fx:id="btnCancel" onAction="#handleCancel" prefHeight="40" prefWidth="100" style="-fx-background-color: transparent; -fx-border-color: #cbd5e1; -fx-border-width: 1; -fx-border-radius: 8; -fx-background-radius: 8; -fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #64748b; -fx-cursor: hand;" text="Cancel" />
+            <Button fx:id="btnSave" onAction="#handleSave" prefHeight="40" prefWidth="140" style="-fx-background-color: #10B981; -fx-text-fill: white; -fx-border-radius: 8; -fx-background-radius: 8; -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 4, 0, 0, 2);" text="Save Expense" />
         </HBox>
 
     </VBox>

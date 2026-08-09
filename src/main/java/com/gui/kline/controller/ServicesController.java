@@ -3,9 +3,7 @@ package com.gui.kline.controller;
 import com.gui.kline.controller.form.RecordServiceDialogController;
 import com.gui.kline.data.DatabaseManager;
 import com.gui.kline.models.ui.ServiceRecord;
-import com.gui.kline.models.dto.LineItem;
 import com.gui.kline.models.ViewModel;
-import com.gui.kline.utils.JsonUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -31,7 +29,6 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -69,10 +66,19 @@ public class ServicesController implements Initializable {
     private Label lblTotalRevenue;
 
     @FXML
-    private Label lblTotalProfit;
+    private Label lblTotalServices;
 
     @FXML
-    private Label lblTotalServices;
+    private Label lblServiceRevenue;
+
+    @FXML
+    private Label lblServiceCount;
+
+    @FXML
+    private Label lblQuickServiceRevenue;
+
+    @FXML
+    private Label lblQuickServiceCount;
 
     @FXML
     private TableView<ServiceRecord> tblServices;
@@ -223,35 +229,6 @@ public class ServicesController implements Initializable {
         }
     }
 
-    private void loadInvoiceServiceRows(Connection conn) throws SQLException {
-        String sql = "SELECT id, COALESCE(invoice_date, DATE(created_at)) AS d, line_items FROM invoices WHERE line_items IS NOT NULL AND line_items != ''";
-        com.fasterxml.jackson.databind.ObjectMapper mapper = com.gui.kline.utils.JsonUtil.createObjectMapper();
-        try (PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                String id = rs.getString(1);
-                LocalDate serviceDate = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, 2);
-                String lineItemsJson = rs.getString(3);
-                if (lineItemsJson != null && !lineItemsJson.isBlank()) {
-                    try {
-                        List<com.gui.kline.models.dto.LineItem> items = mapper.readValue(lineItemsJson, new com.fasterxml.jackson.core.type.TypeReference<List<com.gui.kline.models.dto.LineItem>>() {});
-                        if (items != null) {
-                            for (com.gui.kline.models.dto.LineItem item : items) {
-                                if ("Service".equalsIgnoreCase(item.getType())) {
-                                    ServiceRecord record = new ServiceRecord(serviceDate, item.getDescription(), "Invoiced service", item.getTotal());
-                                    record.setId(id);
-                                    record.setSourceTable("invoices");
-                                    record.setIsQuickService(false);
-                                    services.add(record);
-                                }
-                            }
-                        }
-                    } catch (Exception ignored) { }
-                }
-            }
-        }
-    }
-
     private void applyFilters() {
         String query = txtFilter.getText() == null ? "" : txtFilter.getText().trim().toLowerCase();
         LocalDate from = dpFrom.getValue();
@@ -281,13 +258,23 @@ public class ServicesController implements Initializable {
     }
 
     private void refreshTotals() {
-        int count = filteredServices.size();
-        double revenue = filteredServices.stream()
-                .collect(Collectors.summingDouble(ServiceRecord::getPrice));
+        long quickCount = filteredServices.stream().filter(ServiceRecord::getIsQuickService).count();
+        double quickRevenue = filteredServices.stream().filter(ServiceRecord::getIsQuickService).mapToDouble(ServiceRecord::getPrice).sum();
 
-        lblTotalServices.setText(String.valueOf(count));
-        lblTotalRevenue.setText("Rs. " + String.format("%.2f", revenue));
-        lblTotalProfit.setText("Rs. " + String.format("%.2f", revenue));
+        long serviceCount = filteredServices.stream().filter(r -> !r.getIsQuickService()).count();
+        double serviceRevenue = filteredServices.stream().filter(r -> !r.getIsQuickService()).mapToDouble(ServiceRecord::getPrice).sum();
+
+        int totalCount = filteredServices.size();
+        double totalRevenue = quickRevenue + serviceRevenue;
+
+        if (lblServiceRevenue != null) lblServiceRevenue.setText("Rs. " + String.format("%,.2f", serviceRevenue));
+        if (lblServiceCount != null) lblServiceCount.setText(String.valueOf(serviceCount));
+
+        if (lblQuickServiceRevenue != null) lblQuickServiceRevenue.setText("Rs. " + String.format("%,.2f", quickRevenue));
+        if (lblQuickServiceCount != null) lblQuickServiceCount.setText(String.valueOf(quickCount));
+
+        if (lblTotalServices != null) lblTotalServices.setText(String.valueOf(totalCount));
+        if (lblTotalRevenue != null) lblTotalRevenue.setText("Rs. " + String.format("%,.2f", totalRevenue));
     }
 
     private void populateCommonServices() {
