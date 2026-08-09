@@ -84,10 +84,10 @@
                     <VBox.margin><Insets top="10" /></VBox.margin>
 
                     <Button fx:id="btnCancel" onAction="#handleCancel" prefHeight="45" prefWidth="120"
-                            style="-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-font-weight: bold; -fx-cursor: hand;" text="Cancel" />
+                            style="-fx-background-color: transparent; -fx-border-color: #cbd5e1; -fx-border-radius: 14; -fx-background-radius: 14; -fx-text-fill: #475569; -fx-font-weight: bold; -fx-font-size: 13px; -fx-cursor: hand;" text="Cancel" />
 
                     <Button fx:id="btnSave" onAction="#handleSave" prefHeight="50" prefWidth="180"
-                            style="-fx-background-color: #00c853; -fx-background-radius: 14; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-cursor: hand;" text="Save Worker" />
+                            style="-fx-background-color: #00c881; -fx-background-radius: 14; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(0,200,129,0.35), 10, 0, 0, 4);" text="Save Worker" />
                 </HBox>
             </VBox>
         </VBox>

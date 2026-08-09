@@ -84,10 +84,18 @@
 }
 
 .main-services-table .column-header-background {
-    -fx-background-color: #10B981;
+    -fx-background-color: #00c881;
+    -fx-background-radius: 12 12 0 0;
     -fx-padding: 0;
-    -fx-border-color: transparent transparent #047857 transparent;
-    -fx-border-width: 0 0 1 0;
+    -fx-border-color: transparent transparent #009e65 transparent;
+    -fx-border-width: 0 0 2 0;
+}
+
+/* Filler: empty space after the last column — rounded top-right independently */
+.main-services-table .column-header-background .filler {
+    -fx-background-color: #00c881;
+    -fx-background-radius: 0 12 0 0;
+    -fx-border-color: transparent;
 }
 
 .main-services-table .column-header {
