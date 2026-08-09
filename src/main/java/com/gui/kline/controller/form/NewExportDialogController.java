@@ -42,6 +42,7 @@ public class NewExportDialogController implements Initializable {
     @FXML private Button           btnCancel;
     @FXML private Button           btnSave;
     @FXML private TextField        txtRemark;
+    @FXML private Label            lblModalTitle;
 
     private final String exportId = Utils.generateId("EXP-", 8);
     private Consumer<ExportResult> onSave;
@@ -51,6 +52,9 @@ public class NewExportDialogController implements Initializable {
     }
 
     public void setEditMode(ExportRecord record) {
+        if (lblModalTitle != null) {
+            lblModalTitle.setText("Edit Export Record");
+        }
         txtSerialNumber.setText(record.getSerialNumber() != null ? record.getSerialNumber() : "");
         txtCompany.setText(record.getCompany());
         txtTyreSize.setText(record.getTyreSize() != null ? record.getTyreSize() : "");

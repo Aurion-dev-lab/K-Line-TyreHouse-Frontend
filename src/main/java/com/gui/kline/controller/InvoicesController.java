@@ -66,6 +66,7 @@ public class InvoicesController implements Initializable {
     @FXML private HBox  hboxDiscount;
     @FXML private Label lblDiscount;
     @FXML private Label lblGrandTotal;
+    @FXML private Button btnGenerate;
     @FXML private Button btnDownloadPdf;
     @FXML private HBox  hboxVehicleNumber;
     @FXML private Label lblVehicleNumber;
@@ -342,6 +343,10 @@ public class InvoicesController implements Initializable {
             insertServiceEntryForServiceInvoice(currentInvoiceDetail);
         }
         
+        if (btnGenerate != null) {
+            btnGenerate.setDisable(true);
+        }
+
         showSuccess("Invoice " + (isEditMode ? "updated" : "created")
                 + " successfully. You can now download it as a PDF.");
         // Keep the detail panel open so the user can download the generated PDF.
@@ -541,6 +546,12 @@ public class InvoicesController implements Initializable {
         vboxLineItems.getChildren().clear();
         currentInvoiceDetail.getLineItems().forEach(this::addLineItemToPanel);
         updateTotals();
+
+        if (btnGenerate != null) {
+            boolean isCompleted = "completed".equalsIgnoreCase(invoice.getStatus())
+                    || (currentInvoiceDetail.getStatus() != null && "completed".equalsIgnoreCase(currentInvoiceDetail.getStatus()));
+            btnGenerate.setDisable(isCompleted);
+        }
     }
 
     private void clearDetailPanel() {
@@ -578,6 +589,7 @@ public class InvoicesController implements Initializable {
     private void disableDetailPanel() {
         rightPanel.setDisable(true);
         rightPanel.setOpacity(0.45);
+        if (btnGenerate != null) btnGenerate.setDisable(false);
         if (btnDownloadPdf != null) btnDownloadPdf.setDisable(true);
         clearDetailPanel();
     }
