@@ -84,69 +84,94 @@
                         </VBox>
 
                         <!-- Service Insights Side Card -->
-                        <VBox maxWidth="310.0" minWidth="260.0" prefWidth="280.0" spacing="20.0" styleClass="insights-card">
+                        <VBox maxWidth="310.0" minWidth="260.0" prefWidth="280.0" spacing="16.0" styleClass="insights-card">
                             <padding>
-                                <Insets bottom="24.0" left="20.0" right="20.0" top="24.0" />
+                                <Insets bottom="20.0" left="18.0" right="18.0" top="20.0" />
                             </padding>
                             <children>
-                                <Label style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;" text="Service Insights" />
+                                <VBox spacing="2.0">
+                                    <children>
+                                        <Label style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;" text="Service Insights" />
+                                        <Label style="-fx-text-fill: #6b7280; -fx-font-size: 11px; -fx-font-weight: bold;" text="SUMMARY OVERVIEW" />
+                                    </children>
+                                </VBox>
 
                                 <VBox spacing="10.0">
                                     <children>
-                                        <HBox alignment="CENTER_LEFT">
+                                        <!-- Invoiced Services Tile -->
+                                        <VBox spacing="8.0" style="-fx-background-color: rgba(59, 130, 246, 0.08); -fx-background-radius: 10; -fx-padding: 10 12;">
                                             <children>
-                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 13px;" text="Services Revenue" />
-                                                <Region HBox.hgrow="ALWAYS" />
-                                                <Label fx:id="lblServiceRevenue" style="-fx-text-fill: #3b82f6; -fx-font-size: 15px; -fx-font-weight: bold;" text="Rs. 0" />
+                                                <Label style="-fx-text-fill: #60a5fa; -fx-font-size: 11px; -fx-font-weight: bold;" text="INVOICED SERVICES" />
+                                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                                    <children>
+                                                        <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                                            <children>
+                                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 11px;" text="Revenue" />
+                                                                <Label fx:id="lblServiceRevenue" style="-fx-text-fill: #3b82f6; -fx-font-size: 15px; -fx-font-weight: bold;" text="Rs. 0" />
+                                                            </children>
+                                                        </VBox>
+                                                        <VBox alignment="TOP_RIGHT" spacing="2.0">
+                                                            <children>
+                                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 11px;" text="Count" />
+                                                                <Label fx:id="lblServiceCount" style="-fx-text-fill: #e2e8f0; -fx-font-size: 15px; -fx-font-weight: bold;" text="0" />
+                                                            </children>
+                                                        </VBox>
+                                                    </children>
+                                                </HBox>
                                             </children>
-                                        </HBox>
-                                        <HBox alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 12px;" text="Services Count" />
-                                                <Region HBox.hgrow="ALWAYS" />
-                                                <Label fx:id="lblServiceCount" style="-fx-text-fill: #e2e8f0; -fx-font-size: 14px; -fx-font-weight: bold;" text="0" />
-                                            </children>
-                                        </HBox>
+                                        </VBox>
 
-                                        <Separator opacity="0.1" />
+                                        <!-- Quick Services Tile -->
+                                        <VBox spacing="8.0" style="-fx-background-color: rgba(251, 191, 36, 0.08); -fx-background-radius: 10; -fx-padding: 10 12;">
+                                            <children>
+                                                <Label style="-fx-text-fill: #fcd34d; -fx-font-size: 11px; -fx-font-weight: bold;" text="QUICK SERVICES" />
+                                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                                    <children>
+                                                        <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                                            <children>
+                                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 11px;" text="Revenue" />
+                                                                <Label fx:id="lblQuickServiceRevenue" style="-fx-text-fill: #fbbf24; -fx-font-size: 15px; -fx-font-weight: bold;" text="Rs. 0" />
+                                                            </children>
+                                                        </VBox>
+                                                        <VBox alignment="TOP_RIGHT" spacing="2.0">
+                                                            <children>
+                                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 11px;" text="Count" />
+                                                                <Label fx:id="lblQuickServiceCount" style="-fx-text-fill: #e2e8f0; -fx-font-size: 15px; -fx-font-weight: bold;" text="0" />
+                                                            </children>
+                                                        </VBox>
+                                                    </children>
+                                                </HBox>
+                                            </children>
+                                        </VBox>
 
-                                        <HBox alignment="CENTER_LEFT">
+                                        <!-- Total Overview Tile -->
+                                        <VBox spacing="8.0" style="-fx-background-color: rgba(16, 185, 129, 0.12); -fx-background-radius: 10; -fx-padding: 12; -fx-border-color: rgba(16, 185, 129, 0.3); -fx-border-radius: 10; -fx-border-width: 1;">
                                             <children>
-                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 13px;" text="Quick Services Revenue" />
-                                                <Region HBox.hgrow="ALWAYS" />
-                                                <Label fx:id="lblQuickServiceRevenue" style="-fx-text-fill: #fbbf24; -fx-font-size: 15px; -fx-font-weight: bold;" text="Rs. 0" />
+                                                <Label style="-fx-text-fill: #34d399; -fx-font-size: 11px; -fx-font-weight: bold;" text="TOTAL OVERVIEW" />
+                                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                                    <children>
+                                                        <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                                            <children>
+                                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 11px;" text="Total Revenue" />
+                                                                <Label fx:id="lblTotalRevenue" style="-fx-text-fill: #10b981; -fx-font-size: 17px; -fx-font-weight: bold;" text="Rs. 0" />
+                                                            </children>
+                                                        </VBox>
+                                                        <VBox alignment="TOP_RIGHT" spacing="2.0">
+                                                            <children>
+                                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 11px;" text="Total Services" />
+                                                                <Label fx:id="lblTotalServices" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" text="0" />
+                                                            </children>
+                                                        </VBox>
+                                                    </children>
+                                                </HBox>
                                             </children>
-                                        </HBox>
-                                        <HBox alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 12px;" text="Quick Services Count" />
-                                                <Region HBox.hgrow="ALWAYS" />
-                                                <Label fx:id="lblQuickServiceCount" style="-fx-text-fill: #e2e8f0; -fx-font-size: 14px; -fx-font-weight: bold;" text="0" />
-                                            </children>
-                                        </HBox>
-
-                                        <Separator opacity="0.1" />
-
-                                        <HBox alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 13px;" text="Total Services" />
-                                                <Region HBox.hgrow="ALWAYS" />
-                                                <Label fx:id="lblTotalServices" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" text="0" />
-                                            </children>
-                                        </HBox>
-                                        <HBox alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 13px;" text="Total Revenue" />
-                                                <Region HBox.hgrow="ALWAYS" />
-                                                <Label fx:id="lblTotalRevenue" style="-fx-text-fill: #10b981; -fx-font-size: 17px; -fx-font-weight: bold;" text="Rs. 0" />
-                                            </children>
-                                        </HBox>
+                                        </VBox>
                                     </children>
                                 </VBox>
 
                                 <Separator opacity="0.15" />
 
-                                <VBox spacing="12.0" VBox.vgrow="ALWAYS">
+                                <VBox spacing="10.0" VBox.vgrow="ALWAYS">
                                     <children>
                                         <Label style="-fx-text-fill: #6b7280; -fx-font-size: 11px; -fx-font-weight: bold; -fx-letter-spacing: 0.5px;" text="COMMON SERVICES" />
                                         <FlowPane fx:id="flowCommonServices" hgap="6.0" vgap="8.0">

@@ -1,5 +1,8 @@
 package com.gui.kline.data;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -8,7 +11,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public final class DatabaseManager {
-    private static final String DEFAULT_URL = "jdbc:sqlite:kline.db";
     private static volatile boolean initialized = false;
 
     private DatabaseManager() {
@@ -253,7 +255,7 @@ public final class DatabaseManager {
             initialized = true;
         } catch (SQLException ex) {
             System.err.println("=== DATABASE INITIALIZATION ERROR ===");
-            System.err.println("Database URL: " + DEFAULT_URL);
+            System.err.println("Database URL: " + getJdbcUrl());
             System.err.println("Error Message: " + ex.getMessage());
             throw new IllegalStateException("Failed to initialize local database: " + ex.getMessage(), ex);
         }
@@ -312,7 +314,18 @@ public final class DatabaseManager {
     }
 
     public static String getJdbcUrl() {
-        return getEnvOrProp("KLINE_DB_URL", "kline.dbUrl", DEFAULT_URL);
+        return getEnvOrProp("KLINE_DB_URL", "kline.dbUrl", getDefaultDbUrl());
+    }
+
+    public static String getDefaultDbUrl() {
+        String userHome = System.getProperty("user.home");
+        Path dir = Paths.get(userHome, "K-Line-Hub");
+        try {
+            Files.createDirectories(dir);
+        } catch (Exception ex) {
+            System.err.println("Failed to create database directory: " + ex.getMessage());
+        }
+        return "jdbc:sqlite:" + dir.resolve("kline.db").toAbsolutePath().toString();
     }
 
     private static String getEnvOrProp(String envKey, String propKey, String fallback) {
