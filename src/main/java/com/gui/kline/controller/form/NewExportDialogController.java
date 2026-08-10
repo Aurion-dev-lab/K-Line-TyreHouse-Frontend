@@ -1,10 +1,15 @@
 package com.gui.kline.controller.form;
 
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.ResourceBundle;
-import java.util.UUID;
 import java.util.function.Consumer;
+import com.gui.kline.utils.Utils;
+
+import com.gui.kline.models.ui.ExportRecord;
 
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -19,7 +24,10 @@ import javafx.stage.Stage;
 
 public class NewExportDialogController implements Initializable {
 
+    @FXML private TextField        txtSerialNumber;
     @FXML private TextField        txtCompany;
+    @FXML private TextField        txtTyreSize;
+    @FXML private TextField        txtTyreMake;
     @FXML private TextField        txtTyreCount;
     @FXML private TextField        txtServiceFee;
     @FXML private TextField        txtCustomerPrice;
@@ -33,12 +41,33 @@ public class NewExportDialogController implements Initializable {
     @FXML private ComboBox<String> cmbStatus;
     @FXML private Button           btnCancel;
     @FXML private Button           btnSave;
+    @FXML private TextField        txtRemark;
+    @FXML private Label            lblModalTitle;
 
-    private final String exportId = "EXP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    private final String exportId = Utils.generateId("EXP-", 8);
     private Consumer<ExportResult> onSave;
 
     public void setOnSave(Consumer<ExportResult> onSave) {
         this.onSave = onSave;
+    }
+
+    public void setEditMode(ExportRecord record) {
+        if (lblModalTitle != null) {
+            lblModalTitle.setText("Edit Export Record");
+        }
+        txtSerialNumber.setText(record.getSerialNumber() != null ? record.getSerialNumber() : "");
+        txtCompany.setText(record.getCompany());
+        txtTyreSize.setText(record.getTyreSize() != null ? record.getTyreSize() : "");
+        txtTyreMake.setText(record.getTyreMake() != null ? record.getTyreMake() : "");
+        txtTyreCount.setText(String.valueOf(record.getTyres()));
+        txtServiceFee.setText(String.valueOf(record.getServiceCharge()));
+        txtCustomerPrice.setText(String.valueOf(record.getCustPrice()));
+        txtCompanyPrice.setText(String.valueOf(record.getCompPrice()));
+        txtPaidNow.setText(String.valueOf(record.getPaidAmount()));
+        dpDateSent.setValue(record.getDate());
+        cmbStatus.setValue(record.getStatus());
+        txtRemark.setText(record.getRemark() != null ? record.getRemark() : "");
+        refreshSummary();
     }
 
     @Override
@@ -72,18 +101,22 @@ public class NewExportDialogController implements Initializable {
         String paymentStatus = paymentStatusFor(balanceAmount, paidAmount);
 
         ExportResult result = new ExportResult(
-            exportId,
+                exportId,
+                txtSerialNumber.getText().trim(),
                 txtCompany.getText().trim(),
+                txtTyreSize.getText().trim(),
+                txtTyreMake.getText().trim(),
                 parseTyres(),
                 parseDouble(txtServiceFee),
                 parseDouble(txtCustomerPrice),
                 parseDouble(txtCompanyPrice),
-            paidAmount,
-            totalAmount,
-            balanceAmount,
-            paymentStatus,
+                paidAmount,
+                totalAmount,
+                balanceAmount,
+                paymentStatus,
                 dpDateSent.getValue() != null ? dpDateSent.getValue() : LocalDate.now(),
-                cmbStatus.getValue()
+                cmbStatus.getValue(),
+                txtRemark.getText().trim()
         );
         if (onSave != null) onSave.accept(result);
         closeStage();
@@ -135,7 +168,10 @@ public class NewExportDialogController implements Initializable {
 
     public record ExportResult(
             String    exportId,
+            String    serialNumber,
             String    company,
+            String    tyreSize,
+            String    tyreMake,
             int       tyres,
             double    serviceFee,
             double    custPrice,
@@ -145,6 +181,7 @@ public class NewExportDialogController implements Initializable {
             double    balanceAmount,
             String    paymentStatus,
             LocalDate date,
-            String    status
+            String    status,
+            String    remark
     ) {}
 }

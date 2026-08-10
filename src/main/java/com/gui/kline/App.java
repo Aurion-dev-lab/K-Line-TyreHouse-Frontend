@@ -6,10 +6,10 @@ import com.gui.kline.utils.AlertUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
+
+import java.io.IOException;
 
 public class App extends Application {
-
     @Override
     public void start(Stage primaryStage) throws IOException {
         try {
@@ -22,9 +22,15 @@ public class App extends Application {
         
         // Store the primary stage for proper window management
         ViewModel.INSTANCE.getViewsFactory().setPrimaryStage(primaryStage);
-        
-        // Load the main layout
+
+        // Load the main layout (this reuses the primary stage as the visible window)
         ViewModel.INSTANCE.getViewsFactory().getView("main-layout");
+
+        // Only exit the application when the main window is closed, not when a
+        // transient dialog/alert is dismissed. Without this, closing an unowned
+        // alert can terminate the whole application.
+        Platform.setImplicitExit(false);
+        primaryStage.setOnCloseRequest(e -> Platform.exit());
     }
 
     public static void main(String[] args) {

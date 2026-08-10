@@ -1,19 +1,23 @@
 package com.gui.kline.controller;
 
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import com.gui.kline.utils.Utils;
 
+import com.gui.kline.data.DatabaseManager;
 import com.gui.kline.data.LocalCatalogRepository;
 import com.gui.kline.data.LocalInvoiceRepository;
-import com.gui.kline.data.SyncQueueReader;
-import com.gui.kline.data.SyncQueueRepository;
-import com.gui.kline.models.InvoiceDetail;
-import com.gui.kline.models.InvoiceRow;
-import com.gui.kline.models.LineItem;
+import com.gui.kline.controller.form.InvoiceFormController;
+import com.gui.kline.models.dto.InvoiceDetail;
+import com.gui.kline.models.dto.InvoiceRow;
+import com.gui.kline.models.dto.LineItem;
 import com.gui.kline.models.Product;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.utils.JsonUtil;
@@ -23,6 +27,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -35,15 +40,16 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 public class InvoicesController implements Initializable {
-
     @FXML private Button btnNewInvoice;
     @FXML private TableView<InvoiceRow>            tblInvoices;
     @FXML private TableColumn<InvoiceRow, String>  colDate;
     @FXML private TableColumn<InvoiceRow, String>  colCustomer;
     @FXML private TableColumn<InvoiceRow, String>  colType;
+    @FXML private TableColumn<InvoiceRow, String>  colStatus;
     @FXML private TableColumn<InvoiceRow, Integer> colItems;
     @FXML private TableColumn<InvoiceRow, Double>  colTotal;
     @FXML private TableColumn<InvoiceRow, Void>    colAction;
@@ -53,24 +59,28 @@ public class InvoicesController implements Initializable {
     @FXML private Label lblCustomer;
     @FXML private Label lblInvoiceDate;
     @FXML private Label lblInvoiceType;
+    @FXML private HBox  hboxType;
     @FXML private VBox  vboxLineItems;
     @FXML private Label lblSubtotal;
-    @FXML private Label lblTax;
+    @FXML private Label lblPhone;
+    @FXML private HBox  hboxDiscount;
+    @FXML private Label lblDiscount;
     @FXML private Label lblGrandTotal;
+    @FXML private Button btnGenerate;
+    @FXML private Button btnDownloadPdf;
+    @FXML private HBox  hboxVehicleNumber;
+    @FXML private Label lblVehicleNumber;
     // Removed: cboInvType, cboInvProduct, txtInvService, txtInvQty, txtInvAmount, btnAddToInvoice
     // (These FXML elements were removed from the UI)
     // ...existing code...
     private final ObservableList<InvoiceRow> invoiceList =
-            FXCollections.observableArrayList();
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
+            FXCollections.observableArrayList();    private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
     private final LocalInvoiceRepository invoiceRepository = new LocalInvoiceRepository();
     private Map<String, Product> productMap = new HashMap<>();
 
     private InvoiceRow    selectedInvoice      = null;
     private InvoiceDetail currentInvoiceDetail = null;
     private boolean       isEditMode           = false;
-
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setupTableColumns();
@@ -78,7 +88,7 @@ public class InvoicesController implements Initializable {
         loadProductMap();
         loadFromLocal();
         tblInvoices.setItems(invoiceList);
-        hideDetailPanel(); // hidden by default, not dimmed
+        disableDetailPanel();
     }
 
     private void loadProductMap() {
@@ -95,6 +105,8 @@ public class InvoicesController implements Initializable {
                 new javafx.beans.property.SimpleStringProperty(cd.getValue().getCustomer()));
         colType.setCellValueFactory(cd ->
                 new javafx.beans.property.SimpleStringProperty(cd.getValue().getType()));
+        colStatus.setCellValueFactory(cd ->
+                new javafx.beans.property.SimpleStringProperty(cd.getValue().getStatus().toUpperCase()));
         colItems.setCellValueFactory(cd ->
                 new javafx.beans.property.SimpleIntegerProperty(cd.getValue().getItemCount()).asObject());
         colTotal.setCellValueFactory(cd ->
@@ -103,8 +115,7 @@ public class InvoicesController implements Initializable {
         colType.setCellFactory(col -> new TableCell<>() {
             private final Label pill = new Label();
             {
-                pill.setStyle("-fx-padding: 2 9 2 9; -fx-background-radius: 20; " +
-                        "-fx-font-size: 10px; -fx-font-weight: bold;");
+                pill.setStyle("-fx-padding: 2 9 2 9; -fx-background-radius: 20; -fx-font-size: 10px; -fx-font-weight: bold;");
             }
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -125,8 +136,7 @@ public class InvoicesController implements Initializable {
             @Override
             protected void updateItem(Double item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? null :
-                        "Rs. " + String.format("%,.0f", item));
+                setText(empty || item == null ? null : "Rs. " + String.format("%,.0f", item));
             }
         });
 
@@ -137,15 +147,9 @@ public class InvoicesController implements Initializable {
             private final Button btnDelete = new Button("✕");
             
             {
-                btnView.setStyle("-fx-background-color: #3b82f6; -fx-border-color: #1e3a8a; " +
-                        "-fx-border-radius: 6; -fx-font-size: 11px; -fx-text-fill: #ffffff; " +
-                        "-fx-padding: 4 10 4 10; -fx-cursor: hand; -fx-font-weight: bold;");
-                btnEdit.setStyle("-fx-background-color: #f59e0b; -fx-border-color: #b45309; " +
-                        "-fx-border-radius: 6; -fx-font-size: 11px; -fx-text-fill: #ffffff; " +
-                        "-fx-padding: 4 10 4 10; -fx-cursor: hand; -fx-font-weight: bold;");
-                btnDelete.setStyle("-fx-background-color: #ef4444; -fx-border-color: #991b1b; " +
-                        "-fx-border-radius: 6; -fx-font-size: 11px; -fx-text-fill: #ffffff; " +
-                        "-fx-padding: 4 8 4 8; -fx-cursor: hand; -fx-font-weight: bold;");
+                btnView.setStyle("-fx-background-color: transparent; -fx-border-color: #3b82f6; -fx-text-fill: #3b82f6; -fx-border-radius: 6; -fx-padding: 5 12; -fx-cursor: hand; -fx-font-size: 12px; -fx-font-weight: bold;");
+                btnEdit.setStyle("-fx-background-color: transparent; -fx-border-color: #d97706; -fx-text-fill: #d97706; -fx-border-radius: 6; -fx-padding: 5 12; -fx-cursor: hand; -fx-font-size: 12px; -fx-font-weight: bold;");
+                btnDelete.setStyle("-fx-background-color: transparent; -fx-border-color: #dc2626; -fx-text-fill: #dc2626; -fx-border-radius: 6; -fx-padding: 5 10; -fx-cursor: hand; -fx-font-size: 12px; -fx-font-weight: bold;");
                 
                 btnView.setOnAction(e -> {
                     InvoiceRow row = getTableView().getItems().get(getIndex());
@@ -160,6 +164,7 @@ public class InvoicesController implements Initializable {
                     onDeleteInvoice(row);
                 });
                 
+                box.setPadding(new Insets(5, 0, 0, 0));
                 box.setStyle("-fx-spacing: 6;");
                 box.getChildren().addAll(btnView, btnEdit, btnDelete);
             }
@@ -167,7 +172,19 @@ public class InvoicesController implements Initializable {
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                setGraphic(empty ? null : box);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    InvoiceRow row = getTableView().getItems().get(getIndex());
+                    if (row != null && "completed".equalsIgnoreCase(row.getStatus())) {
+                        btnEdit.setVisible(false);
+                        btnEdit.setManaged(false);
+                    } else {
+                        btnEdit.setVisible(true);
+                        btnEdit.setManaged(true);
+                    }
+                    setGraphic(box);
+                }
             }
         });
     }
@@ -180,22 +197,24 @@ public class InvoicesController implements Initializable {
     @FXML
     private void onNewInvoice(ActionEvent event) {
         Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        ViewModel.INSTANCE.getViewsFactory().getForm("form/add-invoice-dialog", ownerStage);
+        ViewModel.INSTANCE.getViewsFactory().getForm("form/invoice-form", ownerStage);
+        attachRefreshOnClose();
     }
 
     @FXML
     private void onSearch(javafx.scene.input.KeyEvent event) {
         String q = txtSearch.getText().toLowerCase().trim();
-        tblInvoices.setItems(q.isEmpty() ? invoiceList :
-                invoiceList.filtered(inv ->
-                        inv.getCustomer().toLowerCase().contains(q) ||
-                                inv.getDate().toLowerCase().contains(q)     ||
-                                inv.getInvoiceId().toLowerCase().contains(q)));
+        tblInvoices.setItems(q.isEmpty() ? invoiceList : invoiceList.filtered(inv ->
+                (inv.getCustomer() != null && inv.getCustomer().toLowerCase().contains(q)) ||
+                (inv.getDate() != null && inv.getDate().toLowerCase().contains(q)) ||
+                (inv.getInvoiceId() != null && inv.getInvoiceId().toLowerCase().contains(q)) ||
+                (inv.getType() != null && inv.getType().toLowerCase().contains(q)) ||
+                (inv.getStatus() != null && inv.getStatus().toLowerCase().contains(q))));
     }
 
     private void onViewInvoice(InvoiceRow invoice) {
         selectedInvoice = invoice;
-        isEditMode = false;  // Read-only mode
+        isEditMode = false;
         enableDetailPanel();
         loadInvoiceDetail(invoice);
     }
@@ -205,25 +224,40 @@ public class InvoicesController implements Initializable {
      */
     private void onEditInvoice(InvoiceRow invoice) {
         try {
-            selectedInvoice = invoice;
-            isEditMode = true;
-            
-            // Load invoice detail
             InvoiceDetail detail = invoiceRepository.loadInvoiceDetail(invoice.getInvoiceId());
             if (detail == null) {
                 showError("Could not load invoice details");
                 return;
             }
-            
-            // Open edit dialog
+            if ("completed".equalsIgnoreCase(detail.getStatus())) {
+                showError("Completed invoices cannot be edited. Create a new quotation for any changes.");
+                return;
+            }
+
             Stage ownerStage = (Stage) tblInvoices.getScene().getWindow();
-            ViewModel.INSTANCE.getViewsFactory().getForm("form/add-invoice-dialog", ownerStage);
-            
-            // Note: The dialog will need to support edit mode via initialization
-            showSuccess("Edit dialog opened");
+            InvoiceFormController controller = ViewModel.INSTANCE.getViewsFactory()
+                    .getForm("form/invoice-form", ownerStage);
+            if (controller != null) {
+                controller.setEditMode(invoice.getInvoiceId(), detail);
+            }
+            attachRefreshOnClose();
         } catch (Exception ex) {
             showError("Error opening edit dialog: " + ex.getMessage());
         }
+    }
+
+    private void attachRefreshOnClose() {
+        Stage dialogStage = ViewModel.INSTANCE.getViewsFactory().getLastDialogStage();
+        if (dialogStage != null) {
+            dialogStage.setOnHidden(e -> refreshTable());
+        }
+    }
+
+    private void refreshTable() {
+        loadFromLocal();
+        loadProductMap();
+        tblInvoices.setItems(invoiceList);
+        tblInvoices.refresh();
     }
 
     // Removed: onInvTypeChange, updateProductServiceDisplay, onAddToInvoice
@@ -264,12 +298,15 @@ public class InvoicesController implements Initializable {
 
     @FXML
     private void onGenerateInvoice(ActionEvent event) {
-        if (currentInvoiceDetail == null ||
-                currentInvoiceDetail.getLineItems().isEmpty()) {
+        if (currentInvoiceDetail == null || currentInvoiceDetail.getLineItems().isEmpty()) {
             showError("Add at least one line item before generating.");
             return;
         }
-        String type      = currentInvoiceDetail.getLineItems().get(0).getType();
+        String type = currentInvoiceDetail.getType() != null && !currentInvoiceDetail.getType().isBlank()
+                ? currentInvoiceDetail.getType()
+                : (currentInvoiceDetail.getLineItems().isEmpty() ? "Sale"
+                   : currentInvoiceDetail.getLineItems().get(0).getType());
+        currentInvoiceDetail.setStatus("completed");
 
         InvoiceRow row = new InvoiceRow(
                 currentInvoiceDetail.getInvoiceId(), 
@@ -277,33 +314,99 @@ public class InvoicesController implements Initializable {
                 currentInvoiceDetail.getCustomer(), 
                 type,
                 currentInvoiceDetail.getLineItems().size(),
-                currentInvoiceDetail.getGrandTotal()
+                currentInvoiceDetail.getGrandTotal(),
+                "completed",
+                currentInvoiceDetail.getPhone(),
+                currentInvoiceDetail.getDescription(),
+                currentInvoiceDetail.getVehicleNumber()
         );
 
-        if (!isEditMode) {
-            invoiceList.add(0, row);
+        int idx = -1;
+        for (int i = 0; i < invoiceList.size(); i++) {
+            if (invoiceList.get(i).getInvoiceId().equalsIgnoreCase(row.getInvoiceId())) {
+                idx = i;
+                break;
+            }
+        }
+        if (idx >= 0) {
+            invoiceList.set(idx, row);
         } else {
-            // Update existing row
-            int idx = invoiceList.indexOf(selectedInvoice);
-            if (idx >= 0) invoiceList.set(idx, row);
+            invoiceList.add(0, row);
         }
+        selectedInvoice = row;
         
-        // Save invoice
+        // Save invoice (updates status to completed)
         invoiceRepository.saveInvoice(currentInvoiceDetail, row);
-        
-        // Only deduct inventory on first creation, not on edit
-        if (!isEditMode) {
-            deductInventory(currentInvoiceDetail);
+
+        // If this is a Service invoice, create a single service entry in the services table
+        if ("Service".equalsIgnoreCase(type)) {
+            insertServiceEntryForServiceInvoice(currentInvoiceDetail);
         }
         
-        enqueueInvoice(row, currentInvoiceDetail);
-        showSuccess("Invoice " + (isEditMode ? "updated" : "created") + " successfully.");
-        onDeselect(event);
+        if (btnGenerate != null) {
+            btnGenerate.setDisable(true);
+        }
+
+        showSuccess("Invoice " + (isEditMode ? "updated" : "created")
+                + " successfully. You can now download it as a PDF.");
+        // Keep the detail panel open so the user can download the generated PDF.
+        // The existing "Close" button still deselects when they are done.
+    }
+
+    /**
+     * Inserts a single service entry in the services table for a completed Service invoice.
+     * Uses the service description as the remark and "Invoiced Service" as the service name.
+     */
+    private void insertServiceEntryForServiceInvoice(InvoiceDetail detail) {
+        String sql = "INSERT INTO services (id, invoice_id, name, price, service_date, remark) VALUES (?, ?, ?, ?, ?, ?)";
+        String today = LocalDate.now().toString();
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, Utils.generateId("SRV-", 8));
+            ps.setString(2, detail.getInvoiceId());
+            ps.setString(3, "Invoiced Service");
+            ps.setDouble(4, detail.getGrandTotal());
+            ps.setString(5, today);
+            ps.setString(6, detail.getDescription() != null ? detail.getDescription() : "");
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            System.err.println("Failed to insert service entry for service invoice: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Export the currently loaded invoice to a PDF file chosen by the user.
+     */
+    @FXML
+    private void onDownloadPdf(ActionEvent event) {
+        if (currentInvoiceDetail == null || currentInvoiceDetail.getLineItems().isEmpty()) {
+            showError("No invoice is loaded to download.");
+            return;
+        }
+
+        Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Invoice PDF");
+        fileChooser.setInitialFileName("Invoice_" + currentInvoiceDetail.getInvoiceId() + ".pdf");
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("PDF files (*.pdf)", "*.pdf"));
+
+        java.io.File file = fileChooser.showSaveDialog(ownerStage);
+        if (file == null) {
+            return; // user cancelled
+        }
+
+        try {
+            new com.gui.kline.service.InvoicePdfService().export(currentInvoiceDetail, file);
+            showSuccess("Invoice PDF saved to:\n" + file.getAbsolutePath());
+        } catch (Exception ex) {
+            showError("Failed to generate PDF: " + ex.getMessage());
+        }
     }
 
     private void deductInventory(InvoiceDetail detail) {
         for (LineItem item : detail.getLineItems()) {
-            if ("Sales".equals(item.getType()) && item.getProductId() != null) {
+            if ("Sale".equals(item.getType()) && item.getProductId() != null) {
                 Product product = catalogRepository.findProductById(item.getProductId());
                 if (product != null) {
                     int newStock = product.getStock() - item.getQty();
@@ -324,16 +427,14 @@ public class InvoicesController implements Initializable {
                             JsonUtil.field("buyPrice", product.getBuyPrice()),
                             JsonUtil.field("sellPrice", product.getSellPrice()),
                             JsonUtil.field("stock", product.getStock())
-                    );
-                    syncQueueRepository.enqueue("product", payload);
-                }
+                    );                }
             }
         }
     }
 
     @FXML
     private void onDeselect(ActionEvent event) {
-        hideDetailPanel();
+        disableDetailPanel();
         selectedInvoice      = null;
         currentInvoiceDetail = null;
         tblInvoices.getSelectionModel().clearSelection();
@@ -349,9 +450,13 @@ public class InvoicesController implements Initializable {
         Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
         confirmDialog.setTitle("Delete Invoice");
         confirmDialog.setHeaderText("Are you sure?");
-        confirmDialog.setContentText("This will permanently delete invoice #" + invoice.getInvoiceId() + 
+        confirmDialog.setContentText("This will permanently delete invoice #" + invoice.getInvoiceId() +
                 "\n\nInventory will be restored for any products sold.");
-        
+        // Own the dialog to the main window so it doesn't open as a separate window
+        if (tblInvoices.getScene() != null && tblInvoices.getScene().getWindow() != null) {
+            confirmDialog.initOwner(tblInvoices.getScene().getWindow());
+        }
+
         if (confirmDialog.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             try {
                 // Restore inventory before deletion
@@ -393,117 +498,143 @@ public class InvoicesController implements Initializable {
                             JsonUtil.field("buyPrice", product.getBuyPrice()),
                             JsonUtil.field("sellPrice", product.getSellPrice()),
                             JsonUtil.field("stock", product.getStock())
-                    );
-                    syncQueueRepository.enqueue("product", payload);
-                }
+                    );                }
             }
         }
         loadProductMap();  // Reload product map
     }
 
     private void loadInvoiceDetail(InvoiceRow invoice) {
-        currentInvoiceDetail = new InvoiceDetail();
-        currentInvoiceDetail.setInvoiceId(invoice.getInvoiceId());
-        currentInvoiceDetail.setCustomer(invoice.getCustomer());
-        currentInvoiceDetail.setDate(invoice.getDate());
-        currentInvoiceDetail.setType(invoice.getType());
+        currentInvoiceDetail = invoiceRepository.loadInvoiceDetail(invoice.getInvoiceId());
+        if (currentInvoiceDetail == null) {
+            showError("Could not load invoice details");
+            return;
+        }
 
-        lblInvoiceId.setText("#" + invoice.getInvoiceId());
+        lblInvoiceId.setText(invoice.getInvoiceId());
         lblCustomer.setText(currentInvoiceDetail.getCustomer());
         lblInvoiceDate.setText(invoice.getDate());
-        lblInvoiceType.setText(invoice.getType());
+        
+        if ("Service".equalsIgnoreCase(invoice.getType())) {
+            if (hboxType != null) {
+                hboxType.setVisible(false);
+                hboxType.setManaged(false);
+            }
+            if (hboxVehicleNumber != null) {
+                hboxVehicleNumber.setVisible(true);
+                hboxVehicleNumber.setManaged(true);
+            }
+            if (lblVehicleNumber != null) {
+                String vehicle = currentInvoiceDetail.getVehicleNumber();
+                lblVehicleNumber.setText(vehicle != null && !vehicle.isBlank() ? vehicle : "—");
+            }
+        } else {
+            if (hboxType != null) {
+                hboxType.setVisible(true);
+                hboxType.setManaged(true);
+            }
+            lblInvoiceType.setText(invoice.getType());
+            if (hboxVehicleNumber != null) {
+                hboxVehicleNumber.setVisible(false);
+                hboxVehicleNumber.setManaged(false);
+            }
+        }
+        
+        String phone = currentInvoiceDetail.getPhone();
+        lblPhone.setText(phone != null && !phone.isBlank() ? phone : "—");
 
         vboxLineItems.getChildren().clear();
-        updateTotalsFromRow(invoice);
+        currentInvoiceDetail.getLineItems().forEach(this::addLineItemToPanel);
+        updateTotals();
+
+        if (btnGenerate != null) {
+            boolean isCompleted = "completed".equalsIgnoreCase(invoice.getStatus())
+                    || (currentInvoiceDetail.getStatus() != null && "completed".equalsIgnoreCase(currentInvoiceDetail.getStatus()));
+            btnGenerate.setDisable(isCompleted);
+        }
     }
 
     private void clearDetailPanel() {
-        lblInvoiceId.setText("#—");
+        lblInvoiceId.setText("—");
         lblCustomer.setText("—");
         lblInvoiceDate.setText("—");
+        if (hboxType != null) {
+            hboxType.setVisible(true);
+            hboxType.setManaged(true);
+        }
         lblInvoiceType.setText("—");
+        lblPhone.setText("—");
+        if (lblVehicleNumber != null) {
+            lblVehicleNumber.setText("—");
+        }
+        if (hboxVehicleNumber != null) {
+            hboxVehicleNumber.setVisible(false);
+            hboxVehicleNumber.setManaged(false);
+        }
         vboxLineItems.getChildren().clear();
         lblSubtotal.setText("Rs. 0.00");
-        lblTax.setText("Rs. 0.00");
+        if (hboxDiscount != null) {
+            hboxDiscount.setVisible(false);
+            hboxDiscount.setManaged(false);
+        }
         lblGrandTotal.setText("Rs. 0.00");
     }
 
-    // ── Show/hide (no dim/glass effect) ──────────────────────────────────────
-
-    private void showDetailPanel() {
-        rightPanel.setVisible(true);
-        rightPanel.setManaged(true);
+    private void enableDetailPanel() {
         rightPanel.setDisable(false);
         rightPanel.setOpacity(1.0);
+        if (btnDownloadPdf != null) btnDownloadPdf.setDisable(false);
     }
 
-    private void hideDetailPanel() {
-        rightPanel.setVisible(false);
-        rightPanel.setManaged(false);
+    private void disableDetailPanel() {
+        rightPanel.setDisable(true);
+        rightPanel.setOpacity(0.45);
+        if (btnGenerate != null) btnGenerate.setDisable(false);
+        if (btnDownloadPdf != null) btnDownloadPdf.setDisable(true);
         clearDetailPanel();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-
     private void updateTotals() {
         if (currentInvoiceDetail == null) return;
-        lblSubtotal.setText("Rs. "  + String.format("%,.2f", currentInvoiceDetail.getSubtotal()));
-        lblTax.setText("Rs. "       + String.format("%,.2f", currentInvoiceDetail.getTax()));
-        lblGrandTotal.setText("Rs. "+ String.format("%,.2f", currentInvoiceDetail.getGrandTotal()));
-    }
+        lblSubtotal.setText("Rs. " + String.format("%,.2f", currentInvoiceDetail.getSubtotal()));
+        
+        double discount = currentInvoiceDetail.getDiscountAmount();
+        if (discount > 0 && hboxDiscount != null && lblDiscount != null) {
+            hboxDiscount.setVisible(true);
+            hboxDiscount.setManaged(true);
+            lblDiscount.setText("- Rs. " + String.format("%,.2f", discount));
+        } else if (hboxDiscount != null) {
+            hboxDiscount.setVisible(false);
+            hboxDiscount.setManaged(false);
+        }
 
-    private void updateTotalsFromRow(InvoiceRow row) {
-        lblSubtotal.setText("Rs. " + String.format("%,.2f", row.getTotal()));
-        lblTax.setText("Rs. 0.00");
-        lblGrandTotal.setText("Rs. " + String.format("%,.2f", row.getTotal()));
+        lblGrandTotal.setText("Rs. "+ String.format("%,.2f", currentInvoiceDetail.getGrandTotal()));
     }
 
     private String generateInvoiceId() { return "INV" + System.currentTimeMillis(); }
 
-    private void enqueueInvoice(InvoiceRow row, InvoiceDetail detail) {
-        if (detail == null) {
-            return;
-        }
-        String[] items = detail.getLineItems().stream()
-                .map(item -> JsonUtil.obj(
-                        JsonUtil.field("description", item.getDescription()),
-                        JsonUtil.field("type", item.getType()),
-                        JsonUtil.field("qty", item.getQty()),
-                        JsonUtil.field("unitPrice", item.getUnitPrice()),
-                        JsonUtil.field("total", item.getTotal())
-                ))
-                .toArray(String[]::new);
-
-        String payload = JsonUtil.obj(
-                JsonUtil.field("invoiceId", row.getInvoiceId()),
-                JsonUtil.field("date", row.getDate()),
-                JsonUtil.field("customer", detail.getCustomer()),
-                JsonUtil.field("type", row.getType()),
-                JsonUtil.field("itemCount", detail.getLineItems().size()),
-                JsonUtil.field("subtotal", detail.getSubtotal()),
-                JsonUtil.field("tax", detail.getTax()),
-                JsonUtil.field("grandTotal", detail.getGrandTotal()),
-                JsonUtil.fieldRaw("items", JsonUtil.array(items))
-        );
-
-        syncQueueRepository.enqueue("invoice", payload);
-    }
-
     private void loadFromLocal() {
-        SyncQueueReader reader = new SyncQueueReader();
-        List<InvoiceRow> local = reader.loadInvoices();
+        List<InvoiceRow> local = invoiceRepository.loadInvoices();
         invoiceList.setAll(local);
     }
 
 
     private void showError(String msg) {
         Alert a = new Alert(Alert.AlertType.ERROR);
-        a.setTitle("Error"); a.setHeaderText(null); a.setContentText(msg); a.showAndWait();
+        a.setTitle("Error"); a.setHeaderText(null); a.setContentText(msg);
+        if (tblInvoices.getScene() != null && tblInvoices.getScene().getWindow() != null) {
+            a.initOwner(tblInvoices.getScene().getWindow());
+        }
+        a.showAndWait();
     }
 
     private void showSuccess(String msg) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setTitle("Success"); a.setHeaderText(null); a.setContentText(msg); a.showAndWait();
+        a.setTitle("Success"); a.setHeaderText(null); a.setContentText(msg);
+        if (tblInvoices.getScene() != null && tblInvoices.getScene().getWindow() != null) {
+            a.initOwner(tblInvoices.getScene().getWindow());
+        }
+        a.showAndWait();
     }
 
     public static class HistoryRow {

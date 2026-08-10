@@ -1,8 +1,8 @@
 package com.gui.kline.controller.form;
 
 import com.gui.kline.data.DatabaseManager;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.utils.JsonUtil;
+import com.gui.kline.utils.Utils;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -20,9 +20,6 @@ public class RecordServiceDialogController {
     @FXML private TextField   txtServiceName;
     @FXML private TextField   txtPrice;
     @FXML private DatePicker  datePicker;
-
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-
     @FXML
     public void initialize() {
         datePicker.setValue(LocalDate.now());
@@ -53,13 +50,14 @@ public class RecordServiceDialogController {
         }
 
         LocalDate serviceDate = date != null ? date : LocalDate.now();
-        String insert = "INSERT INTO services (id, name, price, service_date, remark) VALUES (UUID(), ?, ?, ?, ?)";
+        String insert = "INSERT INTO services (id, name, price, service_date, remark) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(insert)) {
-            ps.setString(1, name);
-            ps.setDouble(2, price);
-            ps.setDate(3, java.sql.Date.valueOf(serviceDate));
-            ps.setString(4, remark);
+            ps.setString(1, Utils.generateId("SRV-", 8));
+            ps.setString(2, name);
+            ps.setDouble(3, price);
+            ps.setString(4, serviceDate.toString());
+            ps.setString(5, remark);
             ps.executeUpdate();
         } catch (SQLException ex) {
             showError("Failed to save service: " + ex.getMessage());
@@ -72,8 +70,6 @@ public class RecordServiceDialogController {
                 JsonUtil.field("price", price),
                 JsonUtil.field("date", serviceDate.toString())
         );
-        syncQueueRepository.enqueue("service", payload);
-
         closeDialog();
     }
 

@@ -53,14 +53,13 @@
     -fx-background-color: transparent;
     -fx-background-radius: 8;
     -fx-text-fill: #9ea3b0;
+    -fx-alignment: center-left;
     -fx-font-size: 14px;
     -fx-padding: 12 15;
     -fx-cursor: hand;
     -fx-pref-width: 10000;
     -fx-graphic-text-gap: 14;
     -fx-border-color: transparent;
-    -fx-content-display: LEFT;
-    -fx-alignment: CENTER-LEFT;
 }
 
 .nav-button:hover {
@@ -398,4 +397,13 @@
 
 .dashboard-quick-scroll > .scroll-bar:horizontal {
     -fx-pref-height: 0;
+}
+
+.connection-indicator {
+    -fx-padding: 3 4 3 4;
+    -fx-background-radius: 8;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-radius: 8;
 }

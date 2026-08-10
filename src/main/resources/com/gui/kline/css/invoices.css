@@ -7,14 +7,18 @@
 }
 
 .btn-primary {
-    -fx-background-color: #06b6d4;
+    -fx-background-color: #00c881;
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-padding: 10 20;
     -fx-background-radius: 10;
     -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,200,129,0.3), 8, 0, 0, 3);
 }
-.btn-primary:hover {  -fx-background-color: #0891b2;  }
+
+.btn-primary:hover {
+    -fx-background-color: #00b573;
+}
 
 .left-card {
     -fx-background-color: #ffffff;
@@ -47,8 +51,9 @@
     -fx-prompt-text-fill: #94a3b8;
     -fx-padding: 0 10 0 10;
 }
+
 .search-field:focused {
-    -fx-border-color: #06b6d4;
+    -fx-border-color: #00c881;
     -fx-background-color: #ffffff;
 }
 
@@ -56,40 +61,57 @@
     -fx-background-color: #ffffff;
     -fx-background-radius: 0 0 12 12;
     -fx-border-color: transparent;
-    -fx-table-cell-border-color: #f1f5f9;
+    -fx-table-cell-border-color: #f0fdf8;
 }
 
 .main-table .column-header-background {
-    -fx-background-color: #f8fafc;
-    -fx-background-radius: 0;
+    -fx-background-color: #00c881;
+    -fx-background-radius: 12 12 0 0;
+    -fx-border-color: transparent transparent #009e65 transparent;
+    -fx-border-width: 0 0 2 0;
+    -fx-pref-height: 50px;
+}
+
+/* Filler is the empty space after the last column — must be rounded separately */
+.main-table .column-header-background .filler {
+    -fx-background-color: #00c881;
+    -fx-background-radius: 0 12 0 0;
+    -fx-border-color: transparent;
 }
 
 .main-table .column-header {
     -fx-background-color: transparent;
-    -fx-border-color: transparent;
-    -fx-padding: 0 14 0 14;
+    -fx-border-color: transparent rgba(0,0,0,0.12) transparent transparent;
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 18 14 18 14;
 }
 
 .main-table .column-header .label {
-    -fx-text-fill: #64748b;
-    -fx-font-size: 11px;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 12px;
     -fx-font-weight: bold;
-    -fx-alignment: CENTER_LEFT;
+    -fx-alignment: CENTER;
 }
 
 .main-table .table-row-cell {
     -fx-background-color: #ffffff;
-    -fx-border-color: #f1f5f9;
+    -fx-border-color: #f0fdf8;
     -fx-border-width: 0 0 1 0;
-    -fx-cell-size: 44px;
+    -fx-cell-size: 56px;
 }
 
-.main-table .table-row-cell:odd  { -fx-background-color: #f8fafc; }
+.main-table .table-row-cell:odd {
+    -fx-background-color: #f6fefb;
+}
+
 .main-table .table-row-cell:hover {
-    -fx-background-color: #eff6ff;
+    -fx-background-color: #e6fff6;
     -fx-cursor: hand;
 }
-.main-table .table-row-cell:selected { -fx-background-color: #dbeafe; }
+
+.main-table .table-row-cell:selected {
+    -fx-background-color: #b3f0dc;
+}
 
 .main-table .table-cell {
     -fx-text-fill: #334155;
@@ -145,7 +167,9 @@
     -fx-border-width: 1;
 }
 
-.panel-meta { -fx-background-color: #1e293b; }
+.panel-meta {
+    -fx-background-color: #1e293b;
+}
 
 .meta-key {
     -fx-text-fill: #64748b;
@@ -175,7 +199,7 @@
     -fx-border-color: transparent;
 }
 
-.items-scroll > .viewport {
+.items-scroll>.viewport {
     -fx-background-color: transparent;
 }
 
@@ -202,7 +226,9 @@
     -fx-opacity: 0;
 }
 
-.line-items-box { -fx-background-color: transparent; }
+.line-items-box {
+    -fx-background-color: transparent;
+}
 
 .line-item-row {
     -fx-background-color: transparent;
@@ -210,11 +236,28 @@
     -fx-border-width: 0 0 1 0;
     -fx-padding: 9 18 9 18;
 }
-.line-item-row:hover { -fx-background-color: #1a2f3f; }
 
-.li-name   { -fx-text-fill: #f1f5f9; -fx-font-size: 12px; -fx-font-weight: bold; }
-.li-detail { -fx-text-fill: #94a3b8; -fx-font-size: 10px; }
-.li-amount { -fx-text-fill: #10b981; -fx-font-size: 12px; -fx-font-weight: bold; -fx-min-width: 90; }
+.line-item-row:hover {
+    -fx-background-color: #1a2f3f;
+}
+
+.li-name {
+    -fx-text-fill: #f1f5f9;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.li-detail {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 10px;
+}
+
+.li-amount {
+    -fx-text-fill: #10b981;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-min-width: 90;
+}
 
 .li-delete {
     -fx-background-color: transparent;
@@ -224,16 +267,40 @@
     -fx-cursor: hand;
     -fx-border-color: transparent;
 }
-.li-delete:hover { -fx-text-fill: #ef4444; }
 
-.totals-box { -fx-background-color: #1e293b; }
+.li-delete:hover {
+    -fx-text-fill: #ef4444;
+}
 
-.tot-label { -fx-text-fill: #64748b; -fx-font-size: 11px; }
-.tot-val   { -fx-text-fill: #cbd5e1; -fx-font-size: 11px; }
-.tot-line  { -fx-background-color: #334155; }
+.totals-box {
+    -fx-background-color: #1e293b;
+}
 
-.grand-label { -fx-text-fill: #f1f5f9; -fx-font-size: 13px; -fx-font-weight: bold; }
-.grand-val   { -fx-text-fill: #10b981;  -fx-font-size: 15px; -fx-font-weight: bold; }
+.tot-label {
+    -fx-text-fill: #64748b;
+    -fx-font-size: 11px;
+}
+
+.tot-val {
+    -fx-text-fill: #cbd5e1;
+    -fx-font-size: 11px;
+}
+
+.tot-line {
+    -fx-background-color: #334155;
+}
+
+.grand-label {
+    -fx-text-fill: #f1f5f9;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.grand-val {
+    -fx-text-fill: #10b981;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
 
 .add-inv-box {
     -fx-background-color: #0f172a;
@@ -249,8 +316,15 @@
     -fx-font-size: 11px;
     -fx-text-fill: #f1f5f9;
 }
-.field-choice:hover { -fx-border-color: #475569; }
-.field-choice > .open-button > .arrow { -fx-background-color: #64748b; }
+
+.field-choice:hover {
+    -fx-border-color: #475569;
+}
+
+.field-choice>.open-button>.arrow {
+    -fx-background-color: #64748b;
+}
+
 .field-choice .context-menu {
     -fx-background-color: #1e293b;
     -fx-border-color: #334155;
@@ -258,11 +332,13 @@
     -fx-font-size: 11px;
     -fx-text-fill: #ffffff;
 }
+
 .field-choice .menu-item {
     -fx-background-color: transparent;
     -fx-font-size: 11px;
     -fx-text-fill: #f1f5f9;
 }
+
 .field-choice .menu-item:focused {
     -fx-background-color: #334155;
     -fx-text-fill: #ffffff;
@@ -278,11 +354,15 @@
     -fx-prompt-text-fill: #64748b;
     -fx-padding: 0 9 0 9;
 }
+
 .field-input:focused {
     -fx-border-color: #06b6d4;
     -fx-background-color: #0f172a;
 }
-.field-narrow { -fx-alignment: CENTER; }
+
+.field-narrow {
+    -fx-alignment: CENTER;
+}
 
 .btn-add-inv {
     -fx-background-color: #06b6d4;
@@ -294,7 +374,10 @@
     -fx-padding: 8 0 8 0;
     -fx-cursor: hand;
 }
-.btn-add-inv:hover { -fx-background-color: #0891b2; }
+
+.btn-add-inv:hover {
+    -fx-background-color: #0891b2;
+}
 
 .gen-box {
     -fx-background-color: #1e293b;
@@ -304,7 +387,39 @@
 }
 
 .btn-generate {
-    -fx-background-color: #10b981;
+    -fx-background-color: #00c881;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-padding: 10 0 10 0;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,200,129,0.3), 8, 0, 0, 3);
+}
+
+.btn-generate:hover {
+    -fx-background-color: #00b573;
+}
+
+.btn-deselect {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ef4444;
+    -fx-font-size: 11px;
+    -fx-background-radius: 7;
+    -fx-border-color: #ef4444;
+    -fx-border-radius: 7;
+    -fx-padding: 7 0 7 0;
+    -fx-cursor: hand;
+}
+
+.btn-deselect:hover {
+    -fx-background-color: #ef4444;
+    -fx-text-fill: #ffffff;
+}
+
+.btn-download {
+    -fx-background-color: #3b82f6;
     -fx-text-fill: #ffffff;
     -fx-font-size: 12px;
     -fx-font-weight: bold;
@@ -313,19 +428,28 @@
     -fx-padding: 10 0 10 0;
     -fx-cursor: hand;
 }
-.btn-generate:hover { -fx-background-color: #059669; }
 
-.btn-deselect {
-    -fx-background-color: transparent;
+.btn-download:hover {
+    -fx-background-color: #2563eb;
+}
+
+.btn-download:disabled {
+    -fx-background-color: #334155;
     -fx-text-fill: #64748b;
+    -fx-cursor: default;
+}
+
+.btn-history {
+    -fx-background-color: #8b5cf6;
+    -fx-text-fill: #ffffff;
     -fx-font-size: 11px;
+    -fx-font-weight: bold;
     -fx-background-radius: 7;
-    -fx-border-color: #334155;
-    -fx-border-radius: 7;
-    -fx-padding: 7 0 7 0;
+    -fx-border-color: transparent;
+    -fx-padding: 8 0 8 0;
     -fx-cursor: hand;
 }
-.btn-deselect:hover {
-    -fx-border-color: #475569;
-    -fx-text-fill: #cbd5e1;
+
+.btn-history:hover {
+    -fx-background-color: #7c3aed;
 }

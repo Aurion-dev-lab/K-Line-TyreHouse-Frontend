@@ -1,0 +1,135 @@
+package com.gui.kline.models.ui;
+
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+public class ServiceRecord {
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    private String id;
+    private String invoiceId;
+    private LocalDate date;
+    private final SimpleStringProperty dateLabel;
+    private String service;
+    private final SimpleStringProperty serviceProperty;
+    private String remark;
+    private final SimpleStringProperty remarkProperty;
+    private double price;
+    private final SimpleDoubleProperty priceProperty;
+    private final SimpleStringProperty priceLabel;
+    
+    // Source tracking for delete functionality
+    private String sourceTable;
+    private boolean isQuickService = false;
+    
+    // Customer fields for sync
+    private String customerId;
+    private String customerName;
+    
+    // Sync fields
+    private boolean syncStatus = false;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    public ServiceRecord(LocalDate date, String service, String remark, double price) {
+        this.date = date;
+        this.dateLabel = new SimpleStringProperty(date != null ? date.format(DATE_FORMAT) : "");
+        this.service = service;
+        this.serviceProperty = new SimpleStringProperty(service);
+        this.remark = remark != null ? remark : "";
+        this.remarkProperty = new SimpleStringProperty(this.remark);
+        this.price = price;
+        this.priceProperty = new SimpleDoubleProperty(price);
+        this.priceLabel = new SimpleStringProperty("Rs. " + String.format("%.2f", price));
+    }
+
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getInvoiceId() { return invoiceId; }
+    public void setInvoiceId(String invoiceId) { this.invoiceId = invoiceId; }
+
+    public String getSourceTable() { return sourceTable; }
+    public void setSourceTable(String sourceTable) { this.sourceTable = sourceTable; }
+
+    public boolean getIsQuickService() { return isQuickService; }
+    public void setIsQuickService(boolean isQuickService) { this.isQuickService = isQuickService; }
+
+    public LocalDate getDate() {
+        return date;
+    }
+    
+    public void setDate(LocalDate date) {
+        this.date = date;
+        if (dateLabel != null) {
+            dateLabel.set(date != null ? date.format(DATE_FORMAT) : "");
+        }
+    }
+
+    public double getPrice() {
+        return price;
+    }
+    
+    public void setPrice(double price) {
+        this.price = price;
+        if (priceProperty != null) {
+            priceProperty.set(price);
+        }
+        if (priceLabel != null) {
+            priceLabel.set("Rs. " + String.format("%.2f", price));
+        }
+    }
+
+    public String getService() {
+        return service;
+    }
+    
+    public void setService(String service) {
+        this.service = service;
+        if (serviceProperty != null) {
+            serviceProperty.set(service);
+        }
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+    
+    public void setRemark(String remark) {
+        this.remark = remark != null ? remark : "";
+        if (remarkProperty != null) {
+            remarkProperty.set(this.remark);
+        }
+    }
+
+    public StringProperty dateLabelProperty() {
+        return dateLabel;
+    }
+
+    public StringProperty serviceProperty() {
+        return serviceProperty;
+    }
+
+    public StringProperty remarkProperty() {
+        return remarkProperty;
+    }
+
+    public StringProperty priceLabelProperty() {
+        return priceLabel;
+    }
+
+    public StringProperty actionsProperty() {
+        return new SimpleStringProperty("");
+    }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+}

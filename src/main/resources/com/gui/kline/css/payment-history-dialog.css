@@ -1,0 +1,185 @@
+/* ── Overlay ─────────────────────────────────────────────────────────── */
+.modal-overlay {
+    -fx-background-color: rgba(0, 0, 0, 0.40);
+}
+
+/* ── Card ──────────────────────────────────────────────────────────────── */
+.modal-card {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E2E8E4;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.14), 28, 0, 0, 8);
+}
+
+/* ── Header ────────────────────────────────────────────────────────────── */
+.header-icon {
+    -fx-background-color: #E8F7F0;
+    -fx-min-width: 40;
+    -fx-min-height: 40;
+    -fx-max-width: 40;
+    -fx-max-height: 40;
+    -fx-alignment: CENTER;
+}
+
+.header-icon-path {
+    -fx-fill: #1A9E6A;
+    -fx-scale-x: 0.75;
+    -fx-scale-y: 0.75;
+}
+
+.modal-title {
+    -fx-font-family: "Segoe UI Semibold", "System Bold";
+    -fx-font-size: 17px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #111B15;
+}
+
+.modal-subtitle {
+    -fx-font-family: "Segoe UI", "System";
+    -fx-font-size: 12px;
+    -fx-text-fill: #6B7D74;
+}
+
+.modal-divider {
+    -fx-background-color: #E8EDE9;
+}
+
+/* ── Summary bar ───────────────────────────────────────────────────────── */
+.summary-bar {
+    -fx-background-color: #F4F8F6;
+    -fx-background-radius: 10;
+    -fx-border-color: #D8E4DF;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+}
+
+.summary-label {
+    -fx-font-family: "Segoe UI", "System";
+    -fx-font-size: 11px;
+    -fx-text-fill: #718880;
+    -fx-font-weight: 600;
+}
+
+.summary-value {
+    -fx-font-family: "Segoe UI Semibold", "System Bold";
+    -fx-font-size: 15px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #111B15;
+}
+
+.summary-value-red {
+    -fx-font-family: "Segoe UI Semibold", "System Bold";
+    -fx-font-size: 15px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #DC2626;
+}
+
+.summary-value-green {
+    -fx-font-family: "Segoe UI Semibold", "System Bold";
+    -fx-font-size: 15px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #059669;
+}
+
+/* ── Payment rows ─────────────────────────────────────────────────────── */
+.payment-row {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 8;
+    -fx-border-color: #E8EDE9;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.payment-row:hover {
+    -fx-background-color: #F4F8F6;
+}
+
+.payment-date {
+    -fx-font-family: "Segoe UI Semibold", "System Bold";
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #111B15;
+}
+
+.payment-method-badge {
+    -fx-background-color: #E8F7F0;
+    -fx-background-radius: 20;
+    -fx-text-fill: #1A9E6A;
+    -fx-font-family: "Segoe UI Semibold", "System Bold";
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-padding: 2 8 2 8;
+}
+
+.payment-notes {
+    -fx-font-family: "Segoe UI", "System";
+    -fx-font-size: 11px;
+    -fx-text-fill: #718880;
+}
+
+.payment-amount {
+    -fx-font-family: "Segoe UI Semibold", "System Bold";
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #059669;
+}
+
+/* ── Empty state ──────────────────────────────────────────────────────── */
+.empty-state-label {
+    -fx-font-family: "Segoe UI", "System";
+    -fx-font-size: 13px;
+    -fx-text-fill: #9CA3AF;
+    -fx-alignment: CENTER;
+}
+
+/* ── Scroll pane ──────────────────────────────────────────────────────── */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane > .scroll-bar:vertical {
+    -fx-pref-width: 6;
+}
+
+/* ── Footer button ────────────────────────────────────────────────────── */
+.btn-close {
+    -fx-background-color: #1A9E6A;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-border-radius: 8;
+    -fx-font-family: "Segoe UI Semibold", "System Bold";
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #FFFFFF;
+    -fx-cursor: hand;
+    -fx-pref-height: 42;
+}
+
+.btn-close:hover {
+    -fx-background-color: #158A5A;
+}
+
+.btn-close:pressed {
+    -fx-background-color: #0F7048;
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+
+.payment-delete-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #EF4444;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-padding: 2 6 2 6;
+    -fx-background-radius: 6;
+}
+
+.payment-delete-btn:hover {
+    -fx-background-color: #FEE2E2;
+}
+

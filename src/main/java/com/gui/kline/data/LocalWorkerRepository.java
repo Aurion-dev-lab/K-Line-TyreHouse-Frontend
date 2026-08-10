@@ -37,14 +37,15 @@ public class LocalWorkerRepository {
             return;
         }
         String sql = "INSERT INTO workers (id, name, phone, role, rate, salary_type, created_at) " +
-                "VALUES (UUID(), ?, ?, ?, ?, ?, NOW())";
+                "VALUES (?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now'))";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, name.trim());
-            statement.setString(2, phone == null ? null : phone.trim());
-            statement.setString(3, role == null ? null : role.trim());
-            statement.setString(4, rate == null ? null : rate.trim());
-            statement.setString(5, salaryType == null ? null : salaryType.trim());
+            statement.setString(1, com.gui.kline.utils.Utils.generateId("WRK-", 6));
+            statement.setString(2, name.trim());
+            statement.setString(3, phone == null ? null : phone.trim());
+            statement.setString(4, role == null ? null : role.trim());
+            statement.setString(5, rate == null ? null : rate.trim());
+            statement.setString(6, salaryType == null ? null : salaryType.trim());
             statement.executeUpdate();
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to save worker", ex);
@@ -55,7 +56,7 @@ public class LocalWorkerRepository {
         if (id == null || id.isBlank()) {
             return;
         }
-        String sql = "UPDATE workers SET name = ?, phone = ?, role = ?, rate = ?, salary_type = ? WHERE id = ?";
+        String sql = "UPDATE workers SET name = ?, phone = ?, role = ?, rate = ?, salary_type = ?, sync_status = 0 WHERE id = ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, name == null ? null : name.trim());
@@ -84,6 +85,7 @@ public class LocalWorkerRepository {
             try (PreparedStatement statement = connection.prepareStatement(deleteWorker)) {
                 statement.setString(1, id);
                 statement.executeUpdate();
+                DatabaseManager.logDeletion("workers", id);
             }
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to delete worker", ex);

@@ -12,7 +12,8 @@
 
 <AnchorPane
         prefHeight="700.0" prefWidth="1000.0"
-        style="-fx-background-color: #F9FAFB;"
+        styleClass="page-root"
+        stylesheets="@../css/tyre-exports.css"
         xmlns="http://javafx.com/javafx/17"
         xmlns:fx="http://javafx.com/fxml/1"
         fx:controller="com.gui.kline.controller.TyreExportsController">
@@ -21,76 +22,72 @@
           AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
           AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
 
+        <!-- Header -->
         <HBox alignment="CENTER_LEFT" style="-fx-padding: 24 28 16 28;">
             <VBox HBox.hgrow="ALWAYS" spacing="3">
-                <Label text="Tyre export tracking"
-                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
-                <Label text="Manage bulk tyre shipments to companies"
-                       style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"/>
+                <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;" text="Tyre Export Tracking" />
+                <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;" text="Manage bulk tyre shipments to companies" />
             </VBox>
-            <Button fx:id="btnNewExport" text="+ New export record" onAction="#handleNewExport"
-                    style="-fx-background-color: #10B981; -fx-text-fill: white;
-                           -fx-font-size: 13px; -fx-font-weight: bold;
-                           -fx-padding: 9 18; -fx-background-radius: 8; -fx-cursor: hand;"/>
+            <Button fx:id="btnNewExport" text="+ New Export Record" onAction="#handleNewExport"
+                    styleClass="btn-new-export"/>
         </HBox>
 
+        <!-- Stat Cards -->
         <HBox spacing="10" style="-fx-padding: 0 28 16 28;">
-            <VBox prefWidth="160"
-                  style="-fx-background-color: white; -fx-background-radius: 8;
-                         -fx-border-color: #E5E7EB; -fx-border-width: 1; -fx-border-radius: 8;
-                         -fx-padding: 10 14;">
-                <Label fx:id="lblShipments" text="0"
-                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
-                <Label text="Shipments"
-                       style="-fx-font-size: 12px; -fx-text-fill: #6B7280;"/>
+            <VBox spacing="10" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="📦" style="-fx-font-size: 18px; -fx-background-color: #EFF6FF; -fx-background-radius: 8; -fx-padding: 6 8 6 8;" />
+                    <Label text="SHIPMENTS" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;" />
+                </HBox>
+                <Label fx:id="lblShipments" text="0" styleClass="stat-value"/>
             </VBox>
-            <VBox prefWidth="160"
-                  style="-fx-background-color: white; -fx-background-radius: 8;
-                         -fx-border-color: #E5E7EB; -fx-border-width: 1; -fx-border-radius: 8;
-                         -fx-padding: 10 14;">
-                <Label fx:id="lblTyres" text="0"
-                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #111827;"/>
-                <Label text="Tyres exported"
-                       style="-fx-font-size: 12px; -fx-text-fill: #6B7280;"/>
+            <VBox spacing="10" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="🔄" style="-fx-font-size: 18px; -fx-background-color: #F0FDF4; -fx-background-radius: 8; -fx-padding: 6 8 6 8;" />
+                    <Label text="TYRES EXPORTED" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;" />
+                </HBox>
+                <Label fx:id="lblTyres" text="0" styleClass="stat-value"/>
             </VBox>
-            <VBox prefWidth="160"
-                  style="-fx-background-color: white; -fx-background-radius: 8;
-                         -fx-border-color: #E5E7EB; -fx-border-width: 1; -fx-border-radius: 8;
-                         -fx-padding: 10 14;">
-                <Label fx:id="lblProfit" text="Rs. 0"
-                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #059669;"/>
-                <Label text="Net profit"
-                       style="-fx-font-size: 12px; -fx-text-fill: #6B7280;"/>
+            <VBox spacing="10" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="📈" style="-fx-font-size: 18px; -fx-background-color: #ECFDF5; -fx-background-radius: 8; -fx-padding: 6 8 6 8;" />
+                    <Label text="TOTAL GAIN" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;" />
+                </HBox>
+                <Label fx:id="lblGain" text="Rs. 0" styleClass="stat-value-gain"/>
             </VBox>
-            <VBox prefWidth="160"
-                  style="-fx-background-color: white; -fx-background-radius: 8;
-                         -fx-border-color: #E5E7EB; -fx-border-width: 1; -fx-border-radius: 8;
-                         -fx-padding: 10 14;">
-                <Label fx:id="lblPending" text="0"
-                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #D97706;"/>
-                <Label text="Credit due"
-                       style="-fx-font-size: 12px; -fx-text-fill: #6B7280;"/>
+            <VBox spacing="10" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="📉" style="-fx-font-size: 18px; -fx-background-color: #FEF2F2; -fx-background-radius: 8; -fx-padding: 6 8 6 8;" />
+                    <Label text="TOTAL LOSS" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;" />
+                </HBox>
+                <Label fx:id="lblLoss" text="Rs. 0" styleClass="stat-value-loss"/>
+            </VBox>
+            <VBox spacing="10" styleClass="stat-card" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="⏳" style="-fx-font-size: 18px; -fx-background-color: #FFFBEB; -fx-background-radius: 8; -fx-padding: 6 8 6 8;" />
+                    <Label text="CREDIT DUE" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #6B7280; -fx-letter-spacing: 1.2;" />
+                </HBox>
+                <Label fx:id="lblPending" text="0" styleClass="stat-value-amber"/>
             </VBox>
         </HBox>
 
+        <!-- Filter Bar -->
         <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 0 28 12 28;">
             <TextField fx:id="txtFilter" promptText="Filter by company…"
                        onKeyReleased="#handleFilter" HBox.hgrow="ALWAYS"
-                       style="-fx-background-color: white;
-                              -fx-border-color: #D1D5DB; -fx-border-width: 1;
-                              -fx-border-radius: 8; -fx-background-radius: 8;
-                              -fx-padding: 8 12; -fx-font-size: 13px;"/>
-            <Label text="From" style="-fx-text-fill: #6B7280; -fx-font-size: 13px;"/>
-            <DatePicker fx:id="dpFrom" onAction="#handleDateFilter" prefWidth="145"/>
-            <Label text="to" style="-fx-text-fill: #6B7280; -fx-font-size: 13px;"/>
-            <DatePicker fx:id="dpTo" onAction="#handleDateFilter" prefWidth="145"/>
+                       styleClass="filter-field"/>
+            <Label text="From" styleClass="filter-label"/>
+            <DatePicker fx:id="dpFrom" onAction="#handleDateFilter" prefWidth="145" styleClass="date-picker"/>
+            <Label text="to" styleClass="filter-label"/>
+            <DatePicker fx:id="dpTo" onAction="#handleDateFilter" prefWidth="145" styleClass="date-picker"/>
         </HBox>
 
+        <!-- Card List -->
         <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
                     style="-fx-background-color: transparent; -fx-background: transparent;
                            -fx-border-color: transparent;">
             <padding><Insets left="28" right="28" bottom="24"/></padding>
-            <VBox fx:id="cardContainer" spacing="10"/>
+            <VBox fx:id="cardContainer" spacing="8"/>
         </ScrollPane>
 
     </VBox>

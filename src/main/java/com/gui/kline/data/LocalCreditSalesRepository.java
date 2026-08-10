@@ -1,11 +1,15 @@
 package com.gui.kline.data;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gui.kline.controller.CreditSalesController;
-import com.gui.kline.models.CreditSaleDetail;
-import com.gui.kline.models.Part;
+import com.gui.kline.models.dto.CreditSaleDetail;
+import com.gui.kline.models.dto.PaymentRecord;
+import com.gui.kline.models.dto.Part;
+import com.gui.kline.utils.JsonUtil;
+import com.gui.kline.utils.Utils;
 
 import java.sql.*;
-import com.gui.kline.data.DatabaseManager;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,118 +17,72 @@ import java.util.List;
 public class LocalCreditSalesRepository {
 
     private final LocalCatalogRepository catalogRepository = new LocalCatalogRepository();
+    private final ObjectMapper objectMapper = JsonUtil.createObjectMapper();
 
     public void saveCreditSale(CreditSaleDetail detail, CreditSalesController.CreditSaleRow row) {
-         String sql = "INSERT INTO credit_sales (id, credit_id, sale_date, customer_name, due_date, subtotal, paid_amount, status, created_at) " +
-                 "VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, NOW()) " +
-                 "ON DUPLICATE KEY UPDATE sale_date=?, customer_name=?, due_date=?, subtotal=?, paid_amount=?, status=?, updated_at=NOW()";
-         
-         try (Connection conn = DatabaseManager.getConnection();
-              PreparedStatement ps = conn.prepareStatement(sql)) {
-             
-             ps.setString(1, row.getCreditId());
-             ps.setString(2, row.getDate());
-             ps.setString(3, row.getCustomer());
-             ps.setString(4, row.getDueDate());
-             ps.setDouble(5, row.getAmount());
-             ps.setDouble(6, detail.getPaid());
-             ps.setString(7, row.getStatus());
-             
-             // For update clause
-             ps.setString(8, row.getDate());
-             ps.setString(9, row.getCustomer());
-             ps.setString(10, row.getDueDate());
-             ps.setDouble(11, row.getAmount());
-             ps.setDouble(12, detail.getPaid());
-             ps.setString(13, row.getStatus());
-             
-             ps.executeUpdate();
-             
-             List<Part> existingParts = loadParts(row.getCreditId());
-             if (!existingParts.isEmpty()) {
-                 restoreInventoryForCreditSale(existingParts);
-             }
+        String partsJson = null;
+        try {
+            partsJson = objectMapper.writeValueAsString(detail.getParts());
+        } catch (Exception e) {
+            System.err.println("Failed to serialize parts: " + e.getMessage());
+            e.printStackTrace();
+            partsJson = "[]";
+        }
 
-             // Save parts and update inventory
-             saveParts(row.getCreditId(), detail.getParts());
-             updateInventoryForCreditSale(detail.getParts());
-         } catch (SQLException e) {
-             throw new RuntimeException("Failed to save credit sale: " + e.getMessage());
-         }
-     }
+        String sql = "INSERT INTO credit_sales (id, credit_id, sale_date, customer_id, due_date, sub_total, grand_total, settlement, status, parts, created_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now')) " +
+                "ON CONFLICT(credit_id) DO UPDATE SET sale_date = excluded.sale_date, customer_id = excluded.customer_id, due_date = excluded.due_date, sub_total = excluded.sub_total, grand_total = excluded.grand_total, settlement = excluded.settlement, status = excluded.status, parts = excluded.parts, sync_status = 0, updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now')";
+         
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, Utils.generateId("CS-PK-", 8));
+            ps.setString(2, row.getCreditId());
+            ps.setString(3, row.getDate());
+            ps.setString(4, detail.getCustomerId());
+            ps.setString(5, row.getDueDate());
+            ps.setDouble(6, detail.getSubtotal());
+            ps.setDouble(7, detail.getGrandTotal());
+            ps.setDouble(8, detail.getSettlement());
+            ps.setString(9, row.getStatus());
+            ps.setString(10, partsJson);
+            
+            ps.executeUpdate();
+            
+            // Restore inventory for previous parts if edit mode, then deduct for new parts
+            CreditSaleDetail existing = loadCreditSaleDetail(row.getCreditId());
+            if (existing != null && existing.getParts() != null) {
+                // deduct inventory for current parts
+                updateInventoryForCreditSale(detail.getParts());
+            } else {
+                updateInventoryForCreditSale(detail.getParts());
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to save credit sale: " + e.getMessage());
+        }
+    }
 
-     private void saveParts(String creditId, List<Part> parts) {
-         // First get the credit_sales.id for the credit_id
-         String getIdSql = "SELECT id FROM credit_sales WHERE credit_id = ?";
-         String creditSaleId = null;
-         
-         try (Connection conn = DatabaseManager.getConnection();
-              PreparedStatement ps = conn.prepareStatement(getIdSql)) {
-             ps.setString(1, creditId);
-             ResultSet rs = ps.executeQuery();
-             if (rs.next()) {
-                 creditSaleId = rs.getString("id");
-             }
-         } catch (SQLException e) {
-             throw new RuntimeException("Failed to get credit sale id: " + e.getMessage());
-         }
-         
-         if (creditSaleId == null) {
-             throw new RuntimeException("Credit sale not found");
-         }
-         
-         // Delete old parts first
-         String deleteSql = "DELETE FROM credit_sale_parts WHERE credit_sale_id = ?";
-         try (Connection conn = DatabaseManager.getConnection();
-              PreparedStatement psDelete = conn.prepareStatement(deleteSql)) {
-             psDelete.setString(1, creditSaleId);
-             psDelete.executeUpdate();
-         } catch (SQLException e) {
-             throw new RuntimeException("Failed to delete old parts: " + e.getMessage());
-         }
-         
-         // Insert new parts
-         String sql = "INSERT INTO credit_sale_parts (id, credit_sale_id, product_id, description, quantity, unit_price, total, created_at) " +
-                 "VALUES (UUID(), ?, ?, ?, ?, ?, ?, NOW())";
-         
-         try (Connection conn = DatabaseManager.getConnection();
-              PreparedStatement ps = conn.prepareStatement(sql)) {
-             
-             final String finalCreditSaleId = creditSaleId;
-             for (Part part : parts) {
-                 ps.setString(1, finalCreditSaleId);
-                 ps.setString(2, part.getProductId());
-                 ps.setString(3, part.getDescription());
-                 ps.setInt(4, part.getQuantity());
-                 ps.setDouble(5, part.getUnitPrice());
-                 ps.setDouble(6, part.getTotal());
-                 ps.addBatch();
-             }
-             ps.executeBatch();
-         } catch (SQLException e) {
-             throw new RuntimeException("Failed to save parts: " + e.getMessage());
-         }
-     }
+    private void updateInventoryForCreditSale(List<Part> parts) {
+        if (parts == null) return;
+        for (Part part : parts) {
+            if (part.getProductId() != null) {
+                catalogRepository.updateProductStock(part.getProductId(), -part.getQuantity());
+            }
+        }
+    }
 
-     private void updateInventoryForCreditSale(List<Part> parts) {
-         for (Part part : parts) {
-             if (part.getProductId() != null) {
-                 // Reduce stock for each part added
-                 catalogRepository.updateProductStock(part.getProductId(), -part.getQuantity());
-             }
-         }
-     }
-
-     private void restoreInventoryForCreditSale(List<Part> parts) {
-         for (Part part : parts) {
-             if (part.getProductId() != null) {
-                 catalogRepository.updateProductStock(part.getProductId(), part.getQuantity());
-             }
-         }
-     }
+    private void restoreInventoryForCreditSale(List<Part> parts) {
+        if (parts == null) return;
+        for (Part part : parts) {
+            if (part.getProductId() != null) {
+                catalogRepository.updateProductStock(part.getProductId(), part.getQuantity());
+            }
+        }
+    }
 
     public CreditSaleDetail loadCreditSaleDetail(String creditId) {
-        String sql = "SELECT * FROM credit_sales WHERE credit_id = ?";
+        String sql = "SELECT cs.*, cc.name AS customer_name, cc.phone AS customer_phone FROM credit_sales cs " +
+                "LEFT JOIN credit_customers cc ON cs.customer_id = cc.id WHERE cs.credit_id = ?";
         CreditSaleDetail detail = null;
         
         try (Connection conn = DatabaseManager.getConnection();
@@ -136,15 +94,27 @@ public class LocalCreditSalesRepository {
             if (rs.next()) {
                 detail = new CreditSaleDetail();
                 detail.setCreditId(rs.getString("credit_id"));
-                detail.setCustomer(rs.getString("customer_name"));
+                detail.setCustomerId(rs.getString("customer_id"));
+                detail.setCustomerName(rs.getString("customer_name"));
+                detail.setPhone(rs.getString("customer_phone"));
                 detail.setDate(LocalDate.parse(rs.getString("sale_date")));
                 detail.setDueDate(LocalDate.parse(rs.getString("due_date")));
-                detail.setPaid(rs.getDouble("paid_amount"));
+                detail.setSettlement(rs.getDouble("settlement"));
                 
-                // Load parts
-                List<Part> parts = loadParts(creditId);
-                for (Part part : parts) {
-                    detail.addPart(part);
+                double subTotal = rs.getDouble("sub_total");
+                double grandTotal = rs.getDouble("grand_total");
+                detail.setDiscount(Math.max(0.0, subTotal - grandTotal));
+                
+                String partsJson = rs.getString("parts");
+                if (partsJson != null && !partsJson.isBlank()) {
+                    try {
+                        List<Part> parts = objectMapper.readValue(partsJson, new TypeReference<List<Part>>() {});
+                        if (parts != null) {
+                            for (Part part : parts) {
+                                detail.addPart(part);
+                            }
+                        }
+                    } catch (Exception ignored) { }
                 }
             }
         } catch (SQLException e) {
@@ -154,126 +124,110 @@ public class LocalCreditSalesRepository {
         return detail;
     }
 
-     private List<Part> loadParts(String creditId) {
-         // First get the credit_sales.id from credit_id
-         String getIdSql = "SELECT id FROM credit_sales WHERE credit_id = ?";
-         String creditSaleId = null;
-         
-         try (Connection conn = DatabaseManager.getConnection();
-              PreparedStatement ps = conn.prepareStatement(getIdSql)) {
-             ps.setString(1, creditId);
-             ResultSet rs = ps.executeQuery();
-             if (rs.next()) {
-                 creditSaleId = rs.getString("id");
-             }
-         } catch (SQLException e) {
-             return new ArrayList<>(); // Return empty list if credit sale not found
-         }
-         
-         if (creditSaleId == null) {
-             return new ArrayList<>();
-         }
-         
-         String sql = "SELECT * FROM credit_sale_parts WHERE credit_sale_id = ?";
-         List<Part> parts = new ArrayList<>();
-         
-         try (Connection conn = DatabaseManager.getConnection();
-              PreparedStatement ps = conn.prepareStatement(sql)) {
-             
-             ps.setString(1, creditSaleId);
-             ResultSet rs = ps.executeQuery();
-             
-             while (rs.next()) {
-                 Part part = new Part(
-                     rs.getString("description"),
-                     "",  // category not stored in new schema
-                     rs.getInt("quantity"),
-                     rs.getDouble("unit_price"),
-                     rs.getString("product_id")
-                 );
-                 parts.add(part);
-             }
-         } catch (SQLException e) {
-             throw new RuntimeException("Failed to load parts: " + e.getMessage());
-         }
-         
-         return parts;
-     }
+    public void deleteCreditSale(String creditId) {
+        CreditSaleDetail detail = loadCreditSaleDetail(creditId);
+        if (detail != null && detail.getParts() != null) {
+            restoreInventoryForCreditSale(detail.getParts());
+        }
 
-     public void deleteCreditSale(String creditId) {
-         // First, get the credit_sales.id
-         String getIdSql = "SELECT id FROM credit_sales WHERE credit_id = ?";
-         String creditSaleId = null;
-         
-         try (Connection conn = DatabaseManager.getConnection();
-              PreparedStatement ps = conn.prepareStatement(getIdSql)) {
-             ps.setString(1, creditId);
-             ResultSet rs = ps.executeQuery();
-             if (rs.next()) {
-                 creditSaleId = rs.getString("id");
-             }
-         } catch (SQLException e) {
-             throw new RuntimeException("Failed to get credit sale id: " + e.getMessage());
-         }
-         
-         if (creditSaleId == null) {
-             throw new RuntimeException("Credit sale not found");
-         }
-
-         // Load parts to restore inventory
-         List<Part> parts = loadParts(creditId);
-         for (Part part : parts) {
-             if (part.getProductId() != null) {
-                 // Restore stock
-                 catalogRepository.updateProductStock(part.getProductId(), part.getQuantity());
-             }
-         }
-
-         String sql = "DELETE FROM credit_sales WHERE credit_id = ?";
-         
-         try (Connection conn = DatabaseManager.getConnection();
-              PreparedStatement ps = conn.prepareStatement(sql)) {
-             
-             // Delete parts first
-             String deleteParts = "DELETE FROM credit_sale_parts WHERE credit_sale_id = ?";
-             try (PreparedStatement psDelete = conn.prepareStatement(deleteParts)) {
-                 psDelete.setString(1, creditSaleId);
-                 psDelete.executeUpdate();
-             }
-             
-             ps.setString(1, creditId);
-             ps.executeUpdate();
-         } catch (SQLException e) {
-             throw new RuntimeException("Failed to delete credit sale: " + e.getMessage());
-         }
-     }
-
-    public void updatePayment(String creditId, double paidAmount) {
-        String sql = "UPDATE credit_sales SET paid_amount = ?, status = ? WHERE credit_id = ?";
+        String sql = "DELETE FROM credit_sales WHERE credit_id = ?";
         
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setDouble(1, paidAmount);
-            double total = getTotalAmount(creditId);
-            String status = paidAmount >= total ? "PAID" : (paidAmount > 0 ? "PARTIAL" : "PENDING");
-            ps.setString(2, status);
-            ps.setString(3, creditId);
+            ps.setString(1, creditId);
             ps.executeUpdate();
+            DatabaseManager.logDeletion("credit_sales", creditId);
+            
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to update payment: " + e.getMessage());
+            throw new RuntimeException("Failed to delete credit sale: " + e.getMessage());
+        }
+    }
+
+    public void recordPayment(String creditId, double installmentAmount, String method, String notes, LocalDate paymentDate) {
+        String paymentId = com.gui.kline.utils.Utils.generateId("PAY-CS-", 8);
+        String insertSql = "INSERT INTO credit_payments (id, credit_id, customer_id, payment_date, amount, payment_method, notes) " +
+                "VALUES (?, ?, (SELECT customer_id FROM credit_sales WHERE credit_id = ?), ?, ?, ?, ?)";
+        
+        try (Connection conn = DatabaseManager.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
+                ps.setString(1, paymentId);
+                ps.setString(2, creditId);
+                ps.setString(3, creditId);
+                ps.setString(4, paymentDate != null ? paymentDate.toString() : LocalDate.now().toString());
+                ps.setDouble(5, installmentAmount);
+                ps.setString(6, method != null && !method.isBlank() ? method : "Cash");
+                ps.setString(7, notes != null ? notes : "Credit Settlement");
+                ps.executeUpdate();
+            }
+
+            // Recalculate total settlement
+            double totalSettled = 0.0;
+            String sumSql = "SELECT COALESCE(SUM(amount), 0) FROM credit_payments WHERE credit_id = ?";
+            try (PreparedStatement psSum = conn.prepareStatement(sumSql)) {
+                psSum.setString(1, creditId);
+                ResultSet rs = psSum.executeQuery();
+                if (rs.next()) {
+                    totalSettled = rs.getDouble(1);
+                }
+            }
+
+            double grandTotal = getTotalAmount(creditId);
+            String status = totalSettled >= grandTotal ? "PAID" : (totalSettled > 0 ? "PARTIAL" : "PENDING");
+            String updateSql = "UPDATE credit_sales SET settlement = ?, status = ?, sync_status = 0 WHERE credit_id = ?";
+            try (PreparedStatement psUpd = conn.prepareStatement(updateSql)) {
+                psUpd.setDouble(1, totalSettled);
+                psUpd.setString(2, status);
+                psUpd.setString(3, creditId);
+                psUpd.executeUpdate();
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to record credit payment: " + e.getMessage());
+        }
+    }
+
+    public void updatePayment(String creditId, double paidAmount) {
+        double currentSettlement = 0.0;
+        String checkSql = "SELECT settlement FROM credit_sales WHERE credit_id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(checkSql)) {
+            ps.setString(1, creditId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                currentSettlement = rs.getDouble("settlement");
+            }
+        } catch (SQLException ignored) {}
+
+        double diff = paidAmount - currentSettlement;
+        if (diff > 0) {
+            recordPayment(creditId, diff, "Settlement", "Credit sale settlement payment", LocalDate.now());
+        } else {
+            String sql = "UPDATE credit_sales SET settlement = ?, status = ?, sync_status = 0 WHERE credit_id = ?";
+            try (Connection conn = DatabaseManager.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setDouble(1, paidAmount);
+                double total = getTotalAmount(creditId);
+                String status = paidAmount >= total ? "PAID" : (paidAmount > 0 ? "PARTIAL" : "PENDING");
+                ps.setString(2, status);
+                ps.setString(3, creditId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to update payment: " + e.getMessage());
+            }
         }
     }
 
     private double getTotalAmount(String creditId) {
-        String sql = "SELECT subtotal FROM credit_sales WHERE credit_id = ?";
+        String sql = "SELECT grand_total FROM credit_sales WHERE credit_id = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, creditId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return rs.getDouble("subtotal");
+                return rs.getDouble("grand_total");
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to get total amount: " + e.getMessage());
@@ -282,7 +236,10 @@ public class LocalCreditSalesRepository {
     }
 
     public List<CreditSalesController.CreditSaleRow> loadAllCreditSales() {
-        String sql = "SELECT * FROM credit_sales ORDER BY sale_date DESC";
+        String sql = "SELECT cs.credit_id, cs.sale_date, cc.name AS customer_name, cs.due_date, " +
+                "cs.grand_total, cs.settlement, cs.status FROM credit_sales cs " +
+                "LEFT JOIN credit_customers cc ON cs.customer_id = cc.id " +
+                "ORDER BY cs.sale_date DESC";
         List<CreditSalesController.CreditSaleRow> sales = new ArrayList<>();
         
         try (Connection conn = DatabaseManager.getConnection();
@@ -293,10 +250,10 @@ public class LocalCreditSalesRepository {
                 CreditSalesController.CreditSaleRow row = new CreditSalesController.CreditSaleRow(
                     rs.getString("credit_id"),
                     rs.getString("sale_date"),
-                    rs.getString("customer_name"),
+                    rs.getString("customer_name") != null ? rs.getString("customer_name") : "Unknown",
                     rs.getString("due_date"),
-                    rs.getDouble("subtotal"),
-                    rs.getDouble("paid_amount"),
+                    rs.getDouble("grand_total"),
+                    rs.getDouble("settlement"),
                     rs.getString("status")
                 );
                 sales.add(row);
@@ -308,6 +265,35 @@ public class LocalCreditSalesRepository {
         return sales;
     }
 
+    public List<PaymentRecord> getPaymentsForCredit(String creditId) {
+        List<PaymentRecord> payments = new ArrayList<>();
+        String sql = "SELECT id, credit_id, payment_date, amount, payment_method, notes " +
+                     "FROM credit_payments WHERE credit_id = ? ORDER BY payment_date ASC";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, creditId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    LocalDate date = null;
+                    String rawDate = rs.getString("payment_date");
+                    if (rawDate != null && !rawDate.isBlank()) {
+                        try { date = LocalDate.parse(rawDate.substring(0, 10)); } catch (Exception ignored) {}
+                    }
+                    payments.add(new PaymentRecord(
+                        rs.getString("id"),
+                        rs.getString("credit_id"),
+                        date,
+                        rs.getDouble("amount"),
+                        rs.getString("payment_method"),
+                        rs.getString("notes")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to load credit payments: " + e.getMessage());
+        }
+        return payments;
+    }
 
 }
 

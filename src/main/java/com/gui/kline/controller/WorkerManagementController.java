@@ -19,11 +19,10 @@ import java.util.Optional;
 import com.gui.kline.controller.form.AddWorkerController;
 import com.gui.kline.data.LocalWorkerAttendanceRepository;
 import com.gui.kline.data.LocalWorkerRepository;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.Worker;
-import com.gui.kline.models.WorkerAttendance;
-import com.gui.kline.models.WorkerAttendanceHistory;
-import com.gui.kline.models.WorkerMonthlySummary;
+import com.gui.kline.models.ui.WorkerAttendance;
+import com.gui.kline.models.reports.WorkerAttendanceHistory;
+import com.gui.kline.models.reports.WorkerMonthlySummary;
 import com.gui.kline.utils.JsonUtil;
 
 import javafx.scene.control.Alert;
@@ -43,11 +42,10 @@ public class WorkerManagementController {
     @FXML private DatePicker historyFromDate;
     @FXML private DatePicker historyToDate;
     @FXML private Label monthlySummaryMonthLabel;
+    @FXML private ComboBox<YearMonth> cmbMonthlySummaryMonth;
 
     private final LocalWorkerRepository workerRepository = new LocalWorkerRepository();
-    private final LocalWorkerAttendanceRepository attendanceRepository = new LocalWorkerAttendanceRepository();
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-    private Map<String, Worker> workerIndex = new HashMap<>();
+    private final LocalWorkerAttendanceRepository attendanceRepository = new LocalWorkerAttendanceRepository();    private Map<String, Worker> workerIndex = new HashMap<>();
 
     @FXML
     public void initialize() {
@@ -64,6 +62,9 @@ public class WorkerManagementController {
         historyFromDate.setValue(currentMonth.atDay(1));
         historyToDate.setValue(today);
 
+        // Set up month selection combo box
+        setupMonthComboBox(currentMonth);
+
         attendanceDatePicker.valueProperty().addListener((obs, oldVal, newVal) -> loadAttendance(newVal));
         historyFromDate.valueProperty().addListener((obs, oldVal, newVal) -> loadHistory());
         historyToDate.valueProperty().addListener((obs, oldVal, newVal) -> loadHistory());
@@ -72,6 +73,21 @@ public class WorkerManagementController {
         loadAttendance(today);
         loadHistory();
         loadMonthlySummary(currentMonth);
+    }
+
+    private void setupMonthComboBox(YearMonth currentMonth) {
+        if (cmbMonthlySummaryMonth != null) {
+            // Populate with last 12 months
+            for (int i = 0; i < 12; i++) {
+                cmbMonthlySummaryMonth.getItems().add(currentMonth.minusMonths(i));
+            }
+            cmbMonthlySummaryMonth.setValue(currentMonth);
+            cmbMonthlySummaryMonth.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    loadMonthlySummary(newVal);
+                }
+            });
+        }
     }
 
     private void loadAttendance(LocalDate date) {
@@ -99,7 +115,7 @@ public class WorkerManagementController {
         historyRowsContainer.getChildren().clear();
         for (WorkerAttendanceHistory row : attendanceRepository.loadHistory(from, to, historySearchField.getText())) {
             String[] status = statusLabel(row.getStatus());
-            addHistoryRow(row.getDate().toString(), row.getWorkerName(), status[0], status[1]);
+            addHistoryRow(row.getDate(), row.getWorkerId(), row.getWorkerName(), status[0], status[1]);
         }
     }
 
@@ -118,11 +134,14 @@ public class WorkerManagementController {
         row.setPadding(new Insets(12, 20, 12, 20));
         row.setStyle("-fx-border-color: transparent transparent #f0f2f5 transparent;");
 
-        VBox nameBox = new VBox(2);
+        VBox nameBox = new VBox(3);
         nameBox.setMinWidth(200); nameBox.setPrefWidth(200);
+        String workerIdStr = worker != null ? worker.getId() : (attendance != null ? attendance.getWorkerId() : "");
+        Label lblId = new Label(workerIdStr != null ? workerIdStr : "");
+        lblId.setStyle("-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #2563eb; -fx-background-color: #dbeafe; -fx-background-radius: 4px; -fx-padding: 2 6 2 6;");
         Label lblName = new Label(attendance.getWorkerName()); lblName.setStyle("-fx-font-weight: bold; -fx-text-fill: #1a1a2e;");
         Label lblRole = new Label(attendance.getRole()); lblRole.setStyle("-fx-font-size: 11px; -fx-text-fill: #888888;");
-        nameBox.getChildren().addAll(lblName, lblRole);
+        nameBox.getChildren().addAll(lblId, lblName, lblRole);
 
         Label lblRate = new Label(attendance.getRate());
         lblRate.setMinWidth(150); lblRate.setPrefWidth(150);
@@ -143,10 +162,10 @@ public class WorkerManagementController {
         actions.getChildren().addAll(p, h, a);
 
         HBox editDel = new HBox(15);
-        editDel.setMinWidth(100); editDel.setPrefWidth(100);
-        editDel.setAlignment(Pos.CENTER_RIGHT);
-        Label edit = new Label("✎"); edit.setStyle("-fx-text-fill: #3b82f6; -fx-cursor: hand; -fx-font-size: 14px;");
-        Label del = new Label("🗑"); del.setStyle("-fx-text-fill: #ef4444; -fx-cursor: hand; -fx-font-size: 14px;");
+        editDel.setMinWidth(160); editDel.setPrefWidth(160);
+        editDel.setAlignment(Pos.CENTER);
+        Label edit = new Label("Edit"); edit.setStyle("-fx-background-color: transparent; -fx-border-color: #3b82f6; -fx-text-fill: #3b82f6; -fx-border-radius: 6; -fx-padding: 5 12; -fx-cursor: hand; -fx-font-size: 12px; -fx-font-weight: bold;");
+        Label del = new Label("Delete"); del.setStyle("-fx-background-color: transparent; -fx-border-color: #ef4444; -fx-text-fill: #ef4444; -fx-border-radius: 6; -fx-padding: 5 12; -fx-cursor: hand; -fx-font-size: 12px; -fx-font-weight: bold;");
 
         edit.setOnMouseClicked(e -> openEditWorker(worker));
         del.setOnMouseClicked(e -> deleteWorker(worker));
@@ -155,6 +174,64 @@ public class WorkerManagementController {
 
         row.getChildren().addAll(nameBox, lblRate, actions, editDel);
         attendanceRowsContainer.getChildren().add(row);
+    }
+
+    private void handleDeleteAttendance(String workerId, String workerName, LocalDate date) {
+        // Get owner window to prevent alert from opening as separate window
+        javafx.stage.Window owner = null;
+        if (attendanceRowsContainer != null && attendanceRowsContainer.getScene() != null) {
+            owner = attendanceRowsContainer.getScene().getWindow();
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Delete Attendance");
+        confirm.setHeaderText(null);
+        confirm.setContentText("Delete attendance record for " + workerName + " on " + date + "?");
+        if (owner != null) {
+            confirm.initOwner(owner);
+            confirm.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK) {
+            return;
+        }
+
+        attendanceRepository.deleteAttendance(workerId, date);
+        loadAttendance(attendanceDatePicker.getValue());
+        loadHistory();
+        loadMonthlySummary(YearMonth.from(date));
+    }
+
+    @FXML
+    private void handleClearAttendance() {
+        LocalDate date = attendanceDatePicker.getValue();
+        if (date == null) {
+            return;
+        }
+
+        // Get owner window to prevent alert from opening as separate window
+        javafx.stage.Window owner = null;
+        if (attendanceRowsContainer != null && attendanceRowsContainer.getScene() != null) {
+            owner = attendanceRowsContainer.getScene().getWindow();
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Clear Attendance");
+        confirm.setHeaderText(null);
+        confirm.setContentText("Clear all attendance records for " + date + "?");
+        if (owner != null) {
+            confirm.initOwner(owner);
+            confirm.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK) {
+            return;
+        }
+
+        attendanceRepository.deleteAttendanceForPeriod(date, date);
+        loadAttendance(date);
+        loadHistory();
+        loadMonthlySummary(YearMonth.from(date));
     }
 
     private void saveAttendance(String workerId, String status, Button selected, Button other1, Button other2, String color) {
@@ -168,9 +245,7 @@ public class WorkerManagementController {
                 JsonUtil.field("date", date.toString()),
                 JsonUtil.field("status", status),
                 JsonUtil.field("op", "upsert")
-        );
-        syncQueueRepository.enqueue("worker_attendance", payload);
-        mark(selected, other1, other2, color);
+        );        mark(selected, other1, other2, color);
         loadHistory();
         loadMonthlySummary(YearMonth.from(date));
     }
@@ -196,10 +271,21 @@ public class WorkerManagementController {
         if (worker == null) {
             return;
         }
+
+        // Get owner window to prevent alert from opening as separate window in full-screen mode
+        javafx.stage.Window owner = null;
+        if (attendanceRowsContainer != null && attendanceRowsContainer.getScene() != null) {
+            owner = attendanceRowsContainer.getScene().getWindow();
+        }
+
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Delete Worker");
         confirm.setHeaderText(null);
         confirm.setContentText("Delete " + worker.getName() + " and related attendance?");
+        if (owner != null) {
+            confirm.initOwner(owner);
+            confirm.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isEmpty() || result.get() != ButtonType.OK) {
             return;
@@ -208,9 +294,7 @@ public class WorkerManagementController {
         String payload = JsonUtil.obj(
                 JsonUtil.field("id", worker.getId()),
                 JsonUtil.field("op", "delete")
-        );
-        syncQueueRepository.enqueue("worker", payload);
-        loadAttendance(attendanceDatePicker.getValue());
+        );        loadAttendance(attendanceDatePicker.getValue());
         loadHistory();
         loadMonthlySummary(YearMonth.now());
     }
@@ -235,28 +319,37 @@ public class WorkerManagementController {
         return new String[]{"ABSENT", "#ef4444"};
     }
 
-    private void addHistoryRow(String date, String worker, String status, String color) {
+    private void addHistoryRow(LocalDate date, String workerId, String worker, String status, String color) {
         HBox row = new HBox();
         row.setAlignment(Pos.CENTER_LEFT);
         row.setPadding(new Insets(12, 20, 12, 20));
         row.setStyle("-fx-border-color: transparent transparent #f0f2f5 transparent; -fx-background-color: white;");
 
-        Label lblDate = new Label(date);
+        Label lblDate = new Label(date.toString());
         lblDate.setMinWidth(250);
         lblDate.setPrefWidth(250);
         lblDate.setMaxWidth(250);
         lblDate.setStyle("-fx-text-fill: #666666; -fx-font-size: 13px;");
 
-        Label lblWorker = new Label(worker);
-        lblWorker.setStyle("-fx-font-weight: bold; -fx-text-fill: #1a1a2e; -fx-font-size: 13px;");
-        HBox.setHgrow(lblWorker, Priority.ALWAYS);
-        lblWorker.setMaxWidth(Double.MAX_VALUE);
+        VBox workerBox = new VBox(2);
+        if (workerId != null && !workerId.isBlank()) {
+            Label lblId = new Label(workerId);
+            lblId.setStyle("-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #2563eb; -fx-background-color: #dbeafe; -fx-background-radius: 4px; -fx-padding: 2 6 2 6;");
+            Label lblWorker = new Label(worker);
+            lblWorker.setStyle("-fx-font-weight: bold; -fx-text-fill: #1a1a2e; -fx-font-size: 13px;");
+            workerBox.getChildren().addAll(lblId, lblWorker);
+        } else {
+            Label lblWorker = new Label(worker);
+            lblWorker.setStyle("-fx-font-weight: bold; -fx-text-fill: #1a1a2e; -fx-font-size: 13px;");
+            workerBox.getChildren().add(lblWorker);
+        }
+        HBox.setHgrow(workerBox, Priority.ALWAYS);
 
         StackPane statusContainer = new StackPane();
         statusContainer.setMinWidth(100);
         statusContainer.setPrefWidth(100);
         statusContainer.setMaxWidth(100);
-        statusContainer.setAlignment(Pos.CENTER_RIGHT);
+        statusContainer.setAlignment(Pos.CENTER);
 
         Label lblStatus = new Label(status);
         lblStatus.setStyle(
@@ -272,7 +365,19 @@ public class WorkerManagementController {
 
         statusContainer.getChildren().add(lblStatus);
 
-        row.getChildren().addAll(lblDate, lblWorker, statusContainer);
+        HBox actionsContainer = new HBox();
+        actionsContainer.setMinWidth(80);
+        actionsContainer.setPrefWidth(80);
+        actionsContainer.setMaxWidth(80);
+        actionsContainer.setAlignment(Pos.CENTER);
+
+        Label delAttendance = new Label("Delete");
+        delAttendance.setStyle("-fx-background-color: transparent; -fx-border-color: #ef4444; -fx-text-fill: #ef4444; -fx-border-radius: 6; -fx-padding: 5 12; -fx-cursor: hand; -fx-font-size: 12px; -fx-font-weight: bold;");
+        delAttendance.setOnMouseClicked(e -> handleDeleteAttendance(workerId, worker, date));
+        
+        actionsContainer.getChildren().add(delAttendance);
+
+        row.getChildren().addAll(lblDate, workerBox, statusContainer, actionsContainer);
         historyRowsContainer.getChildren().add(row);
     }
 

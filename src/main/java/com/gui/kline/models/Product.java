@@ -8,6 +8,10 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import com.gui.kline.utils.Utils;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Product {
     private final StringProperty  id        = new SimpleStringProperty();
@@ -24,12 +28,12 @@ public class Product {
     private final StringProperty material = new SimpleStringProperty("");
     private final StringProperty supplierName = new SimpleStringProperty("");
     private final StringProperty createdDate = new SimpleStringProperty("");
-    private final java.util.List<String> imagePaths = new java.util.ArrayList<>();
+    private final List<String> imagePaths = new ArrayList<>();
     private final BooleanProperty active    = new SimpleBooleanProperty(true);
 
     public Product(String name, String category, double buyPrice,
                    double sellPrice, int stock) {
-        this.id.set(java.util.UUID.randomUUID().toString());
+        this.id.set(Utils.generateId("PRD-PK-", 8));
         this.code.set("");
         this.name.set(name);
         this.category.set(category);
@@ -42,7 +46,7 @@ public class Product {
         this.vehicleType.set("");
         this.material.set("");
         this.supplierName.set("");
-        this.createdDate.set(java.time.LocalDateTime.now().toString());
+        this.createdDate.set(LocalDateTime.now().toString());
     }
 
     public Product(String id, String name, String category, double buyPrice,
@@ -58,7 +62,7 @@ public class Product {
 
     public Product(String id, String code, String name, String category, double buyPrice,
                    double sellPrice, int stock, int minimumStockAlert, String brand, String description,
-                   String vehicleType, String material, String supplierName, String createdDate, java.util.List<String> imagePaths) {
+                   String vehicleType, String material, String supplierName, String createdDate, List<String> imagePaths) {
         this.id.set(id);
         this.code.set(code == null ? "" : code.trim());
         this.name.set(name);
@@ -150,7 +154,7 @@ public class Product {
     public String getMaterial()  { return material.get(); }
     public String getSupplierName()  { return supplierName.get(); }
     public String getCreatedDate()  { return createdDate.get(); }
-    public java.util.List<String> getImagePaths()  { return imagePaths; }
+    public List<String> getImagePaths()  { return imagePaths; }
     public boolean  isActive()    { return active.get(); }
     public boolean isInStock() { return getStock() > 0; }
 

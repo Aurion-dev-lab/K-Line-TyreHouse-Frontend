@@ -2,8 +2,6 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ChoiceBox?>
-<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
@@ -14,20 +12,17 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="0" styleClass="page-root" stylesheets="@../css/sales-view.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gui.kline.controller.CreditSalesController">
+<VBox spacing="0" styleClass="page-root" stylesheets="@../css/invoices.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.gui.kline.controller.CreditSalesController">
 
     <HBox alignment="CENTER_LEFT" spacing="16" styleClass="page-header-bar">
         <padding>
             <Insets bottom="18" left="28" right="28" top="22" />
         </padding>
         <VBox spacing="3" HBox.hgrow="ALWAYS">
-            <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;"
-                   text="Credit Sales Management" />
-            <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"
-                   text="Track credit sales with parts &amp; due dates" />
+            <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #111827;" text="Credit Sales Management" />
+            <Label style="-fx-font-size: 13px; -fx-text-fill: #6B7280;" text="Track credit sales with parts &amp; due dates" />
         </VBox>
-        <Button fx:id="btnNewCredit" onAction="#onNewCredit"
-                styleClass="btn-primary" text="＋  New Credit Sale" />
+        <Button fx:id="btnNewCredit" onAction="#onNewCredit" styleClass="btn-primary" text="＋  New Credit Sale" />
     </HBox>
 
     <HBox spacing="14" VBox.vgrow="ALWAYS">
@@ -35,7 +30,6 @@
             <Insets bottom="14" left="20" right="20" top="0" />
         </padding>
 
-        <!-- ── Credit sales list (always visible, expands when panel hidden) ── -->
         <VBox spacing="0" styleClass="left-card" HBox.hgrow="ALWAYS">
 
             <HBox alignment="CENTER_LEFT" spacing="12" styleClass="table-header-bar">
@@ -43,40 +37,36 @@
                     <Insets bottom="13" left="20" right="16" top="13" />
                 </padding>
                 <Label styleClass="card-title" text="Credit Sales List" HBox.hgrow="ALWAYS" />
-                <TextField fx:id="txtSearch" onKeyReleased="#onSearch"
-                           prefHeight="32" prefWidth="200"
-                           promptText="⌕  Search…" styleClass="search-field" />
+                <TextField fx:id="txtSearch" onKeyReleased="#onSearch" prefHeight="32" prefWidth="200" promptText="⌕  Search…" styleClass="search-field" />
             </HBox>
 
-            <TableView fx:id="tblCreditSales" maxHeight="1.7976931348623157E308"
-                       styleClass="main-table" VBox.vgrow="ALWAYS">
-                <columns>
-                    <TableColumn fx:id="colDate"     prefWidth="100" text="DATE" />
-                    <TableColumn fx:id="colCustomer" prefWidth="150" text="CUSTOMER" />
-                    <TableColumn fx:id="colDueDate"  prefWidth="100" text="DUE DATE" />
-                    <TableColumn fx:id="colAmount"   prefWidth="100" text="AMOUNT" />
-                    <TableColumn fx:id="colStatus"   prefWidth="90"  text="STATUS" />
-                    <TableColumn fx:id="colAction"   prefWidth="70"  text="VIEW" />
-                </columns>
-                <columnResizePolicy>
-                    <TableView fx:constant="UNCONSTRAINED_RESIZE_POLICY" />
-                </columnResizePolicy>
-            </TableView>
+            <!-- Wrap table in ScrollPane for horizontal scrolling and consistency with invoices -->
+            <ScrollPane fitToHeight="true" hbarPolicy="AS_NEEDED" vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS" style="-fx-padding: 0;">
+                <TableView fx:id="tblCreditSales" maxHeight="1.7976931348623157E308" styleClass="main-table">
+                    <columns>
+                        <TableColumn fx:id="colDate" prefWidth="100" text="DATE" />
+                        <TableColumn fx:id="colCustomer" prefWidth="150" text="CUSTOMER" />
+                        <TableColumn fx:id="colDueDate" prefWidth="100" text="DUE DATE" />
+                        <TableColumn fx:id="colAmount" prefWidth="130" text="TOTAL AMOUNT" />
+                        <TableColumn fx:id="colStatus" prefWidth="90" text="STATUS" />
+                        <TableColumn fx:id="colAction" prefWidth="300" text="ACTIONS" />
+                    </columns>
+                    <columnResizePolicy>
+                        <TableView fx:constant="UNCONSTRAINED_RESIZE_POLICY" />
+                    </columnResizePolicy>
+                </TableView>
+            </ScrollPane>
 
         </VBox>
 
-        <!-- ── Right panel: hidden until View is clicked ── -->
-        <VBox fx:id="rightPanel"
-              visible="false" managed="false"
-              minWidth="310" prefWidth="355"
-              spacing="0" styleClass="right-panel">
+        <VBox fx:id="rightPanel" minWidth="310" prefWidth="355" spacing="0" styleClass="right-panel">
 
             <HBox alignment="CENTER_LEFT" spacing="8" styleClass="panel-header">
                 <padding>
                     <Insets bottom="15" left="18" right="18" top="15" />
                 </padding>
                 <Label styleClass="panel-title" text="Credit Sale Detail" HBox.hgrow="ALWAYS" />
-                <Label fx:id="lblCreditId"    styleClass="inv-badge"    text="#—" />
+                <Label fx:id="lblCreditId" styleClass="inv-badge" text="—" />
                 <Label fx:id="lblCreditBadge" styleClass="credit-badge" text="CREDIT" />
             </HBox>
 
@@ -89,6 +79,10 @@
                     <Label fx:id="lblCustomer" styleClass="meta-val" text="—" />
                 </HBox>
                 <HBox alignment="CENTER_LEFT">
+                    <Label styleClass="meta-key" text="Phone " HBox.hgrow="ALWAYS" />
+                    <Label fx:id="lblCustomerPhone" styleClass="meta-val" text="—" />
+                </HBox>
+                <HBox alignment="CENTER_LEFT">
                     <Label styleClass="meta-key" text="Date " HBox.hgrow="ALWAYS" />
                     <Label fx:id="lblSaleDate" styleClass="meta-val" text="—" />
                 </HBox>
@@ -96,15 +90,14 @@
 
             <Separator styleClass="pnl-sep" />
 
+            <!-- Line Items (Parts) -->
             <Label styleClass="section-mini-label" text="PARTS">
                 <VBox.margin>
                     <Insets bottom="4" left="18" top="10" />
                 </VBox.margin>
             </Label>
 
-            <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
-                        styleClass="items-scroll" vbarPolicy="AS_NEEDED"
-                        VBox.vgrow="ALWAYS">
+            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="items-scroll" vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS">
                 <content>
                     <VBox fx:id="vboxParts" spacing="8" styleClass="line-items-box" />
                 </content>
@@ -127,7 +120,23 @@
                 <HBox alignment="CENTER_LEFT">
                     <AnchorPane HBox.hgrow="ALWAYS">
                         <children>
-                            <Label styleClass="tot-label" text="Paid" />
+                            <Label styleClass="tot-label" text="Discount" />
+                        </children>
+                    </AnchorPane>
+                    <Label fx:id="lblDiscount" style="-fx-text-fill: #ef4444; -fx-font-weight: bold;" styleClass="tot-val" text="- Rs. 0.00" />
+                </HBox>
+                <HBox alignment="CENTER_LEFT">
+                    <AnchorPane HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label styleClass="tot-label" text="Grand Total" style="-fx-font-weight: bold;" />
+                        </children>
+                    </AnchorPane>
+                    <Label fx:id="lblGrandTotal" styleClass="tot-val" style="-fx-font-weight: bold;" text="Rs. 0.00" />
+                </HBox>
+                <HBox alignment="CENTER_LEFT">
+                    <AnchorPane HBox.hgrow="ALWAYS">
+                        <children>
+                            <Label styleClass="tot-label" text="Settlement" />
                         </children>
                     </AnchorPane>
                     <Label fx:id="lblPaid" styleClass="tot-val" text="Rs. 0.00" />
@@ -138,40 +147,23 @@
                             <Label styleClass="grand-label" text="Amount Due" />
                         </children>
                     </AnchorPane>
-                    <Label fx:id="lblAmountDue" styleClass="amount-due" text="Rs. 0.00" />
+                    <Label fx:id="lblAmountDue" styleClass="grand-val" text="Rs. 0.00" />
                 </HBox>
             </VBox>
 
             <Separator styleClass="pnl-sep" />
 
-            <VBox spacing="8" styleClass="add-inv-box">
-                <padding>
-                    <Insets bottom="12" left="18" right="18" top="12" />
-                </padding>
-                <Label styleClass="section-mini-label" text="ADD PART TO THIS SALE" />
-
-                <ChoiceBox fx:id="cboPartCategory" maxWidth="1.7976931348623157E308"
-                           prefHeight="32" styleClass="field-choice" />
-
-                <ComboBox fx:id="cboProduct" maxWidth="1.7976931348623157E308" prefHeight="32" promptText="Select Product..." styleClass="field-input" />
-
-                <HBox spacing="6">
-                    <TextField fx:id="txtPartQty" prefHeight="32" prefWidth="64" promptText="Qty" styleClass="field-input field-narrow" />
-                </HBox>
-
-                <Button fx:id="btnAddPart" maxWidth="1.7976931348623157E308"
-                        onAction="#onAddPart"
-                        styleClass="btn-add-inv" text="＋  Add Part" />
-            </VBox>
-
+            <!-- Single clean layout-aligned box for details panel buttons -->
             <VBox spacing="8" styleClass="gen-box">
                 <padding>
-                    <Insets bottom="18" left="18" right="18" top="10" />
+                    <Insets bottom="18" left="18" right="18" top="12" />
                 </padding>
-                <Button fx:id="btnGenerateSale" maxWidth="1.7976931348623157E308" onAction="#onGenerateSale" styleClass="btn-generate" text="Create Credit Sale" />
-                <Button fx:id="btnSettleCredit" maxWidth="1.7976931348623157E308" onAction="#onSettleCredit" styleClass="btn-settle" text="Settle Credit" />
+                <Button fx:id="btnDownloadInvoice" maxWidth="1.7976931348623157E308" onAction="#onDownloadInvoice" styleClass="btn-download" text="⬇ Download PDF" />
+                <Button fx:id="btnPaymentHistory" maxWidth="1.7976931348623157E308" onAction="#onViewPaymentHistory" styleClass="btn-history" text="📋 Payment History" />
+                <Button fx:id="btnSettleCredit" maxWidth="1.7976931348623157E308" onAction="#onSettleCredit" styleClass="btn-generate" text="Settle Credit" />
                 <Button fx:id="btnDeselect" maxWidth="1.7976931348623157E308" onAction="#onDeselect" styleClass="btn-deselect" text="Close" />
             </VBox>
+
 
         </VBox>
     </HBox>

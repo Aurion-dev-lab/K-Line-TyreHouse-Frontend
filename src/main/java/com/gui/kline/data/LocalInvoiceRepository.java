@@ -1,36 +1,55 @@
 package com.gui.kline.data;
 
-import com.gui.kline.models.InvoiceDetail;
-import com.gui.kline.models.InvoiceRow;
-import com.gui.kline.models.LineItem;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gui.kline.models.dto.InvoiceDetail;
+import com.gui.kline.models.dto.InvoiceRow;
+import com.gui.kline.models.dto.LineItem;
+import com.gui.kline.utils.JsonUtil;
+import com.gui.kline.utils.Utils;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class LocalInvoiceRepository {
 
+    private final ObjectMapper objectMapper = JsonUtil.createObjectMapper();
+
     /**
-     * Save or update an invoice with all its line items
+     * Save or update an invoice with all its line items stored as JSON
      */
     public String saveInvoice(InvoiceDetail detail, InvoiceRow row) {
         String internalId = null;
-        String sql = "INSERT INTO invoices (id, invoice_id, customer, invoice_date, type, status, subtotal, tax, grand_total, created_at) " +
-                "VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, NOW()) " +
-                "ON DUPLICATE KEY UPDATE customer = VALUES(customer), subtotal = VALUES(subtotal), tax = VALUES(tax), grand_total = VALUES(grand_total), updated_at = NOW()";
+        String lineItemsJson = null;
+        try {
+            lineItemsJson = objectMapper.writeValueAsString(detail.getLineItems());
+        } catch (Exception e) {
+            System.err.println("Failed to serialize line items: " + e.getMessage());
+            e.printStackTrace();
+            lineItemsJson = "[]";
+        }
+
+        String sql = "INSERT INTO invoices (id, invoice_id, customer, phone, description, vehicle_number, invoice_date, type, status, subtotal, grand_total, line_items, created_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now')) " +
+                "ON CONFLICT(invoice_id) DO UPDATE SET customer = excluded.customer, phone = excluded.phone, description = excluded.description, vehicle_number = excluded.vehicle_number, type = excluded.type, status = excluded.status, subtotal = excluded.subtotal, grand_total = excluded.grand_total, line_items = excluded.line_items, sync_status = 0, updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now')";
 
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, row.getInvoiceId());
-            statement.setString(2, detail.getCustomer());
-            statement.setString(3, row.getDate());
-            statement.setString(4, row.getType());
-            statement.setString(5, "completed");
-            statement.setDouble(6, detail.getSubtotal());
-            statement.setDouble(7, detail.getTax());
-            statement.setDouble(8, detail.getGrandTotal());
+            statement.setString(1, Utils.generateId("INV-PK-", 8));
+            statement.setString(2, row.getInvoiceId());
+            statement.setString(3, detail.getCustomer());
+            statement.setString(4, detail.getPhone());
+            statement.setString(5, detail.getDescription());
+            statement.setString(6, detail.getVehicleNumber());
+            statement.setString(7, row.getDate());
+            statement.setString(8, row.getType());
+            statement.setString(9, detail.getStatus());
+            statement.setDouble(10, detail.getSubtotal());
+            statement.setDouble(11, detail.getGrandTotal());
+            statement.setString(12, lineItemsJson);
             statement.executeUpdate();
 
-            // Retrieve internal id for the invoice
             String lookup = "SELECT id FROM invoices WHERE invoice_id = ? LIMIT 1";
             try (PreparedStatement ps = connection.prepareStatement(lookup)) {
                 ps.setString(1, row.getInvoiceId());
@@ -40,14 +59,6 @@ public class LocalInvoiceRepository {
                     }
                 }
             }
-
-            if (internalId != null) {
-                // Clear old line items and save new ones
-                deleteInvoiceLineItems(connection, row.getInvoiceId());
-                for (LineItem item : detail.getLineItems()) {
-                    saveInvoiceLineItemWithRef(connection, internalId, row.getInvoiceId(), item, item.getProductId());
-                }
-            }
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to save invoice", ex);
         }
@@ -55,41 +66,25 @@ public class LocalInvoiceRepository {
     }
 
     /**
-     * Save a single line item to an existing invoice
+     * Save a single line item to an existing invoice (by appending to line_items JSON)
      */
     public void saveInvoiceLineItem(String invoiceId, LineItem item, String productId) {
-        try (Connection connection = DatabaseManager.getConnection()) {
-            String lookup = "SELECT id FROM invoices WHERE invoice_id = ? LIMIT 1";
-            try (PreparedStatement ps = connection.prepareStatement(lookup)) {
-                ps.setString(1, invoiceId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        String internalId = rs.getString("id");
-                        saveInvoiceLineItemWithRef(connection, internalId, invoiceId, item, productId);
-                    }
-                }
+        InvoiceDetail detail = loadInvoiceDetail(invoiceId);
+        if (detail != null) {
+            if (productId != null && !productId.isBlank()) {
+                item.setProductId(productId);
             }
-        } catch (SQLException ex) {
-            throw new IllegalStateException("Failed to save invoice line item", ex);
-        }
-    }
-
-    /**
-     * Internal method to save line item with foreign key reference
-     */
-    private void saveInvoiceLineItemWithRef(Connection connection, String invoiceRef, String invoiceId, LineItem item, String productId) throws SQLException {
-        String sql = "INSERT INTO invoice_line_items (id, invoice_id, invoice_ref, product_id, description, type, qty, unit_price, total, created_at) " +
-                "VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, invoiceId);
-            statement.setString(2, invoiceRef);
-            statement.setString(3, productId);
-            statement.setString(4, item.getDescription());
-            statement.setString(5, item.getType());
-            statement.setInt(6, item.getQty());
-            statement.setDouble(7, item.getUnitPrice());
-            statement.setDouble(8, item.getTotal());
-            statement.executeUpdate();
+            detail.addLineItem(item);
+            InvoiceRow row = new InvoiceRow(
+                    detail.getInvoiceId(),
+                    detail.getDate(),
+                    detail.getCustomer(),
+                    detail.getType(),
+                    detail.getLineItems().size(),
+                    detail.getGrandTotal(),
+                    detail.getStatus()
+            );
+            saveInvoice(detail, row);
         }
     }
 
@@ -97,22 +92,34 @@ public class LocalInvoiceRepository {
      * Load all invoices with summary information
      */
     public List<InvoiceRow> loadInvoices() {
-        String sql = "SELECT id, invoice_id, customer, invoice_date, type, status, COUNT(DISTINCT ili.id) as item_count, grand_total " +
-                "FROM invoices i LEFT JOIN invoice_line_items ili ON i.id = ili.invoice_ref " +
-                "GROUP BY i.id ORDER BY i.invoice_date DESC";
+        String sql = "SELECT invoice_id, customer, phone, description, vehicle_number, invoice_date, type, status, line_items, grand_total FROM invoices ORDER BY invoice_date DESC";
         List<InvoiceRow> invoices = new ArrayList<>();
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
              ResultSet rs = statement.executeQuery()) {
             while (rs.next()) {
+                String lineItemsJson = rs.getString("line_items");
+                int itemCount = 0;
+                if (lineItemsJson != null && !lineItemsJson.isBlank()) {
+                    try {
+                        List<LineItem> items = objectMapper.readValue(lineItemsJson, new TypeReference<List<LineItem>>() {});
+                        itemCount = items != null ? items.size() : 0;
+                    } catch (Exception ex) {
+                        System.err.println("Failed to parse line_items JSON: " + ex.getMessage());
+                    }
+                }
                 InvoiceRow row = new InvoiceRow(
                         rs.getString("invoice_id"),
                         rs.getString("invoice_date"),
                         rs.getString("customer"),
                         rs.getString("type"),
-                        rs.getInt("item_count"),
-                        rs.getDouble("grand_total")
+                        itemCount,
+                        rs.getDouble("grand_total"),
+                        rs.getString("status"),
+                        rs.getString("phone"),
+                        rs.getString("description"),
+                        rs.getString("vehicle_number")
                 );
                 invoices.add(row);
             }
@@ -123,10 +130,10 @@ public class LocalInvoiceRepository {
     }
 
     /**
-     * Load complete invoice details including all line items
+     * Load complete invoice details including line items from JSON
      */
     public InvoiceDetail loadInvoiceDetail(String invoiceId) {
-        String sql = "SELECT invoice_id, customer, invoice_date, type, subtotal, tax, grand_total, status " +
+        String sql = "SELECT invoice_id, customer, phone, description, vehicle_number, invoice_date, type, subtotal, grand_total, status, line_items " +
                 "FROM invoices WHERE invoice_id = ? LIMIT 1";
         
         try (Connection connection = DatabaseManager.getConnection();
@@ -137,25 +144,26 @@ public class LocalInvoiceRepository {
                     InvoiceDetail detail = new InvoiceDetail();
                     detail.setInvoiceId(rs.getString("invoice_id"));
                     detail.setCustomer(rs.getString("customer"));
+                    detail.setPhone(rs.getString("phone"));
+                    detail.setDescription(rs.getString("description"));
+                    detail.setVehicleNumber(rs.getString("vehicle_number"));
                     detail.setDate(rs.getString("invoice_date"));
                     detail.setType(rs.getString("type"));
-                    detail.setTaxRate(rs.getDouble("tax") > 0 ? rs.getDouble("tax") / rs.getDouble("subtotal") : 0.0);
+                    detail.setStatus(rs.getString("status"));
+                    detail.setTaxRate(0.0);
+                    detail.setDiscountAmount(Math.max(0, rs.getDouble("subtotal") - rs.getDouble("grand_total")));
 
-                    // Load line items
-                    String lineItemsSql = "SELECT description, type, qty, unit_price, product_id FROM invoice_line_items WHERE invoice_id = ?";
-                    try (PreparedStatement ps = connection.prepareStatement(lineItemsSql)) {
-                        ps.setString(1, invoiceId);
-                        try (ResultSet itemsRs = ps.executeQuery()) {
-                            while (itemsRs.next()) {
-                                LineItem item = new LineItem(
-                                        itemsRs.getString("description"),
-                                        itemsRs.getString("type"),
-                                        itemsRs.getInt("qty"),
-                                        itemsRs.getDouble("unit_price"),
-                                        itemsRs.getString("product_id")
-                                );
-                                detail.addLineItem(item);
+                    String lineItemsJson = rs.getString("line_items");
+                    if (lineItemsJson != null && !lineItemsJson.isBlank()) {
+                        try {
+                            List<LineItem> items = objectMapper.readValue(lineItemsJson, new TypeReference<List<LineItem>>() {});
+                            if (items != null) {
+                                for (LineItem item : items) {
+                                    detail.addLineItem(item);
+                                }
                             }
+                        } catch (Exception ex) {
+                            System.err.println("Failed to parse line_items JSON for detail: " + ex.getMessage());
                         }
                     }
                     return detail;
@@ -171,7 +179,7 @@ public class LocalInvoiceRepository {
      * Update invoice status (completed, cancelled, etc.)
      */
     public void updateInvoiceStatus(String invoiceId, String status) {
-        String sql = "UPDATE invoices SET status = ?, updated_at = NOW() WHERE invoice_id = ?";
+        String sql = "UPDATE invoices SET status = ?, sync_status = 0, updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now') WHERE invoice_id = ?";
         
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -184,34 +192,19 @@ public class LocalInvoiceRepository {
     }
 
     /**
-     * Delete an invoice and all its line items
+     * Delete an invoice
      */
     public void deleteInvoice(String invoiceId) {
-        String delItems = "DELETE FROM invoice_line_items WHERE invoice_id = ?";
         String delInvoice = "DELETE FROM invoices WHERE invoice_id = ?";
         
         try (Connection connection = DatabaseManager.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement(delItems)) {
-                stmt.setString(1, invoiceId);
-                stmt.executeUpdate();
-            }
             try (PreparedStatement stmt = connection.prepareStatement(delInvoice)) {
                 stmt.setString(1, invoiceId);
                 stmt.executeUpdate();
+                DatabaseManager.logDeletion("invoices", invoiceId);
             }
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to delete invoice", ex);
-        }
-    }
-
-    /**
-     * Delete line items for an invoice
-     */
-    private void deleteInvoiceLineItems(Connection connection, String invoiceId) throws SQLException {
-        String sql = "DELETE FROM invoice_line_items WHERE invoice_id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, invoiceId);
-            stmt.executeUpdate();
         }
     }
 
@@ -249,4 +242,3 @@ public class LocalInvoiceRepository {
         return 0.0;
     }
 }
-

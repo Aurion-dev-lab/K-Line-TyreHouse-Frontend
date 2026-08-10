@@ -355,3 +355,125 @@
     -fx-alignment: CENTER;
     -fx-padding: 20;
 }
+
+/* ComboBox Styles */
+.dialog-combo-box {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 12;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-font-size: 14px;
+}
+
+.dialog-combo-box .text-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1f2937;
+    -fx-prompt-text-fill: #a0aec0;
+    -fx-padding: 6 12 6 12;
+}
+
+.dialog-combo-box:focused, .dialog-combo-box:showing {
+    -fx-border-color: #3b82f6;
+    -fx-background-color: #ffffff;
+}
+
+.dialog-combo-box .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 10 0 10;
+}
+
+.dialog-combo-box .arrow {
+    -fx-background-color: #94a3b8;
+}
+
+/* DatePicker Styles */
+.dialog-date-picker {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 12;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-font-size: 14px;
+}
+
+.dialog-date-picker .text-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1f2937;
+    -fx-prompt-text-fill: #a0aec0;
+    -fx-padding: 6 10 6 10;
+}
+
+.dialog-date-picker:focused {
+    -fx-border-color: #3b82f6;
+    -fx-background-color: #ffffff;
+}
+
+.dialog-date-picker .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 10 0 10;
+}
+
+/* Custom Alert/DialogPane Styles */
+.custom-alert.dialog-pane {
+    -fx-background-color: white;
+    -fx-font-family: "Segoe UI", "System";
+    -fx-font-size: 14px;
+}
+
+.custom-alert.dialog-pane .header-panel {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: transparent transparent #e2e8f0 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.custom-alert.dialog-pane .header-panel .label {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+}
+
+.custom-alert.dialog-pane .content .label {
+    -fx-text-fill: #475569;
+    -fx-font-size: 13px;
+    -fx-padding: 0 0 10 0;
+}
+
+.custom-alert.dialog-pane .text-field {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 8;
+    -fx-border-color: #cbd5e1;
+    -fx-border-radius: 8;
+    -fx-padding: 8 12;
+    -fx-font-size: 14px;
+    -fx-text-fill: #1e293b;
+}
+
+.custom-alert.dialog-pane .text-field:focused {
+    -fx-border-color: #3b82f6;
+    -fx-background-color: white;
+}
+
+.custom-alert.dialog-pane > .button-bar > .container > .button {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-padding: 8 16;
+    -fx-cursor: hand;
+}
+
+.custom-alert.dialog-pane > .button-bar > .container > .button:hover {
+    -fx-background-color: #2563eb;
+}
+
+.custom-alert.dialog-pane > .button-bar > .container > .button:cancel {
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill: #475569;
+    -fx-border-color: #cbd5e1;
+    -fx-border-radius: 8;
+}
+
+.custom-alert.dialog-pane > .button-bar > .container > .button:cancel:hover {
+    -fx-background-color: #e2e8f0;
+}

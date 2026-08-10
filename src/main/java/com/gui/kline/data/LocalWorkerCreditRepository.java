@@ -1,9 +1,8 @@
 package com.gui.kline.data;
 
-import com.gui.kline.models.LedgerEntry;
+import com.gui.kline.models.dto.LedgerEntry;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -12,13 +11,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class LocalWorkerCreditRepository {
     public String saveCredit(String workerId, String workerName, LocalDate date, double amount, String note, String type) {
-        String id = UUID.randomUUID().toString();
+        String id = com.gui.kline.utils.Utils.generateId("CRD-", 8);
         String sql = "INSERT INTO worker_credits (id, worker_id, worker, amount, credit_type, credit_date, note, created_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now'))";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, id);
@@ -26,7 +24,7 @@ public class LocalWorkerCreditRepository {
             statement.setString(3, workerName);
             statement.setDouble(4, amount);
             statement.setString(5, type);
-            statement.setDate(6, Date.valueOf(date));
+            statement.setString(6, date.toString());
             statement.setString(7, note == null ? null : note.trim());
             statement.executeUpdate();
         } catch (SQLException ex) {
@@ -44,6 +42,7 @@ public class LocalWorkerCreditRepository {
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, id);
             statement.executeUpdate();
+            DatabaseManager.logDeletion("worker_credits", id);
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to delete worker credit", ex);
         }
@@ -51,14 +50,14 @@ public class LocalWorkerCreditRepository {
 
     public void updateCredit(String id, String workerId, String workerName, LocalDate date, double amount, String note, String type) {
         if (id == null || id.isBlank()) return;
-        String sql = "UPDATE worker_credits SET worker_id = ?, worker = ?, amount = ?, credit_type = ?, credit_date = ?, note = ?, created_at = NOW() WHERE id = ?";
+        String sql = "UPDATE worker_credits SET worker_id = ?, worker = ?, amount = ?, credit_type = ?, credit_date = ?, note = ?, sync_status = 0, created_at = strftime('%Y-%m-%dT%H:%M:%S', 'now') WHERE id = ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, workerId);
             statement.setString(2, workerName);
             statement.setDouble(3, amount);
             statement.setString(4, type);
-            statement.setDate(5, Date.valueOf(date));
+            statement.setString(5, date.toString());
             statement.setString(6, note == null ? null : note.trim());
             statement.setString(7, id);
             statement.executeUpdate();
@@ -77,7 +76,7 @@ public class LocalWorkerCreditRepository {
                     String type = rs.getString("credit_type");
                     return new LedgerEntry(
                             rs.getString("id"),
-                            rs.getDate("credit_date").toLocalDate(),
+                            com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "credit_date"),
                             rs.getString("worker"),
                             type == null ? "CREDIT" : type,
                             rs.getString("note"),
@@ -91,20 +90,19 @@ public class LocalWorkerCreditRepository {
         return null;
     }
 
-    public List<LedgerEntry> loadLedger(LocalDate from, LocalDate to) {
+    public List<LedgerEntry> loadLedger(LocalDate to) {
         String sql = "SELECT id, worker, credit_date, credit_type, note, amount " +
-                "FROM worker_credits WHERE credit_date BETWEEN ? AND ? ORDER BY credit_date DESC";
+                "FROM worker_credits WHERE credit_date <= ? ORDER BY credit_date DESC";
         List<LedgerEntry> entries = new ArrayList<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(from));
-            statement.setDate(2, Date.valueOf(to));
+            statement.setString(1, to.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     String type = rs.getString("credit_type");
                     entries.add(new LedgerEntry(
                             rs.getString("id"),
-                            rs.getDate("credit_date").toLocalDate(),
+                            com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "credit_date"),
                             rs.getString("worker"),
                             type == null ? "CREDIT" : type,
                             rs.getString("note"),
@@ -118,15 +116,18 @@ public class LocalWorkerCreditRepository {
         return entries;
     }
 
+    public List<LedgerEntry> loadLedger(LocalDate from, LocalDate to) {
+        return loadLedger(to);
+    }
+
     public Map<String, Double> balanceByWorkerId(LocalDate from, LocalDate to) {
         String sql = "SELECT worker_id, credit_type, SUM(amount) AS total FROM worker_credits " +
-                "WHERE credit_date BETWEEN ? AND ? AND worker_id IS NOT NULL " +
+                "WHERE credit_date <= ? AND worker_id IS NOT NULL " +
                 "GROUP BY worker_id, credit_type";
         Map<String, Double> totals = new HashMap<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(from));
-            statement.setDate(2, Date.valueOf(to));
+            statement.setString(1, to.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     String workerId = rs.getString("worker_id");
@@ -144,13 +145,12 @@ public class LocalWorkerCreditRepository {
 
     public Map<String, Double> balanceByWorkerName(LocalDate from, LocalDate to) {
         String sql = "SELECT worker, credit_type, SUM(amount) AS total FROM worker_credits " +
-                "WHERE credit_date BETWEEN ? AND ? AND worker IS NOT NULL " +
+                "WHERE credit_date <= ? AND worker IS NOT NULL " +
                 "GROUP BY worker, credit_type";
         Map<String, Double> totals = new HashMap<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(from));
-            statement.setDate(2, Date.valueOf(to));
+            statement.setString(1, to.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     String worker = rs.getString("worker");
@@ -165,5 +165,33 @@ public class LocalWorkerCreditRepository {
         }
         return totals;
     }
-}
 
+    /**
+     * Returns the current net outstanding credit balance for a single worker
+     * (all CREDIT entries minus all SETTLEMENT entries, up to today).
+     * Returns 0 if the worker has no credit history or is fully settled.
+     */
+    public double getOutstandingBalance(String workerId) {
+        if (workerId == null || workerId.isBlank()) return 0;
+        String sql = "SELECT credit_type, SUM(amount) AS total FROM worker_credits " +
+                "WHERE worker_id = ? GROUP BY credit_type";
+        double balance = 0;
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, workerId);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    double total = rs.getDouble("total");
+                    if ("SETTLEMENT".equalsIgnoreCase(rs.getString("credit_type"))) {
+                        balance -= total;
+                    } else {
+                        balance += total;
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to load outstanding credit balance", ex);
+        }
+        return Math.max(0, balance);
+    }
+}

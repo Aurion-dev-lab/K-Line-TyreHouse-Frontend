@@ -70,6 +70,11 @@
                         <TextField fx:id="txtAmount"
                                    promptText="0.00"
                                    styleClass="form-input" />
+                        <Label fx:id="lblError"
+                               style="-fx-text-fill: #dc2626; -fx-font-weight: bold; -fx-font-size: 11px;"
+                               visible="false"
+                               managed="false"
+                               wrapText="true" />
                     </VBox>
 
                     <VBox spacing="6" GridPane.columnIndex="1">

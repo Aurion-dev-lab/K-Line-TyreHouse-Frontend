@@ -1,9 +1,9 @@
 package com.gui.kline.controller.form;
 
 import com.gui.kline.data.DatabaseManager;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.ViewModel;
 import com.gui.kline.utils.JsonUtil;
+import com.gui.kline.utils.Utils;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -24,8 +24,6 @@ public class QuickActionsPopupController {
 
     private List<QuickService> services;
     private Runnable onActionLogged;
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-
     public void setServices(List<QuickService> services) {
         this.services = services;
         populateGrid();
@@ -103,12 +101,13 @@ public class QuickActionsPopupController {
     }
 
     private void logQuickService(QuickService service) {
-        String insert = "INSERT INTO quick_services (id, service, price, service_date) VALUES (UUID(), ?, ?, ?)";
+        String insert = "INSERT INTO quick_services (id, service, price, service_date) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(insert)) {
-            ps.setString(1, service.name);
-            ps.setDouble(2, service.price);
-            ps.setDate(3, java.sql.Date.valueOf(java.time.LocalDate.now()));
+            ps.setString(1, Utils.generateId("QSV-", 8));
+            ps.setString(2, service.name);
+            ps.setDouble(3, service.price);
+            ps.setString(4, java.time.LocalDate.now().toString());
             ps.executeUpdate();
         } catch (SQLException ex) {
             System.err.println("Error logging quick service: " + ex.getMessage());
@@ -119,9 +118,7 @@ public class QuickActionsPopupController {
                 JsonUtil.field("service", service.name),
                 JsonUtil.field("price", service.price),
                 JsonUtil.field("date", java.time.LocalDate.now().toString())
-        );
-        syncQueueRepository.enqueue("quick_service", payload);
-    }
+        );    }
 
     @FXML
     private void handleClose() {

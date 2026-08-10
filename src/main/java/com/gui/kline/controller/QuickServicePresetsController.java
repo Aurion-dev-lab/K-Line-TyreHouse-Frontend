@@ -1,7 +1,7 @@
 package com.gui.kline.controller;
 
 import com.gui.kline.data.DatabaseManager;
-import com.gui.kline.models.QuickServicePreset;
+import com.gui.kline.models.ui.QuickServicePreset;
 import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,7 +17,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.UUID;
+import com.gui.kline.utils.Utils;
 
 public class QuickServicePresetsController {
 
@@ -33,6 +33,11 @@ public class QuickServicePresetsController {
     @FXML private Label lblMessage;
 
     private final ObservableList<QuickServicePreset> presets = FXCollections.observableArrayList();
+    private Runnable onSaved;
+
+    public void setOnSaved(Runnable onSaved) {
+        this.onSaved = onSaved;
+    }
 
     // Curated list of service-relevant FontAwesome icons
     private final String[] ICON_CHOICES = {
@@ -176,10 +181,10 @@ public class QuickServicePresetsController {
             return;
         }
 
-        String sql = "INSERT INTO quick_service_presets (id, service, price, active, icon, created_at) VALUES (?, ?, ?, 1, ?, NOW())";
+        String sql = "INSERT INTO quick_service_presets (id, service, price, active, icon, created_at) VALUES (?, ?, ?, 1, ?, CURRENT_TIMESTAMP)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, UUID.randomUUID().toString());
+            ps.setString(1, Utils.generateId("PRE-", 8));
             ps.setString(2, service);
             ps.setDouble(3, price);
             ps.setString(4, icon != null ? icon : "fas-bolt");
@@ -192,6 +197,7 @@ public class QuickServicePresetsController {
         txtService.clear();
         txtPrice.clear();
         loadPresets();
+        if (onSaved != null) onSaved.run();
         showMessage("✓ Service added successfully", false);
     }
 
@@ -215,6 +221,7 @@ public class QuickServicePresetsController {
         }
 
         loadPresets();
+        if (onSaved != null) onSaved.run();
     }
 
     @FXML
@@ -288,6 +295,7 @@ public class QuickServicePresetsController {
         btnSave.setVisible(false);
         btnSave.setManaged(false);
         loadPresets();
+        if (onSaved != null) onSaved.run();
 
         showMessage("✓ Successfully updated", false);
     }
@@ -308,12 +316,14 @@ public class QuickServicePresetsController {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, selected.getId());
             ps.executeUpdate();
+            DatabaseManager.logDeletion("quick_service_presets", selected.getId());
         } catch (SQLException ex) {
             showMessage("Failed to delete preset: " + ex.getMessage(), true);
             return;
         }
 
         loadPresets();
+        if (onSaved != null) onSaved.run();
         showMessage("✓ Service deleted successfully", false);
     }
 
@@ -331,6 +341,13 @@ public class QuickServicePresetsController {
         alert.setTitle("Quick Service Presets");
         alert.setHeaderText(null);
         alert.setContentText(message);
+        
+        // Set owner window to make it modal to the main application
+        if (tblPresets.getScene() != null && tblPresets.getScene().getWindow() != null) {
+            alert.initOwner(tblPresets.getScene().getWindow());
+            alert.initModality(javafx.stage.Modality.WINDOW_MODAL);
+        }
+        
         return alert.showAndWait().filter(btn -> btn == ButtonType.OK).isPresent();
     }
 

@@ -1,346 +1,507 @@
 package com.gui.kline.service;
 
 import com.gui.kline.data.ReportsRepository;
-import com.gui.kline.data.ReportsRepository.DailySummary;
-import com.gui.kline.data.ReportsRepository.ExpenseItem;
-import com.gui.kline.data.ReportsRepository.FinancialSummary;
-import com.gui.kline.data.ReportsRepository.TopProduct;
-import com.gui.kline.data.ReportsRepository.CustomerSummary;
+import com.gui.kline.models.reports.CustomerSummary;
+import com.gui.kline.models.reports.DailySummary;
+import com.gui.kline.models.reports.ExpenseItem;
+import com.gui.kline.models.reports.FinancialSummary;
+import com.gui.kline.models.reports.TopProduct;
 import com.gui.kline.controller.ReportsController.SaleItem;
 import com.gui.kline.controller.ReportsController.ServiceItem;
+import com.gui.kline.controller.ReportsController.PaymentItem;
 
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Element;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.Rectangle;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
+
+import java.awt.Color;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
+import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Service for exporting reports to PDF format.
- * This service provides methods to generate PDF reports using different libraries.
- * Currently implements basic PDF generation, with options for Apache PDFBox and iText.
- */
 public class PDFExportService {
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final DateTimeFormatter FILE_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+    private static final DateTimeFormatter DATE_FMT      = DateTimeFormatter.ofPattern("dd MMM yyyy");
+    private static final DateTimeFormatter FILE_DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final NumberFormat      NF            = NumberFormat.getInstance();
+    static { NF.setMaximumFractionDigits(0); }
+
+    private static final Color NAVY         = new Color(17,  24,  39);
+    private static final Color BLUE         = new Color(30,  64, 175);
+    private static final Color BLUE_LIGHT   = new Color(219,234,254);
+    private static final Color GREEN        = new Color(22, 163,  74);
+    private static final Color GREEN_LIGHT  = new Color(220,252,231);
+    private static final Color RED          = new Color(220,  38,  38);
+    private static final Color RED_LIGHT    = new Color(254,226,226);
+    private static final Color GRAY         = new Color(107,114,128);
+    private static final Color GRAY_LIGHT   = new Color(249,250,251);
+    private static final Color GRAY_BORDER  = new Color(229,231,235);
+    private static final Color GRAY_HEADER  = new Color(243,244,246);
+    private static final Color GRAY_DARK    = new Color(55,  65,  81);
+    private static final Color PURPLE       = new Color(147, 51, 234);
+    private static final Color ORANGE       = new Color(234, 88,  12);
+    private static final Color PURPLE_LIGHT = new Color(245,243,255);
+    private static final Color ORANGE_LIGHT = new Color(255,247,237);
+
+    private Font titleFont()     { return FontFactory.getFont(FontFactory.HELVETICA_BOLD,  22, Color.WHITE); }
+    private Font subtitleFont()  { return FontFactory.getFont(FontFactory.HELVETICA,       13, new Color(156,163,175)); }
+    private Font metaFont()      { return FontFactory.getFont(FontFactory.HELVETICA,        9, new Color(156,163,175)); }
+    private Font secFont()       { return FontFactory.getFont(FontFactory.HELVETICA_BOLD,  11, NAVY); }
+    private Font tblHdrFont()    { return FontFactory.getFont(FontFactory.HELVETICA_BOLD,   9, Color.WHITE); }
+    private Font bodyFont()      { return FontFactory.getFont(FontFactory.HELVETICA,        9, NAVY); }
+    private Font boldFont()      { return FontFactory.getFont(FontFactory.HELVETICA_BOLD,   9, NAVY); }
+    private Font subtleFont()    { return FontFactory.getFont(FontFactory.HELVETICA,        8, GRAY); }
+    private Font greenFont()     { return FontFactory.getFont(FontFactory.HELVETICA_BOLD,   9, GREEN); }
+    private Font redFont()       { return FontFactory.getFont(FontFactory.HELVETICA_BOLD,   9, RED); }
+    private Font blueFont()      { return FontFactory.getFont(FontFactory.HELVETICA_BOLD,   9, BLUE); }
+    private Font purpleFont()    { return FontFactory.getFont(FontFactory.HELVETICA_BOLD,   9, PURPLE); }
+    private Font orangeFont()    { return FontFactory.getFont(FontFactory.HELVETICA_BOLD,   9, ORANGE); }
+    private Font totFont(Color c){ return FontFactory.getFont(FontFactory.HELVETICA_BOLD,  10, c); }
 
     private final ReportsRepository reportsRepository;
 
-    public PDFExportService() {
-        this.reportsRepository = new ReportsRepository();
+    public PDFExportService() { this.reportsRepository = new ReportsRepository(); }
+    public PDFExportService(ReportsRepository r) { this.reportsRepository = r; }
+
+    public boolean exportBusinessReportToPDF(LocalDate s, LocalDate e, File f) {
+        return exportSummaryReportToPDF(s, e, f);
     }
 
-    public PDFExportService(ReportsRepository reportsRepository) {
-        this.reportsRepository = reportsRepository;
-    }
-
-    /**
-     * Export comprehensive business report to PDF
-     * @param startDate Start date of the report period
-     * @param endDate End date of the report period
-     * @param outputFile Output file path
-     * @return true if export was successful
-     */
-    public boolean exportBusinessReportToPDF(LocalDate startDate, LocalDate endDate, File outputFile) {
+    public boolean exportSummaryReportToPDF(LocalDate startDate, LocalDate endDate, File outputFile) {
         try {
-            // For now, we'll generate a text-based PDF using a simple approach
-            // In production, you would use a proper PDF library like Apache PDFBox or iText
-            return generateTextBasedPDF(startDate, endDate, outputFile);
-        } catch (Exception e) {
-            System.err.println("Failed to export business report to PDF: " + e.getMessage());
-            e.printStackTrace();
-            return false;
+            FinancialSummary            summary  = reportsRepository.getFinancialSummary(startDate, endDate);
+            java.util.List<SaleItem>    sales    = reportsRepository.getSalesData(startDate, endDate);
+            java.util.List<ServiceItem> services = reportsRepository.getServiceData(startDate, endDate);
+            java.util.List<ExpenseItem> expenses = reportsRepository.getExpenses(startDate, endDate);
+
+            Document doc = new Document(PageSize.A4, 36, 36, 50, 40);
+            PdfWriter.getInstance(doc, new FileOutputStream(outputFile));
+            doc.open();
+
+            buildHeader(doc, "Executive Business Summary", startDate, endDate);
+            addSectionBand(doc, "Financial Summary");
+            buildFinancialSummary(doc, summary);
+
+            if (!sales.isEmpty())    { addSectionBand(doc, "Sales Overview (" + sales.size() + " transactions)"); buildSalesTable(doc, sales); }
+            if (!services.isEmpty()) { addSectionBand(doc, "Service Overview (" + services.size() + " entries)"); buildServicesTable(doc, services); }
+            if (!expenses.isEmpty()) { addSectionBand(doc, "Expenses Overview"); buildExpensesSection(doc, expenses); }
+
+            doc.close();
+            return true;
+        } catch (Exception ex) {
+            System.err.println("Export Summary failed: " + ex.getMessage()); ex.printStackTrace(); return false;
         }
     }
 
-    /**
-     * Export sales report to PDF
-     */
     public boolean exportSalesReportToPDF(LocalDate startDate, LocalDate endDate, File outputFile) {
         try {
-            return generateSalesPDF(startDate, endDate, outputFile);
-        } catch (Exception e) {
-            System.err.println("Failed to export sales report to PDF: " + e.getMessage());
-            e.printStackTrace();
-            return false;
+            java.util.List<SaleItem> sales = reportsRepository.getSalesData(startDate, endDate);
+            java.util.List<TopProduct> topProducts = reportsRepository.getTopSellingProducts(startDate, endDate, 10);
+            Document doc = new Document(PageSize.A4, 36, 36, 50, 40);
+            PdfWriter.getInstance(doc, new FileOutputStream(outputFile));
+            doc.open();
+
+            buildHeader(doc, "Sales Analysis Report", startDate, endDate);
+
+            if (topProducts != null && !topProducts.isEmpty()) {
+                addSectionBand(doc, "Top Selling Products");
+                buildTopProductsTable(doc, topProducts);
+            }
+
+            if (!sales.isEmpty()) {
+                addSectionBand(doc, "Detailed Sales Transactions (" + sales.size() + " items)");
+                buildSalesTable(doc, sales);
+            }
+            doc.close();
+            return true;
+        } catch (Exception ex) {
+            System.err.println("Export Sales failed: " + ex.getMessage()); ex.printStackTrace(); return false;
         }
     }
 
-    /**
-     * Export service revenue report to PDF
-     */
+    public boolean exportDailySummaryReportToPDF(LocalDate singleDate, LocalDate endDate, File outputFile) {
+        try {
+            LocalDate targetDate = endDate != null ? endDate : singleDate;
+            FinancialSummary            summary  = reportsRepository.getFinancialSummary(targetDate, targetDate);
+            java.util.List<DailySummary> dailySummaries = reportsRepository.getDailySalesSummary(targetDate, targetDate);
+            java.util.List<ExpenseItem> expenses = reportsRepository.getExpenses(targetDate, targetDate);
+
+            Document doc = new Document(PageSize.A4, 36, 36, 50, 40);
+            PdfWriter.getInstance(doc, new FileOutputStream(outputFile));
+            doc.open();
+
+            buildHeader(doc, "Daily Business Summary Report (" + targetDate.format(DATE_FMT) + ")", targetDate, targetDate);
+            addSectionBand(doc, "Financial Summary (" + targetDate.format(DATE_FMT) + ")");
+            buildFinancialSummary(doc, summary);
+
+            if (dailySummaries != null && !dailySummaries.isEmpty()) {
+                addSectionBand(doc, "Daily Sales & Transaction Breakdown");
+                buildDailySummaryTable(doc, dailySummaries);
+            }
+
+            if (expenses != null && !expenses.isEmpty()) {
+                addSectionBand(doc, "Daily Expenses Breakdown");
+                buildExpensesSection(doc, expenses);
+            }
+
+            doc.close();
+            return true;
+        } catch (Exception ex) {
+            System.err.println("Export Daily Summary failed: " + ex.getMessage()); ex.printStackTrace(); return false;
+        }
+    }
+
+    public boolean exportTopProductsReportToPDF(LocalDate startDate, LocalDate endDate, File outputFile) {
+        try {
+            java.util.List<TopProduct> topProducts = reportsRepository.getTopSellingProducts(startDate, endDate, 20);
+            Document doc = new Document(PageSize.A4, 36, 36, 50, 40);
+            PdfWriter.getInstance(doc, new FileOutputStream(outputFile));
+            doc.open();
+
+            buildHeader(doc, "Top Selling Products Report", startDate, endDate);
+            if (topProducts != null && !topProducts.isEmpty()) {
+                addSectionBand(doc, "Ranked Top Products");
+                buildTopProductsTable(doc, topProducts);
+            }
+            doc.close();
+            return true;
+        } catch (Exception ex) {
+            System.err.println("Export Top Products failed: " + ex.getMessage()); ex.printStackTrace(); return false;
+        }
+    }
+
     public boolean exportServiceReportToPDF(LocalDate startDate, LocalDate endDate, File outputFile) {
         try {
-            return generateServicePDF(startDate, endDate, outputFile);
-        } catch (Exception e) {
-            System.err.println("Failed to export service report to PDF: " + e.getMessage());
-            e.printStackTrace();
-            return false;
+            java.util.List<ServiceItem> services = reportsRepository.getServiceData(startDate, endDate);
+            Document doc = new Document(PageSize.A4, 36, 36, 50, 40);
+            PdfWriter.getInstance(doc, new FileOutputStream(outputFile));
+            doc.open();
+
+            buildHeader(doc, "Service Revenue Report", startDate, endDate);
+            if (!services.isEmpty()) {
+                addSectionBand(doc, "Service Entries (" + services.size() + " items)");
+                buildServicesTable(doc, services);
+            }
+            doc.close();
+            return true;
+        } catch (Exception ex) {
+            System.err.println("Export Services failed: " + ex.getMessage()); ex.printStackTrace(); return false;
         }
     }
 
-    /**
-     * Export expense report to PDF
-     */
     public boolean exportExpenseReportToPDF(LocalDate startDate, LocalDate endDate, File outputFile) {
         try {
-            return generateExpensePDF(startDate, endDate, outputFile);
-        } catch (Exception e) {
-            System.err.println("Failed to export expense report to PDF: " + e.getMessage());
-            e.printStackTrace();
-            return false;
+            java.util.List<ExpenseItem> expenses = reportsRepository.getExpenses(startDate, endDate);
+            Document doc = new Document(PageSize.A4, 36, 36, 50, 40);
+            PdfWriter.getInstance(doc, new FileOutputStream(outputFile));
+            doc.open();
+
+            buildHeader(doc, "Expense Analysis Report", startDate, endDate);
+            if (!expenses.isEmpty()) {
+                addSectionBand(doc, "Categorized Expenses");
+                buildExpensesSection(doc, expenses);
+            }
+            doc.close();
+            return true;
+        } catch (Exception ex) {
+            System.err.println("Export Expenses failed: " + ex.getMessage()); ex.printStackTrace(); return false;
         }
     }
 
-    /**
-     * Generate a default filename for the report
-     */
+    public boolean exportCustomerReportToPDF(LocalDate startDate, LocalDate endDate, File outputFile) {
+        try {
+            java.util.List<CustomerSummary> customers = reportsRepository.getCustomerPurchaseSummary(startDate, endDate);
+            java.util.List<PaymentItem> payments = reportsRepository.getPaymentTransactions(startDate, endDate);
+            Document doc = new Document(PageSize.A4, 36, 36, 50, 40);
+            PdfWriter.getInstance(doc, new FileOutputStream(outputFile));
+            doc.open();
+
+            buildHeader(doc, "Customer & Credit Analysis Report", startDate, endDate);
+            if (customers != null && !customers.isEmpty()) {
+                addSectionBand(doc, "Customer Credit Balances (" + customers.size() + " customers)");
+                buildCustomerTable(doc, customers);
+            }
+            if (payments != null && !payments.isEmpty()) {
+                addSectionBand(doc, "Payment Settlement History (" + payments.size() + " payments)");
+                buildPaymentTable(doc, payments);
+            }
+            doc.close();
+            return true;
+        } catch (Exception ex) {
+            System.err.println("Export Customer Analysis failed: " + ex.getMessage()); ex.printStackTrace(); return false;
+        }
+    }
+
     public File generateDefaultOutputFile(String reportType) {
-        String timestamp = LocalDate.now().format(FILE_DATE_FORMATTER);
-        String userHome = System.getProperty("user.home");
-        File reportsDir = new File(userHome, "KLine_Reports");
-        
-        if (!reportsDir.exists()) {
-            reportsDir.mkdirs();
-        }
-        
-        return new File(reportsDir, "KLine_" + reportType + "_" + timestamp + ".pdf");
+        File dir = new File(System.getProperty("user.home"), "KLine_Reports");
+        if (!dir.exists()) dir.mkdirs();
+        return new File(dir, "KLine_Report_" + LocalDate.now().format(FILE_DATE_FMT) + ".pdf");
     }
 
-    private boolean generateTextBasedPDF(LocalDate startDate, LocalDate endDate, File outputFile) throws IOException {
-        // This is a placeholder implementation
-        // In a real application, you would use a proper PDF library
-        
-        FinancialSummary summary = reportsRepository.getFinancialSummary(startDate, endDate);
-        List<SaleItem> sales = reportsRepository.getSalesData(startDate, endDate);
-        List<ServiceItem> services = reportsRepository.getServiceData(startDate, endDate);
-        List<ExpenseItem> expenses = reportsRepository.getExpenses(startDate, endDate);
-        
-        StringBuilder content = new StringBuilder();
-        content.append("K-LINE TYRE HOUSE - BUSINESS REPORT\n");
-        content.append("====================================\n\n");
-        content.append("Report Period: ").append(startDate.format(DATE_FORMATTER)).append(" to ")
-               .append(endDate.format(DATE_FORMATTER)).append("\n");
-        content.append("Generated: ").append(LocalDate.now().format(DATE_FORMATTER)).append("\n\n");
-        
-        content.append("FINANCIAL SUMMARY\n");
-        content.append("----------------\n");
-        content.append(String.format("Total Sales Revenue:     Rs. %,.0f\n", summary.getTotalSales()));
-        content.append(String.format("Credit Sales:            Rs. %,.0f\n", summary.getCreditSales()));
-        content.append(String.format("Service Revenue:         Rs. %,.0f\n", summary.getServiceRevenue()));
-        content.append(String.format("Quick Services:          Rs. %,.0f\n", summary.getQuickServiceRevenue()));
-        content.append(String.format("Total Revenue:           Rs. %,.0f\n\n", summary.getTotalRevenue()));
-        
-        content.append(String.format("Total Expenses:          Rs. %,.0f\n", summary.getTotalExpenses()));
-        content.append(String.format("Worker Costs:            Rs. %,.0f\n", summary.getWorkerCosts()));
-        content.append(String.format("Total Costs:             Rs. %,.0f\n\n", summary.getTotalCosts()));
-        
-        content.append(String.format("NET PROFIT:              Rs. %,.0f\n\n", summary.getNetProfit()));
-        
-        content.append("TOP 5 SALES\n");
-        content.append("----------\n");
-        sales.stream()
-                .sorted((a, b) -> Double.compare(b.revenue(), a.revenue()))
-                .limit(5)
-                .forEach(item -> content.append(String.format("%-25s %10s %12s\n", 
-                        truncate(item.name(), 25), 
-                        formatCurrency(item.revenue()))));
-        
-        content.append("\nTOP 5 SERVICES\n");
-        content.append("------------\n");
-        services.stream()
-                .sorted((a, b) -> Double.compare(b.fee(), a.fee()))
-                .limit(5)
-                .forEach(item -> content.append(String.format("%-25s %12s\n", 
-                        truncate(item.name(), 25), 
-                        formatCurrency(item.fee()))));
-        
-        // For now, save as text file (in real implementation, this would be PDF)
-        try (FileOutputStream fos = new FileOutputStream(outputFile)) {
-            fos.write(content.toString().getBytes());
-            return true;
-        }
+    public boolean isPDFExportAvailable() { return true; }
+    public ReportsRepository getReportsRepository() { return reportsRepository; }
+
+    private void buildHeader(Document doc, String reportTitle, LocalDate start, LocalDate end) throws DocumentException {
+        PdfPTable band = new PdfPTable(1);
+        band.setWidthPercentage(100);
+        PdfPCell cell = new PdfPCell();
+        cell.setBackgroundColor(NAVY); cell.setPadding(22); cell.setBorder(Rectangle.NO_BORDER);
+        Paragraph name = new Paragraph("K-LINE TYRE HOUSE", titleFont()); name.setAlignment(Element.ALIGN_CENTER);
+        Paragraph sub = new Paragraph(reportTitle, subtitleFont()); sub.setAlignment(Element.ALIGN_CENTER);
+        Paragraph meta = new Paragraph("Period:  " + start.format(DATE_FMT) + "  -  " + end.format(DATE_FMT) + "     |     Generated:  " + LocalDate.now().format(DATE_FMT), metaFont());
+        meta.setAlignment(Element.ALIGN_CENTER); meta.setSpacingBefore(6);
+        cell.addElement(name); cell.addElement(sub); cell.addElement(meta);
+        band.addCell(cell); doc.add(band); doc.add(spacer(10));
     }
 
-    private boolean generateSalesPDF(LocalDate startDate, LocalDate endDate, File outputFile) throws IOException {
-        List<SaleItem> sales = reportsRepository.getSalesData(startDate, endDate);
-        
-        StringBuilder content = new StringBuilder();
-        content.append("K-LINE TYRE HOUSE - SALES REPORT\n");
-        content.append("==================================\n\n");
-        content.append("Report Period: ").append(startDate.format(DATE_FORMATTER)).append(" to ")
-               .append(endDate.format(DATE_FORMATTER)).append("\n\n");
-        
-        double totalRevenue = sales.stream().mapToDouble(SaleItem::revenue).sum();
-        double totalProfit = sales.stream().mapToDouble(SaleItem::profit).sum();
-        
-        content.append("SUMMARY\n");
-        content.append("-------\n");
-        content.append(String.format("Total Transactions: %d\n", sales.size()));
-        content.append(String.format("Total Revenue:      Rs. %,.0f\n", totalRevenue));
-        content.append(String.format("Total Profit:       Rs. %,.0f\n\n", totalProfit));
-        
-        content.append("DETAILED SALES\n");
-        content.append("------------\n");
-        content.append(String.format("%-12s %-25s %6s %12s %12s\n", "Date", "Product", "Qty", "Revenue", "Profit"));
-        content.append(String.format("%-12s %-25s %6s %12s %12s\n", "----", "-------", "---", "-------", "------"));
-        
-        sales.stream()
-                .sorted((a, b) -> b.date().compareTo(a.date()))
-                .forEach(item -> content.append(String.format("%-12s %-25s %6d %12s %12s\n",
-                        item.date().format(DATE_FORMATTER),
-                        truncate(item.name(), 25),
-                        item.qty(),
-                        formatCurrency(item.revenue()),
-                        formatCurrency(item.profit()))));
-        
-        try (FileOutputStream fos = new FileOutputStream(outputFile)) {
-            fos.write(content.toString().getBytes());
-            return true;
-        }
+    private void buildFinancialSummary(Document doc, FinancialSummary s) throws DocumentException {
+        PdfPTable t = new PdfPTable(2);
+        t.setWidthPercentage(62); t.setHorizontalAlignment(Element.ALIGN_LEFT);
+        t.setWidths(new float[]{3.5f, 2f}); t.setSpacingBefore(4); t.setSpacingAfter(14);
+
+        summaryRow(t, "Invoice Sales Revenue", "Rs. " + fmt(s.getTotalSales()),         GRAY_LIGHT);
+        summaryRow(t, "Credit Sales",          "Rs. " + fmt(s.getCreditSales()),         Color.WHITE);
+        summaryRow(t, "Service Revenue",       "Rs. " + fmt(s.getServiceRevenue()),      GRAY_LIGHT);
+        summaryRow(t, "Quick Services",        "Rs. " + fmt(s.getQuickServiceRevenue()), Color.WHITE);
+        summaryRow(t, "Tyre Export Revenue",   "Rs. " + fmt(s.getTyreExportRevenue()),   GRAY_LIGHT);
+        summaryRowTotal(t, "TOTAL REVENUE",    "Rs. " + fmt(s.getTotalRevenue()),        BLUE_LIGHT, totFont(BLUE));
+        emptyRow(t);
+        summaryRow(t, "Product Costs (COGS)", "Rs. " + fmt(s.getProductCosts()),  GRAY_LIGHT);
+        summaryRow(t, "Total Expenses",       "Rs. " + fmt(s.getTotalExpenses()),  Color.WHITE);
+        summaryRow(t, "Worker Costs",         "Rs. " + fmt(s.getWorkerCosts()),    GRAY_LIGHT);
+        summaryRowTotal(t, "TOTAL COSTS",     "Rs. " + fmt(s.getTotalCosts()),     RED_LIGHT, totFont(RED));
+        emptyRow(t);
+        boolean pos = s.getNetProfit() >= 0;
+        summaryRowTotal(t, "NET PROFIT", "Rs. " + fmt(s.getNetProfit()), pos ? GREEN_LIGHT : RED_LIGHT, totFont(pos ? GREEN : RED));
+        doc.add(t);
     }
 
-    private boolean generateServicePDF(LocalDate startDate, LocalDate endDate, File outputFile) throws IOException {
-        List<ServiceItem> services = reportsRepository.getServiceData(startDate, endDate);
-        
-        StringBuilder content = new StringBuilder();
-        content.append("K-LINE TYRE HOUSE - SERVICE REVENUE REPORT\n");
-        content.append("===========================================\n\n");
-        content.append("Report Period: ").append(startDate.format(DATE_FORMATTER)).append(" to ")
-               .append(endDate.format(DATE_FORMATTER)).append("\n\n");
-        
-        double totalRevenue = services.stream().mapToDouble(ServiceItem::fee).sum();
-        
-        content.append("SUMMARY\n");
-        content.append("-------\n");
-        content.append(String.format("Total Services: %d\n", services.size()));
-        content.append(String.format("Total Revenue: Rs. %,.0f\n\n", totalRevenue));
-        
-        content.append("DETAILED SERVICES\n");
-        content.append("----------------\n");
-        content.append(String.format("%-12s %-30s %12s\n", "Date", "Service", "Fee"));
-        content.append(String.format("%-12s %-30s %12s\n", "----", "-------", "---"));
-        
-        services.stream()
-                .sorted((a, b) -> b.date().compareTo(a.date()))
-                .forEach(item -> content.append(String.format("%-12s %-30s %12s\n",
-                        item.date().format(DATE_FORMATTER),
-                        truncate(item.name(), 30),
-                        formatCurrency(item.fee()))));
-        
-        try (FileOutputStream fos = new FileOutputStream(outputFile)) {
-            fos.write(content.toString().getBytes());
-            return true;
+    private void buildSalesTable(Document doc, java.util.List<SaleItem> sales) throws DocumentException {
+        PdfPTable t = new PdfPTable(5);
+        t.setWidthPercentage(100); t.setWidths(new float[]{2f,4.5f,1.2f,2.5f,2.5f});
+        t.setSpacingBefore(4); t.setSpacingAfter(14);
+        tblHeader(t, "Date", "Product / Item", "Qty", "Revenue", "Profit");
+
+        double totalRev = 0, totalPft = 0; boolean alt = false;
+        for (SaleItem item : sales.stream().sorted((a,b)->b.date().compareTo(a.date())).toList()) {
+            boolean isCredit = item.name().endsWith("(Credit)");
+            boolean isExport = item.name().startsWith("Tyre Export -");
+            Color bg = isCredit ? PURPLE_LIGHT : isExport ? ORANGE_LIGHT : (alt ? GRAY_LIGHT : Color.WHITE); alt = !alt;
+            tblCell(t, item.date().format(DATE_FMT), subtleFont(), bg, Element.ALIGN_LEFT);
+            tblCell(t, truncate(item.name(), 42), isCredit ? purpleFont() : isExport ? orangeFont() : bodyFont(), bg, Element.ALIGN_LEFT);
+            tblCell(t, String.valueOf(item.qty()), bodyFont(), bg, Element.ALIGN_CENTER);
+            tblCell(t, "Rs. " + fmt(item.revenue()), boldFont(), bg, Element.ALIGN_RIGHT);
+            tblCell(t, "Rs. " + fmt(item.profit()), item.profit()>=0 ? greenFont() : redFont(), bg, Element.ALIGN_RIGHT);
+            totalRev += item.revenue(); totalPft += item.profit();
         }
+        tblFooter(t, "TOTALS", "", "", "Rs. " + fmt(totalRev), "Rs. " + fmt(totalPft));
+        doc.add(t);
     }
 
-    private boolean generateExpensePDF(LocalDate startDate, LocalDate endDate, File outputFile) throws IOException {
-        List<ExpenseItem> expenses = reportsRepository.getExpenses(startDate, endDate);
+    private void buildDailySummaryTable(Document doc, java.util.List<DailySummary> dailySummaries) throws DocumentException {
+        PdfPTable t = new PdfPTable(4);
+        t.setWidthPercentage(100); t.setWidths(new float[]{2.5f, 2.5f, 2.5f, 3.5f});
+        t.setSpacingBefore(4); t.setSpacingAfter(14);
+        tblHeader(t, "Date", "Transactions", "Total Qty", "Daily Revenue");
+
+        int totalTx = 0, totalQty = 0; double totalRev = 0; boolean alt = false;
+        for (DailySummary d : dailySummaries) {
+            Color bg = alt ? GRAY_LIGHT : Color.WHITE; alt = !alt;
+            tblCell(t, d.getDate().format(DATE_FMT), subtleFont(), bg, Element.ALIGN_LEFT);
+            tblCell(t, String.valueOf(d.getInvoiceCount()), bodyFont(), bg, Element.ALIGN_CENTER);
+            tblCell(t, String.valueOf(d.getTotalItems()), bodyFont(), bg, Element.ALIGN_CENTER);
+            tblCell(t, "Rs. " + fmt(d.getTotalRevenue()), boldFont(), bg, Element.ALIGN_RIGHT);
+            totalTx += d.getInvoiceCount(); totalQty += d.getTotalItems(); totalRev += d.getTotalRevenue();
+        }
+        tblFooter(t, "TOTALS", String.valueOf(totalTx), String.valueOf(totalQty), "Rs. " + fmt(totalRev));
+        doc.add(t);
+    }
+
+    private void buildTopProductsTable(Document doc, java.util.List<TopProduct> topProducts) throws DocumentException {
+        PdfPTable t = new PdfPTable(5);
+        t.setWidthPercentage(100); t.setWidths(new float[]{1.2f, 4.8f, 1.8f, 2.4f, 2.8f});
+        t.setSpacingBefore(4); t.setSpacingAfter(14);
+
+        // Header
+        tblHeader(t, "Rank", "Product Name", "Qty Sold", "Selling Price", "Total Revenue");
+
+        int rank = 1; int totalQty = 0; double totalRev = 0; boolean alt = false;
+        for (TopProduct p : topProducts) {
+            Color bg = alt ? GRAY_LIGHT : Color.WHITE; alt = !alt;
+            tblCell(t, "#" + (rank++), subtleFont(), bg, Element.ALIGN_CENTER);
+            tblCell(t, truncate(p.getProductName(), 42), boldFont(), bg, Element.ALIGN_LEFT);
+            tblCell(t, String.valueOf(p.getQuantity()), bodyFont(), bg, Element.ALIGN_CENTER);
+            tblCell(t, "Rs. " + fmt(p.getUnitPrice()), bodyFont(), bg, Element.ALIGN_RIGHT);
+            tblCell(t, "Rs. " + fmt(p.getRevenue()), greenFont(), bg, Element.ALIGN_RIGHT);
+            totalQty += p.getQuantity();
+            totalRev += p.getRevenue();
+        }
         
-        StringBuilder content = new StringBuilder();
-        content.append("K-LINE TYRE HOUSE - EXPENSE REPORT\n");
-        content.append("==================================\n\n");
-        content.append("Report Period: ").append(startDate.format(DATE_FORMATTER)).append(" to ")
-               .append(endDate.format(DATE_FORMATTER)).append("\n\n");
+        // Footer aligned cleanly across all 5 columns
+        Font f = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, NAVY);
         
-        // Group by category
-        Map<String, List<ExpenseItem>> byCategory = expenses.stream()
-                .collect(Collectors.groupingBy(ExpenseItem::getCategory));
+        PdfPCell c1 = new PdfPCell(new Phrase("TOTAL", f)); c1.setBackgroundColor(GRAY_HEADER); c1.setPadding(7); c1.setBorderColor(new Color(209,213,219)); c1.setBorderWidth(0.5f); t.addCell(c1);
+        PdfPCell c2 = new PdfPCell(new Phrase("", f)); c2.setBackgroundColor(GRAY_HEADER); c2.setPadding(7); c2.setBorderColor(new Color(209,213,219)); c2.setBorderWidth(0.5f); t.addCell(c2);
+        PdfPCell c3 = new PdfPCell(new Phrase(String.valueOf(totalQty), f)); c3.setBackgroundColor(GRAY_HEADER); c3.setPadding(7); c3.setBorderColor(new Color(209,213,219)); c3.setBorderWidth(0.5f); c3.setHorizontalAlignment(Element.ALIGN_CENTER); t.addCell(c3);
+        PdfPCell c4 = new PdfPCell(new Phrase("", f)); c4.setBackgroundColor(GRAY_HEADER); c4.setPadding(7); c4.setBorderColor(new Color(209,213,219)); c4.setBorderWidth(0.5f); t.addCell(c4);
+        PdfPCell c5 = new PdfPCell(new Phrase("Rs. " + fmt(totalRev), f)); c5.setBackgroundColor(GRAY_HEADER); c5.setPadding(7); c5.setBorderColor(new Color(209,213,219)); c5.setBorderWidth(0.5f); c5.setHorizontalAlignment(Element.ALIGN_RIGHT); t.addCell(c5);
         
-        double totalExpenses = expenses.stream().mapToDouble(ExpenseItem::getAmount).sum();
-        
-        content.append("SUMMARY\n");
-        content.append("-------\n");
-        content.append(String.format("Total Expenses: Rs. %,.0f\n\n", totalExpenses));
-        
-        content.append("EXPENSES BY CATEGORY\n");
-        content.append("--------------------\n");
-        
-        for (Map.Entry<String, List<ExpenseItem>> entry : byCategory.entrySet()) {
-            content.append(String.format("\n%s\n", entry.getKey()));
-            content.append(String.format("%-12s %-40s %12s\n", "Date", "Description", "Amount"));
-            content.append(String.format("%-12s %-40s %12s\n", "----", "-----------", "------"));
-            
-            double categoryTotal = 0;
-            for (ExpenseItem expense : entry.getValue()) {
-                content.append(String.format("%-12s %-40s %12s\n",
-                        expense.getDate().format(DATE_FORMATTER),
-                        truncate(expense.getDescription(), 40),
-                        formatCurrency(expense.getAmount())));
-                categoryTotal += expense.getAmount();
+        doc.add(t);
+    }
+
+    private void buildServicesTable(Document doc, java.util.List<ServiceItem> services) throws DocumentException {
+        PdfPTable t = new PdfPTable(4);
+        t.setWidthPercentage(100); t.setWidths(new float[]{2f,5f,2.5f,2f});
+        t.setSpacingBefore(4); t.setSpacingAfter(14);
+        tblHeader(t, "Date", "Service", "Source", "Fee");
+
+        double total = 0; boolean alt = false;
+        for (ServiceItem item : services.stream().sorted((a,b)->b.date().compareTo(a.date())).toList()) {
+            boolean isQuick = "Quick Service".equals(item.assignedTo());
+            boolean isInv   = "Service Invoice".equals(item.assignedTo());
+            Color bg = isQuick ? new Color(240,253,244) : (alt ? GRAY_LIGHT : Color.WHITE); alt = !alt;
+            tblCell(t, item.date().format(DATE_FMT), subtleFont(), bg, Element.ALIGN_LEFT);
+            tblCell(t, truncate(item.name(), 50), bodyFont(), bg, Element.ALIGN_LEFT);
+            tblCell(t, item.assignedTo()!=null ? item.assignedTo() : "Standard", isQuick ? greenFont() : isInv ? blueFont() : bodyFont(), bg, Element.ALIGN_CENTER);
+            tblCell(t, "Rs. " + fmt(item.fee()), boldFont(), bg, Element.ALIGN_RIGHT);
+            total += item.fee();
+        }
+        tblFooter(t, "TOTAL", "", "", "Rs. " + fmt(total));
+        doc.add(t);
+    }
+
+    private void buildExpensesSection(Document doc, java.util.List<ExpenseItem> expenses) throws DocumentException {
+        Map<String, java.util.List<ExpenseItem>> byCategory = expenses.stream().collect(Collectors.groupingBy(e->normalizeCategory(e.getCategory())));
+        double grandTotal = 0;
+        for (Map.Entry<String, java.util.List<ExpenseItem>> entry : byCategory.entrySet()) {
+            Paragraph catLabel = new Paragraph(entry.getKey(), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, BLUE));
+            catLabel.setSpacingBefore(10); catLabel.setSpacingAfter(3); doc.add(catLabel);
+
+            PdfPTable t = new PdfPTable(3);
+            t.setWidthPercentage(100); t.setWidths(new float[]{2f,5.5f,2.5f}); t.setSpacingAfter(4);
+            tblHeader(t, "Date", "Description", "Amount");
+            double catTotal = 0; boolean alt = false;
+            for (ExpenseItem exp : entry.getValue()) {
+                Color bg = alt ? GRAY_LIGHT : Color.WHITE; alt = !alt;
+                tblCell(t, exp.getDate().format(DATE_FMT), subtleFont(), bg, Element.ALIGN_LEFT);
+                tblCell(t, truncate(exp.getDescription(), 60), bodyFont(), bg, Element.ALIGN_LEFT);
+                tblCell(t, "Rs. " + fmt(exp.getAmount()), boldFont(), bg, Element.ALIGN_RIGHT);
+                catTotal += exp.getAmount();
             }
-            
-            content.append(String.format("%-12s %-40s %12s\n", "", "Category Total:", formatCurrency(categoryTotal)));
+            tblFooter(t, "", "Category Total:", "Rs. " + fmt(catTotal));
+            doc.add(t); grandTotal += catTotal;
         }
-        
-        try (FileOutputStream fos = new FileOutputStream(outputFile)) {
-            fos.write(content.toString().getBytes());
-            return true;
+        doc.add(spacer(6));
+        PdfPTable gt = new PdfPTable(3); gt.setWidthPercentage(100); gt.setWidths(new float[]{2f,5.5f,2.5f});
+        PdfPCell empty = new PdfPCell(new Phrase("")); empty.setBorder(Rectangle.NO_BORDER); gt.addCell(empty);
+        Font tf = totFont(RED);
+        PdfPCell lc2 = new PdfPCell(new Phrase("GRAND TOTAL EXPENSES:", tf)); lc2.setBackgroundColor(RED_LIGHT); lc2.setPadding(8); lc2.setBorderColor(GRAY_BORDER); lc2.setBorderWidth(0.5f); gt.addCell(lc2);
+        PdfPCell vc2 = new PdfPCell(new Phrase("Rs. " + fmt(grandTotal), tf)); vc2.setBackgroundColor(RED_LIGHT); vc2.setPadding(8); vc2.setBorderColor(GRAY_BORDER); vc2.setBorderWidth(0.5f); vc2.setHorizontalAlignment(Element.ALIGN_RIGHT); gt.addCell(vc2);
+        doc.add(gt);
+    }
+
+    private void buildCustomerTable(Document doc, java.util.List<CustomerSummary> customers) throws DocumentException {
+        PdfPTable t = new PdfPTable(4);
+        t.setWidthPercentage(100); t.setWidths(new float[]{3.5f, 2.5f, 2.5f, 2.5f});
+        t.setSpacingBefore(4); t.setSpacingAfter(14);
+        tblHeader(t, "Customer / Company", "Total Amount", "Total Paid", "Outstanding Balance");
+
+        double totalCredit = 0, totalPaid = 0, totalBal = 0; boolean alt = false;
+        for (CustomerSummary c : customers) {
+            Color bg = alt ? GRAY_LIGHT : Color.WHITE; alt = !alt;
+            tblCell(t, truncate(c.getCustomer(), 40), boldFont(), bg, Element.ALIGN_LEFT);
+            tblCell(t, "Rs. " + fmt(c.getTotalAmount()), bodyFont(), bg, Element.ALIGN_RIGHT);
+            tblCell(t, "Rs. " + fmt(c.getTotalPaid()), greenFont(), bg, Element.ALIGN_RIGHT);
+            tblCell(t, "Rs. " + fmt(c.getOutstanding()), c.getOutstanding() > 0 ? redFont() : bodyFont(), bg, Element.ALIGN_RIGHT);
+            totalCredit += c.getTotalAmount(); totalPaid += c.getTotalPaid(); totalBal += c.getOutstanding();
+        }
+        tblFooter(t, "TOTALS", "Rs. " + fmt(totalCredit), "Rs. " + fmt(totalPaid), "Rs. " + fmt(totalBal));
+        doc.add(t);
+    }
+
+    private void buildPaymentTable(Document doc, java.util.List<PaymentItem> payments) throws DocumentException {
+        PdfPTable t = new PdfPTable(5);
+        t.setWidthPercentage(100); t.setWidths(new float[]{2f, 3.5f, 2f, 2f, 2.5f});
+        t.setSpacingBefore(4); t.setSpacingAfter(14);
+        tblHeader(t, "Date", "Customer", "Type", "Method", "Amount");
+
+        double totalAmount = 0; boolean alt = false;
+        for (PaymentItem p : payments) {
+            Color bg = alt ? GRAY_LIGHT : Color.WHITE; alt = !alt;
+            tblCell(t, p.date().format(DATE_FMT), subtleFont(), bg, Element.ALIGN_LEFT);
+            tblCell(t, truncate(p.customerOrCompany(), 35), bodyFont(), bg, Element.ALIGN_LEFT);
+            tblCell(t, p.type() != null ? p.type() : "Settlement", blueFont(), bg, Element.ALIGN_CENTER);
+            tblCell(t, p.method() != null ? p.method() : "Cash", bodyFont(), bg, Element.ALIGN_CENTER);
+            tblCell(t, "Rs. " + fmt(p.amount()), greenFont(), bg, Element.ALIGN_RIGHT);
+            totalAmount += p.amount();
+        }
+        tblFooter(t, "TOTAL", "", "", "", "Rs. " + fmt(totalAmount));
+        doc.add(t);
+    }
+
+    private void addSectionBand(Document doc, String title) throws DocumentException {
+        PdfPTable band = new PdfPTable(1); band.setWidthPercentage(100); band.setSpacingBefore(14); band.setSpacingAfter(0);
+        PdfPCell cell = new PdfPCell(new Phrase("  " + title, secFont()));
+        cell.setBackgroundColor(GRAY_HEADER); cell.setPadding(8); cell.setBorderColor(GRAY_BORDER); cell.setBorderWidth(0.5f);
+        band.addCell(cell); doc.add(band);
+    }
+
+    private void summaryRow(PdfPTable t, String label, String value, Color bg) {
+        PdfPCell lc = new PdfPCell(new Phrase(label, bodyFont())); lc.setBackgroundColor(bg); lc.setPadding(6); lc.setBorderColor(GRAY_BORDER); lc.setBorderWidth(0.5f);
+        PdfPCell vc = new PdfPCell(new Phrase(value, bodyFont())); vc.setBackgroundColor(bg); vc.setPadding(6); vc.setHorizontalAlignment(Element.ALIGN_RIGHT); vc.setBorderColor(GRAY_BORDER); vc.setBorderWidth(0.5f);
+        t.addCell(lc); t.addCell(vc);
+    }
+
+    private void summaryRowTotal(PdfPTable t, String label, String value, Color bg, Font f) {
+        PdfPCell lc = new PdfPCell(new Phrase(label, f)); lc.setBackgroundColor(bg); lc.setPadding(8); lc.setBorderColor(GRAY_BORDER); lc.setBorderWidth(0.5f);
+        PdfPCell vc = new PdfPCell(new Phrase(value, f)); vc.setBackgroundColor(bg); vc.setPadding(8); vc.setHorizontalAlignment(Element.ALIGN_RIGHT); vc.setBorderColor(GRAY_BORDER); vc.setBorderWidth(0.5f);
+        t.addCell(lc); t.addCell(vc);
+    }
+
+    private void emptyRow(PdfPTable t) {
+        for (int i = 0; i < t.getNumberOfColumns(); i++) { PdfPCell c = new PdfPCell(new Phrase("")); c.setBorder(Rectangle.NO_BORDER); c.setPadding(3); t.addCell(c); }
+    }
+
+    private void tblHeader(PdfPTable t, String... headers) {
+        for (String h : headers) { PdfPCell c = new PdfPCell(new Phrase(h, tblHdrFont())); c.setBackgroundColor(GRAY_DARK); c.setPadding(7); c.setBorder(Rectangle.NO_BORDER); c.setHorizontalAlignment(Element.ALIGN_CENTER); t.addCell(c); }
+    }
+
+    private void tblCell(PdfPTable t, String text, Font f, Color bg, int align) {
+        PdfPCell c = new PdfPCell(new Phrase(text, f)); c.setBackgroundColor(bg); c.setPadding(5); c.setBorderColor(GRAY_BORDER); c.setBorderWidth(0.5f); c.setHorizontalAlignment(align); t.addCell(c);
+    }
+
+    private void tblFooter(PdfPTable t, String... values) {
+        Font f = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, NAVY);
+        for (int i = 0; i < values.length; i++) {
+            PdfPCell c = new PdfPCell(new Phrase(values[i], f)); c.setBackgroundColor(GRAY_HEADER); c.setPadding(7); c.setBorderColor(new Color(209,213,219)); c.setBorderWidth(0.5f);
+            c.setHorizontalAlignment(i==values.length-1 ? Element.ALIGN_RIGHT : Element.ALIGN_LEFT); t.addCell(c);
         }
     }
 
-    /**
-     * Check if PDF export is available (if proper libraries are installed)
-     */
-    public boolean isPDFExportAvailable() {
-        // Check for PDF libraries
-        try {
-            // Try to load Apache PDFBox
-            Class.forName("org.apache.pdfbox.pdmodel.PDDocument");
-            return true;
-        } catch (ClassNotFoundException e) {
-            try {
-                // Try to load iText
-                Class.forName("com.itextpdf.text.Document");
-                return true;
-            } catch (ClassNotFoundException e2) {
-                return false;
-            }
-        }
+    private Paragraph spacer(float h) { Paragraph p = new Paragraph(" "); p.setSpacingAfter(h); return p; }
+
+    private String normalizeCategory(String cat) {
+        if (cat==null||cat.isBlank()) return "Other";
+        String l = cat.trim().toLowerCase();
+        if (l.contains("worker")||l.contains("salary")||l.contains("payroll")) return "Worker Salary";
+        if (l.contains("transport")||l.contains("freight")||l.contains("delivery")) return "Transport";
+        if (l.contains("tyre")||l.contains("export")) return "Tyre Purchase";
+        return cat.trim().substring(0,1).toUpperCase()+cat.trim().substring(1);
     }
 
-    /**
-     * Get available PDF export libraries
-     */
-    public List<String> getAvailablePDFLibraries() {
-        List<String> libraries = new java.util.ArrayList<>();
-        
-        try {
-            Class.forName("org.apache.pdfbox.pdmodel.PDDocument");
-            libraries.add("Apache PDFBox");
-        } catch (ClassNotFoundException e) {
-            // PDFBox not available
-        }
-        
-        try {
-            Class.forName("com.itextpdf.text.Document");
-            libraries.add("iText");
-        } catch (ClassNotFoundException e) {
-            // iText not available
-        }
-        
-        return libraries;
-    }
-
-    private String formatCurrency(double value) {
-        java.text.NumberFormat nf = java.text.NumberFormat.getInstance();
-        nf.setMaximumFractionDigits(0);
-        return nf.format(value);
-    }
-
-    private String truncate(String text, int maxLength) {
-        if (text == null) return "";
-        return text.length() <= maxLength ? text : text.substring(0, maxLength - 3) + "...";
-    }
-
-    /**
-     * Get the reports repository used by this service
-     */
-    public ReportsRepository getReportsRepository() {
-        return reportsRepository;
-    }
+    private String fmt(double v) { NF.setMaximumFractionDigits(0); return NF.format(v); }
+    private String truncate(String s, int max) { if (s==null) return ""; return s.length()<=max ? s : s.substring(0,max-3)+"..."; }
 }

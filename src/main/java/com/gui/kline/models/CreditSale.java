@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.gui.kline.models.dto.Part;
+
 /**
  * CreditSale model class with sync support.
  */
@@ -36,9 +38,6 @@ public class CreditSale {
     private List<Part> parts = new ArrayList<>();
     
     // Sync fields
-    private String syncId;
-    private String deviceId;
-    private LocalDateTime syncedAt;
     private boolean syncStatus = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -120,14 +119,6 @@ public class CreditSale {
     public void setParts(List<Part> parts) { this.parts = parts; }
 
     // Sync field getters and setters
-    public String getSyncId() { return syncId; }
-    public void setSyncId(String syncId) { this.syncId = syncId; }
-
-    public String getDeviceId() { return deviceId; }
-    public void setDeviceId(String deviceId) { this.deviceId = deviceId; }
-
-    public LocalDateTime getSyncedAt() { return syncedAt; }
-    public void setSyncedAt(LocalDateTime syncedAt) { this.syncedAt = syncedAt; }
 
     public boolean isSyncStatus() { return syncStatus; }
     public void setSyncStatus(boolean syncStatus) { this.syncStatus = syncStatus; }

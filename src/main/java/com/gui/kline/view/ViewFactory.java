@@ -1,23 +1,43 @@
 package com.gui.kline.view;
 
+import com.gui.kline.controller.DashboardController;
 import com.gui.kline.controller.LayoutController;
+import com.gui.kline.controller.ReportsController;
+import com.gui.kline.controller.ServicesController;
+import com.gui.kline.controller.CreditCustomersController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-
-import java.io.IOException;
-import java.util.Map;
 
 public class ViewFactory {
     // Storage for primary stage and last opened dialog stage
     private Stage primaryStage;
     private Stage lastDialogStage;
     private LayoutController layoutController;
+    private DashboardController dashboardController;
+    private ServicesController servicesController;
+    private ReportsController reportsController;
+    private CreditCustomersController creditCustomersController;
+
+    public void setCreditCustomersController(CreditCustomersController controller) {
+        this.creditCustomersController = controller;
+    }
+
+    public void refreshCreditCustomers() {
+        if (creditCustomersController != null) {
+            creditCustomersController.loadData();
+        }
+    }
+    
+    public void refreshDashboard() {
+        if (dashboardController != null) {
+            dashboardController.refreshData();
+        }
+    }
     
     public void setPrimaryStage(Stage primaryStage) {
         this.primaryStage = primaryStage;
@@ -34,6 +54,36 @@ public class ViewFactory {
     public LayoutController getLayoutController() {
         return layoutController;
     }
+
+    public void setDashboardController(DashboardController controller) {
+        this.dashboardController = controller;
+    }
+
+    public void refreshDashboardQuickActions() {
+        if (dashboardController != null) {
+            dashboardController.refreshQuickActions();
+        }
+    }
+
+    public void setServicesController(ServicesController controller) {
+        this.servicesController = controller;
+    }
+
+    public void refreshServices() {
+        if (servicesController != null) {
+            servicesController.refreshData();
+        }
+    }
+
+    public void setReportsController(ReportsController controller) {
+        this.reportsController = controller;
+    }
+
+    public void refreshReports() {
+        if (reportsController != null) {
+            reportsController.refresh();
+        }
+    }
     
     public void updateQuickStats() {
         if (layoutController != null) {
@@ -45,30 +95,92 @@ public class ViewFactory {
         getView(view, primaryStage);
     }
     
-    public void getView(String view, Stage ownerStage) {
+/*    public void getView(String view, Stage ownerStage) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gui/kline/view/" + view + ".fxml"));
             Parent root = loader.load();
-            Stage stage = new Stage();
-            stage.setTitle("K-Line - " + view);
-            
+
+            Stage stage;
+            if (view.equals("main-layout") && primaryStage != null) {
+                // Reuse the real primary stage so window ownership stays consistent
+                // and the application only exits when this window is closed.
+                stage = primaryStage;
+            } else {
+                stage = new Stage();
+                stage.setTitle("K-Line - " + view);
+            }
+
             // Use provided owner or fall back to primary stage
             Stage actualOwner = ownerStage != null ? ownerStage : primaryStage;
-            
+
             // If owner stage is available, make this window a child of it
-            if (actualOwner != null) {
+            if (actualOwner != null && !view.equals("main-layout")) {
                 stage.initOwner(actualOwner);
-                // Don't make main layout modal - only dialogs should be modal
-                if (!view.equals("main-layout")) {
-                    stage.initModality(Modality.WINDOW_MODAL);
-                }
+                stage.initModality(Modality.WINDOW_MODAL);
             }
-            
+
             Scene scene = new Scene(root);
             stage.setScene(scene);
             stage.show();
-            
+
             // Store reference
+            lastDialogStage = stage;
+        } catch (Exception e) {
+            System.out.println("Error loading view: " + view + " - " + e.getMessage());
+            e.printStackTrace();
+        }
+    }*/
+
+    private java.net.URL resolveFxmlUrl(String viewOrPage) {
+        String path = viewOrPage.startsWith("/") ? viewOrPage : "/com/gui/kline/view/" + viewOrPage + ".fxml";
+        java.net.URL url = ViewFactory.class.getResource(path);
+        if (url == null) {
+            url = getClass().getResource(path);
+        }
+        if (url == null && path.startsWith("/")) {
+            url = Thread.currentThread().getContextClassLoader().getResource(path.substring(1));
+        }
+        if (url == null) {
+            System.err.println("Could not resolve FXML resource for path: " + path);
+        }
+        return url;
+    }
+
+    public void getView(String view, Stage ownerStage) {
+        try {
+            java.net.URL resource = resolveFxmlUrl(view);
+            if (resource == null) {
+                System.err.println("Cannot load view: " + view + " because FXML resource is missing.");
+                return;
+            }
+            FXMLLoader loader = new FXMLLoader(resource);
+            Parent root = loader.load();
+
+            Stage stage;
+            if (view.equals("main-layout") && primaryStage != null) {
+                stage = primaryStage;
+            } else {
+                stage = new Stage();
+                stage.setTitle("K-Line - " + view);
+            }
+
+            Stage actualOwner = ownerStage != null ? ownerStage : primaryStage;
+
+            if (actualOwner != null && !view.equals("main-layout")) {
+                stage.initOwner(actualOwner);
+                stage.initModality(Modality.WINDOW_MODAL);
+            }
+
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+
+            // Maximize only the main application window to fill the screen
+            if (view.equals("main-layout")) {
+                stage.setMaximized(true);
+            }
+
+            stage.show();
+
             lastDialogStage = stage;
         } catch (Exception e) {
             System.out.println("Error loading view: " + view + " - " + e.getMessage());
@@ -78,9 +190,15 @@ public class ViewFactory {
 
     public Node getPage(String page){
         try{
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gui/kline/view/" + page + ".fxml"));
+            java.net.URL resource = resolveFxmlUrl(page);
+            if (resource == null) {
+                System.err.println("Cannot load page: " + page + " because FXML resource is missing.");
+                return null;
+            }
+            FXMLLoader loader = new FXMLLoader(resource);
             return loader.load();
         }catch (Exception e){
+            System.err.println("Error loading page: " + page + " - " + e.getMessage());
             e.printStackTrace();
         }
         return null;
@@ -88,42 +206,37 @@ public class ViewFactory {
 
     public <T> T getForm(String view, Stage ownerStage) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/gui/kline/view/" + view + ".fxml"));
+            java.net.URL resource = resolveFxmlUrl(view);
+            if (resource == null) {
+                System.err.println("Cannot load form: " + view + " because FXML resource is missing.");
+                return null;
+            }
+            FXMLLoader loader = new FXMLLoader(resource);
             Parent root = loader.load();
             T controller = loader.getController();
 
             Stage stage = new Stage();
-            stage.initStyle(StageStyle.TRANSPARENT);
-            
-            // Use provided owner or fall back to primary stage
+
             Stage actualOwner = ownerStage != null ? ownerStage : primaryStage;
-            
-            // Only set modality and owner if owner stage is available
+
             if (actualOwner != null) {
-                stage.initModality(Modality.APPLICATION_MODAL);
+                stage.initModality(Modality.WINDOW_MODAL);
                 stage.initOwner(actualOwner);
-
-                Scene scene = new Scene(root, actualOwner.getWidth(), actualOwner.getHeight());
-                scene.setFill(Color.TRANSPARENT);
-                stage.setScene(scene);
-
-                stage.setX(actualOwner.getX());
-                stage.setY(actualOwner.getY());
-
-                actualOwner.xProperty().addListener((obs, oldVal, newVal) -> stage.setX(newVal.doubleValue()));
-                actualOwner.yProperty().addListener((obs, oldVal, newVal) -> stage.setY(newVal.doubleValue()));
-                actualOwner.widthProperty().addListener((obs, oldVal, newVal) -> stage.setWidth(newVal.doubleValue()));
-                actualOwner.heightProperty().addListener((obs, oldVal, newVal) -> stage.setHeight(newVal.doubleValue()));
-            } else {
-                // If no owner, create a regular scene
-                Scene scene = new Scene(root);
-                scene.setFill(Color.TRANSPARENT);
-                stage.setScene(scene);
             }
 
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.initStyle(StageStyle.DECORATED);
+
             stage.show();
-            
-            // Store reference so callers can access it
+
+            if (actualOwner != null) {
+                stage.setX(actualOwner.getX() + (actualOwner.getWidth() - stage.getWidth()) / 2);
+                stage.setY(actualOwner.getY() + (actualOwner.getHeight() - stage.getHeight()) / 2);
+            } else {
+                stage.centerOnScreen();
+            }
+
             lastDialogStage = stage;
 
             return controller;
@@ -133,7 +246,6 @@ public class ViewFactory {
             return null;
         }
     }
-    
     // New method to get the last opened dialog stage
     public Stage getLastDialogStage() {
         return lastDialogStage;

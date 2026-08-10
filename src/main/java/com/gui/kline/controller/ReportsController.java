@@ -1,11 +1,12 @@
 package com.gui.kline.controller;
 
 import com.gui.kline.data.ReportsRepository;
-import com.gui.kline.data.ReportsRepository.DailySummary;
-import com.gui.kline.data.ReportsRepository.ExpenseItem;
-import com.gui.kline.data.ReportsRepository.FinancialSummary;
-import com.gui.kline.data.ReportsRepository.TopProduct;
-import com.gui.kline.data.ReportsRepository.CustomerSummary;
+import com.gui.kline.models.reports.CustomerSummary;
+import com.gui.kline.models.reports.DailySummary;
+import com.gui.kline.models.reports.ExpenseItem;
+import com.gui.kline.models.reports.FinancialSummary;
+import com.gui.kline.models.reports.TopProduct;
+import com.gui.kline.models.ViewModel;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,13 +14,14 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 
+import com.gui.kline.service.PDFExportService;
+
+import java.io.File;
 import java.net.URL;
 import java.text.NumberFormat;
 import java.time.LocalDate;
@@ -69,6 +71,13 @@ public class ReportsController implements Initializable {
     
     // Analytics elements
     @FXML private VBox customerSummaryContainer;
+    @FXML private VBox paymentHistoryContainer;
+    
+    // Services tab elements
+    @FXML private VBox servicesTabContent;
+    
+    // Expenses tab elements
+    @FXML private VBox expensesTabContent;
 
     private final ReportsRepository reportsRepository = new ReportsRepository();
     private final ObservableList<SaleItem> allSales = FXCollections.observableArrayList();
@@ -94,12 +103,25 @@ public class ReportsController implements Initializable {
             double fee
     ) {}
 
+    public record PaymentItem(
+            String id,
+            String customerOrCompany,
+            String refId,
+            String type,
+            LocalDate date,
+            double amount,
+            String method,
+            String notes
+    ) {}
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setupUI();
         initializeDatePickers();
         setupEventHandlers();
         loadInitialData();
+        // Register with ViewFactory for cross-controller refresh
+        ViewModel.INSTANCE.getViewsFactory().setReportsController(this);
     }
 
     private void setupUI() {
@@ -150,7 +172,7 @@ public class ReportsController implements Initializable {
         refresh();
     }
 
-    private void refresh() {
+    public void refresh() {
         LocalDate from = startDatePicker.getValue();
         LocalDate to = endDatePicker.getValue();
         if (from == null || to == null) return;
@@ -190,14 +212,18 @@ public class ReportsController implements Initializable {
         buildSalesBreakdown(sales);
         buildServiceRevenue(services);
         buildExpensesSection(expenses);
+        buildExpensesTabContent(expenses);
+        buildServicesTabContent(services);
         buildTopProductsSection(from, to);
         buildDailySalesSummary(from, to);
         buildCustomerAnalysis(from, to);
+        buildPaymentHistory(from, to);
     }
 
     private void updateSummaryMetrics(FinancialSummary summary) {
         double totalRevenue = summary.getTotalRevenue();
-        double grossProfit = totalRevenue - summary.getTotalExpenses();
+        // Gross profit = Total Revenue - Cost of Goods Sold (Product Costs)
+        double grossProfit = totalRevenue - summary.getProductCosts();
         double workerCosts = summary.getWorkerCosts();
         double netIncome = summary.getNetProfit();
 
@@ -279,6 +305,114 @@ public class ReportsController implements Initializable {
         }
     }
 
+    private void buildServicesTabContent(List<ServiceItem> services) {
+        if (servicesTabContent == null) return;
+        
+        servicesTabContent.getChildren().clear();
+        if (services.isEmpty()) {
+            servicesTabContent.getChildren().add(emptyLabel("No services in this period"));
+            return;
+        }
+        
+        // Group by date
+        Map<LocalDate, List<ServiceItem>> byDate = new LinkedHashMap<>();
+        for (ServiceItem service : services) {
+            byDate.computeIfAbsent(service.date(), k -> new ArrayList<>()).add(service);
+        }
+        
+        for (Map.Entry<LocalDate, List<ServiceItem>> entry : byDate.entrySet()) {
+            VBox dateBox = new VBox(8);
+            dateBox.setPadding(new Insets(0, 0, 16, 0));
+            
+            // Date header with total
+            double dateTotal = entry.getValue().stream().mapToDouble(ServiceItem::fee).sum();
+            Label dateHeader = new Label(entry.getKey().format(DF) + " (Rs. " + formatCurrency(dateTotal) + ")");
+            dateHeader.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+            dateBox.getChildren().add(dateHeader);
+            
+            // Service items
+            for (ServiceItem service : entry.getValue()) {
+                dateBox.getChildren().add(buildServiceRowForTab(service));
+            }
+            
+            servicesTabContent.getChildren().add(dateBox);
+        }
+    }
+
+    private HBox buildServiceRowForTab(ServiceItem item) {
+        Label name = new Label(item.name());
+        name.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+
+        String assignee = (item.assignedTo() == null || item.assignedTo().isBlank()) ? "Standard Service" : item.assignedTo();
+        Label sub = new Label("Type/Worker: " + assignee);
+        sub.setStyle("-fx-font-size: 10px; -fx-text-fill: #6B7280;");
+
+        VBox left = new VBox(2, name, sub);
+        HBox.setHgrow(left, Priority.ALWAYS);
+
+        Label fee = new Label("Rs. " + formatCurrency(item.fee()));
+        fee.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #2563EB;");
+        fee.setAlignment(Pos.CENTER_RIGHT);
+
+        VBox right = new VBox(fee);
+        right.setAlignment(Pos.CENTER_RIGHT);
+
+        HBox row = new HBox(left, right);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.getStyleClass().add("report-row");
+        return row;
+    }
+
+    private String normalizeCategory(String category) {
+        if (category == null || category.isBlank()) return "Other";
+        String lower = category.trim().toLowerCase();
+        if (lower.contains("worker") || lower.contains("salary") || lower.contains("payroll")) {
+            return "Worker Salary";
+        }
+        if (lower.contains("transport") || lower.contains("freight") || lower.contains("delivery")) {
+            return "Transport";
+        }
+        if (lower.contains("tyre purchase") || lower.contains("export")) {
+            return "Tyre Purchase";
+        }
+        return category.trim().substring(0, 1).toUpperCase() + category.trim().substring(1);
+    }
+
+    private void buildExpensesTabContent(List<ExpenseItem> expenses) {
+        if (expensesTabContent == null) return;
+        
+        expensesTabContent.getChildren().clear();
+        if (expenses.isEmpty()) {
+            expensesTabContent.getChildren().add(emptyLabel("No expenses in this period"));
+            return;
+        }
+        
+        // Group by normalized category
+        Map<String, List<ExpenseItem>> byCategory = new LinkedHashMap<>();
+        for (ExpenseItem expense : expenses) {
+            String categoryKey = normalizeCategory(expense.getCategory());
+            byCategory.computeIfAbsent(categoryKey, k -> new ArrayList<>()).add(expense);
+        }
+        
+        for (Map.Entry<String, List<ExpenseItem>> entry : byCategory.entrySet()) {
+            VBox categoryBox = new VBox(8);
+            categoryBox.setPadding(new Insets(0, 0, 16, 0));
+            
+            // Category header with total
+            double categoryTotal = entry.getValue().stream().mapToDouble(ExpenseItem::getAmount).sum();
+            Label categoryHeader = new Label(entry.getKey() + " Expenses (Rs. " + formatCurrency(categoryTotal) + ")");
+            categoryHeader.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+            categoryBox.getChildren().add(categoryHeader);
+            
+            // Expense items
+            for (ExpenseItem expense : entry.getValue()) {
+                categoryBox.getChildren().add(buildExpenseRow(expense));
+            }
+            
+            expensesTabContent.getChildren().add(categoryBox);
+        }
+    }
+
     private void buildTopProductsSection(LocalDate from, LocalDate to) {
         if (topProductsContainer == null) return;
         
@@ -290,10 +424,7 @@ public class ReportsController implements Initializable {
             return;
         }
         
-        Label title = new Label("Top Selling Products");
-        title.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;");
-        topProductsContainer.getChildren().add(title);
-        topProductsContainer.getChildren().add(new Separator());
+        // FXML already has the header
         
         for (TopProduct product : topProducts) {
             topProductsContainer.getChildren().add(buildTopProductRow(product));
@@ -311,10 +442,7 @@ public class ReportsController implements Initializable {
             return;
         }
         
-        Label title = new Label("Daily Sales Summary");
-        title.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;");
-        dailySalesContainer.getChildren().add(title);
-        dailySalesContainer.getChildren().add(new Separator());
+        // FXML already has the header
         
         for (DailySummary summary : dailySummaries) {
             dailySalesContainer.getChildren().add(buildDailySummaryRow(summary));
@@ -332,28 +460,96 @@ public class ReportsController implements Initializable {
             return;
         }
         
-        Label title = new Label("Customer Credit Analysis");
-        title.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;");
-        customerSummaryContainer.getChildren().add(title);
-        customerSummaryContainer.getChildren().add(new Separator());
+        // FXML already has the header
         
         for (CustomerSummary customer : customerSummaries) {
             customerSummaryContainer.getChildren().add(buildCustomerSummaryRow(customer));
         }
     }
 
-    private HBox buildSaleRow(SaleItem item) {
-        Label name = new Label(item.name());
+    private void buildPaymentHistory(LocalDate from, LocalDate to) {
+        if (paymentHistoryContainer == null) return;
+        
+        paymentHistoryContainer.getChildren().clear();
+        
+        List<PaymentItem> payments = reportsRepository.getPaymentTransactions(from, to);
+        if (payments.isEmpty()) {
+            paymentHistoryContainer.getChildren().add(emptyLabel("No payment transactions in this period"));
+            return;
+        }
+        
+        // FXML already has the header
+        
+        for (PaymentItem payment : payments) {
+            paymentHistoryContainer.getChildren().add(buildPaymentRow(payment));
+        }
+    }
+
+    private HBox buildPaymentRow(PaymentItem item) {
+        Label name = new Label(item.customerOrCompany());
         name.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #111827;");
 
-        Label sub = new Label(item.date().format(DF) + " • " + item.qty() + " unit" + (item.qty() != 1 ? "s" : ""));
-        sub.setStyle("-fx-font-size: 11px; -fx-text-fill: #9CA3AF;");
+        String method = (item.method() != null && !item.method().isBlank()) ? item.method() : "Cash";
+        Label sub = new Label(item.date().format(DF) + " • " + item.type() + " (" + item.refId() + ") • Method: " + method);
+        sub.setStyle("-fx-font-size: 11px; -fx-text-fill: #6B7280;");
 
         VBox left = new VBox(3, name, sub);
         HBox.setHgrow(left, Priority.ALWAYS);
 
+        Label amount = new Label("Rs. " + formatCurrency(item.amount()));
+        amount.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #16A34A;");
+        amount.setAlignment(Pos.CENTER_RIGHT);
+
+        String note = (item.notes() != null && !item.notes().isBlank()) ? item.notes() : "Settlement";
+        Label noteLabel = new Label(note);
+        noteLabel.setStyle("-fx-font-size: 10px; -fx-text-fill: #9CA3AF;");
+        noteLabel.setAlignment(Pos.CENTER_RIGHT);
+
+        VBox right = new VBox(3, amount, noteLabel);
+        right.setAlignment(Pos.CENTER_RIGHT);
+
+        HBox row = new HBox(left, right);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.getStyleClass().add("report-row");
+        return row;
+    }
+
+    private HBox buildSaleRow(SaleItem item) {
+        // Detect item type from name suffix
+        boolean isCredit = item.name().endsWith("(Credit)");
+        boolean isTyreExport = item.name().startsWith("Tyre Export -");
+
+        String displayName = item.name();
+        String typeTag;
+        String typeColor;
+        if (isCredit) {
+            typeTag = "CREDIT SALE";
+            typeColor = "#9333EA";
+        } else if (isTyreExport) {
+            typeTag = "TYRE EXPORT";
+            typeColor = "#EA580C";
+        } else {
+            typeTag = "INVOICE";
+            typeColor = "#2563EB";
+        }
+
+        Label name = new Label(displayName);
+        name.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+
+        String qtyText = item.qty() > 0 ? item.qty() + " unit" + (item.qty() != 1 ? "s" : "") : "—";
+        Label sub = new Label(item.date().format(DF) + " • Qty: " + qtyText);
+        sub.setStyle("-fx-font-size: 11px; -fx-text-fill: #6B7280;");
+
+        Label badge = new Label(typeTag);
+        badge.setStyle("-fx-font-size: 9px; -fx-font-weight: bold; -fx-text-fill: " + typeColor +
+                "; -fx-background-color: transparent; -fx-border-color: " + typeColor +
+                "; -fx-border-radius: 4; -fx-padding: 1 5 1 5;");
+
+        VBox left = new VBox(2, new HBox(6, name, badge), sub);
+        HBox.setHgrow(left, Priority.ALWAYS);
+
         Label rev = new Label("Rs. " + formatCurrency(item.revenue()));
-        rev.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+        rev.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #111827;");
         rev.setAlignment(Pos.CENTER_RIGHT);
 
         Label profit = new Label("PROFIT: RS. " + formatCurrency(item.profit()));
@@ -365,50 +561,37 @@ public class ReportsController implements Initializable {
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(14, 0, 14, 0));
-
-        VBox wrapper = new VBox(new Separator(), row);
-        wrapper.setPadding(new Insets(0));
-        HBox outer = new HBox(wrapper);
-        HBox.setHgrow(wrapper, Priority.ALWAYS);
-        return outer;
+        row.getStyleClass().add("report-row");
+        return row;
     }
 
     private HBox buildServiceRow(ServiceItem item) {
         Label name = new Label(item.name());
-        name.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+        name.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #111827;");
 
-        String assignee = (item.assignedTo() == null || item.assignedTo().isBlank()) ? "Unassigned" : item.assignedTo();
+        String assignee = (item.assignedTo() == null || item.assignedTo().isBlank()) ? "Standard Service" : item.assignedTo();
         Label sub = new Label(item.date().format(DF) + " • " + assignee);
-        sub.setStyle("-fx-font-size: 11px; -fx-text-fill: #9CA3AF;");
+        sub.setStyle("-fx-font-size: 10px; -fx-text-fill: #6B7280;");
 
-        VBox left = new VBox(3, name, sub);
+        VBox left = new VBox(2, name, sub);
         HBox.setHgrow(left, Priority.ALWAYS);
 
         Label fee = new Label("Rs. " + formatCurrency(item.fee()));
-        fee.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #2563EB;");
+        fee.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #2563EB;");
         fee.setAlignment(Pos.CENTER_RIGHT);
 
-        Label feeTag = new Label("SERVICE FEE");
-        feeTag.setStyle("-fx-font-size: 10px; -fx-text-fill: #9CA3AF;");
-        feeTag.setAlignment(Pos.CENTER_RIGHT);
-
-        VBox right = new VBox(3, fee, feeTag);
+        VBox right = new VBox(fee);
         right.setAlignment(Pos.CENTER_RIGHT);
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(14, 0, 14, 0));
-
-        VBox wrapper = new VBox(new Separator(), row);
-        HBox outer = new HBox(wrapper);
-        HBox.setHgrow(wrapper, Priority.ALWAYS);
-        return outer;
+        row.getStyleClass().add("report-row");
+        return row;
     }
 
     private HBox buildExpenseRow(ExpenseItem expense) {
         Label description = new Label(expense.getDescription());
-        description.setStyle("-fx-font-size: 13px; -fx-text-fill: #111827;");
+        description.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #111827;");
 
         Label dateLabel = new Label(expense.getDate().format(DF) + " • " + expense.getCategory());
         dateLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #9CA3AF;");
@@ -425,8 +608,7 @@ public class ReportsController implements Initializable {
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(12, 0, 12, 0));
-
+        row.getStyleClass().add("report-row");
         return row;
     }
 
@@ -449,7 +631,7 @@ public class ReportsController implements Initializable {
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(12, 0, 12, 0));
+        row.getStyleClass().add("report-row");
 
         return row;
     }
@@ -474,7 +656,7 @@ public class ReportsController implements Initializable {
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(12, 0, 12, 0));
+        row.getStyleClass().add("report-row");
 
         return row;
     }
@@ -506,7 +688,7 @@ public class ReportsController implements Initializable {
 
         HBox row = new HBox(left, right);
         row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(12, 0, 12, 0));
+        row.getStyleClass().add("report-row");
 
         return row;
     }
@@ -518,14 +700,35 @@ public class ReportsController implements Initializable {
     }
 
     private void filterReports(String searchText) {
-        if (searchText == null || searchText.isBlank()) {
-            refresh();
+        String query = searchText == null ? "" : searchText.trim().toLowerCase();
+        if (query.isEmpty()) {
+            buildSalesBreakdown(allSales);
+            buildServiceRevenue(allServices);
+            buildExpensesSection(allExpenses);
+            buildExpensesTabContent(allExpenses);
+            buildServicesTabContent(allServices);
             return;
         }
-        
-        // Filter logic would go here
-        // For now, just refresh to show all data
-        refresh();
+
+        List<SaleItem> filteredSales = allSales.stream()
+                .filter(s -> s.name() != null && s.name().toLowerCase().contains(query))
+                .toList();
+
+        List<ServiceItem> filteredServices = allServices.stream()
+                .filter(s -> (s.name() != null && s.name().toLowerCase().contains(query)) ||
+                             (s.assignedTo() != null && s.assignedTo().toLowerCase().contains(query)))
+                .toList();
+
+        List<ExpenseItem> filteredExpenses = allExpenses.stream()
+                .filter(e -> (e.getDescription() != null && e.getDescription().toLowerCase().contains(query)) ||
+                             (e.getCategory() != null && e.getCategory().toLowerCase().contains(query)))
+                .toList();
+
+        buildSalesBreakdown(filteredSales);
+        buildServiceRevenue(filteredServices);
+        buildExpensesSection(filteredExpenses);
+        buildExpensesTabContent(filteredExpenses);
+        buildServicesTabContent(filteredServices);
     }
 
     private String formatCurrency(double value) {
@@ -542,25 +745,77 @@ public class ReportsController implements Initializable {
     @FXML
     private void handleExportPDF() {
         LocalDate from = startDatePicker.getValue();
-        LocalDate to = endDatePicker.getValue();
-        
+        LocalDate to   = endDatePicker.getValue();
+
         if (from == null || to == null) {
-            Alert alert = new Alert(Alert.AlertType.WARNING, 
+            Alert alert = new Alert(Alert.AlertType.WARNING,
                     "Please select a valid date range first.", ButtonType.OK);
             alert.setHeaderText("Date Range Required");
             alert.showAndWait();
             return;
         }
 
-        String reportText = generateBusinessReport(from, to);
-        
-        Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                "Generating PDF report for period: " + from + " to " + to + "\n\n" +
-                "PDF export functionality will be implemented with a PDF library.\n\n" + reportText,
-                ButtonType.OK);
-        alert.setHeaderText("PDF Export");
-        alert.setTitle("Generate Report");
-        alert.showAndWait();
+        String selectedReportType = reportTypeComboBox != null && reportTypeComboBox.getValue() != null 
+                ? reportTypeComboBox.getValue() : "Summary Report";
+
+        // Open file save dialog
+        javafx.stage.FileChooser fc = new javafx.stage.FileChooser();
+        fc.setTitle("Save " + selectedReportType + " PDF");
+        fc.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
+        String safeTypeName = selectedReportType.replaceAll("[^a-zA-Z0-9]", "_");
+        fc.setInitialFileName("KLine_" + safeTypeName + "_" + from + "_to_" + to + ".pdf");
+
+        File file = fc.showSaveDialog(exportBtn.getScene().getWindow());
+        if (file == null) return; // user cancelled
+
+        // Lock button during generation
+        exportBtn.setDisable(true);
+        exportBtn.setText("Generating...");
+
+        PDFExportService pdfService = new PDFExportService(reportsRepository);
+        executorService.submit(() -> {
+            boolean success;
+            switch (selectedReportType) {
+                case "Sales Analysis":
+                    success = pdfService.exportSalesReportToPDF(from, to, file);
+                    break;
+                case "Service Revenue":
+                    success = pdfService.exportServiceReportToPDF(from, to, file);
+                    break;
+                case "Expense Report":
+                    success = pdfService.exportExpenseReportToPDF(from, to, file);
+                    break;
+                case "Customer Analysis":
+                    success = pdfService.exportCustomerReportToPDF(from, to, file);
+                    break;
+                case "Daily Summary":
+                    success = pdfService.exportDailySummaryReportToPDF(to, to, file);
+                    break;
+                case "Top Products":
+                    success = pdfService.exportTopProductsReportToPDF(from, to, file);
+                    break;
+                case "Summary Report":
+                default:
+                    success = pdfService.exportSummaryReportToPDF(from, to, file);
+                    break;
+            }
+
+            Platform.runLater(() -> {
+                exportBtn.setDisable(false);
+                exportBtn.setText("Export PDF");
+                if (success) {
+                    Alert ok = new Alert(Alert.AlertType.INFORMATION,
+                            "Report saved to:\n" + file.getAbsolutePath(), ButtonType.OK);
+                    ok.setHeaderText("PDF Report Generated");
+                    ok.showAndWait();
+                } else {
+                    Alert err = new Alert(Alert.AlertType.ERROR,
+                            "Failed to generate the PDF report. Please check the logs.", ButtonType.OK);
+                    err.setHeaderText("Export Failed");
+                    err.showAndWait();
+                }
+            });
+        });
     }
 
     @FXML
@@ -597,7 +852,8 @@ public class ReportsController implements Initializable {
         report.append(String.format("Quick Services: Rs. %,.0f\n", summary.getQuickServiceRevenue()));
         report.append(String.format("Total Revenue: Rs. %,.0f\n\n", summary.getTotalRevenue()));
         
-        report.append("--- EXPENSES ---\n");
+        report.append("--- EXPENSES & COSTS ---\n");
+        report.append(String.format("Product Costs (COGS): Rs. %,.0f\n", summary.getProductCosts()));
         report.append(String.format("Total Expenses: Rs. %,.0f\n", summary.getTotalExpenses()));
         report.append(String.format("Worker Costs: Rs. %,.0f\n", summary.getWorkerCosts()));
         report.append(String.format("Total Costs: Rs. %,.0f\n\n", summary.getTotalCosts()));

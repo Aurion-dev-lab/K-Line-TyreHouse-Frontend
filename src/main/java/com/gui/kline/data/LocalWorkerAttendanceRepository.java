@@ -1,11 +1,11 @@
 package com.gui.kline.data;
 
-import com.gui.kline.models.WorkerAttendance;
-import com.gui.kline.models.WorkerAttendanceHistory;
-import com.gui.kline.models.WorkerMonthlySummary;
+import com.gui.kline.models.ui.WorkerAttendance;
+import com.gui.kline.models.reports.WorkerAttendanceHistory;
+import com.gui.kline.models.reports.WorkerMonthlySummary;
+import com.gui.kline.utils.Utils;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,12 +23,11 @@ public class LocalWorkerAttendanceRepository {
         List<WorkerAttendance> rows = new ArrayList<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(date));
+            statement.setString(1, date.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    LocalDate attendanceDate = rs.getDate("attendance_date") == null
-                            ? date
-                            : rs.getDate("attendance_date").toLocalDate();
+                    LocalDate attendanceDate = com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "attendance_date");
+                    if (attendanceDate == null) attendanceDate = date;
                     rows.add(new WorkerAttendance(
                             rs.getString("id"),
                             rs.getString("name"),
@@ -48,13 +47,15 @@ public class LocalWorkerAttendanceRepository {
 
     public void upsertAttendance(String workerId, LocalDate date, String status) {
         String sql = "INSERT INTO worker_attendance (id, worker_id, attendance_date, status, created_at, updated_at) " +
-                "VALUES (UUID(), ?, ?, ?, NOW(), NOW()) " +
-                "ON DUPLICATE KEY UPDATE status = VALUES(status), updated_at = NOW()";
+                "VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%S', 'now'), strftime('%Y-%m-%dT%H:%M:%S', 'now')) " +
+                "ON CONFLICT(worker_id, attendance_date) DO UPDATE SET status = excluded.status, sync_status = 0, updated_at = strftime('%Y-%m-%dT%H:%M:%S', 'now')";
+
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, workerId);
-            statement.setDate(2, Date.valueOf(date));
-            statement.setString(3, status);
+            statement.setString(1, Utils.generateId("ATT-", 8));
+            statement.setString(2, workerId);
+            statement.setString(3, date.toString());
+            statement.setString(4, status);
             statement.executeUpdate();
         } catch (SQLException ex) {
             throw new IllegalStateException("Failed to save attendance", ex);
@@ -62,21 +63,24 @@ public class LocalWorkerAttendanceRepository {
     }
 
     public List<WorkerAttendanceHistory> loadHistory(LocalDate from, LocalDate to, String nameFilter) {
-        String sql = "SELECT a.attendance_date, w.name, a.status " +
+        String sql = "SELECT a.attendance_date, a.worker_id, w.name, a.status " +
                 "FROM worker_attendance a " +
                 "JOIN workers w ON w.id = a.worker_id " +
-                "WHERE a.attendance_date BETWEEN ? AND ? AND w.name LIKE ? " +
+                "WHERE a.attendance_date BETWEEN ? AND ? AND (w.name LIKE ? OR w.id LIKE ?) " +
                 "ORDER BY a.attendance_date DESC";
         List<WorkerAttendanceHistory> rows = new ArrayList<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(from));
-            statement.setDate(2, Date.valueOf(to));
-            statement.setString(3, "%" + (nameFilter == null ? "" : nameFilter.trim()) + "%");
+            String filter = "%" + (nameFilter == null ? "" : nameFilter.trim()) + "%";
+            statement.setString(1, from.toString());
+            statement.setString(2, to.toString());
+            statement.setString(3, filter);
+            statement.setString(4, filter);
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     rows.add(new WorkerAttendanceHistory(
-                            rs.getDate("attendance_date").toLocalDate(),
+                            com.gui.kline.utils.SqliteUtil.getLocalDate(rs, "attendance_date"),
+                            rs.getString("worker_id"),
                             rs.getString("name"),
                             rs.getString("status")
                     ));
@@ -101,8 +105,8 @@ public class LocalWorkerAttendanceRepository {
         List<WorkerMonthlySummary> rows = new ArrayList<>();
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(start));
-            statement.setDate(2, Date.valueOf(end));
+            statement.setString(1, start.toString());
+            statement.setString(2, end.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     double days = rs.getDouble("days");
@@ -128,6 +132,36 @@ public class LocalWorkerAttendanceRepository {
             return Double.parseDouble(rateText.replace(",", ""));
         } catch (NumberFormatException ex) {
             return 0;
+        }
+    }
+
+    /**
+     * Delete a single attendance record for a worker on a specific date
+     */
+    public void deleteAttendance(String workerId, LocalDate date) {
+        String sql = "DELETE FROM worker_attendance WHERE worker_id = ? AND attendance_date = ?";
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, workerId);
+            statement.setString(2, date.toString());
+            statement.executeUpdate();
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to delete attendance", ex);
+        }
+    }
+
+    /**
+     * Delete all attendance records within a date range
+     */
+    public void deleteAttendanceForPeriod(LocalDate from, LocalDate to) {
+        String sql = "DELETE FROM worker_attendance WHERE attendance_date BETWEEN ? AND ?";
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, from.toString());
+            statement.setString(2, to.toString());
+            statement.executeUpdate();
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to delete attendance for period", ex);
         }
     }
 }

@@ -2,7 +2,6 @@ package com.gui.kline.controller.form;
 
 import com.gui.kline.data.LocalSalaryAdvanceRepository;
 import com.gui.kline.data.LocalWorkerRepository;
-import com.gui.kline.data.SyncQueueRepository;
 import com.gui.kline.models.Worker;
 import com.gui.kline.utils.AlertUtil;
 import com.gui.kline.utils.JsonUtil;
@@ -35,10 +34,7 @@ public class SalaryAdvanceController {
     private TextField txtAmount;
 
     @FXML
-    private TextField txtNote;
-
-    private final SyncQueueRepository syncQueueRepository = new SyncQueueRepository();
-    private final LocalWorkerRepository workerRepository = new LocalWorkerRepository();
+    private TextField txtNote;    private final LocalWorkerRepository workerRepository = new LocalWorkerRepository();
     private final LocalSalaryAdvanceRepository advanceRepository = new LocalSalaryAdvanceRepository();
     private Runnable onSaved;
 
@@ -68,13 +64,20 @@ public class SalaryAdvanceController {
     void onSave(ActionEvent event) {
         Worker worker = cmbWorker.getValue();
         LocalDate date = datePicker.getValue();
+        
+        // Get owner window for proper dialog parenting
+        javafx.stage.Window owner = null;
+        if (btnSave != null && btnSave.getScene() != null) {
+            owner = btnSave.getScene().getWindow();
+        }
+        
         if (worker == null || date == null) {
-            AlertUtil.showError("Missing data", "Please select a worker and date.");
+            AlertUtil.showError(owner, "Missing data", "Please select a worker and date.");
             return;
         }
         double amount = parseAmount(txtAmount.getText());
         if (amount <= 0) {
-            AlertUtil.showError("Invalid amount", "Please enter a valid amount.");
+            AlertUtil.showError(owner, "Invalid amount", "Please enter a valid amount.");
             return;
         }
         String note = txtNote.getText().trim();
@@ -87,9 +90,7 @@ public class SalaryAdvanceController {
                 JsonUtil.field("amount", amount),
                 JsonUtil.field("note", note),
                 JsonUtil.field("op", "create")
-        );
-        syncQueueRepository.enqueue("salary_advance", payload);
-        if (onSaved != null) {
+        );        if (onSaved != null) {
             onSaved.run();
         }
         closeDialog();
