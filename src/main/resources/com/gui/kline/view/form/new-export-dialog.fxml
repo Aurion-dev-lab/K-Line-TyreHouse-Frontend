@@ -96,9 +96,9 @@
                     </VBox>
 
                     <VBox spacing="6" GridPane.columnIndex="1">
-                        <Label text="SERVICE FEE (RS.)" styleClass="form-label" />
+                        <Label text="SERVICE FEE (RS.) (Optional)" styleClass="form-label" />
                         <TextField fx:id="txtServiceFee"
-                                   promptText="0.00"
+                                   promptText="Leave blank for 0"
                                    styleClass="form-input-amber" />
                     </VBox>
                 </GridPane>

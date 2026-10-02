@@ -60,7 +60,8 @@ public class NewExportDialogController implements Initializable {
         txtTyreSize.setText(record.getTyreSize() != null ? record.getTyreSize() : "");
         txtTyreMake.setText(record.getTyreMake() != null ? record.getTyreMake() : "");
         txtTyreCount.setText(String.valueOf(record.getTyres()));
-        txtServiceFee.setText(String.valueOf(record.getServiceCharge()));
+        double serviceCharge = record.getServiceCharge();
+        txtServiceFee.setText(serviceCharge > 0 ? String.valueOf(serviceCharge) : "");
         txtCustomerPrice.setText(String.valueOf(record.getCustPrice()));
         txtCompanyPrice.setText(String.valueOf(record.getCompPrice()));
         txtPaidNow.setText(String.valueOf(record.getPaidAmount()));
@@ -162,7 +163,11 @@ public class NewExportDialogController implements Initializable {
     }
 
     private int    parseTyres()              { try { return Integer.parseInt(txtTyreCount.getText().trim()); } catch (Exception ex) { return 0; } }
-    private double parseDouble(TextField f)  { try { return Double.parseDouble(f.getText().trim()); }          catch (Exception ex) { return 0.0; } }
+    // Service fee is optional - returns 0.0 if empty or invalid
+    private double parseDouble(TextField f)  { try {
+        String text = f.getText().trim();
+        return text.isEmpty() ? 0.0 : Double.parseDouble(text);
+    } catch (Exception ex) { return 0.0; } }
     private void   enforceNumeric(TextField field) { field.textProperty().addListener((obs, oldVal, newVal) -> { if (!newVal.matches("\\d*\\.?\\d*")) field.setText(oldVal); }); }
     private void   closeStage()              { ((Stage) btnCancel.getScene().getWindow()).close(); }
 
