@@ -464,6 +464,11 @@ public class InvoiceFormController {
             return false;
         }
 
+        if (txtPhone.getText().trim().isBlank()) {
+            alert("Phone number required");
+            return false;
+        }
+
         if ("Service".equals(cmbInvoiceType.getValue()) && txtServiceDesc.getText().trim().isBlank()) {
             alert("Service description required");
             return false;
