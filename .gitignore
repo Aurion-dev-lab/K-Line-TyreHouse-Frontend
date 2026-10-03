@@ -41,3 +41,6 @@ build/
 .env.production
 .env.development
 .env.*
+
+# Backup files
+*.bak
